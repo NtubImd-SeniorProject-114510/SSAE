@@ -33,6 +33,10 @@ body {
     height: 60px;
 }
 
+a.logo img.Logo {
+    width: 45px;
+}
+
 .logo {
     font-weight: bold;
     font-size: 18px;

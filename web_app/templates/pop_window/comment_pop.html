@@ -1,0 +1,33 @@
+<div id="rating-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>評分選項</h2>
+        <div class="modal-course-info">
+            <h3 class="modal-course-name"></h3>
+            <p class="modal-course-teacher"></p>
+        </div>
+        <div class="modal-options">
+            <div class="modal-rating-option">
+                <h4>快速五星評分</h4>
+                <div class="modal-rating">
+                    <div class="modal-stars">
+                        <i class="far fa-star" data-value="1"></i>
+                        <i class="far fa-star" data-value="2"></i>
+                        <i class="far fa-star" data-value="3"></i>
+                        <i class="far fa-star" data-value="4"></i>
+                        <i class="far fa-star" data-value="5"></i>
+                    </div>
+                    <div class="rating-display">0.0</div>
+                    <input type="hidden" id="modal-rating-value" value="0">
+                </div>
+                <button class="submit-rating-btn">提交評分</button>
+            </div>
+            <div class="modal-divider"></div>
+            <div class="modal-full-option">
+                <h4>撰寫完整評論</h4>
+                <p>前往評論頁面撰寫詳細的課程評價</p>
+                <a id="full-comment-btn" href="/add_comment/" class="full-comment-btn">前往評論頁面</a>
+            </div>
+        </div>
+    </div>
+</div>

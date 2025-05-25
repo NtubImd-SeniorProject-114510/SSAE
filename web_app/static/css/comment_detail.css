@@ -121,7 +121,7 @@ body {
 
 .course-title {
     font-size: 2.2rem;
-    color: #2c3e50;
+    color: #635c63;
     margin: 0;
     font-weight: 700;
 }
@@ -150,12 +150,6 @@ body {
     font-size: 0.95rem;
 }
 
-.course-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
 .like-btn {
     display: flex;
     align-items: center;
@@ -178,8 +172,6 @@ body {
     margin-left: auto;
 }
 
-/* Removed the old add-comment-btn styles as it's replaced by fixed button */
-
 /* Comments Section */
 .comments-section {
     background: white;
@@ -190,7 +182,7 @@ body {
 
 .section-title {
     font-size: 1.5rem;
-    color: #2c3e50;
+    color: #635c63;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid #eee;
@@ -266,11 +258,11 @@ body {
 .user-name {
     display: block;
     font-weight: 600;
-    color: #2c3e50;
+    color: #635c63;
     margin-bottom: 0.25rem;
 }
 
-.comment-date, .reply-date {
+.reply-date {
     font-size: 0.8rem;
     color: #6c757d;
 }
@@ -373,8 +365,8 @@ body {
 
 .reply {
     display: flex;
-    gap: 10px;
-    padding: 12px 0;
+    gap: 1rem;
+    padding: 0.5rem 0;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -387,9 +379,7 @@ body {
 }
 
 .reply-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
 }
 
 .reply-actions {
@@ -409,49 +399,32 @@ body {
     text-decoration: underline;
 }
 
-.reply {
-    display: flex;
-    gap: 1rem;
-    padding: 0.5rem 0;
+/* Fixed Add Comment Button */
+.fixed-add-comment-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #9e8c9d;
+    color: white;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
-.reply-content {
-    flex: 1;
-}
-
-.reply-header {
-    margin-bottom: 0.5rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .main-container {
-        padding: 1rem;
-    }
-    
-    .course-title {
-        font-size: 1.8rem;
-    }
-    
-    .course-meta {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .comment-content,
-    .comment-actions,
-    .reply-section {
-        margin-left: 0;
-    }
-    
-    .comment-header {
-        flex-wrap: wrap;
-    }
-    
-    .like-btn.small {
-        margin-left: 0;
-        margin-top: 0.5rem;
-    }
+.fixed-add-comment-btn:hover {
+    background-color: #635c63;
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    color: white;
 }
 
 /* Background Text */
@@ -481,34 +454,6 @@ body {
     pointer-events: none;
 }
 
-/* Fixed Add Comment Button */
-.fixed-add-comment-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #7E3D76;
-    color: white;
-    border: none;
-    padding: 15px 35px;
-    border-radius: 50px;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.fixed-add-comment-btn:hover {
-    background-color: #6a3364;
-    transform: translateX(-50%) translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    color: white;
-}
-
 /* Decorative Line */
 .deco-line {
     height: 2px;
@@ -516,300 +461,33 @@ body {
     margin: 4rem 0;
 }
 
-/* Select Dropdown Styling */
-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 1.2em;
-    padding-right: 2.5em !important;
-    cursor: pointer;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #333;
-    transition: all 0.2s ease;
-}
-
-select:focus {
-    outline: none;
-    border-color: #7E3D76;
-    box-shadow: 0 0 0 2px rgba(126, 61, 118, 0.2);
-}
-
-/* For Firefox */
-@-moz-document url-prefix() {
-    select {
-        text-indent: 0.01px;
-        text-overflow: '';
-        padding-right: 2.5em;
-    }
-}
-
-/* For IE10+ */
-select::-ms-expand {
-    display: none;
-}
-
-
-
-
-
-/* rating_modal.css */
-
-/* 模態框基本樣式 */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    overflow: auto;
-}
-
-.modal-content {
-    background-color: white;
-    margin: 15% auto;
-    padding: 30px;
-    border-radius: 15px;
-    width: 80%;
-    max-width: 500px;
-    position: relative;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    animation: modalSlideIn 0.3s ease;
-}
-
-@keyframes modalSlideIn {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* 關閉按鈕 */
-.modal-close {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.modal-close:hover {
-    color: #333;
-}
-
-/* 標題與課程信息 */
-.modal h2 {
-    font-size: 24px;
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #7E3D76; /* 使用與 comment_detail.css 中的固定按鈕相同的顏色 */
-    text-align: center;
-}
-
-.modal-course-info {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.modal-course-name {
-    font-size: 20px;
-    margin: 0 0 5px 0;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.modal-course-teacher {
-    font-size: 16px;
-    color: #6c757d;
-    margin: 0;
-}
-
-/* 選項區域 */
-.modal-options {
-    display: flex;
-    gap: 20px;
-}
-
-.modal-rating-option,
-.modal-full-option {
-    flex: 1;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.modal-divider {
-    width: 1px;
-    background-color: #ddd;
-}
-
-.modal h4 {
-    font-size: 18px;
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #2c3e50;
-}
-
-/* 星級評分區域 */
-.modal-rating {
-    margin: 15px 0;
-}
-
-.modal-stars {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
-.modal-stars i {
-    font-size: 24px;
-    color: #e0e0e0;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.modal-stars i.fas {
-    color: #ffc107; /* 金黃色星星 */
-}
-
-.modal-stars i:hover {
-    transform: scale(1.2);
-}
-
-.rating-display {
-    font-size: 24px;
-    font-weight: bold;
-    color: #7E3D76;
-    margin-top: 10px;
-}
-
-/* 按鈕樣式 */
-.submit-rating-btn,
-.full-comment-btn {
-    display: inline-block;
-    padding: 10px 25px;
-    background-color: #7E3D76;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 15px;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(126, 61, 118, 0.2);
-}
-
-.submit-rating-btn:hover,
-.full-comment-btn:hover {
-    background-color: #6a3364;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(126, 61, 118, 0.3);
-    color: white;
-}
-
-.modal-full-option p {
-    color: #6c757d;
-    margin-bottom: 40px;
-    font-size: 14px;
-}
-
-/* 成功消息樣式 */
-.success-message {
-    text-align: center;
-    padding: 20px;
-}
-
-.success-message i {
-    font-size: 60px;
-    color: #4CAF50;
-    margin-bottom: 20px;
-}
-
-.success-message h2 {
-    color: #4CAF50;
-    margin-top: 10px;
-}
-
-.success-message p {
-    color: #333;
-    margin: 15px 0;
-    font-size: 16px;
-}
-
-.close-modal-btn {
-    display: inline-block;
-    padding: 10px 25px;
-    background-color: #7E3D76;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 20px;
-    box-shadow: 0 4px 10px rgba(126, 61, 118, 0.2);
-}
-
-.close-modal-btn:hover {
-    background-color: #6a3364;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(126, 61, 118, 0.3);
-}
-
-/* 響應式設計 */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .modal-content {
-        width: 90%;
-        padding: 20px;
-        margin-top: 20%;
+    .main-container {
+        padding: 1rem;
     }
     
-    .modal h2 {
-        font-size: 20px;
+    .course-title {
+        font-size: 1.8rem;
     }
     
-    .modal-options {
+    .course-meta {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
-    .modal-divider {
-        width: 100%;
-        height: 1px;
-        margin: 10px 0;
+    .comment-content,
+    .comment-actions,
+    .replies-container {
+        margin-left: 0;
     }
     
-    .modal-stars i {
-        font-size: 22px;
+    .comment-header {
+        flex-wrap: wrap;
     }
     
-    .submit-rating-btn,
-    .full-comment-btn,
-    .close-modal-btn {
-        font-size: 14px;
-        padding: 8px 20px;
+    .like-btn.small {
+        margin-left: 0;
+        margin-top: 0.5rem;
     }
 }

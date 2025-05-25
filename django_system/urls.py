@@ -40,6 +40,7 @@ urlpatterns = [
     path("comment/", views.comment, name="comment"),   
     path("comment_detail/", views.comment_detail, name="comment_detail"),   
     path("add_comment/", views.add_comment, name="add_comment"),
+    path("personal/", views.personal, name="personal"),
     path('api/conversations/', views.api_conversations),
     path('api/conversations/<str:convo_id>/messages/', views.api_messages),
     path('api/ask/', views.api_ask),

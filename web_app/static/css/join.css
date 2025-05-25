@@ -20,8 +20,8 @@
 }
 
 .body {
-  margin-top: 50px;
-  background-color: var(--secondary-color);
+  margin-top: 80px;
+  background-color: #f8f6f4;
   color: var(--text-color);
   overflow-x: hidden;
 }
@@ -85,9 +85,9 @@
 .page-title {
   font-size: 50px;
   font-weight: 700;
-  color: #36464e;
+  color: #635c63;
   text-align: center;
-  margin-bottom: 10;
+  margin-bottom: 10px;
   letter-spacing: 0.05em;
 }
 
@@ -97,7 +97,6 @@
   font-weight: 300;
   text-align:center;
   margin-bottom: 0;
-
 }
 
 .filter-container {
@@ -121,6 +120,14 @@
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 1em;
+  padding-right: 35px;
 }
 
 .filter-item:hover {
@@ -137,6 +144,7 @@
   width: 250px;
   font-size: 15px;
   outline: none;
+  transition: all 0.3s;
 }
 
 .create-btn {
@@ -161,7 +169,7 @@
 
 /* Activity Card Grid */
 .activities-container {
-  margin-bottom: 100px;
+  margin-bottom: 90px;
 }
 
 .activity-grid {
@@ -606,6 +614,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
   .title-container {
     flex-direction: column;
   }
@@ -619,7 +631,8 @@
     padding-top: 5px;
   }
   
-  .page-title, .page-subtitle {
+  .page-title {
+    font-size: 42px;
     text-align: center;
   }
   

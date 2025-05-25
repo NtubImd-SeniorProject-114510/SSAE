@@ -2,12 +2,12 @@
 {% load static %}
 
 {% block title %}北商rule事說 - 活動召集{% endblock %}
+
 {% block lang %}zh-Hant{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/join.css' %}">
 <link rel="stylesheet" href="{% static 'css/join_create.css' %}">
-
 {% endblock %}
 
 
@@ -18,15 +18,13 @@
     
     
     <div class="main-container">
-            <!-- 上面 分類 -------------------------------------------------------->
-            <div>
+            <!-- 標題 -->
+            <header class="page-header">
                 <h1 class="page-title">活動召集</h1>
-            </div>
-            
-            <div>
                 <p class="page-subtitle">（尋找同好・共享樂趣）</p>
-            </div>
+            </header>
             
+            <!-- 頂部搜尋與過濾區 -->
             <div class="filter-section">
                 <select class="filter-item">
                     <option>全部活動類型</option>
@@ -53,156 +51,155 @@
                 
                 <input type="text" class="search-box" placeholder="搜尋活動...">
             </div>
-            
-
+    </div>
         
-        <section class="activities-container">
-            <div class="activity-grid">
-                <!-- 活動 到時候改迴圈 -->
-                <div class="activity-card" onclick="window.location.href='/join_detail/?id=1'">
-                    <div class="activity-header">週末烤肉趴</div>
-                    <div class="activity-image">
-                        <img src="{% static 'image/bbq.jpeg' %}" alt="烤肉聚會">
-                        <div class="activity-tag food">美食</div>
-                    </div>
-                    <div class="activity-content">
-                        <h3 class="activity-title">一起來同樂！</h3>
-                        <p class="activity-description">週末一起來烤肉放鬆！我們會準備各種食材，飲料自備。歡迎大家參加，認識新朋友！</p>
-                        
-                        <div class="activity-info">
-                            <div class="activity-location">
-                                <span class="icon">📍</span>
-                                <span>大安森林公園</span>
-                            </div>
-                            <div class="activity-time">
-                                <span class="icon">🕒</span>
-                                <span>4/6 下午2:00</span>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-footer">
-                            <div class="participants">
-                                <div class="participant-avatars">
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                </div>
-                                <div class="participant-count">8/15人</div>
-                            </div>
-                            <a href="/join_detail/?id=1" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                        </div>
-                    </div>
+    <section class="activities-container">
+        <div class="activity-grid">
+            <!-- 活動 到時候改迴圈 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=1'">
+                <div class="activity-header">週末烤肉趴</div>
+                <div class="activity-image">
+                    <img src="{% static 'image/bbq.jpeg' %}" alt="烤肉聚會">
+                    <div class="activity-tag food">美食</div>
                 </div>
-                
-                <!-- Activity Card 2 -->
-                <div class="activity-card" onclick="window.location.href='/join_detail/?id=2'">
-                    <div class="activity-header">ACTIVITY 02 - 會計學讀書會</div>
-                    <div class="activity-image">
-                        <img src="/api/placeholder/400/180" alt="期中考讀書會">
-                        <div class="activity-tag study">讀書</div>
-                    </div>
-                    <div class="activity-content">
-                        <h3 class="activity-title">期中考準備</h3>
-                        <p class="activity-description">期中考快到了，一起來複習會計學！我有整理好的重點筆記，可以一起討論難題。人數限制避免太吵雜，請有準備的同學參加。</p>
-                        
-                        <div class="activity-info">
-                            <div class="activity-location">
-                                <span class="icon">📍</span>
-                                <span>圖書館3樓讀書室</span>
-                            </div>
-                            <div class="activity-time">
-                                <span class="icon">🕒</span>
-                                <span>4/5 晚上7:00</span>
-                            </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">一起來同樂！</h3>
+                    <p class="activity-description">週末一起來烤肉放鬆！我們會準備各種食材，飲料自備。歡迎大家參加，認識新朋友！</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon">📍</span>
+                            <span>大安森林公園</span>
                         </div>
-                        
-                        <div class="activity-footer">
-                            <div class="participants">
-                                <div class="participant-avatars">
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                </div>
-                                <div class="participant-count">5/8人</div>
-                            </div>
-                            <a href="/join_detail/?id=2" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                        <div class="activity-time">
+                            <span class="icon">🕒</span>
+                            <span>4/6 下午2:00</span>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Activity Card 3 -->
-                <div class="activity-card" onclick="window.location.href='/join_detail/?id=3'">
-                    <div class="activity-header">ACTIVITY 03 - 籃球練習</div>
-                    <div class="activity-image">
-                        <img src="/api/placeholder/400/180" alt="籃球練習">
-                        <div class="activity-tag sports">運動</div>
-                    </div>
-                    <div class="activity-content">
-                        <h3 class="activity-title">週三球場見</h3>
-                        <p class="activity-description">固定每週三晚上的籃球練習，歡迎對籃球有興趣的同學參加！不限男女，有經驗或新手都可以，一起來動一動。</p>
-                        
-                        <div class="activity-info">
-                            <div class="activity-location">
-                                <span class="icon">📍</span>
-                                <span>校內籃球場</span>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
                             </div>
-                            <div class="activity-time">
-                                <span class="icon">🕒</span>
-                                <span>每週三晚上6:00</span>
-                            </div>
+                            <div class="participant-count">8/15人</div>
                         </div>
-                        
-                        <div class="activity-footer">
-                            <div class="participants">
-                                <div class="participant-avatars">
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                </div>
-                                <div class="participant-count">9/10人</div>
-                            </div>
-                            <a href="/join_detail/?id=3" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Activity Card 4 -->
-                <div class="activity-card" onclick="window.location.href='/join_detail/?id=4'">
-                    <div class="activity-header">ACTIVITY 04 - 漫威馬拉松</div>
-                    <div class="activity-image">
-                        <img src="/api/placeholder/400/180" alt="電影之夜">
-                        <div class="activity-tag movie">電影</div>
-                    </div>
-                    <div class="activity-content">
-                        <h3 class="activity-title">超級英雄電影夜</h3>
-                        <p class="activity-description">一起來看漫威電影馬拉松！連續播放三部復仇者系列電影，提供爆米花和飲料。喜歡漫威的朋友不要錯過！</p>
-                        
-                        <div class="activity-info">
-                            <div class="activity-location">
-                                <span class="icon">📍</span>
-                                <span>市民大道電影院</span>
-                            </div>
-                            <div class="activity-time">
-                                <span class="icon">🕒</span>
-                                <span>4/10 下午1:00</span>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-footer">
-                            <div class="participants">
-                                <div class="participant-avatars">
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                    <div class="participant-avatar"></div>
-                                </div>
-                                <div class="participant-count">12/20人</div>
-                            </div>
-                            <a href="/join_detail/?id=4" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                        </div>
+                        <a href="/join_detail/?id=1" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
                     </div>
                 </div>
             </div>
-        </section>
+            
+            <!-- Activity Card 2 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=2'">
+                <div class="activity-header">ACTIVITY 02 - 會計學讀書會</div>
+                <div class="activity-image">
+                    <img src="/api/placeholder/400/180" alt="期中考讀書會">
+                    <div class="activity-tag study">讀書</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">期中考準備</h3>
+                    <p class="activity-description">期中考快到了，一起來複習會計學！我有整理好的重點筆記，可以一起討論難題。人數限制避免太吵雜，請有準備的同學參加。</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon">📍</span>
+                            <span>圖書館3樓讀書室</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon">🕒</span>
+                            <span>4/5 晚上7:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">5/8人</div>
+                        </div>
+                        <a href="/join_detail/?id=2" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Card 3 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=3'">
+                <div class="activity-header">ACTIVITY 03 - 籃球練習</div>
+                <div class="activity-image">
+                    <img src="/api/placeholder/400/180" alt="籃球練習">
+                    <div class="activity-tag sports">運動</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">週三球場見</h3>
+                    <p class="activity-description">固定每週三晚上的籃球練習，歡迎對籃球有興趣的同學參加！不限男女，有經驗或新手都可以，一起來動一動。</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon">📍</span>
+                            <span>校內籃球場</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon">🕒</span>
+                            <span>每週三晚上6:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">9/10人</div>
+                        </div>
+                        <a href="/join_detail/?id=3" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Card 4 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=4'">
+                <div class="activity-header">ACTIVITY 04 - 漫威馬拉松</div>
+                <div class="activity-image">
+                    <img src="/api/placeholder/400/180" alt="電影之夜">
+                    <div class="activity-tag movie">電影</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">超級英雄電影夜</h3>
+                    <p class="activity-description">一起來看漫威電影馬拉松！連續播放三部復仇者系列電影，提供爆米花和飲料。喜歡漫威的朋友不要錯過！</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon">📍</span>
+                            <span>市民大道電影院</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon">🕒</span>
+                            <span>4/10 下午1:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">12/20人</div>
+                        </div>
+                        <a href="/join_detail/?id=4" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
         <!-- 上傳按鈕 -->
         <div class="upload-btn" id="uploadBtn">+</div>

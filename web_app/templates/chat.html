@@ -1,13 +1,16 @@
+{% extends 'navbar.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>北商 Rule 是說 Chatbot</title>
-    <link rel="stylesheet" href="{% static 'css/chat.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block title %}北商rule事說 - Chatbot{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
 <body>
     <!-- 菜單按鈕 -->
     <div class="menu-btn-container" id="menuBtnContainer">
@@ -54,7 +57,9 @@
         </div>
     </div>
 
-    <!-- 載入 JavaScript -->
-    <script src="{% static 'js/chat.js' %}"></script>
 </body>
-</html>
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}
