@@ -11,44 +11,17 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/comment_detail.css' %}">
-<link rel="stylesheet" href="{% static 'css/rating_modal.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
 {% endblock %}
 
 {% block content %}
 <body>
-    <!-- 評分模態框 -->
-    <div id="rating-modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close">&times;</span>
-            <h2>評分選項</h2>
-            <div class="modal-course-info">
-                <h3 class="modal-course-name">計算機概論</h3>
-                <p class="modal-course-teacher">王大明 教授</p>
-            </div>
-            <div class="modal-options">
-                <div class="modal-rating-option">
-                    <h4>快速五星評分</h4>
-                    <div class="modal-rating">
-                        <div class="modal-stars">
-                            <i class="far fa-star" data-value="1"></i>
-                            <i class="far fa-star" data-value="2"></i>
-                            <i class="far fa-star" data-value="3"></i>
-                            <i class="far fa-star" data-value="4"></i>
-                            <i class="far fa-star" data-value="5"></i>
-                        </div>
-                        <div class="rating-display">0.0</div>
-                        <input type="hidden" id="modal-rating-value" value="0">
-                    </div>
-                    <button class="submit-rating-btn">提交評分</button>
-                </div>
-                <div class="modal-divider"></div>
-                <div class="modal-full-option">
-                    <h4>撰寫完整評論</h4>
-                    <p>前往評論頁面撰寫詳細的課程評價</p>
-                    <a id="full-comment-btn" href="{% url 'add_comment' %}?course=1" class="full-comment-btn">前往評論頁面</a>
-                </div>
-            </div>
-        </div>
+    <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
+    <div class="course-item" data-course-id="1" style="display: none;">
+        <div class="course-name">計算機概論</div>
+        <div class="course-teacher">王大明教授</div>
+        <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
+        <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
     </div>
     
     <!-- Fixed Add Comment Button -->
@@ -162,7 +135,16 @@
                     </div>
                     <div class="user-info">
                         <span class="user-name">資管系學生</span>
-                        <span class="comment-date">2024/04/05</span>
+                        <div class="comment-meta">
+                            <div class="stars" data-rating="4.0">
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="comment-date">2024/04/05</span>
+                        </div>
                     </div>
                     <button class="like-btn small">
                         <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
@@ -175,6 +157,20 @@
                 <div class="comment-actions">
                     <button class="reply-btn">回覆</button>
                 </div>
+                
+                <!-- 回覆表單 (預設隱藏) -->
+                <div class="reply-form" style="display: none;">
+                    <div class="form-group">
+                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="cancel-reply-btn">取消</button>
+                        <button class="submit-reply-btn">發送</button>
+                    </div>
+                </div>
+                
+                <!-- 回覆區塊 -->
+                <div class="replies-container"></div>
             </article>
 
             <!-- 評論 3 -->
@@ -185,7 +181,16 @@
                     </div>
                     <div class="user-info">
                         <span class="user-name">匿名</span>
-                        <span class="comment-date">2024/03/28</span>
+                        <div class="comment-meta">
+                            <div class="stars" data-rating="5.0">
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="comment-date">2024/03/28</span>
+                        </div>
                     </div>
                     <button class="like-btn small">
                         <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
@@ -198,15 +203,34 @@
                 <div class="comment-actions">
                     <button class="reply-btn">回覆</button>
                 </div>
+                
+                <!-- 回覆表單 (預設隱藏) -->
+                <div class="reply-form" style="display: none;">
+                    <div class="form-group">
+                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="cancel-reply-btn">取消</button>
+                        <button class="submit-reply-btn">發送</button>
+                    </div>
+                </div>
+                
+                <!-- 回覆區塊 -->
+                <div class="replies-container"></div>
             </article>
         </section>
     </div>
     
     <div class="deco-line"></div>
 </body>
+
+<!-- 載入模態框HTML -->
+{% include 'pop_window/comment_pop.html' %}
+
 {% endblock %}
 
 {% block body_js %}
 <script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+<script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
 <script src="{% static 'js/comment_detail.js' %}"></script>
 {% endblock %}

@@ -1,6 +1,8 @@
-// comment_detail.js - 更新版本
+// comment_detail.js - 清理版本，專注於頁面特定功能
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('comment_detail.js 已載入');
+    
     // 初始化星級評分顯示
     initializeRatings();
     
@@ -9,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 回覆功能
     initializeReplyButtons();
+    
+    // 連接到 comment_pop.js 的評分模態框功能
+    initializeRatingModalConnection();
     
     // Initialize star ratings with Font Awesome icons
     function initializeRatings() {
@@ -216,6 +221,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 連接到 comment_pop.js 的評分模態框功能
+    function initializeRatingModalConnection() {
+        const addCommentBtn = document.getElementById('add-comment-btn');
+        const hiddenCreateBtn = document.querySelector('.hidden-create-btn');
+        
+        if (addCommentBtn && hiddenCreateBtn) {
+            addCommentBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('觸發評分模態框');
+                
+                // 觸發隱藏按鈕的點擊事件，讓 comment_pop.js 處理
+                hiddenCreateBtn.click();
+            });
+        } else {
+            console.error('找不到必要的按鈕元素');
+        }
+    }
 });
 
 // Function to handle adding a new comment (to be called from the add comment page)
@@ -226,193 +249,3 @@ function submitComment(commentData) {
     // Here you would typically make an AJAX request to save the comment
     // and then update the UI with the new comment
 }
-
-
-
-// rating_modal.js
-document.addEventListener('DOMContentLoaded', function() {
-    // 初始化評分模態框功能
-    initializeRatingModal();
-    
-    // 評分模態框功能
-    function initializeRatingModal() {
-        console.log('初始化評分模態框');
-        const modal = document.getElementById('rating-modal');
-        if (!modal) {
-            console.error('找不到評分模態框');
-            return;
-        }
-        
-        // 獲取元素引用
-        const addCommentBtn = document.getElementById('add-comment-btn');
-        const closeBtn = modal.querySelector('.modal-close');
-        const stars = modal.querySelectorAll('.modal-stars i');
-        const ratingValue = modal.querySelector('#modal-rating-value');
-        const ratingDisplay = modal.querySelector('.rating-display');
-        const submitBtn = modal.querySelector('.submit-rating-btn');
-        const fullCommentBtn = document.getElementById('full-comment-btn');
-        
-        // 點擊"新增評論"按鈕顯示模態框
-        if (addCommentBtn) {
-            console.log('綁定新增評論按鈕點擊事件');
-            addCommentBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('新增評論按鈕點擊');
-                
-                // 獲取課程信息
-                const courseName = document.querySelector('.course-title')?.textContent || '';
-                const courseTeacherEl = document.querySelector('.course-teacher');
-                const courseTeacher = courseTeacherEl ? 
-                    courseTeacherEl.textContent.replace('授課教師：', '').trim() : '';
-                
-                // 從URL獲取課程ID
-                let courseId = '1'; // 默認值
-                // URL中可能包含課程ID，如 /course/123/ 或 ?course=123
-                const urlPath = window.location.pathname;
-                const urlMatch = urlPath.match(/\/course\/(\d+)/);
-                if (urlMatch && urlMatch[1]) {
-                    courseId = urlMatch[1];
-                } else {
-                    // 嘗試從查詢參數獲取
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const paramCourseId = urlParams.get('course') || urlParams.get('id');
-                    if (paramCourseId) {
-                        courseId = paramCourseId;
-                    }
-                }
-                
-                // 填充模態框信息
-                modal.querySelector('.modal-course-name').textContent = courseName;
-                modal.querySelector('.modal-course-teacher').textContent = courseTeacher;
-                
-                // 設置課程ID
-                modal.setAttribute('data-course-id', courseId);
-                
-                // 更新"前往評論頁面"按鈕的URL
-                if (fullCommentBtn) {
-                    fullCommentBtn.href = `/add_comment/?course=${courseId}`;
-                }
-                
-                // 重置星級評分
-                stars.forEach(star => {
-                    star.className = 'far fa-star';
-                });
-                if (ratingValue) ratingValue.value = '0';
-                if (ratingDisplay) ratingDisplay.textContent = '0.0';
-                
-                // 顯示模態框
-                modal.style.display = 'block';
-                console.log('評分模態框已顯示');
-            });
-        } else {
-            console.error('找不到新增評論按鈕');
-        }
-        
-        // 關閉模態框
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                modal.style.display = 'none';
-                console.log('關閉模態框');
-            });
-        }
-        
-        // 點擊模態框外部關閉
-        window.addEventListener('click', function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-                console.log('點擊外部關閉模態框');
-            }
-        });
-        
-        // 星級評分點擊
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                const value = parseInt(this.getAttribute('data-value'));
-                console.log(`選擇 ${value} 星評分`);
-                
-                if (ratingValue) ratingValue.value = value;
-                if (ratingDisplay) ratingDisplay.textContent = value + '.0';
-                
-                // 更新星星顯示
-                stars.forEach(s => {
-                    const starValue = parseInt(s.getAttribute('data-value'));
-                    s.className = starValue <= value ? 'fas fa-star' : 'far fa-star';
-                });
-            });
-            
-            // 懸停效果
-            star.addEventListener('mouseover', function() {
-                const value = parseInt(this.getAttribute('data-value'));
-                
-                stars.forEach(s => {
-                    const starValue = parseInt(s.getAttribute('data-value'));
-                    if (starValue <= value) {
-                        s.className = 'fas fa-star';
-                    } else {
-                        s.className = 'far fa-star';
-                    }
-                });
-            });
-            
-            star.addEventListener('mouseout', function() {
-                const currentValue = parseInt(ratingValue?.value || '0');
-                
-                stars.forEach(s => {
-                    const starValue = parseInt(s.getAttribute('data-value'));
-                    s.className = starValue <= currentValue ? 'fas fa-star' : 'far fa-star';
-                });
-            });
-        });
-        
-        // 提交評分
-        if (submitBtn) {
-            submitBtn.addEventListener('click', function() {
-                const value = parseInt(ratingValue?.value || '0');
-                const courseId = modal.getAttribute('data-course-id') || '1';
-                
-                if (value > 0) {
-                    console.log(`提交評分：課程ID=${courseId}, 評分=${value}`);
-                    // 這裡可以添加 AJAX 請求來提交評分
-                    submitRating(courseId, value);
-                } else {
-                    alert('請選擇評分！');
-                }
-            });
-        }
-    }
-    
-    // 提交評分 (模擬)
-    function submitRating(courseId, rating) {
-        console.log(`提交評分: 課程ID=${courseId}, 評分=${rating}`);
-        
-        // 模擬 AJAX 請求
-        setTimeout(() => {
-            // 顯示成功消息
-            const modal = document.getElementById('rating-modal');
-            if (!modal) return;
-            
-            const modalContent = modal.querySelector('.modal-content');
-            
-            modalContent.innerHTML = `
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i>
-                <h2>評分成功！</h2>
-                <p>感謝您的評分，您給出了 ${rating} 星評價。</p>
-                <button class="close-modal-btn">關閉</button>
-            </div>`;
-            
-            // 關閉按鈕事件
-            const closeBtn = modalContent.querySelector('.close-modal-btn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function() {
-                    modal.style.display = 'none';
-                    
-                    // 重新載入頁面或更新評分顯示
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                });
-            }
-        }, 800); // 模擬網路延遲
-    }
-});

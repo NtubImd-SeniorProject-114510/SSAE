@@ -52,6 +52,9 @@ def comment_detail(request):
 
 def add_comment(request):
     return render(request, "add_comment.html")
+
+def personal(request):
+    return render(request, "personal.html")
 # web_app/views.py
 import json
 from django.shortcuts import render

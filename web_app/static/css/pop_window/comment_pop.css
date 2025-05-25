@@ -62,12 +62,12 @@
     font-size: 24px;
     margin-top: 0;
     margin-bottom: 20px;
-    color: var(--primary-color);
+    color: #635c63;
     text-align: center;
 }
 
 .modal-course-info {
-    background-color: var(--light-gray);
+    background-color: #f1f1f1;
     padding: 15px;
     border-radius: 10px;
     margin-bottom: 20px;
@@ -94,7 +94,7 @@
 .modal-full-option {
     flex: 1;
     padding: 20px;
-    background-color: var(--light-gray);
+    background-color: #f1f1f1;
     border-radius: 10px;
     text-align: center;
 }
@@ -123,7 +123,7 @@
 
 .modal-stars i {
     font-size: 24px;
-    color: #e0e0e0;
+    color: #c0c0c0;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -139,14 +139,14 @@
 .rating-display {
     font-size: 24px;
     font-weight: bold;
-    color: var(--primary-color);
+    color: #635c63;
 }
 
 .submit-rating-btn,
 .full-comment-btn {
     display: inline-block;
     padding: 10px 20px;
-    background-color: var(--primary-color);
+    background-color: #9e8c9d;
     color: white;
     border: none;
     border-radius: 50px;
@@ -160,7 +160,7 @@
 
 .submit-rating-btn:hover,
 .full-comment-btn:hover {
-    background-color: var(--primary-dark);
+    background-color: #635c63;
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
@@ -178,18 +178,18 @@
 
 .success-message i {
     font-size: 60px;
-    color: #4CAF50;
+    color: #635c63;
     margin-bottom: 20px;
 }
 
 .success-message h2 {
-    color: #4CAF50;
+    color: #635c63;
 }
 
 .close-modal-btn {
     display: inline-block;
     padding: 10px 20px;
-    background-color: var(--primary-color);
+    background-color: #9e8c9d;
     color: white;
     border: none;
     border-radius: 50px;
@@ -201,7 +201,7 @@
 }
 
 .close-modal-btn:hover {
-    background-color: var(--primary-dark);
+    background-color: #635c63;
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }

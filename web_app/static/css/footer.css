@@ -6,7 +6,7 @@ footer {
   background: #9E8C9D;
   min-height: 110px;
   display: flex;
-  margin: 10px 0;
+  margin: 10px 0 0;
   flex-wrap: wrap;
   color: #fff;
   display: flex;
@@ -16,7 +16,7 @@ footer {
 .fowl {
   width: 150px;
   height: 150px;
-  background-image: url('../image/floatowl.png'); /* 換成你的圖片路徑 */
+  background-image: url('../image/lay.png'); /* 換成你的圖片路徑 */
   background-size: contain;
   background-repeat: no-repeat;
   position: absolute;
