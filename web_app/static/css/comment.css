@@ -56,7 +56,7 @@
 
 body {
     font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
-    background-color: var(--bg-color);
+    background-color: #f8f6f4;
     color: var(--text-color);
     margin: 0;
     padding: 0;
@@ -67,8 +67,8 @@ body {
 
 .page-container {
     max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
+    margin: 0 auto;
+    padding: 60px 20px;
     position: relative;
     z-index: 1;
 }
@@ -105,7 +105,7 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 50px;
+    margin: 20px 0px 40px 0px;
 }
 
 .filter-item {
@@ -153,14 +153,14 @@ body {
 
 /* Activity Card Grid */
 .activities-container {
-    margin-bottom: 80px;
+    margin-bottom: 100px;
 }
 
 .activity-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 40px;
-    margin-bottom: 60px;
+    margin-bottom: 80px;
 }
 .stats-container {
     display: grid;
@@ -243,23 +243,23 @@ body {
 /* Header and Title Section */
 .page-header {
     text-align: center;
-    margin-bottom: 50px;
     position: relative;
 }
 
 .page-title {
     font-size: 50px;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #635c63;
+    text-align: center;
     margin-bottom: 10px;
     letter-spacing: 0.05em;
 }
 
 .page-subtitle {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 300;
-    margin-bottom: 20px;
-    color: var(--dark-gray);
+    text-align:center;
+    margin-bottom: 0;
 }
 
 .courses-container {
@@ -529,6 +529,7 @@ body {
     
     .page-title {
         font-size: 42px;
+        text-align: center;
     }
     
     .page-subtitle {
@@ -556,7 +557,7 @@ body {
     }
     
     .page-title {
-        font-size: 36px;
+        font-size: 42px;
     }
     
     .page-subtitle {

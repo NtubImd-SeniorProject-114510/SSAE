@@ -1,4 +1,4 @@
-// comment_rating_modal.js
+// comment.js
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('評分模態框 JS 已加載');
@@ -139,8 +139,8 @@ function initializeInteractions() {
 
 // 設置評分模態框
 function setupRatingModal() {
-    // 創建模態框 HTML
-    createRatingModal();
+    // 載入模態框 HTML
+    loadModalHTML();
     
     // 綁定新增評論按鈕點擊事件
     const createBtns = document.querySelectorAll('.create-btn');
@@ -167,10 +167,12 @@ function setupRatingModal() {
             modal.querySelector('.rating-display').textContent = '0.0';
             
             // 顯示模態框
-            modal.style.display = 'block';
+            modal.classList.add('show');
+            // 防止背景滾動
+            document.body.classList.add('modal-open');
             
             // 保存課程 ID 到模態框
-            const courseId = courseItem.getAttribute('data-course-id') || '1'; // 默認為 1，如果沒有設置
+            const courseId = courseItem.getAttribute('data-course-id') || '1';
             modal.setAttribute('data-course-id', courseId);
         });
     });
@@ -179,14 +181,23 @@ function setupRatingModal() {
     initializeModalEvents();
 }
 
-// 創建評分模態框
-function createRatingModal() {
+// 載入模態框 HTML
+function loadModalHTML() {
     // 檢查模態框是否已存在
     if (document.getElementById('rating-modal')) {
         return;
     }
     
-    // 創建模態框 HTML
+    // 由於模態框已經通過 Django include 載入，我們只需要初始化事件
+    // 如果 include 沒有載入，使用備選方案
+    if (!document.getElementById('rating-modal')) {
+        console.log('模態框 HTML 尚未載入，使用備選方案');
+        createFallbackModal();
+    }
+}
+
+// 備選方案：創建內嵌模態框（如果外部文件載入失敗）
+function createFallbackModal() {
     const modalHtml = `
     <div id="rating-modal" class="modal">
         <div class="modal-content">
@@ -222,192 +233,14 @@ function createRatingModal() {
         </div>
     </div>`;
     
-    // 添加模態框到頁面
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // 添加模態框樣式
-    const style = document.createElement('style');
-    style.textContent = `
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        overflow: auto;
-    }
-    
-    .modal-content {
-        background-color: white;
-        margin: 15% auto;
-        padding: 30px;
-        border-radius: 15px;
-        width: 80%;
-        max-width: 500px;
-        position: relative;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        animation: modalSlideIn 0.3s ease;
-    }
-    
-    @keyframes modalSlideIn {
-        from {
-            transform: translateY(-50px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-    
-    .modal-close {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        color: #aaa;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .modal-close:hover {
-        color: #333;
-    }
-    
-    .modal h2 {
-        font-size: 24px;
-        margin-top: 0;
-        margin-bottom: 20px;
-        color: var(--primary-color);
-        text-align: center;
-    }
-    
-    .modal-course-info {
-        background-color: var(--light-gray);
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-    
-    .modal-course-name {
-        font-size: 20px;
-        margin: 0 0 5px 0;
-    }
-    
-    .modal-course-teacher {
-        font-size: 16px;
-        color: var(--dark-gray);
-        margin: 0;
-    }
-    
-    .modal-options {
-        display: flex;
-        gap: 20px;
-    }
-    
-    .modal-rating-option,
-    .modal-full-option {
-        flex: 1;
-        padding: 20px;
-        background-color: var(--light-gray);
-        border-radius: 10px;
-        text-align: center;
-    }
-    
-    .modal-divider {
-        width: 1px;
-        background-color: #ddd;
-    }
-    
-    .modal h4 {
-        font-size: 18px;
-        margin-top: 0;
-        margin-bottom: 10px;
-    }
-    
-    .modal-rating {
-        margin: 15px 0;
-    }
-    
-    .modal-stars {
-        display: flex;
-        justify-content: center;
-        gap: 5px;
-        margin-bottom: 10px;
-    }
-    
-    .modal-stars i {
-        font-size: 24px;
-        color: #e0e0e0;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .modal-stars i.fas {
-        color: #ffc107;
-    }
-    
-    .modal-stars i:hover {
-        transform: scale(1.2);
-    }
-    
-    .rating-display {
-        font-size: 24px;
-        font-weight: bold;
-        color: var(--primary-color);
-    }
-    
-    .submit-rating-btn,
-    .full-comment-btn {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 16px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s;
-        margin-top: 10px;
-        text-decoration: none;
-    }
-    
-    .submit-rating-btn:hover,
-    .full-comment-btn:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    }
-    
-    .modal-full-option p {
-        color: var(--dark-gray);
-        margin-bottom: 40px;
-    }
-    
-    @media (max-width: 768px) {
-        .modal-options {
-            flex-direction: column;
-        }
-        
-        .modal-divider {
-            width: 100%;
-            height: 1px;
-            margin: 10px 0;
-        }
-    }`;
-    
-    document.head.appendChild(style);
 }
 
 // 初始化模態框事件處理
 function initializeModalEvents() {
     const modal = document.getElementById('rating-modal');
+    if (!modal) return; // 如果模態框不存在則返回
+    
     const closeBtn = modal.querySelector('.modal-close');
     const stars = modal.querySelectorAll('.modal-stars i');
     const ratingValue = modal.querySelector('#modal-rating-value');
@@ -416,14 +249,20 @@ function initializeModalEvents() {
     const fullCommentBtn = modal.querySelector('#full-comment-btn');
     
     // 關閉模態框
-    closeBtn.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            modal.classList.remove('show');
+            // 恢復背景滾動
+            document.body.classList.remove('modal-open');
+        });
+    }
     
     // 點擊模態框外部關閉
-    window.addEventListener('click', function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.classList.remove('show');
+            // 恢復背景滾動
+            document.body.classList.remove('modal-open');
         }
     });
     
@@ -464,28 +303,30 @@ function initializeModalEvents() {
     });
     
     // 提交評分
-    submitBtn.addEventListener('click', function() {
-        const value = parseInt(ratingValue.value);
-        const courseId = modal.getAttribute('data-course-id');
-        
-        if (value > 0) {
-            // 這裡可以添加 AJAX 請求來提交評分
-            submitRating(courseId, value);
-        } else {
-            alert('請選擇評分！');
-        }
-    });
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
+            const value = parseInt(ratingValue.value);
+            const courseId = modal.getAttribute('data-course-id');
+            
+            if (value > 0) {
+                submitRating(courseId, value);
+            } else {
+                alert('請選擇評分！');
+            }
+        });
+    }
     
     // 修改前往完整評論頁面的 URL
-    fullCommentBtn.addEventListener('click', function(e) {
-        const courseId = modal.getAttribute('data-course-id');
-        fullCommentBtn.href = `/add_comment/?course=${courseId}`;
-    });
+    if (fullCommentBtn) {
+        fullCommentBtn.addEventListener('click', function(e) {
+            const courseId = modal.getAttribute('data-course-id');
+            fullCommentBtn.href = `/add_comment/?course=${courseId}`;
+        });
+    }
 }
 
 // 提交評分 (模擬)
 function submitRating(courseId, rating) {
-    // 模擬 AJAX 請求
     console.log(`提交評分: 課程ID=${courseId}, 評分=${rating}`);
     
     // 顯示成功消息
@@ -500,50 +341,12 @@ function submitRating(courseId, rating) {
         <button class="close-modal-btn">關閉</button>
     </div>`;
     
-    // 添加成功消息樣式
-    const style = document.createElement('style');
-    style.textContent = `
-    .success-message {
-        text-align: center;
-        padding: 20px;
-    }
-    
-    .success-message i {
-        font-size: 60px;
-        color: #4CAF50;
-        margin-bottom: 20px;
-    }
-    
-    .success-message h2 {
-        color: #4CAF50;
-    }
-    
-    .close-modal-btn {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 16px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s;
-        margin-top: 20px;
-    }
-    
-    .close-modal-btn:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    }`;
-    
-    document.head.appendChild(style);
-    
     // 關閉按鈕事件
     const closeBtn = modalContent.querySelector('.close-modal-btn');
     closeBtn.addEventListener('click', function() {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
+        // 恢復背景滾動
+        document.body.classList.remove('modal-open');
         
         // 重新載入頁面或更新評分顯示
         setTimeout(() => {

@@ -1,4 +1,4 @@
-{% extends 'navbar.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}北商rule事說 - 課程評論列表{% endblock %}
@@ -11,18 +11,14 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/comment.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <!-- 背景裝飾 -->
-    <div class="bg-text">COURSE REVIEWS COURSE REVIEWS</div>
-    <div class="cloud-shape" style="width: 200px; height: 200px; top: 150px; left: 10%; opacity: 0.2;"></div>
-    <div class="cloud-shape" style="width: 150px; height: 150px; top: 400px; right: 15%; opacity: 0.2;"></div>
-    
     <!-- 標題 -->
     <header class="page-header">
-        <h1 class="page-title">課程評論列表</h1>
+        <h1 class="page-title">課程評論區</h1>
         <p class="page-subtitle">（選擇課程・查看評價）</p>
     </header>
     
@@ -162,11 +158,16 @@
                 </div>
         </div>
         
-        </div>
+    </section>
         
     <div class="deco-line"></div>
 </div>
+
+<!-- 載入模態框HTML -->
+{% include 'pop_window/comment_pop.html' %}
+
 {% endblock %}
+
 {% block body_js %}
     <script src="{% static 'js/comment.js' %}"></script>
 {% endblock %}
