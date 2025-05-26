@@ -1,34 +1,4 @@
-.buttons-container {
-    display: flex;
-    justify-content: end;
-    margin-top: 20px;
-}
 
-.create-btn {
-    margin-right: 10px;
-}
-
-.create-btn,
-.join-btn {
-    margin-top: 30px;
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #9e8c9d;
-    color: white;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 16px;
-    transition: all 0.3s;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.create-btn:hover,
-.join-btn:hover {
-    background-color: #635c63;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
 
 :root {
     /* Main colors */
@@ -262,12 +232,7 @@ body {
     margin-bottom: 0;
 }
 
-.courses-container {
-    margin-bottom: 40px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 40px;
-}
+
 
 .course-item {
     background-color: white;
@@ -480,6 +445,41 @@ body {
     cursor: pointer;
     transition: var(--transition);
 }
+
+
+/* buttons */
+.buttons-container {
+    display: flex;
+    justify-content: end;
+    margin-top: 20px;
+}
+
+.create-btn {
+    margin-right: 10px;
+}
+
+.create-btn,
+.join-btn {
+    margin-top: 30px;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #9e8c9d;
+    color: white;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.create-btn:hover,
+.join-btn:hover {
+    background-color: #635c63;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
 
 /* Fixed Add Comment Button */
 .fixed-add-comment-container {

@@ -11,6 +11,7 @@ footer {
   color: #fff;
   display: flex;
   justify-content: space-between;
+  z-index: 999;
 }
 
 .fowl {
