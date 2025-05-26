@@ -14,6 +14,15 @@ body {
     margin-top: 80px;
 }
 
+/* 包裝所有內容的容器 */
+.chat-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 0 80px;
+    position: relative;
+    display: flex;
+}
+
 /* 側邊欄 */
 .sidebar {
     width: 280px;
@@ -23,25 +32,32 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto; /* 允許側邊欄內容滾動 */
     z-index: 100;
+    /* 移除margin-left */
+    /* 改為絕對定位，使其疑疊在內容上方 */
     position: absolute;
     left: 0;
+    top: 0;
+    padding-top: 66px; /* 為標題列留出空間 */
 }
 
 .sidebar.collapsed {
-    left: -280px;
+    transform: translateX(-280px);
+    margin-left: 0; /* 收合時不需要負margin */
 }
 
-.sidebar-header {
-    background-color: #FFFFFF;
+/* 已移除 .sidebar-header */
+
+/* 統一標題列 */
+.unified-header {
     height: 66px;
-    padding: 20px;
-    padding-left: 56px;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    border-bottom: 1px solid #34495e;
+    width: 100%;
+    background-color: white;
+    border-bottom: 1px solid #ddd; /* 添加回下方的邊框線 */
+    position: relative;
+    z-index: 101;
 }
 
 .sidebar-record {
@@ -52,19 +68,20 @@ body {
 }
 
 .new-chat-btn {
-    font-size: 16px;
-    margin: 15px;
-    padding: 10px 10px;
-    background-color: #422552;
-    color: white;
+    background-color: #FFFFFF;
+    color: #6F557D;
     border: none;
     border-radius: 5px;
+    padding: 10px 15px;
+    margin: 15px 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    font-weight: bold;
     transition: all 0.3s ease;
+    z-index: 102; /* 確保按鈕可見 */
     position: relative;
     overflow: hidden;
 }
@@ -231,10 +248,10 @@ body {
     align-items: center;
     justify-content: center;
     position: fixed;
-    left: 40px;
+    left: 100px; /* 調整位置使其可見 */
     top: 95px;
-    z-index: 200;
-    transition: left 0.3s ease;
+    z-index: 1000;
+    cursor: pointer;
 }
 
 .hamburger {
@@ -303,22 +320,79 @@ body {
     flex-direction: column;
     overflow: hidden;
     transition: all 0.3s ease;
-    margin-left: 0;
+    position: relative;
+    /* 移除左右padding，因為現在已經由chat-wrapper提供 */
+}
+
+/* 移除主內容區域的padding-left */
+body:not(.sidebar-collapsed) .main-content {
+    /* 不再需要padding-left */
     position: relative;
 }
 
-body:not(.sidebar-collapsed) .main-content {
-    padding-left: 280px;
+/* 使用絕對定位來定位內容區域，而不是使用margin */
+.chat-container {
+    position: absolute;
+    top: 66px; /* 標題列高度 */
+    bottom: 80px; /* 輸入區域高度 */
+    right: 0;
+    left: 0;
+    transition: all 0.3s ease;
+    overflow-y: auto; /* 確保內容可滾動 */
 }
 
-.chat-header {
+.input-container {
+    position: fixed; /* 改為 fixed 以確保始終固定在底部 */
+    bottom: 0;
+    right: 80px; /* 考慮左右的padding */
+    left: 80px; /* 考慮左右的padding */
+    transition: all 0.3s ease;
+    background-color: #f5f5f5;
+    z-index: 101; /* 確保在其他內容之上 */
+}
+
+/* 側邊欄展開時的內容區域樣式 */
+body:not(.sidebar-collapsed) .chat-container,
+body:not(.sidebar-collapsed) .chat-header-part {
+    left: 280px; /* 與側邊欄寬度相同 */
+}
+
+body:not(.sidebar-collapsed) .input-container {
+    left: 360px; /* 80px(左邊距) + 280px(側邊欄寬度) */
+}
+
+/* 側邊欄收合時的內容區域樣式 */
+body.sidebar-collapsed .chat-container {
+    left: 0;
+}
+
+body.sidebar-collapsed .chat-header-part {
+    left: 60px; /* 增加與菜單按鈕的距離 */
+    padding-left: 20px; /* 增加內部填充 */
+}
+
+body.sidebar-collapsed .input-container {
+    left: 80px; /* 考慮左邊的padding */
+}
+
+/* 移除側邊欄收合時的標題列樣式 */
+
+/* 已移除 .chat-header */
+
+/* 移除側邊欄標題部分 */
+
+/* 主內容標題部分 */
+.chat-header-part {
+    position: absolute;
     height: 66px;
     display: flex;
     align-items: center;
-    padding: 15px 20px;
-    padding-left: 76px;
-    border-bottom: 1px solid #ddd;
+    padding: 0 20px;
     background-color: white;
+    transition: all 0.3s ease;
+    z-index: 101;
+    right: 0;
+    border-bottom: 1px solid #ddd; 
 }
 
 .chat-header h2 {
@@ -331,12 +405,13 @@ body:not(.sidebar-collapsed) .main-content {
 }
 
 .chat-container {
-    flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background-color: white;
     display: flex;
     flex-direction: column;
+    gap: 20px;
+    background-color: white;
+    /* 其他定位屬性已經在上面的絕對定位規則中設置 */
 }
 
 /* 消息樣式 */
@@ -385,12 +460,12 @@ body:not(.sidebar-collapsed) .main-content {
 .user-content {
     background-color: #593C68;
     color: white;
-    border-bottom-right-radius: 5px;
+    border-radius: 10px 10px 0 10px;
 }
 
 .bot-content {
-    background-color: #f1f1f1;
-    border-bottom-left-radius: 5px;
+    background-color: #f0f0f0;
+    border-radius: 10px 10px 10px 0;
 }
 
 .no-messages {
@@ -401,12 +476,57 @@ body:not(.sidebar-collapsed) .main-content {
 
 /* 輸入區域 */
 .input-container {
-    padding: 15px;
+    padding: 20px;
     display: flex;
     background-color: #f5f5f5;
     border-top: 1px solid #ddd;
     align-items: center;
     gap: 10px;
+    height: 80px; /* 確保高度與先前設置的bottom值匹配 */
+    box-sizing: border-box;
+    /* 其他定位屬性已經在上面的絕對定位規則中設置 */
+}
+
+/* 載入中的點點動畫 */
+.loading-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-width: 60px;
+}
+
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #666;
+    margin: 0 4px;
+    animation: dot-pulse 1.5s infinite ease-in-out;
+}
+
+.dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes dot-pulse {
+    0%, 80%, 100% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% { 
+        transform: scale(1.2);
+        opacity: 1;
+    }
 }
 
 .message-input {

@@ -280,6 +280,20 @@ async function sendQuestion() {
         chatContainer.appendChild(userMsg);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         
+        // 在聊天區域加入機器人正在輸入的指示
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'message-container bot-container';
+        loadingMsg.innerHTML = `
+            <div class="avatar bot-avatar">AI</div>
+            <div class="message-content bot-content loading-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        `;
+        chatContainer.appendChild(loadingMsg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
         // 發送到後端
         const res = await fetch("/api/ask/", {
             method: "POST",
@@ -288,6 +302,9 @@ async function sendQuestion() {
         });
         
         const data = await res.json();
+        
+        // 移除載入指示器
+        chatContainer.removeChild(loadingMsg);
         
         // 在聊天區域加入機器人回覆
         const botMsg = document.createElement('div');
