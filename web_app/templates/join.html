@@ -5,6 +5,10 @@
 
 {% block lang %}zh-Hant{% endblock %}
 
+{% block extra_css %}
+<script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/join.css' %}">
 <link rel="stylesheet" href="{% static 'css/join_create.css' %}">
@@ -12,47 +16,45 @@
 
 
 {% block content %}
-<div class="body">
+<div class="page-container">
     <!-- 背景的ACTIVITY GROUP ACTIVITY GROUP -->
     <div class="bg-text">ACTIVITY GROUP ACTIVITY GROUP</div>
+
+    <!-- 標題 -->
+    <header class="page-header">
+        <h1 class="page-title">活動召集</h1>
+        <p class="page-subtitle">（尋找同好・共享樂趣）</p>
+    </header>
     
-    
-    <div class="main-container">
-            <!-- 標題 -->
-            <header class="page-header">
-                <h1 class="page-title">活動召集</h1>
-                <p class="page-subtitle">（尋找同好・共享樂趣）</p>
-            </header>
-            
-            <!-- 頂部搜尋與過濾區 -->
-            <div class="filter-section">
-                <select class="filter-item">
-                    <option>全部活動類型</option>
-                    <option>美食</option>
-                    <option>運動</option>
-                    <option>讀書</option>
-                    <option>旅遊</option>
-                    <option>電影</option>
-                    <option>其他</option>
-                </select>
-                
-                <select class="filter-item">
-                    <option>全部地點</option>
-                    <option>校內</option>
-                    <option>校外</option>
-                </select>
-                
-                <select class="filter-item">
-                    <option>全部時間</option>
-                    <option>今天</option>
-                    <option>本週</option>
-                    <option>本月</option>
-                </select>
-                
-                <input type="text" class="search-box" placeholder="搜尋活動...">
-            </div>
+    <!-- 頂部搜尋與過濾區 -->
+    <div class="filter-section">
+        <select class="filter-item">
+            <option>全部活動類型</option>
+            <option>美食</option>
+            <option>運動</option>
+            <option>讀書</option>
+            <option>旅遊</option>
+            <option>電影</option>
+            <option>其他</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部地點</option>
+            <option>校內</option>
+            <option>校外</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部時間</option>
+            <option>今天</option>
+            <option>本週</option>
+            <option>本月</option>
+        </select>
+        
+        <input type="text" class="search-box" placeholder="搜尋活動...">
     </div>
         
+    <!-- 活動列表和分頁 -->
     <section class="activities-container">
         <div class="activity-grid">
             <!-- 活動 到時候改迴圈 -->
@@ -68,11 +70,11 @@
                     
                     <div class="activity-info">
                         <div class="activity-location">
-                            <span class="icon">📍</span>
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
                             <span>大安森林公園</span>
                         </div>
                         <div class="activity-time">
-                            <span class="icon">🕒</span>
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
                             <span>4/6 下午2:00</span>
                         </div>
                     </div>
@@ -104,11 +106,11 @@
                     
                     <div class="activity-info">
                         <div class="activity-location">
-                            <span class="icon">📍</span>
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
                             <span>圖書館3樓讀書室</span>
                         </div>
                         <div class="activity-time">
-                            <span class="icon">🕒</span>
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
                             <span>4/5 晚上7:00</span>
                         </div>
                     </div>
@@ -140,11 +142,11 @@
                     
                     <div class="activity-info">
                         <div class="activity-location">
-                            <span class="icon">📍</span>
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
                             <span>校內籃球場</span>
                         </div>
                         <div class="activity-time">
-                            <span class="icon">🕒</span>
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
                             <span>每週三晚上6:00</span>
                         </div>
                     </div>
@@ -176,11 +178,11 @@
                     
                     <div class="activity-info">
                         <div class="activity-location">
-                            <span class="icon">📍</span>
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
                             <span>市民大道電影院</span>
                         </div>
                         <div class="activity-time">
-                            <span class="icon">🕒</span>
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
                             <span>4/10 下午1:00</span>
                         </div>
                     </div>
