@@ -11,9 +11,8 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/join.css' %}">
-<link rel="stylesheet" href="{% static 'css/join_create.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/join_pop.css' %}">
 {% endblock %}
-
 
 {% block content %}
 <div class="page-container">
@@ -203,166 +202,18 @@
         </div>
     </section>
 
-        <!-- 上傳按鈕 -->
-        <div class="upload-btn" id="uploadBtn">+</div>
-        
-        <!-- 發起揪團表單 -->
-        <div class="upload-form" id="uploadForm">
-            <div class="upload-container">
-                <div class="upload-header">
-                    <div class="upload-title">發起揪團</div>
-                    <button class="close-btn" id="closeUploadBtn">&times;</button>
-                </div>
-                
-                <!-- 從join_create.html整合的發起揪團表單 -->
-                <form id="create-group-form">
-                    <div class="form-group">
-                        <label for="activity-title" class="form-label">活動標題</label>
-                        <input type="text" id="activity-title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="activity-type" class="form-label">活動類型</label>
-                                <select id="activity-type" class="form-select" required>
-                                    <option value="" disabled selected>請選擇活動類型</option>
-                                    <option value="food">美食</option>
-                                    <option value="sport">運動</option>
-                                    <option value="study">讀書</option>
-                                    <option value="travel">旅遊</option>
-                                    <option value="movie">電影</option>
-                                    <option value="other">其他</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="activity-location" class="form-label">活動地點</label>
-                                <input type="text" id="activity-location" class="form-input" placeholder="請輸入活動地點" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="activity-date" class="form-label">活動日期</label>
-                                <input type="date" id="activity-date" class="form-input" required>
-                            </div>
-                        </div>
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="activity-time" class="form-label">活動時間</label>
-                                <input type="time" id="activity-time" class="form-input" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="min-participants" class="form-label">最少參加人數</label>
-                                <input type="number" id="min-participants" class="form-input" min="2" value="2" required>
-                                <div class="help-text">若未達最少人數，活動將被取消</div>
-                            </div>
-                        </div>
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="max-participants" class="form-label">最多參加人數</label>
-                                <input type="number" id="max-participants" class="form-input" min="2" value="10" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="activity-description" class="form-label">活動說明</label>
-                        <textarea id="activity-description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">活動封面圖片</label>
-                        <div class="image-upload-container" id="image-upload-area">
-                            <div class="image-upload-icon">📷</div>
-                            <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
-                        </div>
-                        <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="activity-deadline" class="form-label">報名截止日期</label>
-                        <input type="date" id="activity-deadline" class="form-input" required>
-                        <div class="help-text">報名截止日期必須早於活動日期</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-info" class="form-label">聯絡方式（選填）</label>
-                        <input type="text" id="contact-info" class="form-input" placeholder="LINE ID、IG、電話等，方便參加者聯繫">
-                    </div>
-                    
-                    <div class="preview-section">
-                        <div class="preview-title">
-                            <span class="preview-icon">👁️</span>
-                            活動預覽
-                        </div>
-                        <div class="preview-card">
-                            <div class="preview-image">
-                                圖片預覽區域
-                                <div class="preview-tag" id="preview-tag">活動類型</div>
-                            </div>
-                            <div class="preview-content">
-                                <h3 class="preview-activity-title" id="preview-title">活動標題</h3>
-                                <div class="preview-info">
-                                    <div class="preview-location">
-                                        <span class="location-icon">📍</span>
-                                        <span id="preview-location">活動地點</span>
-                                    </div>
-                                    <div class="preview-time">
-                                        <span class="time-icon">🕒</span>
-                                        <span id="preview-time">活動時間</span>
-                                    </div>
-                                </div>
-                                <p class="preview-description" id="preview-description">活動說明將顯示在這裡...</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="buttons-container">
-                        <button type="button" class="cancel-btn" id="cancel-create-btn">取消</button>
-                        <button type="submit" class="submit-btn">發布活動</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <div class="deco-line"></div>
-    </div>
+    <!-- 上傳按鈕 -->
+    <button class="upload-btn" id="uploadBtn">+</button>
     
-    <!-- 添加JavaScript代碼，使活動卡片點擊功能更加穩健 -->
-    <script>
-        // 確保DOM加載完成後執行
-        document.addEventListener('DOMContentLoaded', function() {
-            // 獲取所有活動卡片
-            const activityCards = document.querySelectorAll('.activity-card');
-            
-            // 為每個活動卡片添加點擊事件監聽器
-            activityCards.forEach(function(card) {
-                card.style.cursor = 'pointer'; // 添加手型游標，提示可點擊
-            });
-            
-            // 防止"我要參加"按鈕冒泡事件
-            const joinButtons = document.querySelectorAll('.join-btn');
-            joinButtons.forEach(function(button) {
-                button.addEventListener('click', function(e) {
-                    e.stopPropagation(); // 阻止事件冒泡
-                });
-            });
-        });
-    </script>
+    <div class="deco-line"></div>
 </div>
+
+<!-- 載入發起揪團彈跳視窗 -->
+{% include 'pop_window/join_pop.html' %}
+
 {% endblock %}
 
 {% block body_js %}
+<script src="{% static 'js/pop_window/join_pop.js' %}"></script>
 <script src="{% static 'js/join.js' %}"></script>
-<script src="{% static 'js/join_create.js' %}"></script>
 {% endblock %}

@@ -6,7 +6,6 @@
 }
 
 body {
-    /* height: 2000px; 為了演示滾動效果 */
     background-color: #f0f0f0;
 }
 
@@ -98,6 +97,12 @@ a.logo img.Logo {
     align-items: center;
     color: white;
     cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-circle:hover {
+    background-color: #4a3a32;
+    transform: scale(1.05);
 }
 
 .user-circle i {
@@ -109,7 +114,7 @@ a.logo img.Logo {
     position: absolute;
     top: 100%;
     right: 0;
-    width: 100px;
+    width: 120px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -131,10 +136,11 @@ a.logo img.Logo {
 
 .dropdown-item {
     display: block;
-    padding: 8px 16px;
+    padding: 10px 16px;
     color: #333;
     text-decoration: none;
     transition: background-color 0.3s;
+    font-size: 14px;
 }
 
 .dropdown-item:hover {
@@ -158,194 +164,23 @@ a.logo img.Logo {
     }
 }
 
-/* 登入模態視窗樣式 */
-.login-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1002;
-    justify-content: center;
-    align-items: center;
-}
-
-.login-modal.show {
-    display: flex;
-    animation: modalFadeIn 0.4s ease;
-}
-
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 15px 20px;
     }
-    to {
-        opacity: 1;
+    
+    .nav-links {
+        display: none;
     }
-}
-
-/* 關閉模態視窗按鈕 */
-.close-modal {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    color: #333;
-    cursor: pointer;
-    z-index: 1003;
-}
-
-/* 登入容器 */
-.login-container {
-    display: flex;
-    width: 800px;
-    height: 400px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    position: relative;
-    animation: modalContentShow 0.4s ease;
-}
-
-@keyframes modalContentShow {
-    from {
-        transform: scale(0.8);
-        opacity: 0;
+    
+    .user-dropdown {
+        width: 100px;
+        right: -10px;
     }
-    to {
-        transform: scale(1);
-        opacity: 1;
+    
+    .dropdown-item {
+        padding: 8px 12px;
+        font-size: 13px;
     }
-}
-
-.frame {
-    width: 800px;
-    height: 400px;
-    background-color: transparent;
-    border-radius: 10px;
-    position: absolute;
-    border: 1px solid rgb(71, 71, 71);
-    top: 7%;
-    left: 3%;
-    z-index: -1;
-}
-
-/* Sidebar */
-.login-sidebar {
-    width: 150px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 20px 20px 20px 40px;
-    position: relative;
-}
-
-.sidebar-text {
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    font-size: 16px;
-    color: #333;
-    letter-spacing: 5px;
-    position: absolute;
-    left: 50px;
-    top: 60%;
-    transform: translateY(-50%);
-    white-space: nowrap;
-}
-
-/* Login form */
-.login-form {
-    padding: 40px;
-    flex-grow: 1;
-    position: relative;
-}
-
-.login-sidebar h2 {
-    font-size: 24px;
-    margin-bottom: 30px;
-    color: #333;
-    writing-mode: vertical-rl;
-    text-align: center;
-    position: relative;
-    padding-top: 60px;
-    margin-top: 20px;
-    align-self: flex-start;
-    margin-left: 50px;
-    font-weight: bold;
-}
-
-.login-sidebar h2::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 50px;
-    background-color: #333;
-    font-weight: bold;
-}
-
-/* Login buttons */
-.login-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-.login-img {
-    width: 40%;
-    position: relative;
-}
-
-.other-login-btn {
-    text-align: center;
-    display: inline-block;
-}
-
-/* Form actions */
-.form-actions {
-    position: absolute;
-    bottom: 40px;
-    right: 40px;
-}
-
-.btn-cancel {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.btn-cancel:hover {
-    background-color: #e0e0e0;
-}
-
-/* Logout button */
-.logout-form {
-    display: inline-block;
-    margin-right: 20px;
-}
-
-.btn-logout {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.btn-logout:hover {
-    background-color: #e0e0e0;
 }

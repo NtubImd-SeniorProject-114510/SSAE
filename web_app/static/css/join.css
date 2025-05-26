@@ -50,7 +50,6 @@ body {
   line-height: 0.8;
   color: #f0f0f0;
   white-space: nowrap;
-  overflow: hidden;
   letter-spacing: -0.05em;
   user-select: none;
   z-index: -1;
@@ -71,7 +70,7 @@ body {
   position: relative;
 }
 
-/* Header and Title Section - 更新的樣式 */
+/* Header and Title Section */
 .page-header {
   text-align: center;
   position: relative;
@@ -97,7 +96,7 @@ body {
   margin-bottom: 40px;
 }
 
-/* Filter Section ----------------------------------------------------------------------------------------------*/
+/* Filter Section */
 .filter-section {
     display: flex;
     flex-wrap: wrap;
@@ -529,78 +528,6 @@ body {
   100% {
     transform: translateY(0);
   }
-}
-
-/* 上傳按鈕和功能 */
-.upload-btn {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
-  background-color: #443730;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  z-index: 100;
-}
-
-.upload-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-
-#imageUpload {
-  display: none;
-}
-
-.upload-form {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 200;
-  justify-content: center;
-  align-items: center;
-  overflow-y: auto;
-}
-
-.upload-container {
-  background-color: white;
-  border-radius: 8px;
-  padding: 30px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.upload-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.upload-title {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.close-btn {
-  font-size: 24px;
-  cursor: pointer;
-  background: none;
-  border: none;
 }
 
 /* Decorative elements */

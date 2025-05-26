@@ -1,3 +1,5 @@
+// navbar.js - 清理版本，專注於導航欄功能
+
 // 監聽滾動事件
 window.addEventListener('scroll', function() {
     const navbar = document.getElementById('navbar');
@@ -12,48 +14,30 @@ window.addEventListener('scroll', function() {
     }
 });
 
-// 使用者菜單和登入模態視窗功能
+// 使用者菜單功能
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('navbar.js 已載入');
+    
+    // 初始化用戶菜單
+    initializeUserMenu();
+});
+
+// 初始化用戶菜單功能
+function initializeUserMenu() {
     // 獲取元素
     const userMenuButton = document.getElementById('userMenuButton');
     const userDropdown = document.getElementById('userDropdown');
-    const loginButton = document.getElementById('loginButton');
-    const loginModal = document.getElementById('loginModal');
-    const cancelLoginButton = document.getElementById('cancelLogin');
-    const closeModalButton = document.querySelector('.close-modal');
     
-    // 點擊用戶圖標顯示下拉菜單
+    if (!userMenuButton || !userDropdown) {
+        console.error('找不到用戶菜單元素');
+        return;
+    }
+    
+    // 點擊用戶圖標顯示/隱藏下拉菜單
     userMenuButton.addEventListener('click', function(e) {
         e.stopPropagation(); // 防止點擊事件傳播
+        console.log('切換用戶下拉菜單');
         userDropdown.classList.toggle('show');
-    });
-    
-    // 點擊登入按鈕顯示登入模態視窗
-    loginButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        userDropdown.classList.remove('show'); // 隱藏下拉菜單
-        loginModal.classList.add('show'); // 顯示登入模態視窗
-    });
-    
-    // 點擊取消按鈕關閉登入模態視窗
-    if (cancelLoginButton) {
-        cancelLoginButton.addEventListener('click', function() {
-            loginModal.classList.remove('show');
-        });
-    }
-    
-    // 點擊關閉按鈕關閉登入模態視窗
-    if (closeModalButton) {
-        closeModalButton.addEventListener('click', function() {
-            loginModal.classList.remove('show');
-        });
-    }
-    
-    // 點擊模態視窗外部關閉模態視窗
-    loginModal.addEventListener('click', function(e) {
-        if (e.target === loginModal) {
-            loginModal.classList.remove('show');
-        }
     });
     
     // 點擊頁面其他部分關閉下拉菜單
@@ -62,4 +46,45 @@ document.addEventListener('DOMContentLoaded', function() {
             userDropdown.classList.remove('show');
         }
     });
-});
+    
+    // ESC 鍵關閉下拉菜單
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && userDropdown.classList.contains('show')) {
+            userDropdown.classList.remove('show');
+        }
+    });
+    
+    // 處理下拉菜單項目點擊
+    const dropdownItems = userDropdown.querySelectorAll('.dropdown-item');
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // 如果是登入按鈕，讓 login_pop.js 處理
+            if (this.id === 'loginButton') {
+                // 隱藏下拉菜單
+                userDropdown.classList.remove('show');
+                // 其他邏輯由 login_pop.js 處理
+                return;
+            }
+            
+            // 其他菜單項目的處理
+            console.log('點擊菜單項目:', this.textContent);
+            userDropdown.classList.remove('show');
+        });
+    });
+}
+
+// 工具函數：手動顯示用戶下拉菜單
+function showUserDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown) {
+        userDropdown.classList.add('show');
+    }
+}
+
+// 工具函數：手動隱藏用戶下拉菜單
+function hideUserDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown) {
+        userDropdown.classList.remove('show');
+    }
+}
