@@ -96,7 +96,7 @@
             <div class="activity-card" onclick="window.location.href='/join_detail/?id=2'">
                 <div class="activity-header">ACTIVITY 02 - 會計學讀書會</div>
                 <div class="activity-image">
-                    <img src="/api/placeholder/400/180" alt="期中考讀書會">
+                    <img src="{% static 'image/activity_test.jpg' %}" alt="期中考讀書會">
                     <div class="activity-tag study">讀書</div>
                 </div>
                 <div class="activity-content">
@@ -132,7 +132,7 @@
             <div class="activity-card" onclick="window.location.href='/join_detail/?id=3'">
                 <div class="activity-header">ACTIVITY 03 - 籃球練習</div>
                 <div class="activity-image">
-                    <img src="/api/placeholder/400/180" alt="籃球練習">
+                    <img src="{% static 'image/activity_test.jpg' %}" alt="籃球練習">
                     <div class="activity-tag sports">運動</div>
                 </div>
                 <div class="activity-content">
@@ -168,7 +168,7 @@
             <div class="activity-card" onclick="window.location.href='/join_detail/?id=4'">
                 <div class="activity-header">ACTIVITY 04 - 漫威馬拉松</div>
                 <div class="activity-image">
-                    <img src="/api/placeholder/400/180" alt="電影之夜">
+                    <img src="{% static 'image/activity_test.jpg' %}" alt="電影之夜">
                     <div class="activity-tag movie">電影</div>
                 </div>
                 <div class="activity-content">
@@ -202,8 +202,24 @@
         </div>
     </section>
 
-    <!-- 上傳按鈕 -->
-    <button class="upload-btn" id="uploadBtn">+</button>
+    <!-- 右下角的圓形logo和上傳按鈕 -->
+    <div class="floating-action-button">
+        <div class="circular-logo">
+            <div class="circular-text">
+                <svg viewBox="0 0 100 100">
+                    <path id="curve" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" fill="transparent"/>
+                    <text>
+                        <textPath href="#curve" textLength="250">
+                            join activity together • 
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="upload-btn-center" id="uploadBtn">
+                <span>＋</span>
+            </div>
+        </div>
+    </div>
     
     <div class="deco-line"></div>
 </div>

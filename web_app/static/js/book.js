@@ -9,9 +9,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploadForm = document.getElementById('uploadForm');
             if (uploadForm) {
                 uploadForm.style.display = 'flex';
+                // 初始化表單驗證
+                validateRequiredFields();
             }
         });
     }
+    
+    // 初始化表單驗證
+    validateRequiredFields();
     
     // 篩選標籤點擊效果
     const filterItems = document.querySelectorAll('.filter-item');
@@ -129,6 +134,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // 驗證必填欄位
+    function validateRequiredFields() {
+        const bookTitleInput = document.getElementById('bookTitle');
+        const priceInput = document.getElementById('price');
+        const faceToFaceCheckbox = document.getElementById('faceToFace');
+        const shippingCheckbox = document.getElementById('shipping');
+        const submitBtn = document.getElementById('submitBtn');
+        const bookTitleError = document.getElementById('bookTitleError');
+        const priceError = document.getElementById('priceError');
+        const transactionMethodError = document.getElementById('transactionMethodError');
+        
+        // 初始化時隱藏所有錯誤訊息
+        bookTitleError.style.display = 'none';
+        priceError.style.display = 'none';
+        transactionMethodError.style.display = 'none';
+        
+        // 檢查必填欄位是否填寫
+        function checkRequiredFields() {
+            const bookTitleValid = bookTitleInput.value.trim() !== '';
+            const priceValid = priceInput.value.trim() !== '';
+            const transactionMethodValid = faceToFaceCheckbox.checked || shippingCheckbox.checked;
+            
+            // 只在表單驗證時才顯示錯誤訊息，不在實時顯示
+            return bookTitleValid && priceValid && transactionMethodValid;
+        }
+        
+        // 監聽輸入欄位變化但不顯示錯誤訊息
+        bookTitleInput.addEventListener('input', function() {
+            // 如果有值則隱藏錯誤訊息
+            if (bookTitleInput.value.trim() !== '') {
+                bookTitleError.style.display = 'none';
+            }
+        });
+        
+        priceInput.addEventListener('input', function() {
+            if (priceInput.value.trim() !== '') {
+                priceError.style.display = 'none';
+            }
+        });
+        
+        function checkTransactionMethod() {
+            if (faceToFaceCheckbox.checked || shippingCheckbox.checked) {
+                transactionMethodError.style.display = 'none';
+            }
+        }
+        
+        faceToFaceCheckbox.addEventListener('change', checkTransactionMethod);
+        shippingCheckbox.addEventListener('change', checkTransactionMethod);
+        
+        return checkRequiredFields;
+    }
+    
+    // 初始化驗證函數
+    const checkRequiredFields = validateRequiredFields();
+    
     // 提交按鈕點擊事件
     submitBtn.addEventListener('click', function() {
         // 獲取所有表單值
@@ -141,7 +201,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const bookDescription = document.getElementById('bookDescription').value;
         const transactionMethods = document.querySelectorAll('input[name="transactionMethod"]:checked');
         
-        // 表單驗證
+        // 驗證必填欄位
+        const bookTitleError = document.getElementById('bookTitleError');
+        const priceError = document.getElementById('priceError');
+        const transactionMethodError = document.getElementById('transactionMethodError');
+        
+        // 顯示錯誤訊息，只在點擊上傳按鈕後顯示
+        if (bookTitle.trim() === '') {
+            bookTitleError.style.display = 'block';
+        }
+        
+        if (price.trim() === '') {
+            priceError.style.display = 'block';
+        }
+        
+        if (transactionMethods.length === 0) {
+            transactionMethodError.style.display = 'block';
+        }
+        
+        // 如果有錯誤，不繼續提交
+        if (bookTitle.trim() === '' || price.trim() === '' || transactionMethods.length === 0) {
+            return;
+        }
+        
+        // 其他表單驗證
         if (!validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods)) {
             return;
         }
@@ -217,10 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 表單驗證函數
     function validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods) {
-        if (!bookTitle) {
-            alert('請輸入書名！');
-            return false;
-        }
+        // 必填欄位已在提交按鈕點擊事件中驗證
         
         if (!imageUpload.files[0]) {
             alert('請上傳書籍圖片！');
@@ -242,18 +322,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        if (!price) {
-            alert('請輸入價格！');
-            return false;
-        }
-        
         if (!condition) {
             alert('請選擇書籍狀況！');
-            return false;
-        }
-        
-        if (transactionMethods.length === 0) {
-            alert('請選擇至少一種交易方式！');
             return false;
         }
         

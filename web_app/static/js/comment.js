@@ -177,4 +177,27 @@ function initializeInteractions() {
             });
         }, 300);
     }
+    
+    // 圓形上傳按鈕點擊事件
+    const commentBtn = document.getElementById('commentBtn');
+    if (commentBtn) {
+        commentBtn.addEventListener('click', function() {
+            const modal = document.getElementById('commentModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    }
+    
+    // 創建評論按鈕點擊事件
+    const createBtns = document.querySelectorAll('.create-btn');
+    createBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = document.getElementById('commentModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    });
 }
