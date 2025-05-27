@@ -1,0 +1,263 @@
+/* login_pop.css - 登入彈跳視窗樣式 */
+
+/* 登入模態視窗樣式 */
+.login-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1002;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-modal.show {
+    display: flex;
+    animation: modalFadeIn 0.4s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 關閉模態視窗按鈕 */
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #333;
+    cursor: pointer;
+    z-index: 1003;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: #666;
+}
+
+/* 登入容器 */
+.login-container {
+    display: flex;
+    width: 800px;
+    height: 400px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    animation: modalContentShow 0.4s ease;
+}
+
+@keyframes modalContentShow {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.frame {
+    width: 800px;
+    height: 400px;
+    background-color: transparent;
+    border-radius: 10px;
+    position: absolute;
+    border: 1px solid rgb(71, 71, 71);
+    top: 7%;
+    left: 3%;
+    z-index: -1;
+}
+
+/* Sidebar */
+.login-sidebar {
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px 20px 20px 40px;
+    position: relative;
+}
+
+.sidebar-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: 16px;
+    color: #333;
+    letter-spacing: 5px;
+    position: absolute;
+    left: 50px;
+    top: 60%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+/* Login form */
+.login-form {
+    padding: 40px;
+    flex-grow: 1;
+    position: relative;
+}
+
+.login-sidebar h2 {
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #333;
+    writing-mode: vertical-rl;
+    text-align: center;
+    position: relative;
+    padding-top: 60px;
+    margin-top: 20px;
+    align-self: flex-start;
+    margin-left: 50px;
+    font-weight: bold;
+}
+
+.login-sidebar h2::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 50px;
+    background-color: #333;
+    font-weight: bold;
+}
+
+/* Login buttons */
+.login-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+.login-img {
+    width: 50%;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.login-img:hover {
+    transform: scale(1.05);
+}
+
+.other-login-btn {
+    text-align: center;
+    display: inline-block;
+    text-decoration: none;
+}
+
+/* Form actions */
+.form-actions {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.btn-cancel:hover {
+    background-color: #e0e0e0;
+}
+
+/* Logout button */
+.logout-form {
+    display: inline-block;
+}
+
+.btn-logout {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.btn-logout:hover {
+    background-color: #e0e0e0;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .login-container {
+        width: 90%;
+        max-width: 600px;
+        height: auto;
+        min-height: 350px;
+        flex-direction: column;
+    }
+    
+    .login-sidebar {
+        width: 100%;
+        height: 80px;
+        flex-direction: row;
+        justify-content: center;
+        padding: 15px;
+    }
+    
+    .login-sidebar h2 {
+        writing-mode: horizontal-tb;
+        margin: 0;
+        padding: 0;
+        margin-left: 0;
+        font-size: 20px;
+    }
+    
+    .login-sidebar h2::before {
+        display: none;
+    }
+    
+    .sidebar-text {
+        writing-mode: horizontal-tb;
+        text-orientation: mixed;
+        position: relative;
+        left: auto;
+        top: auto;
+        transform: none;
+        margin-left: 20px;
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+    
+    .login-form {
+        padding: 20px;
+    }
+    
+    .login-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .frame {
+        width: 90%;
+        height: 90%;
+        top: 5%;
+        left: 5%;
+    }
+}

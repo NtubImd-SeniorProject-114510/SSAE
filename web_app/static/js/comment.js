@@ -15,8 +15,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化交互元素
     initializeInteractions();
     
+    // 添加視差滾動效果
+    initializeParallax();
+    
     // 注意：評分模態框功能現在由 comment_pop.js 處理
 });
+
+// 滾動動畫
+function initializeScrollAnimations() {
+    const allCards = document.querySelectorAll('.activity-card');
+    
+    function checkVisibility() {
+        const windowHeight = window.innerHeight;
+        
+        allCards.forEach((card, index) => {
+            const cardTop = card.getBoundingClientRect().top;
+            
+            if (cardTop < windowHeight - 100) {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 100); // 錯開動畫時間
+            }
+        });
+    }
+    
+    // 初始檢查
+    checkVisibility();
+    
+    // 滾動事件監聽
+    window.addEventListener('scroll', checkVisibility);
+}
+
+// 背景文字視差效果
+function initializeParallax() {
+    const bgText = document.querySelector('.bg-text');
+    
+    function parallaxScroll() {
+        const scrollPosition = window.pageYOffset;
+        if (bgText) {
+            bgText.style.transform = `translateX(${scrollPosition * -0.1}px)`;
+        }
+    }
+    
+    window.addEventListener('scroll', parallaxScroll);
+}
+
 
 // 初始化星級評分顯示
 function initializeStarRatings() {
