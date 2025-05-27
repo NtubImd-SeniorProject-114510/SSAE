@@ -27,6 +27,19 @@
                     <label for="school_year">學年度</label>
                     <select id="school_year" name="school_year" class="form-control">
                         <option value="">選擇學年度</option>
+                        <option value="112">112</option>
+                        <option value="111">111</option>
+                        <option value="110">110</option>
+                        <option value="109">109</option>
+                        <option value="108">108</option>
+                        <option value="107">107</option>
+                        <option value="106">106</option>
+                        <option value="105">105</option>
+                        <option value="104">104</option>
+                        <option value="103">103</option>
+                        <option value="102">102</option>
+                        <option value="101">101</option>
+                        <option value="100">100</option>
                     </select>
                 </div>
                 
@@ -34,6 +47,9 @@
                     <label for="category">學制</label>
                     <select id="category" name="category" class="form-control">
                         <option value="">學制</option>
+                        <option value="進四技">進四技</option>
+                        <option value="五專">五專</option>
+                        <option value="二技">二技</option>
                     </select>
                 </div>
                 
@@ -41,7 +57,7 @@
                     <label for="class_info">選擇班級</label>
                     <select id="class_info" name="class_info" class="form-control">
                         <option value="">選擇班級</option>
-                        <option value="進四技資管一甲班">進四技資管一甲班</option>
+                        <option value="進四技資管一甲班">資管一年甲班</option>
                     </select>
                 </div>
                 
@@ -67,14 +83,14 @@
                     <label>顯示方式</label>
                     <div class="user-info-container">
                         <div class="user-info">
-                            <img src="{% static 'image/user_avatar.png' %}" alt="User Avatar" class="avatar">
-                            <span class="username">可愛男</span>
+                            <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
+                            <span class="username">匿名</span>
                         </div>
                         <div class="anonymous-options">
-                            <input type="radio" id="anonymous_no" name="anonymous" value="no" checked>
-                            <label for="anonymous_no">匿名</label>
-                            <input type="radio" id="anonymous_yes" name="anonymous" value="yes">
-                            <label for="anonymous_yes">實名</label>
+                            <input type="radio" id="anonymous_yes" name="anonymous" value="no" checked>
+                            <label for="anonymous_yes">匿名</label>
+                            <input type="radio" id="anonymous_no" name="anonymous" value="yes">
+                            <label for="anonymous_no">實名</label>
                         </div>
                     </div>
                 </div>    
@@ -100,14 +116,14 @@
         <div class="top-row-container">
             <div class="course-info-container">
                 <div class="comment-header">
-                    <h3>112年進五專資管系四年甲班資料科 任課教師:林志忠</h3>
+                    <h3>112年五專資管系一年甲班計算機概論 任課教師:</h3>
                 </div>
             </div>
         </div>
         
         <div class="comment-content">
             <div class="comment-text-area">
-                <textarea id="comment_text" name="comment_text" rows="10" placeholder="輸入評論內容...">111111111111111111111111111111111111111111</textarea>
+                <textarea id="comment_text" name="comment_text" rows="10" placeholder="輸入評論內容...">這門課真的很爛，整堂課毫無重點，老師講課方式超爛，根本就只是念投影片，完全不管學生聽不聽得懂。作業內容難死了，說明又超不清楚，問問題還被敷衍帶過，到底在教什麼？整個課程節奏拖拖拉拉，內容又無聊到不行，真的快睡著，感覺上這門課就是在浪費時間。我超討厭這種不負責任的教學方式，讓人學得一肚子火。</textarea>
             </div>
             
             <div class="arrows-container">
@@ -127,122 +143,14 @@
             </div>
         </div>
         
-        <div class="form-actions">
+        <div class="add-comment-form-actions">
             <button type="submit" class="btn-submit">送出</button>
         </div>
     </form>
 </div>
 {% endblock %}
 
+
 {% block body_js %}
 <script src="{% static 'js/add_comment.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const starsContainer = document.getElementById('rating-stars');
-    const stars = Array.from(starsContainer.querySelectorAll('i'));
-    const ratingInput = document.getElementById('rating-input');
-    // Manual rating input removed
-    const ratingText = starsContainer.querySelector('.rating-text');
-    
-    // Set initial rating to 1 by default
-    let currentRating = 1;
-    ratingInput.value = '1';
-    updateStars(currentRating, true);
-    
-    // Hover effect removed for better usability
-    
-    // Click to set rating
-    starsContainer.addEventListener('click', (e) => {
-        if (e.target.matches('i')) {
-            const star = e.target;
-            const newRating = parseInt(star.getAttribute('data-rating'));
-            
-            // 設置為新的評分值
-            currentRating = Math.min(5, Math.max(1, newRating)); // 確保最小評分為1
-            
-            updateStars(currentRating, true);
-        }
-    });
-    
-
-    
-    function updateStars(rating, updateInput = true) {
-        // Ensure rating is at least 1
-        if (rating < 1) rating = 1;
-        
-        stars.forEach((star, index) => {
-            const starRating = index + 1; // 1, 2, 3, 4, 5
-            
-            if (rating >= starRating) {
-                // Full star
-                star.className = 'fa-solid fa-star';
-            } else {
-                // Empty star
-                star.className = 'fa-regular fa-star';
-            }
-        });
-        
-        // Update rating text and hidden input
-        ratingText.textContent = `${rating}/5.0`;
-        if (updateInput) {
-            ratingInput.value = rating;
-        }
-    }
-    
-    // 表單提交確認
-    function confirmSubmission() {
-        const form = document.getElementById('commentForm');
-        const comment = form.querySelector('textarea[name="comment_text"]').value.trim();
-        const rating = parseFloat(document.getElementById('rating-input').value);
-        const teacherSelect = form.querySelector('select[name="teacher"]');
-        const classSelect = form.querySelector('select[name="class_info"]');
-        const schoolYearSelect = form.querySelector('select[name="school_year"]');
-        
-        // 驗證必填欄位
-        if (!teacherSelect.value) {
-            alert('請選擇課程');
-            return false;
-        }
-        
-        if (!classSelect.value) {
-            alert('請選擇班級');
-            return false;
-        }
-        
-        if (!schoolYearSelect.value) {
-            alert('請選擇學年度');
-            return false;
-        }
-        
-        if (!comment) {
-            alert('請輸入評論內容');
-            return false;
-        }
-        
-        if (isNaN(rating) || rating < 1 || rating > 5) {
-            alert('請給出有效的評分 (1-5分)');
-            return false;
-        }
-        
-        // 顯示確認對話框
-        const confirmation = confirm('確定要送出評論嗎？\n\n' +
-            '課程: ' + teacherSelect.options[teacherSelect.selectedIndex].text + '\n' +
-            '班級: ' + classSelect.options[classSelect.selectedIndex].text + '\n' +
-            '學年度: ' + schoolYearSelect.options[schoolYearSelect.selectedIndex].text + '\n' +
-            '評分: ' + rating + '分\n\n' +
-            '評論將公開顯示，送出後無法修改。');
-            
-        if (confirmation) {
-            // 顯示載入中或禁用按鈕等處理
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
-            }
-        }
-        
-        return confirmation;
-    }
-});
-</script>
 {% endblock %}

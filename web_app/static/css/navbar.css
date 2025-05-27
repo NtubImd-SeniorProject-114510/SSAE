@@ -18,7 +18,7 @@ body {
     align-items: center;
     padding: 20px 40px;
     transition: all 0.5s ease;
-    z-index: 1000;
+    z-index: 999;
 }
 
 .navbar-initial {
@@ -141,6 +141,7 @@ a.logo img.Logo {
     text-decoration: none;
     transition: background-color 0.3s;
     font-size: 14px;
+    cursor: pointer;
 }
 
 .dropdown-item:hover {
