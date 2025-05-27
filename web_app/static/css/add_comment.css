@@ -46,6 +46,7 @@
     background-color: var(--bg-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
+    margin-bottom: 100px; /* 增加底部邊距，避免送出按鈕被擋住 */
 }
 
 /* Back button styles */
@@ -100,6 +101,7 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
     z-index: 1;
+    min-height: auto; /* 移除固定高度 */
 }
 
 /* Form row layout */
@@ -166,15 +168,15 @@ input[list].form-control {
 }
 
 .form-control:focus {
-    border-bottom: 2px solid var(--primary-color);
+    border-bottom: 2px solid #9e8c9d;
     transform: translateY(-2px);
     box-shadow: 0 4px 6px rgba(108, 99, 255, 0.1);
     background-color: white;
 }
 
 .form-control:hover {
-    border-bottom: 2px solid var(--primary-light);
-    background-color: rgba(245, 245, 255, 1);
+    border-bottom: 2px solid #9e8c9d;
+    background-color: #f5f5f5;
 }
 
 /* Display mode container */
@@ -186,8 +188,6 @@ input[list].form-control {
     display: flex;
     justify-content: space-between;
 }
-
-
 
 /* Rating container */
 .rating-container {
@@ -294,10 +294,12 @@ input[list].form-control {
     width: 30px;
     height: 30px;
     border-radius: 50%;
+    transition: var(--transition); /* 添加圖片切換動畫 */
 }
 
 .username {
     font-weight: bold;
+    transition: var(--transition); /* 添加文字切換動畫 */
 }
 
 .anonymous-options {
@@ -358,14 +360,14 @@ textarea:focus {
 
 .arrow {
     font-size: 24px;
-    color: var(--primary-color);
+    color: #635c63;
     transition: var(--transition);
     height: 40px;
     width: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(171, 190, 249, 0.2);
+    background-color: #f5f5f5;
     border-radius: 50%;
 }
 
@@ -379,7 +381,7 @@ textarea:focus {
 
 .btn-convert {
     padding: 15px 0;
-    background-color: var(--primary-color);
+    background-color: #9e8c9d;
     color: white;
     border: none;
     border-radius: var(--radius-round);
@@ -410,22 +412,26 @@ textarea:focus {
 }
 
 .btn-convert:hover {
-    background-color: var(--primary-dark);
+    background-color: #635c63;
     transform: translateY(-3px);
     box-shadow: 0 8px 15px rgba(138, 155, 208, 0.4);
 }
 
 /* Submit button */
-.form-actions {
+.add-comment-form-actions {
     text-align: right;
     margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid var(--medium-gray);
+    position: relative;
+    z-index: 10; /* 確保送出按鈕在最上層 */
+    background-color: white; /* 添加背景色避免被遮擋 */
+    margin-bottom: 30px; /* 增加底部間距 */
 }
 
 .btn-submit {
     padding: 12px 25px;
-    background-color: var(--accent-color);
+    background-color: #9e8c9d;
     color: white;
     border: none;
     border-radius: var(--radius-md);
@@ -436,6 +442,13 @@ textarea:focus {
     box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
+    z-index: 11; /* 確保按鈕本身在最上層 */
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
 .btn-submit:before {
@@ -453,10 +466,15 @@ textarea:focus {
     left: 100%;
 }
 
-.btn-submit:hover {
-    background-color: rgba(150, 137, 149, 1);
+.btn-submit:hover:not(:disabled) {
+    background-color: #635c63;
     transform: translateY(-3px);
     box-shadow: 0 8px 16px rgba(170, 157, 169, 0.4);
+}
+
+/* 確保表單底部有足夠空間 */
+body {
+    padding-bottom: 50px;
 }
 
 /* Responsive adjustments */
@@ -481,5 +499,9 @@ textarea:focus {
 
     .form-col-left {
         grid-template-columns: 50% 50%;
+    }
+    
+    .comment-container {
+        margin-bottom: 150px; /* 在手機版增加更多底部間距 */
     }
 }
