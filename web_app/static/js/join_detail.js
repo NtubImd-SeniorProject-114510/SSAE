@@ -9,6 +9,8 @@ ctaButtons.forEach(button => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Fix any layout issues on load
+    fixLayoutIssues();
     // 初始化星級評分顯示
     initializeRatings();
     
@@ -223,6 +225,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    }
+    
+    // Function to fix layout issues
+    function fixLayoutIssues() {
+        // Ensure proper spacing between sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.clear = 'both';
+            section.style.overflow = 'hidden';
+        });
+        
+        // Fix any overlapping elements in the comments section
+        const commentsSection = document.querySelector('.comments-section');
+        if (commentsSection) {
+            commentsSection.style.clear = 'both';
+            commentsSection.style.overflow = 'hidden';
+        }
+        
+        // Fix map container and address elements
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+            mapContainer.style.clear = 'both';
+            mapContainer.style.position = 'relative';
+            mapContainer.style.overflow = 'hidden';
+        }
+        
+        const address = document.querySelector('.address');
+        if (address) {
+            address.style.clear = 'both';
+            address.style.position = 'relative';
+            address.style.marginTop = '20px';
+        }
+        
+        // Ensure related grid has proper layout
+        const relatedGrid = document.querySelector('.related-grid');
+        if (relatedGrid) {
+            relatedGrid.style.clear = 'both';
+        }
     }
 });
 

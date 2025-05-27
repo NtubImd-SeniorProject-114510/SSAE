@@ -12,51 +12,54 @@
 
 {% block content %}
 <body>
-    <!-- 菜單按鈕 -->
-    <div class="menu-btn-container" id="menuBtnContainer">
-        <button class="hamburger" id="menuBtn">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-    </div>
-
-    <!-- 側邊欄 -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3>北商 Rule 是說</h3>
+    <!-- 將所有內容包裝在一個大的div中，左右padding 80px -->
+    <div class="chat-wrapper">
+        <!-- 菜單按鈕 -->
+        <div class="menu-btn-container" id="menuBtnContainer">
+            <button class="hamburger" id="menuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
-        <button class="new-chat-btn" id="newChatBtn">
-            <i class="fa-solid fa-plus"></i> <span>新增對話</span>
-        </button>
-
-        <div class="sidebar-record">
-            <div>對話歷史</div>
-        </div>
-
-        <div class="chat-history" id="chatHistory">
-            <!-- 對話歷史由 JavaScript 動態載入 -->
-        </div>
-    </div>
-
-    <!-- 主內容區域 -->
-    <div class="main-content" id="mainContent">
-        <div class="chat-header">
-            <h2 id="currentChatTitle">對話</h2>
-        </div>
-        <div class="chat-container" id="chatContainer">
-            <div class="no-messages" id="noMessages">
-                開始一個新對話或從側邊欄選擇歷史對話
+        
+        <!-- 主內容區域 -->
+        <div class="main-content" id="mainContent">
+            <!-- 標題列 -->
+            <div class="unified-header">
+                <!-- 主內容標題 -->
+                <div class="chat-header-part">
+                    <h2 id="currentChatTitle">對話</h2>
+                </div>
             </div>
-            <!-- 對話內容由 JavaScript 動態載入 -->
-        </div>
-        <div class="input-container">
-            <textarea class="message-input" id="messageInput" placeholder="輸入訊息..." rows="1"></textarea>
-            <button class="send-btn" id="sendBtn">➤</button>
+            
+            <!-- 側邊欄 -->
+            <div class="sidebar" id="sidebar">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <i class="fa-solid fa-plus"></i> <span>新增對話</span>
+                </button>
+
+                <div class="sidebar-record">
+                    <div>對話歷史</div>
+                </div>
+
+                <div class="chat-history" id="chatHistory">
+                    <!-- 對話歷史由 JavaScript 動態載入 -->
+                </div>
+            </div>
+            <div class="chat-container" id="chatContainer">
+                <div class="no-messages" id="noMessages">
+                    開始一個新對話或從側邊欄選擇歷史對話
+                </div>
+                <!-- 對話內容由 JavaScript 動態載入 -->
+            </div>
+            <div class="input-container">
+                <textarea class="message-input" id="messageInput" placeholder="輸入訊息..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn">➤</button>
+            </div>
         </div>
     </div>
-
 </body>
 {% endblock %}
 
