@@ -2,7 +2,6 @@
 <div id="loginModal" class="login-modal">
     <div class="login-container">
         <span class="close-modal">&times;</span>
-        <div class="frame"></div>
         <div class="login-sidebar">
             <h2>登入</h2>
             <div class="sidebar-text">
@@ -12,10 +11,6 @@
         <div class="login-form">
             <form id="loginForm">
                 <div class="login-buttons">
-                    <form action="{% url 'logout' %}" method="post" class="logout-form">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-logout">登出</button>
-                    </form>
                     <a class="other-login-btn" href="{% url 'social:begin' 'google-oauth2' %}?prompt=select_account">
                         <img class="login-img" src="/static/image/login.png" alt="Google 登入">
                     </a>

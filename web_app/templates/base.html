@@ -7,6 +7,7 @@
     {% load static %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pop_window/login_pop.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     {% block css %}{% endblock %}
     {% block head_js %}{% endblock %}
@@ -14,19 +15,29 @@
 
 <body>
     {% block header %}
-    <nav class="navbar navbar-initial" id="navbar">
-        <a href="/index/" class="logo">
-            <img class="Logo"  src="{% static 'image/logo.png' %}">
-        </a>
-        <ul class="nav-links">
-            <li><a href="/chat/">校規查詢</a></li>
-            <li><a href="/comment/">課程評論區</a></li>
-            <li><a href="/join/">活動召集</a></li>
-            <li><a href="/book/">二手書專區</a></li>
-        </ul>
-        <a href="/login/" class="user-circle">
-            <i class="fa-solid fa-user"></i>
-        </a>
+    <nav class="navbar navbar-initial" id="navbar">         
+      <a href="/index/" class="logo">
+          <img class="Logo"  src="{% static 'image/logo.png' %}">
+      </a>         
+      <ul class="nav-links">             
+          <li><a href="/chat/">校規查詢</a></li>             
+          <li><a href="/comment/">課程評論區</a></li>             
+          <li><a href="/join/">活動召集</a></li>             
+          <li><a href="/book/">二手書專區</a></li>         
+      </ul>         
+      <div class="user-menu">
+          <div class="user-circle" id="userMenuButton">             
+              <i class="fa-solid fa-user"></i>         
+          </div>
+          <div class="user-dropdown" id="userDropdown">
+              <a href="#" class="dropdown-item" id="loginButton">登入</a>
+              <a href="/personal/" class="dropdown-item" id="personalButton">個人中心</a>
+              <form action="{% url 'logout' %}" method="post" id="logoutForm" style="cursor: pointer;">
+                  {% csrf_token %}
+                  <a href="/welcome/" type="button" class="dropdown-item" id="logoutButton">登出</a>
+              </form>
+          </div>
+      </div>
     </nav>
     {% endblock %}
 
@@ -77,8 +88,11 @@
             </div>
           </footer>
     {% endblock %}
+
+    {% include 'pop_window/login_pop.html' %}
     
     <!-- JavaScript 文件 -->
+    <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
     <script src="{% static 'js/navbar.js' %}"></script>
     <script src="{% static 'js/footer.js' %}"></script>
     {% block body_js %}{% endblock %}
