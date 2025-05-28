@@ -1,142 +1,175 @@
 {% extends 'base.html' %}
-{% block title %}二手書{% endblock %}
-{% block lang %}zh{% endblock %}
 {% load static %}
+
+{% block title %}北商rule事說 - 二手書專區{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/book.css' %}">
 {% endblock %}
 
 {% block content %}
-<body>
-    <header class="header">
-        <div class="header-container">
-            <div class="logo-section">
-                <a href="/index/" class="back-btn">
-                </a>
-            </div>
-            
-            <div class="title-container">
-                <h1 class="site-title">二手書專區</h1>
-            </div>
-        </div>
+<div class="page-container">
+    <!-- 背景文字 -->
+    <div class="bg-text">SECOND HAND BOOK SECOND HAND BOOK</div>
+
+    <!-- 標題 -->
+    <header class="page-header">
+        <h1 class="page-title">二手書專區</h1>
+        <p class="page-subtitle">（尋找教科書・節省花費）</p>
     </header>
 
-    <div>
-        <div class="filter-card">
-            <div class="filter-options">
-                <div class="filter-group">
-                    <label class="filter-label">系所</label>
-                    <select class="filter-select">
-                        <option>全部系所</option>
-                        <option>資訊工程學系</option>
-                        <option>電機工程學系</option>
-                        <option>企業管理學系</option>
-                        <option>外國語文學系</option>
-                        <option>經濟學系</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">年級</label>
-                    <select class="filter-select">
-                        <option>全部年級</option>
-                        <option>大一</option>
-                        <option>大二</option>
-                        <option>大三</option>
-                        <option>大四</option>
-                        <option>研究所</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">類型</label>
-                    <select class="filter-select">
-                        <option>全部類型</option>
-                        <option>教科書</option>
-                        <option>參考書</option>
-                        <option>課外讀物</option>
-                        <option>考試用書</option>
-                        <option>小說文學</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">價格</label>
-                    <select class="filter-select">
-                        <option>全部價格</option>
-                        <option>$100以下</option>
-                        <option>$100-$300</option>
-                        <option>$300-$500</option>
-                        <option>$500以上</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">關鍵字搜尋</label>
-                    <input type="text" class="filter-input" placeholder="輸入書名、作者...">
-                </div>
-            </div>
+    <!-- 頂部搜尋與過濾區 -->
+    <div class="filter-section">
+        <select class="filter-item">
+            <option>全部系所</option>
+            <option>資訊工程學系</option>
+            <option>電機工程學系</option>
+            <option>企業管理學系</option>
+            <option>外國語文學系</option>
+            <option>經濟學系</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部年級</option>
+            <option>大一</option>
+            <option>大二</option>
+            <option>大三</option>
+            <option>大四</option>
+            <option>研究所</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部狀態</option>
+            <option>全新</option>
+            <option>九成新</option>
+            <option>八成新</option>
+            <option>七成新</option>
+            <option>五成新以下</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部價格</option>
+            <option>$100以下</option>
+            <option>$100-$300</option>
+            <option>$300-$500</option>
+            <option>$500-$800</option>
+            <option>$800以上</option>
+        </select>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="搜尋書名或關鍵字...">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
         </div>
-        
     </div>
-    
-    <main class="container">
-        
+
+    <section class="books-container">
         <div class="books-grid">
             <!-- 書籍卡片 1 -->
             <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">Python 程式設計：AI與資料科學應用</div>
                 <div class="book-image">
-                    <!-- 支持兩種方式：漸變色背景或圖片 -->
-                    <img src="/api/placeholder/400/320" alt="Python 程式設計" class="book-cover">
+                    <img src="{% static 'image/book_test.jpg' %}" alt="Python 程式設計" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
                 </div>
-                <h3 class="book-title">Python 程式設計：AI與資料科學應用</h3>
-                <p class="book-description">完整介紹Python在人工智能與資料科學領域的應用，適合初學者</p>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">資訊工程學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$350</div>
+                </div>
             </a>
             
             <!-- 書籍卡片 2 -->
             <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">我沒事</div>
                 <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="我沒事" class="book-cover">
+                    <img src="{% static 'image/book_literature.jpg' %}" alt="我沒事" class="book-cover">
+                    <div class="book-tag literature">文學</div>
                 </div>
-                <h3 class="book-title">我沒事</h3>
-                <p class="book-description">青春小說，講述大學生活中的友情與成長</p>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">外國語文學系</span>
+                        <span class="book-grade">大一</span>
+                        <span class="book-condition">八成新</span>
+                    </div>
+                    <div class="book-price">$180</div>
+                </div>
             </a>
             
             <!-- 書籍卡片 3 -->
             <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">資料科學與機器學習實務</div>
                 <div class="book-image">
                     <img src="/api/placeholder/400/320" alt="資料科學與機器學習實務" class="book-cover">
+                    <div class="book-tag reference">參考書</div>
                 </div>
-                <h3 class="book-title">資料科學與機器學習實務</h3>
-                <p class="book-description">從理論到實踐的機器學習指南，包含多個實際案例</p>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">資訊工程學系</span>
+                        <span class="book-grade">大三</span>
+                        <span class="book-condition">全新</span>
+                    </div>
+                    <div class="book-price">$450</div>
+                </div>
             </a>
             
             <!-- 書籍卡片 4 -->
             <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">微積分與工程數學</div>
                 <div class="book-image">
                     <img src="/api/placeholder/400/320" alt="微積分與工程數學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
                 </div>
-                <h3 class="book-title">微積分與工程數學</h3>
-                <p class="book-description">工程與科學相關專業必備的數學基礎教材</p>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">電機工程學系</span>
+                        <span class="book-grade">大一</span>
+                        <span class="book-condition">七成新</span>
+                    </div>
+                    <div class="book-price">$280</div>
+                </div>
             </a>
             
             <!-- 書籍卡片 5 -->
             <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">行銷管理學</div>
                 <div class="book-image">
                     <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
                 </div>
-                <h3 class="book-title">行銷管理學</h3>
-                <p class="book-description">現代行銷管理理論與實踐的全面介紹</p>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">企業管理學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$320</div>
+                </div>
             </a>
             
             <!-- 書籍卡片 6 -->
             <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">經濟學原理</div>
                 <div class="book-image">
                     <img src="/api/placeholder/400/320" alt="經濟學原理" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
                 </div>
-                <h3 class="book-title">經濟學原理</h3>
-                <p class="book-description">深入淺出地介紹經濟學基本原理與應用</p>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">經濟學系</span>
+                        <span class="book-grade">大一</span>
+                        <span class="book-condition">八成新</span>
+                    </div>
+                    <div class="book-price">$250</div>
+                </div>
             </a>
         </div>
     </main>
@@ -186,8 +219,9 @@
             
             <div class="upload-form-fields">
                 <div class="form-group">
-                    <label for="bookTitle">書名</label>
+                    <label for="bookTitle">書名 <span class="required">*</span></label>
                     <input type="text" id="bookTitle" placeholder="請輸入書名" required>
+                    <div class="error-message" id="bookTitleError" style="display: none; color: red; font-size: 12px;">請輸入書名</div>
                 </div>
                 
                 <div class="form-group">
@@ -238,8 +272,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="price">價格 (NT$)</label>
+                    <label for="price">價格 (NT$) <span class="required">*</span></label>
                     <input type="number" id="price" min="0" placeholder="請輸入價格" required>
+                    <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
                 </div>
                 
                 <div class="form-group">
@@ -255,17 +290,18 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>交易方式</label>
+                    <label>交易方式 <span class="required">*</span></label>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
-                            <input type="checkbox" id="faceToFace" name="transactionMethod" value="面交">
+                            <input type="checkbox" id="faceToFace" name="transactionMethod" value="面交" class="required-checkbox">
                             <label for="faceToFace">面交</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="shipping" name="transactionMethod" value="郵寄">
+                            <input type="checkbox" id="shipping" name="transactionMethod" value="郵寄" class="required-checkbox">
                             <label for="shipping">郵寄</label>
                         </div>
                     </div>
+                    <div class="error-message" id="transactionMethodError" style="display: none; color: red; font-size: 12px;">請選擇至少一種交易方式</div>
                 </div>
                 
                 <div class="form-group">
@@ -273,11 +309,36 @@
                     <textarea id="bookDescription" rows="4" placeholder="請輸入書籍描述，例如：使用情況、有無筆記、有無劃線等"></textarea>
                 </div>
                 
-                <button type="button" class="submit-btn" id="submitBtn">上傳書籍</button>
+                <div class="button-group">
+                    <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+                    <button type="button" class="submit-btn" id="submitBtn">上傳</button>
+                </div>
+                
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <div class="deco-line"></div>
+</div>
+
+<!-- 載入上傳二手書彈跳視窗 -->
+<div class="upload-form" id="uploadForm">
+    <div class="upload-container">
+        <div class="form-header">
+            <h2>上傳二手書</h2>
+            <button type="button" class="close-btn" id="closeFormBtn">×</button>
+        </div>
+        <div class="upload-form-fields">
+            <!-- 上傳表單內容 -->
+            <div class="button-group">
+                <button type="button" class="cancel-btn" id="cancelPopupBtn">取消</button>
+                <button type="button" class="submit-btn" id="submitPopupBtn">上傳書籍</button>
             </div>
         </div>
     </div>
-</body>
+</div>
 {% endblock %}
 
 {% block body_js %}

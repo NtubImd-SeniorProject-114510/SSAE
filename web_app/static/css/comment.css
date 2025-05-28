@@ -458,7 +458,86 @@ body {
 }
 
 
-/* Fixed Add Comment Button */
+/* 右下角浮動按鈕樣式 */
+.floating-action-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+}
+
+/* 圓形旋轉文字樣式 */
+.circular-logo {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.circular-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    animation: rotate 20s linear infinite;
+    transform-origin: center center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.circular-text svg {
+    width: 100%;
+    height: 100%;
+}
+
+.circular-text text {
+    font-size: 8px;
+    fill: var(--primary-color);
+    letter-spacing: 1px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+/* 中心上傳按鈕樣式 */
+.upload-btn-center {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background-color: #9e8c9d;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+    z-index: 100;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.upload-btn-center:hover {
+    background-color: #8a7889;
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35);
+}
+
+/* Fixed Add Comment Button (Legacy) */
 .fixed-add-comment-container {
     position: fixed;
     bottom: 30px;
