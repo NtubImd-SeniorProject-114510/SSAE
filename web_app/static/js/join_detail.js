@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 回覆功能
     initializeReplyButtons();
     
+    // 新增留言功能
+    initializeCommentForm();
+    
     // Initialize star ratings with Font Awesome icons
     function initializeRatings() {
         document.querySelectorAll('.stars').forEach(starsContainer => {
@@ -97,6 +100,88 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Comment form functionality
+    function initializeCommentForm() {
+        const submitButton = document.getElementById('submitComment');
+        const commentTextarea = document.getElementById('newCommentText');
+        const commentsSection = document.querySelector('.comments-section');
+        const commentCount = document.querySelector('.comment-count');
+        
+        if (submitButton && commentTextarea && commentsSection) {
+            submitButton.addEventListener('click', function() {
+                const commentText = commentTextarea.value.trim();
+                if (commentText) {
+                    // Create a new comment
+                    const newComment = createCommentElement(commentText);
+                    
+                    // Add the new comment to the comments section
+                    commentsSection.insertBefore(newComment, commentsSection.firstChild);
+                    
+                    // Clear the textarea
+                    commentTextarea.value = '';
+                    
+                    // Update comment count
+                    if (commentCount) {
+                        const currentCount = parseInt(commentCount.textContent.match(/\d+/)[0]);
+                        commentCount.textContent = `(${currentCount + 1}則評論)`;
+                    }
+                    
+                    // Initialize like button for the new comment
+                    initializeLikeButtons();
+                    
+                    // Initialize reply button for the new comment
+                    initializeReplyButtons();
+                }
+            });
+        }
+    }
+    
+    function createCommentElement(commentText) {
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getFullYear()}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getDate().toString().padStart(2, '0')}`;
+        
+        // Create the comment article element
+        const article = document.createElement('article');
+        article.className = 'comment-card';
+        
+        // Create the comment HTML structure
+        article.innerHTML = `
+            <div class="comment-header">
+                <div class="user-avatar">
+                    <img src="/static/images/default-avatar.png" alt="使用者頭像">
+                </div>
+                <div class="user-info">
+                    <span class="user-name">我</span>
+                    <div class="comment-meta">
+                        <span class="comment-date">${formattedDate}</span>
+                    </div>
+                </div>
+                <button class="like-btn small">
+                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                    <span class="like-count">0</span>
+                </button>
+            </div>
+            <div class="comment-content">
+                <p>${commentText}</p>
+            </div>
+            <div class="comment-actions">
+                <button class="reply-btn">回覆</button>
+            </div>
+            <div class="reply-form" style="display: none;">
+                <div class="form-group">
+                    <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="cancel-reply-btn">取消</button>
+                    <button class="submit-reply-btn">發送</button>
+                </div>
+            </div>
+            <div class="replies-container"></div>
+        `;
+        
+        return article;
+    }
+    
     // Reply functionality
     function initializeReplyButtons() {
         // Handle main reply buttons

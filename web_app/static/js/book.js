@@ -1,6 +1,27 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 確保SVG路徑和上傳按鈕中心點對齊
+    // 確俞SVG路徑和上傳按鈕中心點對齊
     alignSvgPathWithUploadButton();
+    
+    // 背景文字隨滾動移動
+    const bgText = document.querySelector('.bg-text');
+    if (bgText) {
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.scrollY;
+            const moveX = scrollPosition * 0.3; // 控制移動速度
+            bgText.style.transform = `translateX(-${moveX}px)`;
+        });
+    }
+    
+    // 鎖定背景滾動功能
+    function lockBodyScroll() {
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100%';
+    }
+    
+    function unlockBodyScroll() {
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+    }
     
     // 中心上傳按鈕點擊事件
     const centerUploadBtn = document.getElementById('centerUploadBtn');
@@ -9,6 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploadForm = document.getElementById('uploadForm');
             if (uploadForm) {
                 uploadForm.style.display = 'flex';
+                // 鎖定背景滾動
+                lockBodyScroll();
                 // 初始化表單驗證
                 validateRequiredFields();
             }
@@ -71,6 +94,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 關閉上傳表單
     closeFormBtn.addEventListener('click', function() {
         uploadForm.style.display = 'none';
+        // 解鎖背景滾動
+        unlockBodyScroll();
     });
     
     // 點擊預覽區域觸發文件選擇

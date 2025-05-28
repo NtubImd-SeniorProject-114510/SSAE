@@ -12,6 +12,8 @@ body {
     position: relative;
     margin-top: 80px;
     transition: padding-left 0.3s ease;
+    overflow: hidden;
+
 }
 
 /* 包裝所有內容的容器 */
@@ -21,27 +23,49 @@ body {
     padding: 0 80px;
     position: relative;
     display: flex;
+    overflow: hidden;
 }
 
 /* 側邊欄 */
 .sidebar {
-    width: 280px;
+    width: 0;
     background-color: #6F557D;
     color: white;
     display: flex;
     flex-direction: column;
     height: calc(100vh - 146px); 
-    overflow-y: auto; 
     z-index: 100;
     position: fixed; 
     left: 80px; 
     top: 146px; 
-    border-radius: 0 0 0 10px; 
+    transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+    overflow: hidden;
+    box-shadow: none;
 }
 
-.sidebar.collapsed {
-    transform: translateX(-280px);
+body:not(.sidebar-collapsed) .sidebar {
+    width: 280px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+
+body.sidebar-collapsed .sidebar .chat-history,
+body.sidebar-collapsed .sidebar .sidebar-record,
+body.sidebar-collapsed .sidebar .new-chat-btn {
+    opacity: 0;
+    transition: opacity 0.5s;
     visibility: hidden;
+    width: 0;
+    overflow: hidden;
+}
+
+body:not(.sidebar-collapsed) .sidebar .chat-history,
+body:not(.sidebar-collapsed) .sidebar .sidebar-record,
+body:not(.sidebar-collapsed) .sidebar .new-chat-btn {
+    opacity: 1;
+    transition: opacity 0.5s 0.2s;
+    width: auto;
+    visibility: visible;
 }
 
 /* 統一標題列 */
@@ -81,13 +105,14 @@ body {
     gap: 8px;
     font-weight: bold;
     transition: all 0.3s ease;
-    z-index: 102; /* 確保按鈕可見 */
+    z-index: 102; 
     position: relative;
     overflow: hidden;
 }
 
 .new-chat-btn:hover {
-    background-color: #2980b9;
+    background-color: #f5e39e;
+    color: #352c3a;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
@@ -137,7 +162,7 @@ body {
 
 .chat-item.active {
     background-color: #422552;
-    border-left: 4px solid #2ecc71;
+    border-left: 4px solid #f8de77;
 }
 
 .chat-title {
@@ -342,7 +367,6 @@ body:not(.sidebar-collapsed) .main-content {
     bottom: 80px; 
     right: 80px; 
     overflow-y: auto; 
-    border-radius: 0 0 10px 0;
     background-color: white;
 }
 
@@ -407,8 +431,22 @@ body.sidebar-collapsed .input-container {
     color: #2c3e50;
 }
 
-.upload-zip-container{
-    margin-right: 25px;
+
+.upload-zip-container .upload-btn {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6F557D;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.upload-zip-container .upload-btn:hover {
+    color: #e7c21b;
+    transform: translateY(-2px);
 }
 
 .chat-container {
@@ -428,7 +466,6 @@ body.sidebar-collapsed .input-container {
 
 .user-container {
     justify-content: flex-end;
-    margin-right: 13px;
 }
 
 .bot-container {
@@ -448,7 +485,7 @@ body.sidebar-collapsed .input-container {
 }
 
 .user-avatar {
-    background-color: #3498db;
+    background-color: #a0abbf;
 }
 
 .bot-avatar {
