@@ -12,9 +12,7 @@
 
 {% block content %}
     <body>
-        
 
-        <!-- 固定在下方的報名按紐 -->
         <button class="fixed-cta">立即報名</button>
         
         <div class="container">    
@@ -154,18 +152,17 @@
             </div>
             
             <div class="section">
-                <!-- 評論區塊 -->
+                <h2 class="section-title">活動討論區 <span class="comment-count">(2則評論)</span></h2>
                 <div class="comments-section">
-                <h2 class="section-title">活動討論區 <span class="comment-count">(24則評論)</span></h2>
                 
                 <!-- 評論 1 -->
                 <article class="comment-card">
                     <div class="comment-header">
                         <div class="user-avatar">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                            <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
                         </div>
                         <div class="user-info">
-                            <span class="user-name">匿名</span>
+                            <span class="user-name">阿華</span>
                             <div class="comment-meta">
                                 <div class="stars" data-rating="4.5">
                                     <i class="fa-regular fa-star"></i>
@@ -183,7 +180,7 @@
                         </button>
                     </div>
                     <div class="comment-content">
-                        <p>上次參加了這位舉辦的活動，真的超級好玩，</p>
+                        <p>請問可以帶朋友一起參加嗎？我有一位朋友也很想來，但他不是北商的學生。</p>
                     </div>
                     <div class="comment-actions">
                         <button class="reply-btn">回覆</button>
@@ -204,14 +201,14 @@
                     <div class="replies-container">
                         <div class="reply">
                             <div class="user-avatar small">
-                                <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                                <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
                             </div>
                             <div class="reply-content">
                                 <div class="reply-header">
-                                    <span class="user-name">助教小幫手</span>
+                                    <span class="user-name">烤肉達人</span>
                                     <span class="reply-date">2024/04/11</span>
                                 </div>
-                                <p>謝謝您的回饋！老師確實很用心準備教材，有任何問題也歡迎隨時在課堂上發問喔！</p>
+                                <p>可以的！這次活動其實不限北商學生，只要是你的朋友都歡迎參加，記得幫他報名和繳費就行了。</p>
                                 <div class="reply-actions">
                                     <button class="reply-to-reply">回覆</button>
                                 </div>
@@ -219,6 +216,15 @@
                         </div>
                     </div>
                 </article>
+                </div>
+                
+                <!-- 新增留言表單 -->
+                <div class="add-comment-form">
+                    <h3>發表留言</h3>
+                    <div class="form-group">
+                        <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
+                    </div>
+                    <button id="submitComment" class="submit-comment-btn">發表留言</button>
                 </div>
             </div>
 

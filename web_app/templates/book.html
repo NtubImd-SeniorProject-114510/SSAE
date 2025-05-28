@@ -15,16 +15,14 @@
 
 {% block content %}
 <div class="page-container">
-    <!-- 背景文字 -->
+
     <div class="bg-text">SECOND HAND BOOK SECOND HAND BOOK</div>
 
-    <!-- 標題 -->
     <header class="page-header">
         <h1 class="page-title">二手書專區</h1>
         <p class="page-subtitle">（尋找教科書・節省花費）</p>
     </header>
 
-    <!-- 頂部搜尋與過濾區 -->
     <div class="filter-section">
         <select class="filter-item">
             <option>全部系所</option>
@@ -37,6 +35,10 @@
         
         <select class="filter-item">
             <option>全部年級</option>
+            <option>專一</option>
+            <option>專二</option>
+            <option>專三</option>
+            <option>專四</option>
             <option>大一</option>
             <option>大二</option>
             <option>大三</option>
@@ -72,9 +74,9 @@
         <div class="books-grid">
             <!-- 書籍卡片 1 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">Python 程式設計：AI與資料科學應用</div>
+                <div class="book-header">Python範例學習書</div>
                 <div class="book-image">
-                    <img src="{% static 'image/book_test.jpg' %}" alt="Python 程式設計" class="book-cover">
+                    <img src="{% static 'image/test/b1.jpg' %}" alt="Python範例學習書" class="book-cover">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
@@ -83,7 +85,7 @@
                         <span class="book-grade">大二</span>
                         <span class="book-condition">九成新</span>
                     </div>
-                    <div class="book-price">$350</div>
+                    <div class="book-price">$100</div>
                 </div>
             </a>
             
@@ -91,7 +93,7 @@
             <a href="{% url 'book_detail' %}" class="book-card">
                 <div class="book-header">我沒事</div>
                 <div class="book-image">
-                    <img src="{% static 'image/book_literature.jpg' %}" alt="我沒事" class="book-cover">
+                    <img src="{% static 'image/test/b2.jpg' %}" alt="我沒事" class="book-cover">
                     <div class="book-tag literature">文學</div>
                 </div>
                 <div class="book-info">
@@ -106,9 +108,9 @@
             
             <!-- 書籍卡片 3 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">資料科學與機器學習實務</div>
+                <div class="book-header">作業系統精論</div>
                 <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="資料科學與機器學習實務" class="book-cover">
+                    <img src="{% static 'image/test/b3.webp' %}" alt="作業系統精論" class="book-cover">
                     <div class="book-tag reference">參考書</div>
                 </div>
                 <div class="book-info">
@@ -117,7 +119,7 @@
                         <span class="book-grade">大三</span>
                         <span class="book-condition">全新</span>
                     </div>
-                    <div class="book-price">$450</div>
+                    <div class="book-price">$700</div>
                 </div>
             </a>
             
@@ -201,107 +203,114 @@
                 <button type="button" class="close-btn" id="closeFormBtn">×</button>
             </div>
             
-            <!-- CSRF Token -->
-            {% csrf_token %}
-            
-            <div class="image-upload-section">
-                <div class="image-upload-area">
-                    <input type="file" id="imageUpload" accept="image/*">
-                    <div class="preview-container">
-                        <div class="preview-placeholder" id="previewPlaceholder">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>點擊或拖曳上傳圖片</p>
+            <div class="scrollable-content">
+                <!-- CSRF Token -->
+                {% csrf_token %}
+                
+                <div class="image-upload-section">
+                    <div class="image-upload-area">
+                        <input type="file" id="imageUpload" accept="image/*">
+                        <div class="preview-container">
+                            <div class="preview-placeholder" id="previewPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>點擊或拖曳上傳圖片</p>
+                            </div>
+                            <img id="previewImage" class="preview-image" style="display: none;">
                         </div>
-                        <img id="previewImage" class="preview-image" style="display: none;">
                     </div>
                 </div>
-            </div>
-            
-            <div class="upload-form-fields">
-                <div class="form-group">
+                
+                <div class="upload-form-fields">
+                    <div class="form-group">
                     <label for="bookTitle">書名 <span class="required">*</span></label>
                     <input type="text" id="bookTitle" placeholder="請輸入書名" required>
                     <div class="error-message" id="bookTitleError" style="display: none; color: red; font-size: 12px;">請輸入書名</div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="department">系所</label>
-                    <select id="department" required>
-                        <option value="" disabled selected>請選擇系所</option>
-                        <option value="會計系">會計系</option>
-                        <option value="財務金融系">財務金融系</option>
-                        <option value="國際商務系">國際商務系</option>
-                        <option value="企業管理系">企業管理系</option>
-                        <option value="資訊管理系">資訊管理系</option>
-                        <option value="應用外語系">應用外語系</option>
-                        <option value="財政稅務系">財政稅務系</option>
-                        <option value="國際貿易系">國際貿易系</option>
-                        <option value="商業設計系">商業設計系</option>
-                        <option value="資訊科技系">資訊科技系</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="grade">年級</label>
-                    <select id="grade" required>
-                        <option value="" disabled selected>請選擇年級</option>
-                        <option value="1">大一</option>
-                        <option value="2">大二</option>
-                        <option value="3">大三</option>
-                        <option value="4">大四</option>
-                        <option value="5">研究所</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="bookType">書籍類型</label>
-                    <select id="bookType" required>
-                        <option value="" disabled selected>請選擇書籍類型</option>
-                        <option value="會計學">會計學</option>
-                        <option value="經濟學">經濟學</option>
-                        <option value="統計學">統計學</option>
-                        <option value="行銷學">行銷學</option>
-                        <option value="管理學">管理學</option>
-                        <option value="財務管理">財務管理</option>
-                        <option value="資訊管理">資訊管理</option>
-                        <option value="程式設計">程式設計</option>
-                        <option value="英文">英文</option>
-                        <option value="日文">日文</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="price">價格 (NT$) <span class="required">*</span></label>
-                    <input type="number" id="price" min="0" placeholder="請輸入價格" required>
-                    <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="condition">書籍狀況</label>
-                    <select id="condition" required>
-                        <option value="" disabled selected>請選擇書籍狀況</option>
-                        <option value="全新">全新</option>
-                        <option value="九成新">九成新</option>
-                        <option value="八成新">八成新</option>
-                        <option value="七成新">七成新</option>
-                        <option value="六成新">六成新</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>交易方式 <span class="required">*</span></label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="faceToFace" name="transactionMethod" value="面交" class="required-checkbox">
-                            <label for="faceToFace">面交</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="shipping" name="transactionMethod" value="郵寄" class="required-checkbox">
-                            <label for="shipping">郵寄</label>
-                        </div>
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="department">系所</label>
+                        <select id="department" required>
+                            <option value="" disabled selected>請選擇系所</option>
+                            <option value="會計系">會計系</option>
+                            <option value="財務金融系">財務金融系</option>
+                            <option value="國際商務系">國際商務系</option>
+                            <option value="企業管理系">企業管理系</option>
+                            <option value="資訊管理系">資訊管理系</option>
+                            <option value="應用外語系">應用外語系</option>
+                            <option value="財政稅務系">財政稅務系</option>
+                            <option value="國際貿易系">國際貿易系</option>
+                            <option value="商業設計系">商業設計系</option>
+                            <option value="資訊科技系">資訊科技系</option>
+                        </select>
                     </div>
-                    <div class="error-message" id="transactionMethodError" style="display: none; color: red; font-size: 12px;">請選擇至少一種交易方式</div>
+                    
+                    <div class="form-group form-group-half">
+                        <label for="grade">年級</label>
+                        <select id="grade" required>
+                            <option value="" disabled selected>請選擇年級</option>
+                            <option value="1">大一</option>
+                            <option value="2">大二</option>
+                            <option value="3">大三</option>
+                            <option value="4">大四</option>
+                            <option value="5">研究所</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="bookType">書籍類型</label>
+                        <select id="bookType" required>
+                            <option value="" disabled selected>請選擇書籍類型</option>
+                            <option value="會計學">會計學</option>
+                            <option value="經濟學">經濟學</option>
+                            <option value="統計學">統計學</option>
+                            <option value="行銷學">行銷學</option>
+                            <option value="管理學">管理學</option>
+                            <option value="財務管理">財務管理</option>
+                            <option value="資訊管理">資訊管理</option>
+                            <option value="程式設計">程式設計</option>
+                            <option value="英文">英文</option>
+                            <option value="日文">日文</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group form-group-half">
+                        <label for="condition">書籍狀況</label>
+                        <select id="condition" required>
+                            <option value="" disabled selected>請選擇書籍狀況</option>
+                            <option value="全新">全新</option>
+                            <option value="九成新">九成新</option>
+                            <option value="八成新">八成新</option>
+                            <option value="七成新">七成新</option>
+                            <option value="六成新">六成新</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="price">價格 (NT$) <span class="required">*</span></label>
+                        <input type="number" id="price" min="0" placeholder="請輸入價格" required>
+                        <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
+                    </div>
+                    
+                    <div class="form-group form-group-half">
+                        <label>交易方式 <span class="required">*</span></label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="faceToFace" name="transactionMethod" value="面交" class="required-checkbox">
+                                <label for="faceToFace">面交</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="shipping" name="transactionMethod" value="郵寄" class="required-checkbox">
+                                <label for="shipping">郵寄</label>
+                            </div>
+                        </div>
+                        <div class="error-message" id="transactionMethodError" style="display: none; color: red; font-size: 12px;">請選擇至少一種交易方式</div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -311,12 +320,12 @@
                 
                 <div class="button-group">
                     <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
-                    <button type="button" class="submit-btn" id="submitBtn">上傳</button>
+                    <button type="button" class="submit-btn" id="submitBtn">上架</button>
                 </div>
-                
                 </div>
             </div>
         </div>
+    </div>
     </section>
 
     
