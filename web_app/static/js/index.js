@@ -387,7 +387,7 @@ function initTechParticles() {
       },
       color: {
         // value: ["#D1C5D1", "#AA9DA9", "#e0d3e0", "#c8b8c8", "#d8d0d8", "#ffffff", "#f0e8f0"] // 紫色系粒子
-        value: ["#B5A9B5", "#8F7C8F", "#C2B3C2", "#A899A8", "#B9ADB9", "#ffffff"]
+        value: ["#9761DD", "#A577E6", "#BA91EC", "#C6A3F0", "#D4B7F4", "#ffffff"]
       },
       shape: {
         type: "triangle", // 使用三角形形狀
@@ -415,7 +415,7 @@ function initTechParticles() {
       line_linked: {
         enable: true,
         distance: 50, // 增加連線距離以創建更多連接
-        color: "#D1C5D1", // 紫色系連線
+        color: "#D4B7F4", // 紫色系連線
         opacity: 0.25, // 增加線條不透明度
         width: 1.5 // 調整線條粗細
       },
