@@ -1,3 +1,17 @@
+function initializeParallax() {
+    const bgText = document.querySelector('.bg-text');
+
+    function parallaxScroll() {
+        const scrollPosition = window.pageYOffset;
+        if (bgText) {
+            bgText.style.transform = `translateX(${scrollPosition * -0.9}px)`;
+        }
+    }
+
+    window.addEventListener('scroll', parallaxScroll);
+}
+
+
 // 日期相關函數
 // 全域狀態
 let calendarYear, calendarMonth;
@@ -288,4 +302,5 @@ document.querySelectorAll('.todo-list input[type="checkbox"]').forEach(checkbox 
 // 初始化頁面
 document.addEventListener('DOMContentLoaded', () => {
     initCalendarPage();
+    initializeParallax();
 });

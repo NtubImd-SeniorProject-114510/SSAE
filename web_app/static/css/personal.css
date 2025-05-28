@@ -6,47 +6,39 @@
     font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
 }
 
-/* 全局變量 */
-:root {
-  --primary-bg: #F8F6F4;
-  --card-bg: #FFFFFF;
-  --primary-purple: #AA9DA9;
-  --purple-medium: rgba(170, 157, 169, 0.8);
-  --light-purple: rgba(170, 157, 169, 0.6);
-  --very-light-purple: rgba(170, 157, 169, 0.3);
-  --accent-color1: rgba(170, 157, 169, 0.5);
-  --accent-color2: rgba(170, 157, 169, 0.4);
-  --accent-color3: rgba(170, 157, 169, 0.6);
-  --accent-color4: rgba(170, 157, 169, 0.2);
-  --text-color: #2E2B2F;
-  --border-color: #D5D0D5;
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --card-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  --border-radius: 16px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-}
-
-
 body {
-    background-color: var(--primary-bg);
-    color: var(--text-color);
+    background-color: #F8F6F4;
+    color: #2E2B2F;
     line-height: 1.6;
 }
 
+
+.bg-text {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  font-size: 18vw;
+  font-weight: 900;
+  line-height: 0.8;
+  color: #f0f0f0;
+  white-space: nowrap;
+  letter-spacing: -0.05em;
+  user-select: none;
+  z-index: -1;
+}
+
+
 /* 頭部樣式 */
 header {
-    background-color: var(--primary-purple);
-    color: white;
-    padding: var(--space-md) var(--space-lg);
-    box-shadow: var(--shadow);
+    padding: 16px 24px;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 16px;
 }
 
 .logo i {
@@ -71,24 +63,24 @@ h1, h2, h3 {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--space-lg);
+    padding: 24px;
 }
 
 .row {
     display: flex;
-    gap: var(--space-lg);
-    margin-bottom: var(--space-lg);
+    gap: 24px;
+    margin-bottom: 24px;
 }
 
 /* 卡片樣式 */
 .card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow);
-    padding: var(--space-lg);
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    padding: 24px;
     flex: 1;
     transition: transform 0.2s, box-shadow 0.2s;
-    border-top: 4px solid var(--primary-purple);
+    border-top: 4px solid #AA9DA9;
 }
 
 .card:hover {
@@ -97,30 +89,30 @@ h1, h2, h3 {
 }
 
 .course-schedule {
-    border-top-color: var(--accent-color1);
+    border-top-color: rgba(170, 157, 169, 0.5);
 }
 
 .profile-card {
-    border-top-color: var(--accent-color2);
+    border-top-color: rgba(170, 157, 169, 0.4);
 }
 
 .activities-card {
-    border-top-color: var(--accent-color3);
+    border-top-color: rgba(170, 157, 169, 0.6);
 }
 
 .calendar-card {
-    border-top-color: var(--accent-color4);
+    border-top-color: rgba(170, 157, 169, 0.2);
 }
 
 .todo-card {
-    border-top-color: var(--primary-purple);
+    border-top-color: #AA9DA9;
 }
 
 .card h2 {
-    color: var(--primary-purple);
-    margin-bottom: var(--space-md);
-    border-bottom: 2px solid var(--light-purple);
-    padding-bottom: var(--space-sm);
+    color: #9479C1;
+    margin-bottom: 16px;
+    border-bottom: 2px solid rgba(170, 157, 169, 0.6);
+    padding-bottom: 8px;
     font-size: 1.3rem;
     display: inline-block;
     position: relative;
@@ -133,18 +125,19 @@ h1, h2, h3 {
     left: 0;
     width: 40%;
     height: 2px;
-    background-color: var(--primary-purple);
+    background-color: #9479C1;
 }
+
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-md);
+    margin-bottom: 16px;
 }
 
 .view-all {
-    color: var(--primary-purple);
+    color: #9479C1;
     text-decoration: none;
     font-size: 0.9rem;
     display: flex;
@@ -158,15 +151,15 @@ h1, h2, h3 {
 
 /* 課表樣式 */
 .schedule-table th {
-    background-color: var(--primary-purple);
+    background-color: #9479C1;
     color: white;
-    padding: var(--space-sm) var(--space-md);
+    padding: 8px 16px;
     font-weight: normal;
 }
 
 .schedule-table .time {
     width: 80px;
-    background-color: var(--primary-purple);
+    background-color: #9479C1;
     color: white;
 }
 
@@ -175,16 +168,16 @@ h1, h2, h3 {
 }
 
 .class-item {
-    background-color: var(--very-light-purple);
-    color: var(--text-color);
+    background-color: rgba(170, 157, 169, 0.3);
+    color: #2E2B2F;
     border-radius: 6px;
-    padding: var(--space-sm);
+    padding: 8px;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     position: relative;
-    border-left: 4px solid var(--primary-purple);
+    border-left: 4px solid #AA9DA9;
     transition: transform 0.2s;
 }
 
@@ -195,7 +188,7 @@ h1, h2, h3 {
 .class-name {
     font-weight: bold;
     margin-bottom: 2px;
-    color: var(--primary-purple);
+    color: #9479C1;
 }
 
 .class-room {
@@ -204,23 +197,23 @@ h1, h2, h3 {
 }
 
 .schedule-table tr:nth-child(1) .class-item {
-    border-left-color: var(--accent-color1);
+    border-left-color: rgba(170, 157, 169, 0.5);
 }
 
 .schedule-table tr:nth-child(2) .class-item {
-    border-left-color: var(--accent-color2);
+    border-left-color: rgba(170, 157, 169, 0.4);
 }
 
 .schedule-table tr:nth-child(3) .class-item {
-    border-left-color: var(--accent-color3);
+    border-left-color: rgba(170, 157, 169, 0.6);
 }
 
 .schedule-table tr:nth-child(5) .class-item {
-    border-left-color: var(--accent-color4);
+    border-left-color: rgba(170, 157, 169, 0.2);
 }
 
 .schedule-table tr:nth-child(6) .class-item {
-    border-left-color: var(--primary-purple);
+    border-left-color: #9479C1;
 }
 
 .course-schedule {
@@ -237,8 +230,8 @@ h1, h2, h3 {
 }
 
 .schedule-table th, .schedule-table td {
-    border: 1px solid var(--border-color);
-    padding: var(--space-sm);
+    border: 1px solid #D5D0D5;
+    padding: 8px;
     text-align: center;
     font-size: 0.9rem;
 }
@@ -250,7 +243,7 @@ h1, h2, h3 {
 
 .profile-content {
     display: flex;
-    gap: var(--space-lg);
+    gap: 24px;
 }
 
 .profile-image img {
@@ -258,7 +251,7 @@ h1, h2, h3 {
     height: 120px;
     object-fit: cover;
     border-radius: 50%;
-    border: 3px solid var(--accent-color2);
+    border: 3px solid rgba(170, 157, 169, 0.4);
     background-color: #f0f0f0;
     transition: transform 0.3s;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -274,9 +267,9 @@ h1, h2, h3 {
 
 .profile-item {
     display: flex;
-    margin-bottom: var(--space-sm);
+    margin-bottom: 8px;
     padding: 6px 0;
-    border-bottom: 1px dashed var(--very-light-purple);
+    border-bottom: 1px dashed rgba(170, 157, 169, 0.3);
 }
 
 .profile-item:last-child {
@@ -285,7 +278,7 @@ h1, h2, h3 {
 
 .profile-item .label {
     width: 80px;
-    color: var(--primary-purple);
+    color: #AA9DA9;
     font-weight: 500;
 }
 
@@ -293,6 +286,7 @@ h1, h2, h3 {
     flex: 1;
     font-weight: 500;
 }
+
 
 /* 活動卡片樣式 */
 .activities-card {
@@ -302,17 +296,17 @@ h1, h2, h3 {
 .activities-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: 16px;
 }
 
 .activity-item {
     display: flex;
-    gap: var(--space-md);
-    padding: var(--space-md);
+    gap: 16px;
+    padding: 16px;
     border-radius: 10px;
-    background-color: var(--very-light-purple);
+    background-color: rgba(170, 157, 169, 0.3);
     transition: transform 0.2s, background-color 0.2s;
-    margin-bottom: var(--space-sm);
+    margin-bottom: 8px;
 }
 
 .activity-item:hover {
@@ -339,9 +333,8 @@ h1, h2, h3 {
 .activity-item:nth-child(1) .activity-icon,
 .activity-item:nth-child(2) .activity-icon,
 .activity-item:nth-child(3) .activity-icon {
-    background-color: var(--primary-purple);
+    background-color: #AA9DA9;
 }
-
 
 .activity-content {
     flex: 1;
@@ -350,7 +343,7 @@ h1, h2, h3 {
 .activity-title {
     font-weight: 500;
     margin-bottom: 4px;
-    color: var(--primary-purple);
+    color: #AA9DA9;
 }
 
 .activity-details {
@@ -375,14 +368,14 @@ h1, h2, h3 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-md);
+    margin-bottom: 16px;
 }
 
 .calendar-nav {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--primary-purple);
+    color: #AA9DA9;
     font-size: 1.2rem;
     width: 36px;
     height: 36px;
@@ -394,7 +387,7 @@ h1, h2, h3 {
 }
 
 .calendar-nav:hover {
-    background-color: var(--very-light-purple);
+    background-color: rgba(170, 157, 169, 0.3);
 }
 
 .calendar table {
@@ -405,8 +398,8 @@ h1, h2, h3 {
 }
 
 .calendar th, .calendar td {
-    border: 1px solid var(--border-color);
-    padding: var(--space-sm);
+    border: 1px solid #D5D0D5;
+    padding: 8px;
     text-align: center;
     height: 80px;
     width: 14.28%;
@@ -416,14 +409,14 @@ h1, h2, h3 {
 }
 
 .calendar th {
-    background-color: var(--primary-purple);
+    background-color: #9479C1;
     color: white;
     height: auto;
-    padding: var(--space-sm);
+    padding: 8px;
 }
 
 .calendar td:hover {
-    background-color: var(--very-light-purple);
+    background-color: rgba(170, 157, 169, 0.3);
 }
 
 .calendar .other-month {
@@ -444,12 +437,12 @@ h1, h2, h3 {
     right: 4px;
     width: 8px;
     height: 8px;
-    background-color: var(--accent-color1);
+    background-color: rgba(170, 157, 169, 0.5);
     border-radius: 50%;
 }
 
 .event {
-    background-color: var(--primary-purple);
+    background-color: #AA9DA9;
     color: white;
     border-radius: 4px;
     padding: 2px 4px;
@@ -480,25 +473,25 @@ h1, h2, h3 {
     border-radius: 8px;
     margin-bottom: 6px;
     transition: background-color 0.2s;
-    border-left: 3px solid var(--border-color);
+    border-left: 3px solid #D5D0D5;
 }
 
 .todo-item:hover {
-    background-color: var(--very-light-purple);
+    background-color: rgba(170, 157, 169, 0.3);
 }
 
 .todo-item.completed {
-    border-left-color: var(--accent-color4);
+    border-left-color: rgba(170, 157, 169, 0.2);
     background-color: #fdfbee;
 }
 
 .todo-item:not(.completed) {
-    border-left-color: var(--accent-color1);
+    border-left-color: rgba(170, 157, 169, 0.5);
 }
 
 .todo-item input[type="checkbox"] {
-    margin-right: var(--space-sm);
-    accent-color: var(--primary-purple);
+    margin-right: 8px;
+    accent-color: #AA9DA9;
     width: 18px;
     height: 18px;
 }
@@ -514,38 +507,39 @@ h1, h2, h3 {
     color: white;
     padding: 3px 10px;
     border-radius: 12px;
-    background-color: var(--primary-purple);
+    background-color: #AA9DA9;
 }
 
 .add-todo {
-    margin-top: var(--space-lg);
+    margin-top: 24px;
     display: flex;
-    gap: var(--space-sm);
+    gap: 8px;
 }
 
 .add-todo input {
     flex: 1;
     padding: 10px;
-    border: 1px solid var(--light-purple);
+    border: 1px solid rgba(170, 157, 169, 0.6);
     border-radius: 20px;
     transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .add-todo input:focus {
     outline: none;
-    border-color: var(--primary-purple);
-    box-shadow: 0 0 0 3px var(--very-light-purple);
+    border-color: #AA9DA9;
+    box-shadow: 0 0 0 3px rgba(170, 157, 169, 0.3);
 }
 
 .add-todo input {
     flex: 1;
-    padding: var(--space-sm);
-    border: 1px solid var(--border-color);
+    padding: 8px;
+    border: 1px solid #D5D0D5;
     border-radius: 4px;
 }
 
 /* 按鈕樣式 */
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary {
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
@@ -555,17 +549,18 @@ h1, h2, h3 {
 }
 
 .btn-primary {
-    background-color: var(--primary-purple);
+    background-color: #AA9DA9;
     color: white;
 }
 
 .btn-secondary {
-    background-color: var(--light-purple);
-    color: var(--text-color);
-    margin-top: var(--space-md);
+    background-color: rgba(170, 157, 169, 0.6);
+    color: #2E2B2F;
+    margin-top: 16px;
 }
 
-.btn-primary:hover, .btn-secondary:hover {
+.btn-primary:hover,
+.btn-secondary:hover {
     opacity: 0.9;
 }
 
@@ -575,7 +570,9 @@ h1, h2, h3 {
         flex-direction: column;
     }
 
-    .course-schedule, .calendar-card, .right-column {
+    .course-schedule,
+    .calendar-card,
+    .right-column {
         flex: auto;
     }
 
