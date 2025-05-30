@@ -202,7 +202,6 @@
                 <div class="card activities-card">
                     <div class="card-header">
                         <h2>我的活動</h2>
-                        <a href="#" class="view-all">查看全部 <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div class="activities-list">
                         <div class="activity-item">
@@ -235,6 +234,7 @@
                                 </div>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>
@@ -334,7 +334,6 @@
             <div class="card todo-card">
                 <div class="card-header">
                     <h2>代辦事項</h2>
-                    <a href="#" class="view-all">查看全部 <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="todo-content">
                     <ul class="todo-list">
@@ -364,10 +363,47 @@
                             <span class="todo-status">4/6</span>
                         </li>
                     </ul>
-                    <div class="add-todo">
-                        <input type="text" id="newTask" placeholder="請點選左方日期">
-                        <div id="selectedDateDisplay" style="font-weight:bold;color:#5A355A;margin-bottom:8px;display:none;">請先點選左側日曆日期</div>
-                        <button id="addTask" class="btn-primary">新增</button>
+                    </div>
+                </div>
+
+                
+                <!-- 詳細資訊卡片（預設隱藏） -->
+                <div class="card detail-card" style="display:none;">
+                    <div class="card-header" style="display:flex;align-items:center;">
+                        <button id="backToTodo" style="margin-right:12px; background:none; border:none; font-size:20px; cursor:pointer; color:#8a7788;">
+                            <i class="fas fa-arrow-left"></i> 返回
+                        </button>
+                    <h2 id="detailCardTitle" style="margin:0;">詳細資訊</h2>
+                    <span id="detailCardDate" style="font-size:20px;font-weight:bold;color:#8a7788;margin-left:12px;"></span>
+                </div>
+        
+                <div class="detail-content">
+                    <ul class="detail-todo-list">
+                        <!-- 這裡會由 JS 動態插入該天的事項 -->
+                    </ul>
+                    
+                    <div class="add-todo-detail">
+                        <div class="todo-input-group">
+                        <!-- 標題輸入框：單行 -->
+                        <input 
+                            type="text" 
+                            id="newDetailTaskTitle" 
+                            class="todo-title-input"
+                            placeholder="輸入待辦事項標題..."
+                            maxlength="50"
+                            autocomplete="off"
+                        >
+                        <!-- 詳細說明輸入框：多行 -->
+                        <textarea 
+                            id="newDetailTaskDescription" 
+                            class="todo-detail-input"
+                            placeholder="輸入詳細說明或備註... (選填)&#10;例如：地點、時間、重要提醒等"
+                            rows="5"
+                        ></textarea>
+                        <div class="todo-actions">
+                            <button id="clearDetailForm" class="btn-secondary-detail">清除</button>
+                            <button id="addDetailTask" class="btn-primary-detail">新增事項</button>
+                        </div>
                     </div>
                 </div>
             </div>

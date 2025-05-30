@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(({ Application }) => {
       const canvas1 = document.getElementById('canvas3d');
       const app1 = new Application(canvas1);
-      app1.load('https://prod.spline.design/aj26V7f18nBGVaU1/scene.splinecode');
+      app1.load('https://prod.spline.design/g8Q9YXB6eDm5SOmP/scene.splinecode');
     })
     .catch(error => console.error('Failed to load Spline:', error));
 });

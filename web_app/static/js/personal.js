@@ -11,6 +11,11 @@ function initializeParallax() {
     window.addEventListener('scroll', parallaxScroll);
 }
 
+window.addEventListener('DOMContentLoaded', function () {
+    initializeParallax(); // <== 確保執行初始化
+});
+
+
 // 學分進度條
 const segments = document.querySelectorAll('.progress-segment');
 const tooltip = document.getElementById('tooltip');
@@ -159,15 +164,20 @@ function setCalendarMonth(year, month) {
 }
 
 function updateTaskDatePickerMonth(year, month) {
-    document.getElementById('taskDateMonth').textContent = getMonthYearText(year, month);
+    const monthDisplay = document.getElementById('taskDateMonth');
+    if (monthDisplay) {
+        monthDisplay.textContent = getMonthYearText(year, month);
+    }
     // 設定 input[type=date] min/max
     const min = `${year}-${pad2(month)}-01`;
     const max = `${year}-${pad2(month)}-${pad2(new Date(year, month, 0).getDate())}`;
     const dateInput = document.getElementById('taskDate');
-    dateInput.setAttribute('min', min);
-    dateInput.setAttribute('max', max);
-    // 若目前日期不在範圍，重設
-    if (dateInput.value < min || dateInput.value > max) dateInput.value = '';
+    if (dateInput) {
+        dateInput.setAttribute('min', min);
+        dateInput.setAttribute('max', max);
+        // 若目前日期不在範圍，重設
+        if (dateInput.value < min || dateInput.value > max) dateInput.value = '';
+    }
 }
 
 // 初始化月份狀態
@@ -184,30 +194,39 @@ function initCalendarPage() {
     renderCalendar(calendarYear, calendarMonth);
 
     // 日曆左右切換
-    document.getElementById('prevMonth').onclick = () => {
-        if (calendarMonth === 1) {
-            calendarYear--;
-            calendarMonth = 12;
-        } else {
-            calendarMonth--;
-        }
-        setCalendarMonth(calendarYear, calendarMonth);
-        selectedDay = null;
-        updateSelectedDateDisplay();
-        bindCalendarDayClick();
-    };
-    document.getElementById('nextMonth').onclick = () => {
-        if (calendarMonth === 12) {
-            calendarYear++;
-            calendarMonth = 1;
-        } else {
-            calendarMonth++;
-        }
-        setCalendarMonth(calendarYear, calendarMonth);
-        selectedDay = null;
-        updateSelectedDateDisplay();
-        bindCalendarDayClick();
-    };
+    const prevMonthBtn = document.getElementById('prevMonth');
+    const nextMonthBtn = document.getElementById('nextMonth');
+    
+    if (prevMonthBtn) {
+        prevMonthBtn.onclick = () => {
+            if (calendarMonth === 1) {
+                calendarYear--;
+                calendarMonth = 12;
+            } else {
+                calendarMonth--;
+            }
+            setCalendarMonth(calendarYear, calendarMonth);
+            selectedDay = null;
+            updateSelectedDateDisplay();
+            bindCalendarDayClick();
+        };
+    }
+    
+    if (nextMonthBtn) {
+        nextMonthBtn.onclick = () => {
+            if (calendarMonth === 12) {
+                calendarYear++;
+                calendarMonth = 1;
+            } else {
+                calendarMonth++;
+            }
+            setCalendarMonth(calendarYear, calendarMonth);
+            selectedDay = null;
+            updateSelectedDateDisplay();
+            bindCalendarDayClick();
+        };
+    }
+    
     bindCalendarDayClick();
 }
 
@@ -222,6 +241,7 @@ function bindCalendarDayClick() {
                 // 高亮顯示
                 document.querySelectorAll('#calendarBody td').forEach(t => t.classList.remove('selected-calendar-day'));
                 td.classList.add('selected-calendar-day');
+                showDetailCard();
             };
         } else {
             td.onclick = null;
@@ -230,82 +250,175 @@ function bindCalendarDayClick() {
     });
 }
 
-function updateSelectedDateDisplay() {
-    const display = document.getElementById('selectedDateDisplay');
-    const newTaskInput = document.getElementById('newTask');
-    if (selectedDay) {
-        display.style.display = 'block';
-        display.textContent = `${calendarYear}.${calendarMonth}.${selectedDay}`;
-        if (newTaskInput) newTaskInput.placeholder = '添加新的待辦事項...';
-    } else {
-        display.style.display = 'none';
-        if (newTaskInput) newTaskInput.placeholder = '請點選左方日期';
+// 顯示詳細資訊卡片，隱藏待辦事項卡片，並載入該天事項
+function showDetailCard() {
+    const todoCard = document.querySelector('.todo-card');
+    const detailCard = document.querySelector('.detail-card');
+
+    if (todoCard) todoCard.style.display = 'none';
+    if (detailCard) detailCard.style.display = 'block';
+
+    const titleElement = document.getElementById('detailCardTitle');
+    const dateElement = document.getElementById('detailCardDate');
+
+    if (titleElement) titleElement.textContent = '詳細資訊';
+    if (dateElement) dateElement.textContent = `${calendarYear}.${calendarMonth}.${selectedDay}`;
+
+    const ul = document.querySelector('.detail-todo-list');
+    if (ul) {
+        ul.innerHTML = '';
+        const events = todoEvents.filter(ev => ev.year === calendarYear && ev.month === calendarMonth && ev.day === selectedDay);
+        if (events.length === 0) {
+            ul.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">尚無事項</li>';
+        } else {
+            events.forEach((ev, idx) => {
+            const taskId = `detail-task-${idx}`;
+
+            // 建立 li 待辦項目
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            li.innerHTML = `
+                <input type="checkbox" id="${taskId}">
+                <label for="${taskId}">${ev.title || ev.text}</label>
+                <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
+                <button class="delete-task-btn" title="刪除事項">×</button>
+            `;
+            ul.appendChild(li);
+
+            // 建立說明容器（分開 append）
+            let detailDiv = null;
+            if (ev.description) {
+                detailDiv = document.createElement('div');
+                detailDiv.className = 'todo-detail-container';
+                detailDiv.innerHTML = `
+                    <div class="todo-detail-label">詳細說明</div>
+                    <div class="todo-detail-box">${ev.description}</div>
+                `;
+                ul.appendChild(detailDiv);
+
+                // 是否預設收起（若已完成）
+                if (ev.completed) {
+                    detailDiv.classList.add('collapsed');
+                }
+
+                // 點擊 todo-item 時 toggle 展開/收起
+                li.addEventListener('click', function (e) {
+                    // 避免點到 checkbox、刪除鍵時也觸發 toggle
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+                    detailDiv.classList.toggle('collapsed');
+                });
+            }
+
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const statusSpan = li.querySelector('.todo-status');
+            const deleteBtn = li.querySelector('.delete-task-btn');
+
+            deleteBtn.addEventListener('click', function () {
+                if (confirm('確定要刪除此待辦事項嗎？')) {
+                    todoEvents = todoEvents.filter(item => item !== ev);
+                    showDetailCard();
+                    updateTodoList();
+                    renderCalendarEvents();
+                }
+            });
+
+            if (ev.completed) {
+                li.classList.add('completed');
+                checkbox.checked = true;
+                statusSpan.textContent = '已完成';
+            }
+
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    li.classList.add('completed');
+                    statusSpan.textContent = '已完成';
+                    markCalendarEventCompleted(ev.text, true);
+                    updateTaskCompletion(ev.text, true);
+
+                    // 自動收起詳細說明（如存在）
+                    if (detailDiv) {
+                        detailDiv.classList.add('collapsed');
+                    }
+
+                } else {
+                    li.classList.remove('completed');
+                    statusSpan.textContent = statusSpan.getAttribute('data-original');
+                    markCalendarEventCompleted(ev.text, false);
+                    updateTaskCompletion(ev.text, false);
+                }
+            });
+        });
+
+        }
     }
-    // 右側輸入框清空
-    document.getElementById('newTask').value = '';
-    document.getElementById('taskTime').value = '';
+
+    updateTodoList();
 }
 
 
-// 待辦事項相關函數
-document.getElementById('addTask').addEventListener('click', addNewTask);
 
-function addNewTask() {
-    const newTaskInput = document.getElementById('newTask');
-    const taskText = newTaskInput.value.trim();
 
-    if (!selectedDay) {
-        alert('請先點選左側日曆日期');
-        return;
+
+// 重新渲染主待辦事項卡片的列表
+function updateTodoList() {
+    const todoUl = document.querySelector('.todo-list');
+    if (!todoUl) return;
+    todoUl.innerHTML = '';
+    if (todoEvents.length === 0) {
+        todoUl.innerHTML = '<li class="todo-item" style="padding: 20px; text-align: center; color: #999;">尚無待辦事項</li>';
+    } else {
+        todoEvents.forEach((ev, idx) => {
+            const taskId = 'task' + (idx + 1);
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            li.innerHTML = `
+                <input type="checkbox" id="${taskId}">
+                <label for="${taskId}">${ev.text}</label>
+                <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
+                 <button class="delete-task-btn" title="刪除事項">×</button>
+            `;
+            todoUl.appendChild(li);
+
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const statusSpan = li.querySelector('.todo-status');
+            const deleteBtn = li.querySelector('.delete-task-btn');
+
+            deleteBtn.addEventListener('click', function () {
+                if (confirm('確定要刪除此待辦事項嗎？')) {
+                    // 從陣列中移除
+                    todoEvents = todoEvents.filter(item => item !== ev);
+                    updateTodoList();
+                    renderCalendarEvents();
+                }
+            });
+
+            if (ev.completed) {
+                li.classList.add('completed');
+                checkbox.checked = true;
+                statusSpan.textContent = '已完成';
+            }
+
+            checkbox.addEventListener('change', function () {
+                if (checkbox.checked) {
+                    li.classList.add('completed');
+                    statusSpan.textContent = '已完成';
+                    markCalendarEventCompleted(ev.text, true);
+                    updateTaskCompletion(ev.text, true);
+                } else {
+                    li.classList.remove('completed');
+                    statusSpan.textContent = statusSpan.getAttribute('data-original');
+                    markCalendarEventCompleted(ev.text, false);
+                    updateTaskCompletion(ev.text, false);
+                }
+                renderCalendarEvents();
+            });
+        });
     }
-    if (taskText === '') return;
+}
 
-    // 組合 due date string
-    let dueDateStr = `${calendarMonth}/${selectedDay}`;
-
-    const todoList = document.querySelector('.todo-list');
-    const taskId = 'task' + (todoList.children.length + 1);
-
-    const li = document.createElement('li');
-    li.className = 'todo-item';
-
-    li.innerHTML = `
-        <input type="checkbox" id="${taskId}">
-        <label for="${taskId}">${taskText}</label>
-        <span class="todo-status" data-original="${dueDateStr}">${dueDateStr}</span>
-    `;
-
-    todoList.appendChild(li);
-    newTaskInput.value = '';
-
-    // 加入 calendar event list
-    todoEvents.push({
-        year: calendarYear,
-        month: calendarMonth,
-        day: selectedDay,
-        text: taskText
-    });
-    renderCalendarEvents();
-
-    // 添加任務完成事件監聽
-    const checkbox = li.querySelector('input[type="checkbox"]');
-    const statusSpan = li.querySelector('.todo-status');
-    checkbox.addEventListener('change', function() {
-        if (this.checked) {
-            li.classList.add('completed');
-            statusSpan.textContent = '已完成';
-            // 行事曆該事件變灰底
-            markCalendarEventCompleted(taskText, true);
-        } else {
-            li.classList.remove('completed');
-            statusSpan.textContent = statusSpan.getAttribute('data-original') || dueDateStr;
-            markCalendarEventCompleted(taskText, false);
-        }
-    });
 
 // 標記行事曆事件完成/取消
 function markCalendarEventCompleted(eventText, completed) {
-    // 只處理當前月份所有事件
     const calendarBody = document.getElementById('calendarBody');
     if (!calendarBody) return;
     const tds = calendarBody.querySelectorAll('td');
@@ -321,30 +434,180 @@ function markCalendarEventCompleted(eventText, completed) {
         });
     });
 }
+function updateTaskCompletion(taskText, completed) {
+    for (let ev of todoEvents) {
+        if (ev.text === taskText) {
+            ev.completed = completed;
+            break;
+        }
+    }
 }
 
-// 已由 renderCalendarEvents 取代
+function updateSelectedDateDisplay() {
+    const display = document.getElementById('selectedDateDisplay');
+    const newTaskInput = document.getElementById('newTask');
+    if (selectedDay) {
+        if (display) {
+            display.style.display = 'block';
+            display.textContent = `${calendarYear}.${calendarMonth}.${selectedDay}`;
+        }
+        if (newTaskInput) newTaskInput.placeholder = '添加新的待辦事項...';
+    } else {
+        if (display) display.style.display = 'none';
+        if (newTaskInput) newTaskInput.placeholder = '請點選左方日期';
+    }
+    if (newTaskInput) newTaskInput.value = '';
+}
 
-// 任務完成狀態處理
-// 初始載入時也要支援恢復 due date
-// 這段只針對現有的 li 設定監聽
 
-document.querySelectorAll('.todo-list input[type="checkbox"]').forEach(checkbox => {
+// 待辦事項相關函數
+function addNewTask() {
+    const newTaskInput = document.getElementById('newTask');
+    if (!newTaskInput) return;
+
+    const taskText = newTaskInput.value.trim();
+    if (!selectedDay) {
+        alert('請先點選左側日曆日期');
+        return;
+    }
+    if (taskText === '') return;
+
+    let dueDateStr = `${calendarMonth}/${selectedDay}`;
+
+    todoEvents.push({
+        year: calendarYear,
+        month: calendarMonth,
+        day: selectedDay,
+        text: taskText,
+        completed: false
+    });
+
+    newTaskInput.value = '';
+    renderCalendarEvents();
+    updateTodoList();
+
+
+    // 添加任務完成事件監聽
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    const statusSpan = li.querySelector('.todo-status');
     checkbox.addEventListener('change', function() {
-        const listItem = this.closest('.todo-item');
-        const statusSpan = listItem.querySelector('.todo-status');
         if (this.checked) {
-            listItem.classList.add('completed');
-            if (statusSpan) statusSpan.textContent = '已完成';
+            li.classList.add('completed');
+            statusSpan.textContent = '已完成';
+            updateTaskCompletion(ev.text, true);
+            // 行事曆該事件變灰底
+            markCalendarEventCompleted(taskText, true);
         } else {
-            listItem.classList.remove('completed');
-            if (statusSpan) statusSpan.textContent = statusSpan.getAttribute('data-original') || '今天';
+            li.classList.remove('completed');
+            statusSpan.textContent = statusSpan.getAttribute('data-original') || dueDateStr;
+            updateTaskCompletion(ev.text, false);
+            markCalendarEventCompleted(taskText, false);
         }
     });
+}
+
+// 新增詳細資訊卡片的待辦事項
+// 確保 DOMContentLoaded 後再綁定事件
+window.addEventListener('DOMContentLoaded', function () {
+    const addDetailBtn = document.getElementById('addDetailTask');
+    if (addDetailBtn) {
+        addDetailBtn.addEventListener('click', function () {
+            const titleInput = document.getElementById('newDetailTaskTitle');
+            const descriptionInput = document.getElementById('newDetailTaskDescription');
+
+            if (!titleInput) {
+                console.error('找不到標題輸入框');
+                return;
+            }
+
+            const title = titleInput.value.trim();
+            const description = descriptionInput ? descriptionInput.value.trim() : '';
+
+            if (!selectedDay) {
+                alert('請先點選左側日曆日期');
+                return;
+            }
+            if (!title) {
+                alert('請輸入待辦事項標題');
+                return;
+            }
+
+            let taskText = title;
+
+            todoEvents.push({
+                year: calendarYear,
+                month: calendarMonth,
+                day: selectedDay,
+                text: taskText,
+                title: title,
+                description: description,
+                completed: false
+            });
+
+            titleInput.value = '';
+            if (descriptionInput) descriptionInput.value = '';
+
+            showDetailCard();
+            renderCalendarEvents();
+        });
+    }
+
+    const backBtn = document.getElementById('backToTodo');
+    if (backBtn) {
+        backBtn.addEventListener('click', function () {
+            const detailCard = document.querySelector('.detail-card');
+            const todoCard = document.querySelector('.todo-card');
+            if (detailCard) detailCard.style.display = 'none';
+            if (todoCard) todoCard.style.display = 'block';
+
+            updateTodoList();
+        });
+    }
+
+    const clearBtn = document.getElementById('clearDetailForm');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            const titleInput = document.getElementById('newDetailTaskTitle');
+            const descriptionInput = document.getElementById('newDetailTaskDescription');
+            if (titleInput) titleInput.value = '';
+            if (descriptionInput) descriptionInput.value = '';
+            if (titleInput) titleInput.focus();
+        });
+    }
+
+    const titleInput = document.getElementById('newDetailTaskTitle');
+    if (titleInput) {
+        titleInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const descriptionInput = document.getElementById('newDetailTaskDescription');
+                if (descriptionInput) {
+                    descriptionInput.focus();
+                }
+            }
+        });
+    }
+
+    const descriptionInput = document.getElementById('newDetailTaskDescription');
+    if (descriptionInput) {
+        descriptionInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                const addBtn = document.getElementById('addDetailTask');
+                if (addBtn) {
+                    addBtn.click();
+                }
+            }
+        });
+    }
+
+    initCalendarPage();
 });
 
-// 初始化頁面
-document.addEventListener('DOMContentLoaded', () => {
-    initCalendarPage();
-    initializeParallax();
-});
+
+function updateTaskCompletion(taskText, completed) {
+    for (let ev of todoEvents) {
+        if (ev.text === taskText) {
+            ev.completed = completed;
+            break;
+        }
+    }
+}
