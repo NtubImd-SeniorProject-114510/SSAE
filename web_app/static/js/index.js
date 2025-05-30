@@ -1,48 +1,85 @@
-//loading
-document.addEventListener("DOMContentLoaded", () => {
-  const loadingScreen = document.getElementById("loading-screen");
-  const finalText = document.getElementById("final-text");
+// //loading
+// document.addEventListener("DOMContentLoaded", () => {
+//   const loadingScreen = document.getElementById("loading-screen");
+//   const finalText = document.getElementById("final-text");
 
-  // 開始翻轉：Welcome 顯示 0.8 秒後
-  setTimeout(() => {
-    document.querySelector('.cube').style.animation = 'flip-up 0.4s ease forwards';
-  }, 800);
+//   // 開始翻轉：Welcome 顯示 0.8 秒後
+//   setTimeout(() => {
+//     document.querySelector('.cube').style.animation = 'flip-up 0.4s ease forwards';
+//   }, 800);
 
-  // 顯示「智能校事專家」0.3 秒後縮小 + 移動
-  setTimeout(() => {
-    finalText.classList.add("shrink-and-move");
-  }, 1200); // 延遲讓動畫顯得更平滑
+//   // 顯示「智能校事專家」0.3 秒後縮小 + 移動
+//   setTimeout(() => {
+//     finalText.classList.add("shrink-and-move");
+//   }, 1200); // 延遲讓動畫顯得更平滑
 
-  // 整個 loading 淡出
-  setTimeout(() => {
-    loadingScreen.style.transition = "opacity 0.3s ease";
-    loadingScreen.style.opacity = "0";
+//   // 整個 loading 淡出
+//   setTimeout(() => {
+//     loadingScreen.style.transition = "opacity 0.3s ease";
+//     loadingScreen.style.opacity = "0";
 
-    setTimeout(() => {
-      loadingScreen.style.display = "none";
-    }, 300);
-  }, 1500); // 1.5秒後開始淡出
-});
+//     setTimeout(() => {
+//       loadingScreen.style.display = "none";
+//     }, 300);
+//   }, 1500); // 1.5秒後開始淡出
+// });
 
 
 
 
 //圓圈線條
+// document.addEventListener("DOMContentLoaded", function () {
+//   const path = document.querySelector("#circle-stroke path");
+//   const pathLength = path.getTotalLength();
+//   console.log("圓形路徑長度:", pathLength);
+
+//   // 使用 JavaScript 設定動畫的 dash 值
+//   path.style.strokeDasharray = pathLength;
+//   path.style.strokeDashoffset = pathLength;
+
+//   // 觸發動畫（加上類名或強制重繪）
+//   path.getBoundingClientRect(); // 強制重繪
+//   setTimeout(() => {
+//     path.style.animation = "drawCircle 3s ease-in-out forwards";
+//   }, 3000);
+// });
+  
 document.addEventListener("DOMContentLoaded", function () {
   const path = document.querySelector("#circle-stroke path");
-  const pathLength = path.getTotalLength();
-  console.log("圓形路徑長度:", pathLength);
+  const strokeGroup = document.querySelector(".stroke-group");
+  const strokeGroupR = document.querySelector(".stroke-group-r");
 
-  // 使用 JavaScript 設定動畫的 dash 值
-  path.style.strokeDasharray = pathLength;
-  path.style.strokeDashoffset = pathLength;
+  if (path) {
+    const pathLength = path.getTotalLength();
+    path.style.strokeDasharray = pathLength;
+    path.style.strokeDashoffset = pathLength;
 
-  // 觸發動畫（加上類名或強制重繪）
-  path.getBoundingClientRect(); // 強制重繪
-  setTimeout(() => {
+    // 播放圓圈動畫
     path.style.animation = "drawCircle 3s ease-in-out forwards";
-  }, 3000);
+
+    // 當圓圈動畫完成後才啟用觀察器
+    path.addEventListener("animationend", function () {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            if (entry.target.classList.contains("stroke-group")) {
+              entry.target.classList.add("animate-stroke-left");
+            } else if (entry.target.classList.contains("stroke-group-r")) {
+              entry.target.classList.add("animate-stroke-right");
+            }
+            observer.unobserve(entry.target); // 只觸發一次
+          }
+        });
+      }, {
+        threshold: 0.5 // 超過一半才觸發
+      });
+
+      if (strokeGroup) observer.observe(strokeGroup);
+      if (strokeGroupR) observer.observe(strokeGroupR);
+    });
+  }
 });
+
 
 
 
@@ -82,6 +119,30 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(error => console.error('Failed to load Spline:', error));
 });
+
+// 浮動標語
+document.addEventListener("DOMContentLoaded", () => {
+  const slogans = document.querySelectorAll(".floating-slogan");
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        const inner = entry.target.querySelector('.slogan-inner');
+        if (entry.isIntersecting) {
+          // 當元素進入視口時，觸發動畫
+          inner.classList.remove("animate-in"); // 移除動畫類
+          void inner.offsetWidth; // 強制重繪，這是觸發重新動畫的技巧
+          inner.classList.add("animate-in"); // 重新添加動畫類
+        }
+      });
+    },
+    { threshold: 0.5 } // 當元素的 50% 進入視口時觸發
+  );
+
+  slogans.forEach(el => observer.observe(el));  
+});
+
+
 
 // 字母
 document.addEventListener("DOMContentLoaded", () => {
@@ -246,10 +307,6 @@ document.addEventListener("DOMContentLoaded", function() {
         direction: 'alternate',
         easing: 'ease-in-out'
       });
-  
-      // 如有需要實體移動也可加入 Blob 實例與 update 循環
-      // const blobInstance = new Blob(blob, seed);
-      // 保存 blobInstance 到陣列中並在動畫循環中呼叫 update()
     });
   }
   
@@ -387,7 +444,8 @@ function initTechParticles() {
       },
       color: {
         // value: ["#D1C5D1", "#AA9DA9", "#e0d3e0", "#c8b8c8", "#d8d0d8", "#ffffff", "#f0e8f0"] // 紫色系粒子
-        value: ["#9761DD", "#A577E6", "#BA91EC", "#C6A3F0", "#D4B7F4", "#ffffff"]
+        // value: ["#9761DD", "#A577E6", "#BA91EC", "#C6A3F0", "#D4B7F4", "#ffffff"]
+        value: ["#B5A9B5", "#8F7C8F", "#C2B3C2", "#A899A8", "#B9ADB9", "#ffffff"]
       },
       shape: {
         type: "triangle", // 使用三角形形狀
@@ -415,7 +473,7 @@ function initTechParticles() {
       line_linked: {
         enable: true,
         distance: 50, // 增加連線距離以創建更多連接
-        color: "#D4B7F4", // 紫色系連線
+        color: "#D1C5D1", // 紫色系連線
         opacity: 0.25, // 增加線條不透明度
         width: 1.5 // 調整線條粗細
       },
@@ -694,47 +752,210 @@ function initTechParticles() {
   
   // 啟動圓形容器動畫
   animateCircleContainer();
+  
+  // SVG 筆畫動畫觸發
+  function isInViewport(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.top < window.innerHeight &&
+      rect.bottom > 0
+    );
+  }
+
+  function triggerSvgDrawAnimation() {
+    document.querySelectorAll('.feature-item').forEach(item => {
+      const svg = item.querySelector('svg.animated-stroke');
+      if (svg) {
+        if (isInViewport(item)) {
+          svg.classList.add('svg-animate-start');
+        } else {
+          svg.classList.remove('svg-animate-start');
+        }
+      }
+    });
+  }
+
+  window.addEventListener('scroll', triggerSvgDrawAnimation);
+  window.addEventListener('resize', triggerSvgDrawAnimation);
+  document.addEventListener('DOMContentLoaded', triggerSvgDrawAnimation);
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initBlobs();
   initTechParticles();
+  initFeatureSvgAnimation();
 });
+
+// SVG 畫線動畫 - 專門針對 feature-item 中的 SVG
+function initFeatureSvgAnimation() {
+  // 選取所有 feature-item 元素
+  const featureItems = document.querySelectorAll('.feature-item');
   
+  // 設定 CSS 變數以供動畫使用
+  featureItems.forEach(item => {
+    const svg = item.querySelector('svg');
+    if (!svg) return;
+    
+    // 修改 SVG 元素，使其能夠顯示畫線動畫
+    const paths = svg.querySelectorAll('path');
+    paths.forEach(path => {
+      // 檢查是否有 fill 屬性
+      const fill = path.getAttribute('fill');
+      
+      // 如果是填充路徑，設定為線條路徑
+      if (fill && fill !== 'none') {
+        path.setAttribute('stroke', '#000');
+        path.setAttribute('stroke-width', '4'); // 增加線條粗細
+        path.setAttribute('fill', 'none');
+      }
+      
+      // 計算路徑總長度
+      const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+      console.log("SVG路徑總長度:", pathLength);
+      
+      // 設定 CSS 變數以供動畫使用
+      document.documentElement.style.setProperty('--path-length', pathLength);
+      
+      // 初始化路徑樣式
+      path.style.strokeDasharray = pathLength;
+      path.style.strokeDashoffset = pathLength;
+    });
+  });
+  
+  // 初始化 Intersection Observer
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const featureItem = entry.target;
+      const svg = featureItem.querySelector('svg');
+      if (!svg) return;
+      
+      const paths = svg.querySelectorAll('path');
+      
+      if (entry.isIntersecting) {
+        // 元素進入視窗範圍
+        console.log("元素進入視窗，開始動畫");
+        
+        // 添加淡入效果
+        featureItem.classList.add('fade-in');
+        
+        // 重置動畫狀態
+        svg.classList.remove('animated');
+        paths.forEach(path => {
+          const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+          path.style.animation = 'none';
+          path.style.strokeDashoffset = pathLength;
+        });
+        
+        // 延遲 0.5 秒後開始 SVG 動畫
+        setTimeout(() => {
+          svg.classList.add('animated');
+          paths.forEach(path => {
+            path.style.animation = 'drawPath 3s ease-in-out forwards';
+          });
+        }, 500);
+        
+      } else {
+        // 元素離開視窗範圍
+        console.log("元素離開視窗，重置動畫");
+        
+        // 移除淡入效果
+        featureItem.classList.remove('fade-in');
+        
+        // 重置 SVG 動畫狀態
+        svg.classList.remove('animated');
+        paths.forEach(path => {
+          const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+          path.style.animation = 'none';
+          path.style.strokeDashoffset = pathLength;
+        });
+      }
+    });
+  }, {
+    // 當元素 30% 進入視窗時觸發
+    threshold: 0.3,
+    // 提前 50px 開始觸發
+    rootMargin: '0px 0px -50px 0px'
+  });
+  
+  // 開始觀察目標元素（不移除觀察器以實現重複動畫）
+  featureItems.forEach(item => {
+    observer.observe(item);
+  });
+}
 
 document.addEventListener("DOMContentLoaded", function () {
-  const path = document.querySelector("#circle-stroke path");
-  const strokeGroup = document.querySelector(".stroke-group");
-  const strokeGroupR = document.querySelector(".stroke-group-r");
-
-  if (path) {
-    const pathLength = path.getTotalLength();
-    path.style.strokeDasharray = pathLength;
-    path.style.strokeDashoffset = pathLength;
-
-    // 播放圓圈動畫
-    path.style.animation = "drawCircle 3s ease-in-out forwards";
-
-    // 當圓圈動畫完成後才啟用觀察器
-    path.addEventListener("animationend", function () {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+  const featureItem = document.getElementById('feature-item');
+  const svgElement = document.querySelector('.rules');
+  const path = svgElement.querySelector('path');
+  
+  // 計算路徑總長度
+  const pathLength = path.getTotalLength();
+  console.log("SVG路徑總長度:", pathLength);
+  
+  // 設定CSS變量以供動畫使用
+  document.documentElement.style.setProperty('--path-length', pathLength);
+  
+  // 初始化路徑樣式
+  path.style.strokeDasharray = pathLength;
+  path.style.strokeDashoffset = pathLength;
+  
+  // 創建 Intersection Observer
+  const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
           if (entry.isIntersecting) {
-            if (entry.target.classList.contains("stroke-group")) {
-              entry.target.classList.add("animate-stroke-left");
-            } else if (entry.target.classList.contains("stroke-group-r")) {
-              entry.target.classList.add("animate-stroke-right");
-            }
-            observer.unobserve(entry.target); // 只觸發一次
+              // 元素進入視窗範圍
+              console.log("元素進入視窗，開始動畫");
+              
+              // 添加淡入效果
+              featureItem.classList.add('fade-in');
+              
+              // 重置動畫狀態
+              svgElement.classList.remove('animated');
+              path.style.animation = 'none';
+              path.style.strokeDashoffset = pathLength;
+              
+              // 延遲0.5秒後開始SVG動畫
+              setTimeout(() => {
+                  svgElement.classList.add('animated');
+                  path.style.animation = 'drawPath 3s ease-in-out forwards';
+              }, 500);
+              
+          } else {
+              // 元素離開視窗範圍
+              console.log("元素離開視窗，重置動畫");
+              
+              // 移除淡入效果
+              featureItem.classList.remove('fade-in');
+              
+              // 重置SVG動畫狀態
+              svgElement.classList.remove('animated');
+              path.style.animation = 'none';
+              path.style.strokeDashoffset = pathLength;
           }
-        });
-      }, {
-        threshold: 0.5 // 超過一半才觸發
       });
-
-      if (strokeGroup) observer.observe(strokeGroup);
-      if (strokeGroupR) observer.observe(strokeGroupR);
-    });
-  }
+  }, {
+      // 當元素30%進入視窗時觸發
+      threshold: 0.3,
+      // 提前50px開始觸發
+      rootMargin: '0px 0px -50px 0px'
+  });
+  
+  // 開始觀察目標元素（不移除觀察器以實現重複動畫）
+  observer.observe(featureItem);
+  
+  // 移除滾動指示器當用戶開始滾動
+  let hasScrolled = false;
+  window.addEventListener('scroll', function() {
+      if (!hasScrolled) {
+          const indicator = document.querySelector('.scroll-indicator');
+          if (indicator) {
+              indicator.style.opacity = '0';
+              setTimeout(() => {
+                  indicator.remove();
+              }, 500);
+          }
+          hasScrolled = true;
+      }
+  });
 });
-
