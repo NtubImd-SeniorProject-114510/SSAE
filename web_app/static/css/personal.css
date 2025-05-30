@@ -33,18 +33,30 @@ body {
 /* 頭部樣式 */
 header {
     padding: 16px 24px;
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    margin-top: 40px;
 }
 
-.logo {
+.title {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px; /* 控制圖標與文字之間的間距 */
+    text-align: center; /* 這裡可以保留，但不會影響 flexbox 中的對齊 */
 }
 
-.logo i {
+.title i {
     font-size: 1.5rem;
     animation: pulse 3s infinite alternate;
 }
+
+.title h1 {
+    margin: 20px; /* 移除標題的外邊距 */
+    font-size: 50px;
+    color: #635c63;
+}
+
 
 @keyframes pulse {
     0% {
@@ -60,10 +72,11 @@ h1, h2, h3 {
 }
 
 /* 容器樣式 */
-.container {
+.page-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 24px;
+    margin-bottom: 40px;;
 }
 
 .row {
@@ -268,8 +281,9 @@ h1, h2, h3 {
 .profile-item {
     display: flex;
     margin-bottom: 8px;
-    padding: 6px 0;
+    padding: 3px 0;
     border-bottom: 1px dashed rgba(170, 157, 169, 0.3);
+    min-width: 200px;    
 }
 
 .profile-item:last-child {
@@ -277,17 +291,108 @@ h1, h2, h3 {
 }
 
 .profile-item .label {
-    width: 80px;
+    width: 60px;
     color: #AA9DA9;
     font-weight: 500;
 }
 
 .profile-item .value {
     flex: 1;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 
+.progress-bar {
+    width: 150px;
+    height: 16px;
+    background-color: #dbdfe4;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    clear: both;
+    margin-top: 8px;
+}
+
+.progress-segment {
+    height: 100%;
+    float: left;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+@keyframes slideIn {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: var(--target-width);
+    }
+}
+
+.progress-segment.animate {
+    width: 0;
+    animation: slideIn 1.5s ease-out forwards;
+}
+
+.progress-segment:hover {
+    filter: brightness(1.1);
+    z-index: 2;
+}
+
+.progress-segment.required {
+    background: #219ebc;
+}
+
+.progress-segment.elective {
+    background: #023047;
+}
+
+.progress-segment.major {
+    background: #ffb703;
+}
+
+.progress-segment.general {
+    background: #fb8500;
+}
+
+.tooltip {
+    position: relative;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 4px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    max-width: 130px;
+}
+
+.tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-90%) translateY(20px);
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%; /* 放在 tooltip 上方 */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+}
+
+
+        
 /* 活動卡片樣式 */
 .activities-card {
     flex: 1;

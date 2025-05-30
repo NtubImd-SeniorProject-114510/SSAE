@@ -1,23 +1,30 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人中心</title>
-    <link rel="stylesheet" href="{% static 'css/personal.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <header>
-        <div class="logo">
-            <i class="fas fa-chart-bar"></i>
-            <h1>個人中心</h1>
-        </div>
-    </header>
 
-    <main class="container">
+{% block title %}智能校事專家 - 個人中心{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/personal.css' %}">
+{% endblock %}
+
+{% block content %}
+    
+
+    <div class="page-container">
         <div class="bg-text">USER INFORMATION</div>
+
+        <header>
+            <div class="title">
+                <i class="fas fa-chart-bar"></i>
+                <h1>個人中心</h1>
+            </div>
+        </header>
 
         <div class="row">
             <!-- 左側課表區塊 -->
@@ -42,14 +49,14 @@
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">統計學</div>
-                                        <div class="class-room">教407</div>
+                                        <div class="class-room">電703</div>
                                     </div>
                                 </td>
                                 <td></td>
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">會計學</div>
-                                        <div class="class-room">商305</div>
+                                        <div class="class-room">藝406</div>
                                     </div>
                                 </td>
                                 <td></td>
@@ -59,7 +66,7 @@
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">經濟學</div>
-                                        <div class="class-room">商204</div>
+                                        <div class="class-room">藝405</div>
                                     </div>
                                 </td>
                                 <td></td>
@@ -68,7 +75,7 @@
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">行銷管理</div>
-                                        <div class="class-room">商102</div>
+                                        <div class="class-room">藝405</div>
                                     </div>
                                 </td>
                             </tr>
@@ -78,7 +85,7 @@
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">管理學</div>
-                                        <div class="class-room">商505</div>
+                                        <div class="class-room">藝405</div>
                                     </div>
                                 </td>
                                 <td></td>
@@ -100,7 +107,7 @@
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">商用英文</div>
-                                        <div class="class-room">語言中心</div>
+                                        <div class="class-room">中正館</div>
                                     </div>
                                 </td>
                                 <td></td>
@@ -116,7 +123,7 @@
                                 <td class="has-class">
                                     <div class="class-item">
                                         <div class="class-name">企業實務</div>
-                                        <div class="class-room">商104</div>
+                                        <div class="class-room">育803</div>
                                     </div>
                                 </td>
                                 <td></td>
@@ -144,10 +151,15 @@
                     <h2>我的資料</h2>
                     <div class="profile-content">
                         <div class="profile-image">
-                            <img src="/api/placeholder/120/120" alt="">
-                            <div class="user-name">王大明</div>
+                            <img src="{% static 'image/me1.png' %}" alt="me">
+                            <div class="user-name">阿ㄎㄧㄤ</div>
+                            <button class="btn-secondary">編輯資料</button>
                         </div>
                         <div class="profile-details">
+                            <div class="profile-item">
+                                <div class="label">姓名</div>
+                                <div class="value">宋繼平</div>
+                            </div>
                             <div class="profile-item">
                                 <div class="label">學號</div>
                                 <div class="value">11056009</div>
@@ -158,13 +170,30 @@
                             </div>
                             <div class="profile-item">
                                 <div class="label">年級</div>
-                                <div class="value">四年級</div>
+                                <div class="value">五專四年級</div>
                             </div>
                             <div class="profile-item">
                                 <div class="label">學分</div>
-                                <div class="value">已修 64/總數 128</div>
+                                <div class="value-with-progress">
+                                    <div class="value">已修196 /220</div>
+                                    <div class="progress-bar" id="progressBar">
+                                        <div class="progress-segment required animate" 
+                                            style="--target-width: 37.73%;" 
+                                            data-tooltip="必修：83學分"></div>
+                                        <div class="progress-segment elective animate" 
+                                            style="--target-width: 0%;" 
+                                            data-tooltip="選修：0學分"></div>
+                                        <div class="progress-segment major animate" 
+                                            style="--target-width: 12.27%;" 
+                                            data-tooltip="專選：27 /37學分"></div>
+                                        <div class="progress-segment general animate" 
+                                            style="--target-width: 30%;" 
+                                            data-tooltip="通識：66學分"></div>
+                                    </div>
+                                    <div class="tooltip" id="tooltip"></div>
+                                </div>
                             </div>
-                            <button class="btn-secondary">編輯資料</button>
+                            
                         </div>
                     </div>
                 </div>
@@ -343,9 +372,9 @@
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+{% endblock %}
 
-    <script src="{% static 'js/personal.js' %}"></script>
-</body>
-</html>
-
+{% block body_js %}
+<script src="{% static 'js/personal.js' %}"></script>
+{% endblock %}

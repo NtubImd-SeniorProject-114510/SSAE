@@ -4,12 +4,56 @@ function initializeParallax() {
     function parallaxScroll() {
         const scrollPosition = window.pageYOffset;
         if (bgText) {
-            bgText.style.transform = `translateX(${scrollPosition * -0.9}px)`;
+            bgText.style.transform = `translateX(${scrollPosition * -0.7}px)`;
         }
     }
 
     window.addEventListener('scroll', parallaxScroll);
 }
+
+// 學分進度條
+const segments = document.querySelectorAll('.progress-segment');
+const tooltip = document.getElementById('tooltip');
+
+segments.forEach(segment => {
+    segment.addEventListener('mouseenter', function(e) {
+        const tooltipText = this.getAttribute('data-tooltip');
+        if (tooltipText && this.style.width !== '0%') {
+            tooltip.textContent = tooltipText;
+            tooltip.classList.add('show');
+            
+            // 计算tooltip位置
+            const rect = this.getBoundingClientRect();
+            const containerRect = this.closest('.profile-item').getBoundingClientRect();
+            
+            const left = rect.left - containerRect.left + (rect.width / 2);
+            tooltip.style.left = left + 'px';
+            tooltip.style.transform = `translateX(-90%) translateY(6px)`;
+        }
+    });
+    
+    segment.addEventListener('mouseleave', function() {
+        tooltip.classList.remove('show');
+    });
+});
+
+// 页面加载时触发动画
+window.addEventListener('load', function() {
+    const segments = document.querySelectorAll('.progress-segment.animate');
+    segments.forEach((segment, index) => {
+        setTimeout(() => {
+            segment.style.animationDelay = `${index * 0.2}s`;
+        }, 100);
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    segments.forEach(segment => {
+        if (segment.style.width === '0%') {
+            segment.style.pointerEvents = 'none';
+        }
+    });
+});
+
 
 
 // 日期相關函數
