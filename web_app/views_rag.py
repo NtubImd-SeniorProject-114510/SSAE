@@ -1,5 +1,6 @@
-#views)
 import os
+import re
+import markdown
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
@@ -13,13 +14,11 @@ from langchain.chat_models import AzureChatOpenAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 
-
 # 載入 .env
 load_dotenv()
 
 def test_mongo_connection():
     MONGO_URI = os.getenv("MONGO_URI")
-
     if not MONGO_URI:
         print("❌ 找不到 MONGODB_URI 環境變數")
         return
@@ -78,17 +77,60 @@ def create_vector_store(splits):
 # 建立進階 RAG 鏈
 def create_advanced_rag_chain(retriever):
     system_prompt = (
-        "You are an assistant for question-answering tasks. "
-        "Use the following pieces of retrieved context to answer "
-        "the question. If you don't know the answer, say that you don't know. "
-        "Use three sentences maximum and keep the answer concise.\n\n{context}"
+        "You are a helpful assistant for answering questions about National Taipei University of Business (NTUB). "
+        "Use the following retrieved context to answer the question. "
+        "If you don't know the answer, just say you don't know, and do not make up anything. "
+        "You must answer **only in Traditional Chinese**, never use Simplified Chinese. "
+        "Your tone should be lively and cute (like a friendly NTUB student helper), "
+        "but your information must be accurate and based on the context. "
+        "Always clearly mention that the information is from NTUB regulations, by saying things like '根據國立臺北商業大學的校規顯示'. "
+        "Use bold (** **) or headers (like # or ##) to highlight key points and make the answer easier to read. "
+        "When listing items, use proper numbering (1. 2. 3.) or bullet points (•) with consistent spacing. "
+        "Organize your response with clear structure and consistent formatting.\n\n{context}"
     )
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("human", "{input}"),
     ])
     qa_chain = create_stuff_documents_chain(llm, prompt)
     return create_retrieval_chain(retriever, qa_chain)
+
+def format_text_with_proper_alignment(text):
+    """改進的文字格式化，保持原本緊湊但讓編號對齊"""
+    if not text:
+        return ""
+    
+    # 統一換行符
+    text = re.sub(r'\r\n|\r', '\n', text)
+    
+    # 處理粗體
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    
+    # 處理編號列表，確保對齊
+    def replace_numbered_item(match):
+        num = match.group(1)
+        content = match.group(2).strip()
+        return f'<div style="display:flex;margin:4px 0;"><span style="min-width:24px;font-weight:bold;color:#2563eb;">{num}.</span><span style="flex:1;">{content}</span></div>'
+    
+    text = re.sub(r'^(\d+)\.\s*(.+)$', replace_numbered_item, text, flags=re.MULTILINE)
+    
+    # 簡單的段落處理
+    lines = text.split('\n')
+    result = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # 如果是HTML標籤，直接加入
+        if line.startswith('<div') or line.startswith('<strong'):
+            result.append(line)
+        else:
+            result.append(f'<p style="margin:4px 0;line-height:1.5;">{line}</p>')
+    
+    return ''.join(result)
 
 # 先測試 MongoDB 連線
 print("🚀 測試 MongoDB 連線...")
@@ -103,7 +145,74 @@ retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k
 advanced_rag_chain = create_advanced_rag_chain(retriever)
 print("✅ 進階 RAG 系統初始化完成。")
 
-# 查詢函式
+# 修正後的查詢函式
+# 只需要替換您原本的 ask_question 函式即可：
 def ask_question(question: str) -> str:
-    response = advanced_rag_chain.invoke({"input": question})
-    return response["answer"].strip()
+    try:
+        response = advanced_rag_chain.invoke({"input": question})
+        raw_answer = response["answer"].strip()
+        
+        # 先處理所有粗體標記，避免後續處理時被破壞
+        raw_answer = re.sub(r'\*\*([^*\n]+?)\*\*', r'<strong style="color:#4A5B73; font-weight:700;">\1</strong>', raw_answer)
+        
+        # 逐行處理
+        lines = raw_answer.split('\n')
+        formatted_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            
+            # 跳過空行
+            if not line:
+                continue
+            
+            # 處理 ### 標題
+            if line.startswith('###'):
+                title = line.replace('###', '').strip()
+                formatted_line = f'<h3 style="color:#5B7296; margin:12px 0 6px 0; font-weight:650; font-size:1.2em;">{title}</h3>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理 ## 標題
+            elif line.startswith('##'):
+                title = line.replace('##', '').strip()
+                formatted_line = f'<h2 style="color:#4A668A; margin:15px 0 8px 0; font-weight:650; font-size:1.4em;">{title}</h2>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理 # 標題
+            elif line.startswith('#'):
+                title = line.replace('#', '').strip()
+                formatted_line = f'<h1 style="color:#365073; margin:18px 0 10px 0; font-weight:650; font-size:1.6em;">{title}</h1>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理編號列表
+            numbered_match = re.match(r'^(\d+)\.\s*(.+)$', line)
+            if numbered_match:
+                num = numbered_match.group(1)
+                content = numbered_match.group(2)
+                formatted_line = f'<div style="display:flex; margin:6px 0; align-items:flex-start;"><span style="min-width:28px; font-weight:650; color:#6B5B8A; flex-shrink:0;">{num}.</span><span style="flex:1; line-height:1.5;">{content}</span></div>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理以破折號或點開頭的列表項
+            elif line.startswith('- ') or line.startswith('• '):
+                content = line[2:].strip()
+                formatted_line = f'<div style="margin:4px 0 4px 20px; line-height:1.5;">• {content}</div>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理普通段落
+            else:
+                formatted_lines.append(f'<p style="margin:6px 0; line-height:1.6; color:#334455;">{line}</p>')
+        
+        # 合併所有格式化的行
+        result = ''.join(formatted_lines)
+        
+        return result
+        
+    except Exception as e:
+        error_msg = f"處理問題時發生錯誤: {str(e)}"
+        print(f"❌ RAG 錯誤: {error_msg}")
+        return f"<p style='color:#8B6B6B;'>抱歉，我在處理您的問題時遇到了一些困難。請稍後再試或換個方式提問。</p>"

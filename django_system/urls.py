@@ -1,4 +1,3 @@
-#urls.py
 """
 URL configuration for django_system project.
 
@@ -38,16 +37,19 @@ urlpatterns = [
     path('upload_book/' , views.upload_book, name='upload_book'),
     path("test/", views.ask_page, name="ask_page"),
     path('navbar2/' , views.navbar2),
+    # 新增：統一檔案上傳路由 (支援 PDF 和 ZIP)
+    path("upload_files/", views.upload_files, name="upload_files"),
+    # 保留：向後相容的 ZIP 上傳路由
     path("upload_zip/", views.upload_zip, name="upload_zip"),
     path("comment/", views.comment, name="comment"),   
     path("comment_detail/", views.comment_detail, name="comment_detail"),   
     path("add_comment/", views.add_comment, name="add_comment"),
     path("personal/", views.personal, name="personal"),
     path('api/conversations/', views.api_conversations),
-    path('api/conversations/<str:convo_id>/messages/', views.api_messages),
+    path('api/messages/<str:convo_id>/', views.api_messages),
     path('api/ask/', views.api_ask),
     path('api/conversations/<str:convo_id>/', views.api_conversation_detail),
-    path('api/conversations/<str:convo_id>/export_excel/', views.api_export_conversation),
+    path('api/export/<str:convo_id>/', views.api_export_conversation),
     path('auth/', include('social_django.urls', namespace='social')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
