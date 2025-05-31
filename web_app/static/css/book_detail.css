@@ -61,6 +61,10 @@ body {
     flex: 0 0 auto;
     position: relative;
     padding: 20px;
+    height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .book-image {
@@ -1089,7 +1093,6 @@ body {
 /* Book image and details */
 .book-image-container {
     float: left;
-    width: 30%;
     margin-right: 5%;
     margin-bottom: 20px;
 }

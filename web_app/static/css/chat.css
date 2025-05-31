@@ -505,7 +505,8 @@ body.sidebar-collapsed .input-container {
     color: #2c3e50;
 }
 
-.upload-zip-container .upload-btn {
+.upload-zip-container .upload-btn,
+.upload-btn {
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -517,9 +518,11 @@ body.sidebar-collapsed .input-container {
     transition: all 0.3s ease;
 }
 
-.upload-zip-container .upload-btn:hover {
+.upload-zip-container .upload-btn:hover,
+.upload-btn:hover {
     color: #e7c21b;
     transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 /* 消息樣式 - 修正文字超出問題 */
@@ -580,14 +583,14 @@ body.sidebar-collapsed .input-container {
 .user-container .message-content {
     background-color: #593C68;
     color: white;
-    border-radius: 18px 18px 4px 18px;
+    border-radius: 18px 4px 18px 18px;
     max-width: 70%;
 }
 
 .bot-container .message-content {
     background-color: #f0f0f0;
     color: #333;
-    border-radius: 18px 18px 18px 4px;
+    border-radius: 4px 18px 18px 18px;
     max-width: 70%;
 }
 
