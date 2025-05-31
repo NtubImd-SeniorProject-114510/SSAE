@@ -163,7 +163,11 @@ h1, h2, h3 {
 }
 
 /* 課表樣式 */
+.schedule-table{
+    border-radius: 10px;
+}
 .schedule-table th {
+    
     background-color: #9479C1;
     color: white;
     padding: 8px 16px;
@@ -280,7 +284,7 @@ h1, h2, h3 {
 
 .profile-item {
     display: flex;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     padding: 3px 0;
     border-bottom: 1px dashed rgba(170, 157, 169, 0.3);
     min-width: 200px;    
@@ -781,6 +785,10 @@ h1, h2, h3 {
     max-width: 100%;
 }
 
+.profile-card {
+    margin-bottom: 20px; /* 或你要的間距大小 */
+}
+
 .detail-content {
     padding: 32px 28px 28px 28px;
     background: #fff;
@@ -811,7 +819,7 @@ h1, h2, h3 {
     border-radius: 8px;
     outline: none;
     transition: border 0.2s, box-shadow 0.2s;
-    background: #faf9fc;
+    background: #eae9ec;
     height: 44px;
     min-height: 44px;
     max-height: 44px;
