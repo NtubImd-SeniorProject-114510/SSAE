@@ -66,7 +66,7 @@ uploadContainer.innerHTML = `
     </label>
     <input type="file" id="fileUpload" accept=".pdf,.zip" style="display:none" />
     
-    <div id="floating-progress" style="display:none; position:fixed; top:10px; right:10px; background:white; border:1px solid #ccc; padding:15px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:1000; width:280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+    <div id="floating-progress" style="display:none; position:absolute; top:120%; left:80%; margin-left:10px; background:white; border:1px solid #ccc; padding:15px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:1000; width:280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
         <div id="progressText" style="font-size:14px; color:#333; margin-bottom:8px;">準備上傳...</div>
         <div style="background:#f0f0f0; height:8px; border-radius:4px; overflow:hidden;">
             <div id="progressBar" style="background:linear-gradient(90deg, #4CAF50, #45a049); height:100%; width:0%; border-radius:4px; transition:width 0.3s ease;"></div>
@@ -134,7 +134,7 @@ function uploadFile(file) {
             
             if (res.status === 'success' || res.message) {
                 progressBar.style.width = "100%";
-                progressText.innerHTML = "✅ " + (res.message || "上傳成功");
+                progressText.innerHTML = "" + (res.message || "上傳成功");
                 
                 // 顯示檔案處理結果
                 if (fileName.endsWith('.pdf')) {
@@ -229,7 +229,7 @@ function initDragAndDrop() {
 }
 
 // 側邊欄切換
-let sidebarOpen = true;
+let sidebarOpen = false;
 menuBtn.addEventListener('click', () => {
     sidebarOpen = !sidebarOpen;
     if (sidebarOpen) {
@@ -506,15 +506,11 @@ messageInput.addEventListener('input', adjustTextareaHeight);
         newChatBtn.click();
     }
     
-    // 檢查窗口大小，決定初始側邊欄狀態
-    if (window.innerWidth <= 768) {
-        sidebar.classList.add('collapsed');
-        menuBtn.classList.remove('open');
-        document.body.classList.add('sidebar-collapsed');
-        sidebarOpen = false;
-    } else {
-        menuBtn.classList.add('open');
-    }
+    // 默認收起側邊欄，無論窗口大小
+    sidebar.classList.add('collapsed');
+    menuBtn.classList.remove('open');
+    document.body.classList.add('sidebar-collapsed');
+    sidebarOpen = false;
 })();
 
 // 窗口大小調整時的行為

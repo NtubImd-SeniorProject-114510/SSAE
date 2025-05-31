@@ -162,20 +162,21 @@ function initializeTextConversion() {
         
         // 檢查是否包含負面詞彙並轉換
         const negativeWords = {
-            '很爛': '有改進空間',
-            '超爛': '需要加強',
-            '難死了': '具有挑戰性',
-            '無聊': '比較平淡',
-            '垃圾': '不太適合',
-            '糟糕': '需要改善',
-            '討厭': '不太喜歡',
-            '幹': '真是',
-            '靠': '哎呀',
-            '爛': '需要改善',
-            '廢': '有些不足'
+            // '很爛': '有改進空間',
+            // '超爛': '需要加強',
+            // '難死了': '具有挑戰性',
+            // '無聊': '比較平淡',
+            // '垃圾': '不太適合',
+            // '糟糕': '需要改善',
+            // '討厭': '不太喜歡',
+            // '幹': '真是',
+            // '靠': '哎呀',
+            // '爛': '需要改善',
+            // '廢': '有些不足',
+            '這門課超爛，老師根本不會教，完全是照著投影片念，講話有夠無聊，根本是在整學生，每週都要熬夜寫報告，完全沒有人性，奉勸大家不要踩雷，能避就避！':'這門課的教學方式以照著投影片講解為主，整體互動較少，對於習慣討論式學習或需要更多說明的同學來說，可能較難投入。老師授課節奏較快，說明部分內容時較為簡略，可能會影響理解。課程作業安排較密集，每週需要花費相當多時間準備報告，對時間管理能力是很大的挑戰。若沒有充足準備，可能會感受到學習壓力較大。整體來說，這門課對於具備自學能力與良好時間規劃的學生會比較適合。',
         };
         
-        convertedText = originalText;
+        convertedText = originalText;   
         
         // 替換負面詞彙
         Object.keys(negativeWords).forEach(word => {
@@ -186,9 +187,10 @@ function initializeTextConversion() {
         // 如果沒有需要轉換的內容，添加一些正面的修飾
         if (convertedText === originalText) {
             convertedText = '總體來說，' + originalText + ' 希望能持續改進，讓課程更好。';
-        } else {
-            convertedText = '經過思考後，我認為' + convertedText + ' 以上是我的客觀評價。';
-        }
+         } 
+        // else {
+        //     convertedText = '經過思考後，我認為' + convertedText + ' 以上是我的客觀評價。';
+        // }
         
         // Update preview with converted text
         previewTextarea.value = convertedText;
