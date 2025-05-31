@@ -1,3 +1,43 @@
+// 隨機數產生器（可重現）
+function randomNumber(min, max, seed) {
+    const x = Math.sin(seed) * 10000;
+    const raw = x - Math.floor(x);
+    return raw * (max - min) + min;
+}
+
+// 初始化背景動畫 blobs
+function initBlobs() {
+    const blobs = document.querySelectorAll('.blob');
+
+    blobs.forEach((blob, index) => {
+        const seed = index + 100;
+
+        // 設定初始位置
+        const initialXPercent = randomNumber(10, 90, seed + 10);
+        const initialYPercent = randomNumber(10, 90, seed + 11);
+        blob.style.left = `${initialXPercent}%`;
+        blob.style.top = `${initialYPercent}%`;
+
+        // 建立動畫 keyframes
+        const keyframes = [
+            { transform: `translate(${randomNumber(-25, 25, seed + 20)}%, ${randomNumber(-25, 25, seed + 21)}%)` },
+            { transform: `translate(${randomNumber(-25, 25, seed + 22)}%, ${randomNumber(-25, 25, seed + 23)}%)` },
+            { transform: `translate(${randomNumber(-25, 25, seed + 24)}%, ${randomNumber(-25, 25, seed + 25)}%)` },
+            { transform: `translate(${randomNumber(-25, 25, seed + 26)}%, ${randomNumber(-25, 25, seed + 27)}%)` }
+        ];
+
+        // 啟用動畫
+        blob.animate(keyframes, {
+            duration: 8000 + index * 1000,
+            iterations: Infinity,
+            direction: 'alternate',
+            easing: 'ease-in-out'
+        });
+    });
+}
+
+
+
 // 當前對話ID
 let currentId = null;
 let conversations = [];
@@ -457,6 +497,7 @@ messageInput.addEventListener('input', adjustTextareaHeight);
     
     // 初始化拖拽上傳功能
     initDragAndDrop();
+    initBlobs();
     
     // 初始對話選擇
     if (conversations.length) {

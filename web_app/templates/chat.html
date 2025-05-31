@@ -11,7 +11,13 @@
 {% endblock %}
 
 {% block content %}
-<body>
+
+<!-- 背景影片 -->
+<img class="bg-png" src="{% static 'image/wave.png' %}" width="100%" height="100%" alt="背景圖片">
+<!-- 半透明遮罩 -->
+<div class="bg-overlay"></div>
+
+
     <!-- 將所有內容包裝在一個大的div中，左右padding 80px -->
     <div class="chat-wrapper">
         <!-- 主內容區域 -->
@@ -50,7 +56,19 @@
                         <!-- 對話歷史由 JavaScript 動態載入 -->
                     </div>
                 </div>
+                
+                <!-- 聊天容器 (只保留一個) -->
                 <div class="chat-container" id="chatContainer">
+                    <div class="blobs">
+                        <div class="blob"></div>
+                        <div class="blob"></div>
+                        <div class="blob"></div>
+                        <div class="blob"></div>
+                        <div class="blob"></div>
+                        <div class="blob"></div>
+                        <div class="blob"></div>
+                    </div>
+                    
                     <div class="no-messages" id="noMessages">
                         開始一個新對話或從側邊欄選擇歷史對話
                     </div>
@@ -63,7 +81,7 @@
             </div>
         </div>
     </div>
-</body>
+
 {% endblock %}
 
 {% block body_js %}
