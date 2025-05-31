@@ -82,14 +82,12 @@ function updateCurrentMonth() {
 }
 
 function renderCalendar(year, month) {
-    // 計算每月第一天是星期幾
     const firstDay = new Date(year, month - 1, 1).getDay();
-    // 當月天數
     const daysInMonth = new Date(year, month, 0).getDate();
-    // 上月天數
     const prevMonthDays = new Date(year, month - 1, 0).getDate();
     const calendarBody = document.getElementById('calendarBody');
     calendarBody.innerHTML = '';
+
     let row = document.createElement('tr');
     // 上月補空格
     for (let i = 0; i < firstDay; i++) {
@@ -98,35 +96,36 @@ function renderCalendar(year, month) {
         td.textContent = prevMonthDays - firstDay + i + 1;
         row.appendChild(td);
     }
+
     let day = 1;
     for (let i = firstDay; i < 7; i++) {
         const td = document.createElement('td');
-        td.textContent = day;
+        td.textContent = day++;
         row.appendChild(td);
-        day++;
     }
     calendarBody.appendChild(row);
+
     // 其餘日期
+    let nextMonthDay = 1;
     while (day <= daysInMonth) {
         row = document.createElement('tr');
         for (let i = 0; i < 7; i++) {
+            const td = document.createElement('td');
             if (day > daysInMonth) {
-                const td = document.createElement('td');
                 td.className = 'other-month';
-                td.textContent = day - daysInMonth;
-                row.appendChild(td);
+                td.textContent = nextMonthDay++;
             } else {
-                const td = document.createElement('td');
-                td.textContent = day;
-                row.appendChild(td);
-                day++;
+                td.textContent = day++;
             }
+            row.appendChild(td);
         }
         calendarBody.appendChild(row);
     }
+
     // 填入事件
     renderCalendarEvents();
 }
+
 
 function renderCalendarEvents() {
     // 只顯示當月事件
