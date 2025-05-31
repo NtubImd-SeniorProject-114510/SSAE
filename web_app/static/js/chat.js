@@ -15,22 +15,23 @@ const noMessagesEl = document.getElementById('noMessages');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-// 建立上傳ZIP按鈕
+// 建立統一檔案上傳按鈕
 const headerArea = currentChatTitle.parentElement;
-const uploadZipContainer = document.createElement('div');
-uploadZipContainer.className = 'upload-zip-container';
-uploadZipContainer.innerHTML = `
-    <label for="zipUpload" class="upload-btn">
+const uploadContainer = document.createElement('div');
+uploadContainer.className = 'upload-container';
+uploadContainer.innerHTML = `
+    <label for="fileUpload" class="upload-btn">
         <i class="fa-solid fa-upload"></i>
-        <span>上傳 ZIP</span>
+        <span>上傳檔案</span>
     </label>
-    <input type="file" id="zipUpload" accept=".zip" style="display:none" />
+    <input type="file" id="fileUpload" accept=".pdf,.zip" style="display:none" />
     
-    <div id="floating-progress" style="display:none; position:fixed; top:10px; right:10px; background:white; border:1px solid #ccc; padding:10px; border-radius:5px; box-shadow:0 2px 10px rgba(0,0,0,0.2); z-index:1000; width:250px;">
-        <div id="progressText">上傳中...</div>
-        <div style="background:#eee; height:10px; margin-top:5px; border-radius:5px;">
-            <div id="progressBar" style="background:#4CAF50; height:100%; width:0%; border-radius:5px;"></div>
+    <div id="floating-progress" style="display:none; position:fixed; top:10px; right:10px; background:white; border:1px solid #ccc; padding:15px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:1000; width:280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+        <div id="progressText" style="font-size:14px; color:#333; margin-bottom:8px;">準備上傳...</div>
+        <div style="background:#f0f0f0; height:8px; border-radius:4px; overflow:hidden;">
+            <div id="progressBar" style="background:linear-gradient(90deg, #4CAF50, #45a049); height:100%; width:0%; border-radius:4px; transition:width 0.3s ease;"></div>
         </div>
+        <div id="fileInfo" style="font-size:12px; color:#666; margin-top:5px;"></div>
     </div>
 `;
 
@@ -38,55 +39,153 @@ uploadZipContainer.innerHTML = `
 headerArea.style.display = 'flex';
 headerArea.style.justifyContent = 'space-between';
 headerArea.style.alignItems = 'center';
-headerArea.appendChild(uploadZipContainer);
+headerArea.appendChild(uploadContainer);
 
-// 綁定上傳事件
-document.getElementById('zipUpload').addEventListener('change', (e) => {
+// 綁定檔案選擇事件
+document.getElementById('fileUpload').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
-        uploadZip(file);
+        uploadFile(file);
     }
 });
 
-// 上傳ZIP檔的函數
-function uploadZip(file) {
-    if (!file || !file.name.endsWith('.zip')) {
-        alert("請選擇 zip 檔！");
+// 統一檔案上傳函數
+function uploadFile(file) {
+    // 檢查檔案類型
+    const fileName = file.name.toLowerCase();
+    const validTypes = ['.pdf', '.zip'];
+    const isValidType = validTypes.some(type => fileName.endsWith(type));
+    
+    if (!isValidType) {
+        alert("請選擇 PDF 或 ZIP 檔案！");
         return;
     }
     
     const formData = new FormData();
-    formData.append("zip_file", file);
+    formData.append("file", file);
     
     const progressBox = document.getElementById("floating-progress");
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
+    const fileInfo = document.getElementById("fileInfo");
     
+    // 顯示進度框
     progressBox.style.display = "block";
     progressBar.style.width = "0%";
-    progressText.innerText = "上傳中...";
+    progressText.innerText = "正在上傳...";
+    fileInfo.innerText = `檔案: ${file.name} (${formatFileSize(file.size)})`;
     
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/upload_zip/", true);
+    xhr.open("POST", "/upload_files/", true);
     
+    // 上傳進度
     xhr.upload.onprogress = e => {
         if (e.lengthComputable) {
-            progressBar.style.width = Math.round(e.loaded/e.total*100)+"%";
+            const percentage = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percentage + "%";
+            progressText.innerText = `上傳中... ${percentage}%`;
         }
     };
     
+    // 上傳完成
     xhr.onload = () => {
-        const res = JSON.parse(xhr.responseText);
-        progressText.innerText = res.message ? "✅ 上傳完成" : `❌ 錯誤：${res.error}`;
+        try {
+            const res = JSON.parse(xhr.responseText);
+            
+            if (res.status === 'success' || res.message) {
+                progressBar.style.width = "100%";
+                progressText.innerHTML = "✅ " + (res.message || "上傳成功");
+                
+                // 顯示檔案處理結果
+                if (fileName.endsWith('.pdf')) {
+                    fileInfo.innerText = "PDF 檔案已成功上傳並加入知識庫";
+                } else if (fileName.endsWith('.zip')) {
+                    fileInfo.innerText = "ZIP 檔案已解壓縮，PDF 檔案已加入知識庫";
+                }
+                
+                // 3秒後自動隱藏
+                setTimeout(() => {
+                    progressBox.style.display = "none";
+                    // 重置檔案輸入
+                    document.getElementById('fileUpload').value = '';
+                }, 3000);
+                
+            } else {
+                progressText.innerHTML = `❌ 錯誤：${res.error}`;
+                fileInfo.innerText = "上傳失敗，請重試";
+                setTimeout(() => progressBox.style.display = "none", 5000);
+            }
+        } catch (error) {
+            progressText.innerHTML = "❌ 回應解析錯誤";
+            fileInfo.innerText = "伺服器回應格式錯誤";
+            setTimeout(() => progressBox.style.display = "none", 5000);
+        }
+    };
+    
+    // 上傳錯誤
+    xhr.onerror = () => {
+        progressText.innerHTML = "❌ 網路錯誤";
+        fileInfo.innerText = "請檢查網路連線並重試";
         setTimeout(() => progressBox.style.display = "none", 5000);
     };
     
-    xhr.onerror = () => {
-        progressText.innerText = "❌ 上傳錯誤";
+    // 上傳超時
+    xhr.ontimeout = () => {
+        progressText.innerHTML = "❌ 上傳超時";
+        fileInfo.innerText = "檔案可能過大，請重試";
         setTimeout(() => progressBox.style.display = "none", 5000);
     };
+    
+    // 設置30秒超時
+    xhr.timeout = 30000;
     
     xhr.send(formData);
+}
+
+// 格式化檔案大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 拖拽上傳功能（可選）
+function initDragAndDrop() {
+    const uploadBtn = document.querySelector('.upload-btn');
+    
+    // 防止頁面默認拖拽行為
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // 拖拽進入上傳按鈕區域
+    uploadBtn.addEventListener('dragenter', () => {
+        uploadBtn.style.backgroundColor = '#0056b3';
+        uploadBtn.style.transform = 'scale(1.05)';
+    });
+    
+    uploadBtn.addEventListener('dragleave', () => {
+        uploadBtn.style.backgroundColor = '';
+        uploadBtn.style.transform = '';
+    });
+    
+    // 拖拽放下
+    uploadBtn.addEventListener('drop', (e) => {
+        uploadBtn.style.backgroundColor = '';
+        uploadBtn.style.transform = '';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            uploadFile(files[0]);
+        }
+    });
 }
 
 // 側邊欄切換
@@ -153,7 +252,7 @@ function renderConvos() {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = btn.getAttribute('data-id');
-            window.location.assign(`/api/conversations/${id}/export_excel/`);
+            window.location.assign(`/api/export/${id}/`);
         });
     });
 
@@ -188,7 +287,7 @@ async function selectConvo(id) {
         document.querySelectorAll(".chat-item").forEach(item => item.classList.remove("active"));
         document.querySelector(`.chat-item:has([data-id="${id}"])`)?.classList.add("active");
         
-        const res = await fetch(`/api/conversations/${id}/messages/`);
+        const res = await fetch(`/api/messages/${id}/`);
         const data = await res.json();
         renderMessages(data.messages);
         
@@ -355,6 +454,9 @@ messageInput.addEventListener('input', adjustTextareaHeight);
 // 初始化
 (async () => {
     await loadConvos();
+    
+    // 初始化拖拽上傳功能
+    initDragAndDrop();
     
     // 初始對話選擇
     if (conversations.length) {

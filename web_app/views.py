@@ -13,7 +13,6 @@ def base(request):
 def welcome(request):
     return render(request, 'welcome.html')
 
-
 def index(request):
     return render(request, 'index.html')
 
@@ -84,6 +83,7 @@ def add_comment(request):
 
 def personal(request):
     return render(request, "personal.html")
+
 # web_app/views.py
 import json
 from django.shortcuts import render
@@ -147,46 +147,98 @@ def api_ask(request):
     return JsonResponse({"answer": answer})
 
 @csrf_exempt
-def upload_zip(request):
+def upload_files(request):
+    """統一處理 PDF 和 ZIP 檔案上傳"""
     if request.method == "POST":
-        zip_file = request.FILES.get("zip_file")
-        if not zip_file or not zip_file.name.endswith(".zip"):
-            return JsonResponse({"error": "請上傳 zip 檔"})
+        uploaded_file = request.FILES.get("file")
+        if not uploaded_file:
+            return JsonResponse({"error": "請選擇檔案"}, status=400)
+
+        # 檢查檔案類型
+        file_name = uploaded_file.name.lower()
+        if not (file_name.endswith(".pdf") or file_name.endswith(".zip")):
+            return JsonResponse({"error": "只支援 PDF 和 ZIP 檔案"}, status=400)
 
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             upload_dir = os.path.abspath(os.path.join(current_dir, "..", "uploaded_files"))
             os.makedirs(upload_dir, exist_ok=True)
-            temp_zip_path = os.path.join(upload_dir, "temp_upload.zip")
 
-            with open(temp_zip_path, "wb") as f:
-                for chunk in zip_file.chunks():
-                    f.write(chunk)
+            if file_name.endswith(".pdf"):
+                # 處理 PDF 檔案
+                pdf_path = os.path.join(upload_dir, uploaded_file.name)
+                with open(pdf_path, "wb") as f:
+                    for chunk in uploaded_file.chunks():
+                        f.write(chunk)
+                message = f"✅ PDF 檔案 '{uploaded_file.name}' 上傳成功"
+                
+            elif file_name.endswith(".zip"):
+                # 處理 ZIP 檔案
+                temp_zip_path = os.path.join(upload_dir, "temp_upload.zip")
+                
+                # 保存上傳的 ZIP 檔案
+                with open(temp_zip_path, "wb") as f:
+                    for chunk in uploaded_file.chunks():
+                        f.write(chunk)
 
-            with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
-                for member in zip_ref.infolist():
-                    if member.filename.endswith(".pdf") and not member.is_dir():
-                        filename = os.path.basename(member.filename)
-                        if filename:
-                            data = zip_ref.read(member.filename)
-                            with open(os.path.join(upload_dir, filename), "wb") as out_file:
-                                out_file.write(data)
+                # 解壓縮 ZIP 檔案中的 PDF 檔案
+                extracted_count = 0
+                with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
+                    for member in zip_ref.infolist():
+                        if member.filename.lower().endswith(".pdf") and not member.is_dir():
+                            filename = os.path.basename(member.filename)
+                            if filename:  # 確保檔名不為空
+                                data = zip_ref.read(member.filename)
+                                pdf_path = os.path.join(upload_dir, filename)
+                                with open(pdf_path, "wb") as out_file:
+                                    out_file.write(data)
+                                extracted_count += 1
 
-            os.remove(temp_zip_path)
+                # 刪除臨時 ZIP 檔案
+                os.remove(temp_zip_path)
+                
+                if extracted_count == 0:
+                    return JsonResponse({"error": "ZIP 檔案中沒有找到 PDF 檔案"}, status=400)
+                
+                message = f"✅ ZIP 檔案解壓縮完成，提取了 {extracted_count} 個 PDF 檔案"
 
+        except zipfile.BadZipFile:
+            return JsonResponse({"error": "ZIP 檔案格式錯誤或損壞"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": f"解壓縮失敗：{str(e)}"})
+            return JsonResponse({"error": f"檔案處理失敗：{str(e)}"}, status=500)
 
+        # 重新建立向量資料庫
         try:
             docs = load_pdf_documents()
+            if not docs:
+                return JsonResponse({"error": "未找到可處理的 PDF 檔案"}, status=400)
+            
             splits = split_documents(docs)
             create_vector_store(splits)
-            return JsonResponse({"message": "✅ 上傳並建立資料庫完成"})
+            
+            return JsonResponse({
+                "message": message + "，向量資料庫已更新",
+                "status": "success"
+            })
+            
         except Exception as e:
-            return JsonResponse({"error": f"建立向量資料庫失敗：{str(e)}"})
+            return JsonResponse({
+                "error": f"建立向量資料庫失敗：{str(e)}",
+                "status": "error"
+            }, status=500)
 
-    return JsonResponse({"error": "僅支援 POST 請求"})
+    return JsonResponse({"error": "僅支援 POST 請求"}, status=405)
 
+# 保留原來的 upload_zip 函數以向後相容（可選）
+@csrf_exempt
+def upload_zip(request):
+    """向後相容的 ZIP 上傳函數，重導向到新的統一上傳函數"""
+    if request.method == "POST":
+        # 將 zip_file 重新命名為 file 以符合新函數的參數名稱
+        if 'zip_file' in request.FILES:
+            request.FILES['file'] = request.FILES['zip_file']
+        return upload_files(request)
+    return JsonResponse({"error": "僅支援 POST 請求"}, status=405)
 
 # web_app/views.py
 from django.views.decorators.csrf import csrf_exempt
@@ -234,4 +286,3 @@ def api_export_conversation(request, convo_id):
     )
     resp["Content-Disposition"] = f'attachment; filename="conversation_{convo_id}.xlsx"'
     return resp
-
