@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from social_core.pipeline.user import get_username
+import requests
 
 def create_user(strategy, details, backend, user=None, *args, **kwargs):
     """Create user if it doesn't exist."""
@@ -10,6 +11,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         user.last_name = details.get('last_name', '')
         user.email = details.get('email')
         user.username = details.get('username') or details.get('email').split('@')[0]
+        
         user.save()
         return {'is_new': False, 'user': user}
 
@@ -41,4 +43,19 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
         password=strategy.random_password(),
         is_active=True
     )
+    
+    # 獲取 Google 帳號照片
+    if backend.name == 'google-oauth2':
+        social = kwargs.get('social')
+        if social:
+            try:
+                # Google OAuth2 的照片 URL
+                photo_url = social.extra_data.get('picture')
+                if photo_url:
+                    # 創建或更新 Profile
+                    profile, created = Profile.objects.get_or_create(user=user)
+                    profile.profile_photo = photo_url
+                    profile.save()
+            except Exception as e:
+                print(f"Error getting Google photo: {str(e)}")
     return {'is_new': True, 'user': user}
