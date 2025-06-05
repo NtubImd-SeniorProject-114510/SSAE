@@ -948,7 +948,7 @@ to {
 
 /* 80x80 容器，獨立於 feature-item */
 /* icon-container 樣式：以 Y 軸旋轉 360 度 */
-.icon-container {
+/* .icon-container {
   position: absolute;
   width: auto;
   height: auto;
@@ -959,17 +959,17 @@ to {
   text-align: center;
   line-height: 80px;
   text-shadow:
-  4px 4px 6px #a37ea3,   /* 底部陰影 */
-  -1px -1px 0 rgba(255, 255, 255, 0.4); /* 高光效果 */
+  4px 4px 6px #a37ea3, 
+  -1px -1px 0 rgba(255, 255, 255, 0.4); 
   transition: transform 1s;
   will-change: transform;
   transform-origin: center center;
   z-index: 99;
 
-}
+} */
 
 /* 旋轉動畫定義 */
-@keyframes rotateOnce {
+/* @keyframes rotateOnce {
   from {
     transform: rotateY(0deg);
   }
@@ -980,12 +980,12 @@ to {
 
 .icon-container.animate {
   animation: rotateOnce 1s ease-out;
-}
+} */
 
 
 
 /* icon-container 位置 */
-.icon-container:nth-child(5) {
+/* .icon-container:nth-child(5) {
   top: 300px;
   left: 200px;
   font-size: 220px;
@@ -1007,11 +1007,11 @@ to {
   top: 1350px;
   left: 190px;
   font-size: 230px;
-}
+} */
 
 
 /* 響應式調整 */
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .feature-box {
     position: relative;
     display: flex;
@@ -1038,4 +1038,4 @@ to {
     position: relative;
     margin: 0 auto 15px auto;
   }
-}
+} */
