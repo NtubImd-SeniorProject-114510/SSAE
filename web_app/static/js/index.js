@@ -145,28 +145,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // 字母
-document.addEventListener("DOMContentLoaded", () => {
-  const icons = document.querySelectorAll('.icon-container');
+// document.addEventListener("DOMContentLoaded", () => {
+//   const icons = document.querySelectorAll('.icon-container');
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('animate');
+//   const observer = new IntersectionObserver((entries) => {
+//     entries.forEach(entry => {
+//       if (entry.isIntersecting) {
+//         entry.target.classList.add('animate');
 
-        // 移除後可再次進入視窗時再觸發
-        setTimeout(() => {
-          entry.target.classList.remove('animate');
-        }, 1000);
-      }
-    });
-  }, {
-    threshold: 0.6 // 元素進入畫面 60% 時觸發
-  });
+//         // 移除後可再次進入視窗時再觸發
+//         setTimeout(() => {
+//           entry.target.classList.remove('animate');
+//         }, 1000);
+//       }
+//     });
+//   }, {
+//     threshold: 0.6 // 元素進入畫面 60% 時觸發
+//   });
 
-  icons.forEach(icon => {
-    observer.observe(icon);
-  });
-});
+//   icons.forEach(icon => {
+//     observer.observe(icon);
+//   });
+// });
 
 
 // 文字
