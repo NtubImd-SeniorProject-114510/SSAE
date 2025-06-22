@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setSize(400, 400);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setClearColor(0xD1C5D1, 0.5);
+    renderer.setClearColor(0xD1C5D1, 0.3);
     // renderer.setClearColor(0xffffff);
 
     // 燈光設置
@@ -504,9 +504,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 將整個流蘇群組加到 tassalString 上
     tassalString.add(tassalGroup);
 
-
-    scene.add(owl);
-
     // 展示台
     const platformGeometry = new THREE.CylinderGeometry(2, 2, 0.3, 32);
     const platformMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
@@ -515,10 +512,21 @@ document.addEventListener('DOMContentLoaded', () => {
     platform.receiveShadow = true;
     scene.add(platform);
 
+    const owlGroup = new THREE.Group();
+    owlGroup.add(owl);
+    owlGroup.add(platform);
+    owlGroup.scale.set(1.5, 1.5, 1.5); // 調整倍率
+    owlGroup.position.y = 0.4; // 調高一點
+
+    scene.add(owlGroup);
+
+
     // 相機位置 - 調整以適應新的佈局
-    camera.position.set(0, 1, 7);
+    camera.position.set(0, 0.8, 7);
     camera.lookAt(0, 0, 0);
 
+    // 取得指定區塊元素
+    const interactionArea = document.querySelector('#circle-particles');
     // 滑鼠控制變數
     let mouseX = 0;
     let mouseY = 0;
@@ -567,8 +575,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 自動旋轉（當用戶沒有控制時）
         if (!userControlling) {
-            owl.rotation.y += 0.005; // 慢慢旋轉
-        } else {
+            // 從正面開始向右擺再往左擺，速度放慢
+            const time = Date.now() * 0.0005; // 調整速度變慢
+            owl.rotation.y = Math.sin(time - Math.PI / 4) * (Math.PI / 4);
+        }else {
             // 用戶控制時的平滑旋轉
             owl.rotation.y += (targetRotationY - owl.rotation.y) * 0.05;
             owl.rotation.x += (targetRotationX - owl.rotation.x) * 0.05;
@@ -578,12 +588,12 @@ document.addEventListener('DOMContentLoaded', () => {
         owl.position.y = Math.sin(Date.now() * 0.001) * 0.05;
 
         // 流蘇輕微搖擺
-        tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.01;
-        tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
+        tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
+        tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.03;
 
         // 眨眼動畫
         blinkTimer++;
-        if (blinkTimer > 240 && !isBlinking) { // 每4秒眨一次眼
+        if (blinkTimer > 36 && !isBlinking) { // 每1秒眨一次眼
             isBlinking = true;
             blinkTimer = 0;
         }
