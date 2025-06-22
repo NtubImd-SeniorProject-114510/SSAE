@@ -81,10 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-
-
-
-
 //dialog
 window.addEventListener('DOMContentLoaded', () => {
   const circle = document.querySelector('.circle-container');
@@ -119,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(error => console.error('Failed to load Spline:', error));
 });
+
 
 // 浮動標語
 document.addEventListener("DOMContentLoaded", () => {
