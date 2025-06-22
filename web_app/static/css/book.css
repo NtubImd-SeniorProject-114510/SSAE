@@ -490,15 +490,15 @@ body {
 }
 
 .book-tag.textbook {
-  background-color: var(--primary-color);
+  background-color: #4CAF50; 
+  font-size: 16px; 
+  padding: 6px 12px; 
 }
 
-.book-tag.reference {
-  background-color: var(--primary-dark);
-}
-
-.book-tag.literature {
-  background-color: var(--accent-color);
+.book-tag.reference, .book-tag.literature {
+  background-color: #e7c21b; /* Yellow for reference and literature */
+  font-size: 16px;
+  padding: 6px 12px;
 }
 
 .book-info {
@@ -540,6 +540,7 @@ body {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
