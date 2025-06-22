@@ -490,13 +490,13 @@ body {
 }
 
 .book-tag.textbook {
-  background-color: #4CAF50; 
+  background-color: #2f0855; 
   font-size: 16px; 
   padding: 6px 12px; 
 }
 
 .book-tag.reference, .book-tag.literature {
-  background-color: #e7c21b; /* Yellow for reference and literature */
+  background-color: #2f0855; 
   font-size: 16px;
   padding: 6px 12px;
 }
