@@ -12,44 +12,9 @@
             background: linear-gradient(135deg, #e8d5ff 0%, #c8a8ff 100%);
             font-family: Arial, sans-serif;
         }
-        #info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #352952;
-            z-index: 100;
-            font-size: 14px;
-            background: rgba(255,255,255,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        #controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: #5a4b7c;
-            z-index: 100;
-            font-size: 12px;
-            background: rgba(255,255,255,0.8);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
     </style>
 </head>
 <body>
-    <div id="info">
-        <h3>🎓 學士帽貓頭鷹</h3>
-        <p>七邊形身體 × 3D 展示</p>
-    </div>
-    
-    <div id="controls">
-        <p>🖱️ 滑鼠拖拽：改變視角</p>
-        <p>🔍 滾輪：縮放</p>
-        <p>✨ 自動旋轉展示</p>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // 場景設置
@@ -63,11 +28,11 @@
         document.body.appendChild(renderer.domElement);
 
         // 燈光設置
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(10, 10, 5);
+        directionalLight.position.set(7, 7, 5);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
@@ -110,17 +75,17 @@
             const extrudeSettings = {
                 depth: depth,
                 bevelEnabled: true,
-                bevelSegments: 2,
-                steps: 2,
-                bevelSize: 0.1,
-                bevelThickness: 0.1
+                bevelSegments: 7,
+                steps: 6,
+                bevelSize: 0.2,
+                bevelThickness: 0.2
             };
             
             return new THREE.ExtrudeGeometry(shape, extrudeSettings);
         }
 
         // 七邊形身體 - 改為垂直方向，底邊平行於畫面，尖角朝上
-        const bodyGeometry = createHeptagonGeometry(1.2, 0.6);
+        const bodyGeometry = createHeptagonGeometry(1.2, 0.45);
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         // 旋轉讓底邊平行於畫面，尖角朝上
         body.rotation.z = -Math.PI / 14; // 負角度讓尖角朝上
@@ -128,17 +93,20 @@
         body.castShadow = true;
         owl.add(body);
 
+
         // 大眼睛 - 向前移動避免與身體重疊
         const leftEyeGeometry = new THREE.SphereGeometry(0.55, 32, 32);
         const leftEye = new THREE.Mesh(leftEyeGeometry, eyeMaterial);
         leftEye.position.set(-0.4, 0.3, 0.5); // z軸向前移動更多
         leftEye.scale.set(0.85, 1, 0.8);
+        leftEye.castShadow = true;
         owl.add(leftEye);
 
         const rightEyeGeometry = new THREE.SphereGeometry(0.55, 32, 32);
         const rightEye = new THREE.Mesh(rightEyeGeometry, eyeMaterial);
         rightEye.position.set(0.4, 0.3, 0.5); // z軸向前移動更多
         rightEye.scale.set(0.85, 1, 0.8);
+        rightEye.castShadow = true;
         owl.add(rightEye);
 
         // 瞳孔（眯眯眼）- 對應眼睛位置調整
@@ -147,6 +115,7 @@
         leftPupil.position.set(-0.4, 0.3, 0.85); // 對應調整
         leftPupil.scale.set(1, 0.25, 1);
         leftPupil.rotation.z = Math.PI / 12; // 左眼下垂
+        leftPupil.castShadow = true;
         owl.add(leftPupil);
 
         const rightPupilGeometry = new THREE.SphereGeometry(0.12, 16, 16);
@@ -154,6 +123,7 @@
         rightPupil.position.set(0.4, 0.3, 0.85); // 對應調整
         rightPupil.scale.set(1, 0.25, 1);
         rightPupil.rotation.z = -Math.PI / 12; // 右眼下垂
+        rightPupil.castShadow = true;
         owl.add(rightPupil);
 
         // // 眉毛 - 對應眼睛位置調整
@@ -174,10 +144,53 @@
         // 嘴巴 - 向前移動
         const beakGeometry = new THREE.ConeGeometry(0.15, 0.4, 4);
         const beak = new THREE.Mesh(beakGeometry, beakMaterial);
-        beak.position.set(0, -0.1, 0.8); // 向前移動
+        beak.position.set(0, -0.1, 0.9); // 向前移動
         // 讓鳥喙稍微後仰（大約 15 度）
         beak.rotation.x = Math.PI - (Math.PI / 8);
+        beak.castShadow = true;
         owl.add(beak);
+
+        // 白色肚子
+        const bellyGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+        const bellyMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const belly = new THREE.Mesh(bellyGeometry, bellyMaterial);
+        belly.position.set(0, -0.6, 0.7); // 在身體前方
+        belly.scale.set(1.4, 1, 0.3); // 稍微拉長，壓扁
+        belly.castShadow = true;
+        owl.add(belly);
+
+        // 肚子上的四個黑色彎曲線條
+        const curveGeometry = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI * 0.6);
+    
+        // 左內側弧線
+        const curve1 = new THREE.Mesh(curveGeometry, pupilMaterial);
+        curve1.position.set(-0.15, -0.5, 0.9);
+        curve1.rotation.z = 2;
+        curve1.castShadow = true;
+        owl.add(curve1);
+        
+        // 右內側弧線
+        const curve2 = new THREE.Mesh(curveGeometry, pupilMaterial);
+        curve2.position.set(0.15, -0.5, 0.9);
+        curve2.rotation.z = -1;
+        curve2.castShadow = true;
+        owl.add(curve2);
+        
+        // 左外側弧線
+        const curve3 = new THREE.Mesh(curveGeometry, pupilMaterial);
+        curve3.position.set(-0.4, -0.5, 0.9);
+        curve3.rotation.z = 2;
+        curve3.castShadow = true;
+        owl.add(curve3);
+        
+        // 右外側弧線
+        const curve4 = new THREE.Mesh(curveGeometry, pupilMaterial);
+        curve4.position.set(0.4, -0.5, 0.9);
+        curve4.rotation.z = -1;
+        curve4.castShadow = true;
+        owl.add(curve4);
+
+
 
         // 手
         // 手臂曲線：上段較平，後段才彎下
@@ -200,15 +213,17 @@
 
         // 左手
         const leftArm = new THREE.Mesh(armGeometry, pupilMaterial);
-        leftArm.position.set(-1, -0.3, 0.5);  // 微調貼近身體
+        leftArm.position.set(-1.1, -0.3, 0.4);  // 微調貼近身體
         leftArm.rotation.z = Math.PI / 2;       // 垂直
+        leftArm.castShadow = true;
         owl.add(leftArm);
 
         // 右手
         const rightArm = new THREE.Mesh(armGeometry.clone(), pupilMaterial);
         rightArm.scale.x = -1;
-        rightArm.position.set(1, -0.3, 0.5);
+        rightArm.position.set(1.1, -0.3, 0.4);
         rightArm.rotation.z = -Math.PI / 2;     // 垂直、鏡像
+        rightArm.castShadow = true;
         owl.add(rightArm);
 
         // 拳頭大小
@@ -222,15 +237,17 @@
         // 左拳頭
         const leftFist = new THREE.Mesh(fistGeometry, pupilMaterial);
         leftFist.position.copy(leftEnd);
-        leftFist.position.add(new THREE.Vector3(-0.85, -0.78, 0.5)); // 加上左手基礎位置
-        leftFist.scale.set(1.5, 1, 1.3); 
+        leftFist.position.add(new THREE.Vector3(-0.95, -0.78, 0.4)); // 加上左手基礎位置
+        leftFist.scale.set(1.3, 1, 1.8);
+        leftFist.castShadow = true; 
         owl.add(leftFist);
 
         // 右拳頭
         const rightFist = new THREE.Mesh(fistGeometry.clone(), pupilMaterial);
         rightFist.position.copy(rightEnd);
-        rightFist.position.add(new THREE.Vector3(0.85, -0.78, 0.5)); // 加上右手基礎位置
-        rightFist.scale.set(1.5, 1, 1.3);
+        rightFist.position.add(new THREE.Vector3(0.95, -0.78, 0.4)); // 加上右手基礎位置
+        rightFist.scale.set(1.3, 1, 1.3);
+        rightFist.castShadow = true;
         owl.add(rightFist);
 
 
@@ -261,6 +278,7 @@
         leftFoot.rotation.z = 2;    // 旋轉180度，朝下
         leftFoot.scale.x = -1;      // 反轉 x 軸
         leftFoot.scale.y = 1.3;
+        leftFoot.castShadow = true;
         owl.add(leftFoot);
 
         // 右腳
@@ -269,6 +287,7 @@
         rightFoot.position.set(-1.35, -0.6, 0.3); // 右腳微調位置
         rightFoot.rotation.z = -2;    // 旋轉180度，朝下
         rightFoot.scale.y = 1.3;
+        rightFoot.castShadow = true;
         owl.add(rightFoot);
 
 
@@ -282,6 +301,7 @@
         leftToe.position.copy(leftEndF);
         leftToe.position.add(new THREE.Vector3(-0.03, -2.67, 0.3)); // 加上左腳基礎位置
         leftToe.scale.set(1.5, 1, 1.3);  // 橢圓
+        leftToe.castShadow = true;
         owl.add(leftToe);
 
         // 右腳趾
@@ -290,38 +310,106 @@
         rightToe.position.copy(rightEndF);
         rightToe.position.add(new THREE.Vector3(0.03, -2.67, 0.3)); // 加上右腳基礎位置
         rightToe.scale.set(1.5, 1, 1.3);  // 橢圓
+        rightToe.castShadow = true;
         owl.add(rightToe);
 
 
 
         // 學士帽 - 向上移動更多
         // 帽子底部
-        const capBaseGeometry = new THREE.CylinderGeometry(0.9, 0.9, 0.15, 32);
+        const capBaseGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 32);
         const capBase = new THREE.Mesh(capBaseGeometry, capMaterial);
-        capBase.position.set(0, 1.6, 0); // 向上移動更多
+        capBase.position.set(0, 1.4, 0.25); // 向上移動更多
+        capBase.castShadow = true;
         owl.add(capBase);
 
         // 帽子頂部方形
-        const capTopGeometry = new THREE.BoxGeometry(1.8, 0.1, 1.8);
+        const capTopGeometry = new THREE.BoxGeometry(1.5, 0.1, 1.5);
         const capTop = new THREE.Mesh(capTopGeometry, capMaterial);
-        capTop.position.set(0, 1.75, 0); // 對應調整
+        capTop.position.set(0, 1.6, 0.25); // 對應調整
+        capTop.castShadow = true;
         owl.add(capTop);
 
         // 流蘇 - 對應帽子位置調整
-        const tassalStringGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8);
+        // 創建流蘇的曲線（從平行開始轉到垂直）
+        class TassalCurve extends THREE.Curve {
+            constructor(start, mid, end) {
+                super();
+                this.start = start; // 起點
+                this.mid = mid;     // 轉彎的中點
+                this.end = end;     // 終點
+            }
+
+            getPoint(t) {
+                if (t < 0.5) {
+                    // 前半段（直線從起點到轉彎點）
+                    const x = this.start.x + (this.mid.x - this.start.x) * 2 * t;
+                    const y = this.start.y + (this.mid.y - this.start.y) * 2 * t;
+                    const z = this.start.z + (this.mid.z - this.start.z) * 2 * t;
+                    return new THREE.Vector3(x, y, z);
+                } else {
+                    // 後半段（直線從轉彎點到終點）
+                    const x = this.mid.x + (this.end.x - this.mid.x) * 2 * (t - 0.5);
+                    const y = this.mid.y + (this.end.y - this.mid.y) * 2 * (t - 0.5);
+                    const z = this.mid.z + (this.end.z - this.mid.z) * 2 * (t - 0.5);
+                    return new THREE.Vector3(x, y, z);
+                }
+            }
+        }
+
+        // 設置流蘇曲線的起點、中點控制點和終點
+        const start = new THREE.Vector3(0, 1.68, 0.25); // 起點
+        const end = new THREE.Vector3(0.78, 1.4, 0.95);   // 終點（稍微向下）
+        const mid = new THREE.Vector3(0.78, 1.68, 0.95); // 中間控制點，讓它有點彎曲的效果
+
+        // 創建曲線
+        const tassalCurve = new TassalCurve(start, mid, end);
+
+        // 使用曲線來生成流蘇的幾何形狀
+        const path = new THREE.CurvePath();
+        path.add(tassalCurve);
+
+        // 創建流蘇的圓柱形網格
+        const tassalStringGeometry = new THREE.TubeGeometry(path, 50, 0.02, 8, false);
         const tassalString = new THREE.Mesh(tassalStringGeometry, tassalMaterial);
-        tassalString.position.set(0.7, 1.6, 0.7); // 對應調整
+
+        // 將流蘇放置到帽子上
+        tassalString.castShadow = true;
         owl.add(tassalString);
 
-        const tassalGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-        const tassal = new THREE.Mesh(tassalGeometry, tassalMaterial);
-        tassal.position.set(0.7, 1.4, 0.7); // 對應調整
-        owl.add(tassal);
+        const tassalGroup = new THREE.Group(); // 群組來收所有流蘇線
+        const numStrands = 12; // 線條數
+        const radius = 0.02; // 流蘇線離中心的距離
+        const strandLength = 0.2;
+
+        for (let i = 0; i < numStrands; i++) {
+            const angle = (i / numStrands) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+
+            // 每條線的起點是中心，終點是這個 (x, -length/2, z)
+            const strandGeometry = new THREE.CylinderGeometry(0.005, 0.005, strandLength, 3);
+            const strand = new THREE.Mesh(strandGeometry, tassalMaterial);
+
+            // 將圓柱先移動到底部對準原點，讓它從中心「伸出去」
+            strand.position.set(x, -strandLength, z); // 中心與終點中間點
+            strand.lookAt(new THREE.Vector3(x, -strandLength, z)); // 朝向末端方向
+            strand.castShadow = true;
+
+            tassalGroup.add(strand);
+        }
+
+        // 設定整個流蘇群組的位置（同原本球體）
+        tassalGroup.position.set(0.78, 1.5, 0.95);
+
+        // 將整個流蘇群組加到 tassalString 上
+        tassalString.add(tassalGroup);
+
 
         scene.add(owl);
 
         // 展示台
-        const platformGeometry = new THREE.CylinderGeometry(2.5, 2.5, 0.3, 32);
+        const platformGeometry = new THREE.CylinderGeometry(2, 2, 0.3, 32);
         const platformMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
         const platform = new THREE.Mesh(platformGeometry, platformMaterial);
         platform.position.y = -2;
@@ -391,8 +479,8 @@
             owl.position.y = Math.sin(Date.now() * 0.001) * 0.05;
 
             // 流蘇輕微搖擺
-            tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.1;
-            tassal.rotation.z = Math.sin(Date.now() * 0.003) * 0.1;
+            tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.01;
+            tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
 
             // 眨眼動畫
             blinkTimer++;
