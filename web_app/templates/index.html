@@ -11,6 +11,7 @@
 
 {% block head_js %}
 <script src="https://cdn.jsdelivr.net/npm/tsparticles@1.42.4/tsparticles.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 {% endblock %}
 
 
@@ -82,7 +83,7 @@
             <div class="circle-background">
               <!--<img class="center-logo"  src="{% static 'image/logo.png' %}" width="200" alt="Logo">-->
               <div class="dialog-canvas">
-                <canvas id="canvas3d"></canvas>
+                <div id="owl-container" style="width: 400px; height: 400px;"></div>
               </div>
             </div> <!-- 新增這一層背景 -->
             <div id="tsparticles"></div> <!-- 粒子效果在上層 -->
