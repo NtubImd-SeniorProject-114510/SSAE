@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     camera.lookAt(0, 0, 0);
 
     // 取得指定區塊元素
-    const interactionArea = document.querySelector('#circle-particles');
+    // const interactionArea = document.querySelector('#circle-particles');
     // 滑鼠控制變數
     let mouseX = 0;
     let mouseY = 0;
