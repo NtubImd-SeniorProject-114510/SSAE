@@ -334,20 +334,39 @@ to {
   top: 50px;
 }
 
-
-
-#canvas3d{
-  position: relative;
+.circle-background{
+  background-color: rgb(209, 197, 209, 0.4);
 }
 
 .dialog-canvas{
-  width: 400px;
-  height: 400px;
-  position: absolute;
+  position: relative;
   z-index: 100;
-  left: 10px;
+  left: 0;
+  top: 0;
+  background-color: white;
 }
 
+
+#owl-container{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background-color: white;
+  overflow: visible;
+}
+
+#owl-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background: transparent;
+  pointer-events: auto;
+}
 
 .circle-container {
   position: absolute;
