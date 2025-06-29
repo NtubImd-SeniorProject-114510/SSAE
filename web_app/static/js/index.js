@@ -53,25 +53,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const pathLength = path.getTotalLength();
     path.style.strokeDasharray = pathLength;
     path.style.strokeDashoffset = pathLength;
-
-    // 播放圓圈動畫
     path.style.animation = "drawCircle 3s ease-in-out forwards";
 
-    // 當圓圈動畫完成後才啟用觀察器
     path.addEventListener("animationend", function () {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+          const el = entry.target;
+
           if (entry.isIntersecting) {
-            if (entry.target.classList.contains("stroke-group")) {
-              entry.target.classList.add("animate-stroke-left");
-            } else if (entry.target.classList.contains("stroke-group-r")) {
-              entry.target.classList.add("animate-stroke-right");
-            }
-            observer.unobserve(entry.target); // 只觸發一次
+            // 👉 強制重播動畫的技巧
+            el.classList.remove("animate-stroke"); // 自訂共用 class
+            void el.offsetWidth; // 觸發 reflow
+            el.classList.add("animate-stroke");
+          } else {
+            el.classList.remove("animate-stroke");
           }
         });
       }, {
-        threshold: 0.5 // 超過一半才觸發
+        threshold: 0.5
       });
 
       if (strokeGroup) observer.observe(strokeGroup);
@@ -79,6 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+
 
 
 //dialog
@@ -184,11 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 七邊形身體 - 改為垂直方向，底邊平行於畫面，尖角朝上
-    const bodyGeometry = createHeptagonGeometry(1.2, 0.45);
+    const bodyGeometry = createHeptagonGeometry(1.2, 0.7);
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     // 旋轉讓底邊平行於畫面，尖角朝上
     body.rotation.z = -Math.PI / 14; // 負角度讓尖角朝上
     body.position.y = 0; // 調整到中心位置
+    body.position.z = -0.3;
     body.castShadow = true;
     owl.add(body);
 
@@ -416,16 +418,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 學士帽 - 向上移動更多
     // 帽子底部
-    const capBaseGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 32);
+    const capBaseGeometry = new THREE.CylinderGeometry(0.7, 0.7, 0.4, 32);
     const capBase = new THREE.Mesh(capBaseGeometry, capMaterial);
-    capBase.position.set(0, 1.4, 0.25); // 向上移動更多
+    capBase.position.set(0, 1.4, 0.1); // 向上移動更多
     capBase.castShadow = true;
     owl.add(capBase);
 
     // 帽子頂部方形
-    const capTopGeometry = new THREE.BoxGeometry(1.5, 0.1, 1.5);
+    const capTopGeometry = new THREE.BoxGeometry(1.7, 0.1, 1.7);
     const capTop = new THREE.Mesh(capTopGeometry, capMaterial);
-    capTop.position.set(0, 1.6, 0.25); // 對應調整
+    capTop.position.set(0, 1.6, 0.1); // 對應調整
     capTop.castShadow = true;
     owl.add(capTop);
 
@@ -516,55 +518,63 @@ document.addEventListener('DOMContentLoaded', () => {
     owlGroup.add(owl);
     owlGroup.add(platform);
     owlGroup.scale.set(1.5, 1.5, 1.5); // 調整倍率
-    owlGroup.position.y = 0.4; // 調高一點
+    owlGroup.position.y = 0.2; // 調高一點
 
     scene.add(owlGroup);
 
-
     // 相機位置 - 調整以適應新的佈局
-    camera.position.set(0, 0.8, 7);
+    camera.position.set(0, 1, 9);
     camera.lookAt(0, 0, 0);
 
-    // 取得指定區塊元素
-    // const interactionArea = document.querySelector('#circle-particles');
-    // 滑鼠控制變數
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetRotationX = 0;
-    let targetRotationY = 0;
-    let mouseDown = false;
-    let userControlling = false;
+    
+    let mouseNormX = 0;
+    let mouseNormY = 0;
 
-    // 滑鼠事件
-    document.addEventListener('mousedown', (event) => {
-        mouseDown = true;
-        userControlling = true;
-        mouseX = event.clientX;
-        mouseY = event.clientY;
+    window.addEventListener('mousemove', (event) => {
+        // 將滑鼠座標轉換為 -1 到 1 的範圍（相對於整個視窗）
+        mouseNormX = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseNormY = -((event.clientY / window.innerHeight) * 2 - 1); // Y 軸反轉
     });
 
-    document.addEventListener('mouseup', () => {
-        mouseDown = false;
-        // 延遲恢復自動旋轉
-        setTimeout(() => {
-            userControlling = false;
-        }, 3000);
-    });
+    // // 滑鼠控制變數
+    // let mouseX = 0;
+    // let mouseY = 0;
+    // let targetRotationX = 0;
+    // let targetRotationY = 0;
+    // let mouseDown = false;
+    // let userControlling = false;
 
-    document.addEventListener('mousemove', (event) => {
-        if (mouseDown) {
-            targetRotationY += (event.clientX - mouseX) * 0.01;
-            targetRotationX += (event.clientY - mouseY) * 0.01;
-            mouseX = event.clientX;
-            mouseY = event.clientY;
-        }
-    });
+    // // 滑鼠事件，只作用在 owlContainer 上
+    // const interactionCanvas = canvas;
+    // interactionCanvas.addEventListener('mousedown', (event) => {
+    //     mouseDown = true;
+    //     userControlling = true;
+    //     mouseX = event.clientX;
+    //     mouseY = event.clientY;
+    // });
 
-    // 滾輪縮放
-    document.addEventListener('wheel', (event) => {
-        camera.position.z += event.deltaY * 0.01;
-        camera.position.z = Math.max(3, Math.min(10, camera.position.z));
-    });
+    // window.addEventListener('mouseup', () => {
+    //     mouseDown = false;
+    //     setTimeout(() => {
+    //         userControlling = false;
+    //     }, 3000);
+    // });
+
+    // interactionCanvas.addEventListener('mousemove', (event) => {
+    //     if (mouseDown) {
+    //         targetRotationY += (event.clientX - mouseX) * 0.01;
+    //         targetRotationX += (event.clientY - mouseY) * 0.01;
+    //         mouseX = event.clientX;
+    //         mouseY = event.clientY;
+    //     }
+    // });
+
+    // // 滾輪縮放，只在 canvas 上觸發
+    // interactionCanvas.addEventListener('wheel', (event) => {
+    //     event.preventDefault(); // 防止頁面滾動
+    //     camera.position.z += event.deltaY * 0.01;
+    //     camera.position.z = Math.max(3, Math.min(10, camera.position.z));
+    // }, { passive: false });
 
     // 眨眼動畫
     let blinkTimer = 0;
@@ -573,16 +583,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function animate() {
         requestAnimationFrame(animate);
 
+        // 根據滑鼠位置讓 owlGroup 轉動
+        const targetY = mouseNormX * Math.PI / 6;  // 左右最多 ±30 度
+        const targetX = -mouseNormY * Math.PI / 12; // 上下最多 ±15 度
+
+        owl.rotation.y += (targetY - owl.rotation.y) * 0.05;
+        owl.rotation.x += (targetX - owl.rotation.x) * 0.05;
+
         // 自動旋轉（當用戶沒有控制時）
-        if (!userControlling) {
-            // 從正面開始向右擺再往左擺，速度放慢
-            const time = Date.now() * 0.0005; // 調整速度變慢
-            owl.rotation.y = Math.sin(time - Math.PI / 4) * (Math.PI / 4);
-        }else {
-            // 用戶控制時的平滑旋轉
-            owl.rotation.y += (targetRotationY - owl.rotation.y) * 0.05;
-            owl.rotation.x += (targetRotationX - owl.rotation.x) * 0.05;
-        }
+        // if (!userControlling) {
+        //     const time = Date.now() * 0.0005; // 調整速度變慢
+        //     owl.rotation.y = Math.sin(time - Math.PI / 4) * (Math.PI / 4);
+        // } else {
+        //     owl.rotation.y += (targetRotationY - owl.rotation.y) * 0.05;
+        //     owl.rotation.x += (targetRotationX - owl.rotation.x) * 0.05;
+        // }
 
         // 輕微的上下浮動
         owl.position.y = Math.sin(Date.now() * 0.001) * 0.05;
@@ -593,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 眨眼動畫
         blinkTimer++;
-        if (blinkTimer > 36 && !isBlinking) { // 每1秒眨一次眼
+        if (blinkTimer > 80 && !isBlinking) {
             isBlinking = true;
             blinkTimer = 0;
         }
@@ -630,27 +645,25 @@ document.addEventListener('DOMContentLoaded', () => {
         
 
 
-// 浮動標語
-document.addEventListener("DOMContentLoaded", () => {
-  const slogans = document.querySelectorAll(".floating-slogan");
+// 便利標籤貼
+document.addEventListener("DOMContentLoaded", function () {
+  const slogans = document.querySelectorAll('.slogan-inner');
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        const inner = entry.target.querySelector('.slogan-inner');
-        if (entry.isIntersecting) {
-          // 當元素進入視口時，觸發動畫
-          inner.classList.remove("animate-in"); // 移除動畫類
-          void inner.offsetWidth; // 強制重繪，這是觸發重新動畫的技巧
-          inner.classList.add("animate-in"); // 重新添加動畫類
-        }
-      });
-    },
-    { threshold: 0.5 } // 當元素的 50% 進入視口時觸發
-  );
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate-in');
+      } else {
+        entry.target.classList.remove('animate-in');
+      }
+    });
+  }, {
+    threshold: 0.3
+  });
 
-  slogans.forEach(el => observer.observe(el));  
+  slogans.forEach(slogan => observer.observe(slogan));
 });
+
 
 
 
