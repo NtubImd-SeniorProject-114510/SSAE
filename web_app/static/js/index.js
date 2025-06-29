@@ -644,27 +644,25 @@ document.addEventListener('DOMContentLoaded', () => {
         
 
 
-// 浮動標語
-document.addEventListener("DOMContentLoaded", () => {
-  const slogans = document.querySelectorAll(".floating-slogan");
+// 便利標籤貼
+document.addEventListener("DOMContentLoaded", function () {
+  const slogans = document.querySelectorAll('.slogan-inner');
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        const inner = entry.target.querySelector('.slogan-inner');
-        if (entry.isIntersecting) {
-          // 當元素進入視口時，觸發動畫
-          inner.classList.remove("animate-in"); // 移除動畫類
-          void inner.offsetWidth; // 強制重繪，這是觸發重新動畫的技巧
-          inner.classList.add("animate-in"); // 重新添加動畫類
-        }
-      });
-    },
-    { threshold: 0.5 } // 當元素的 50% 進入視口時觸發
-  );
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate-in');
+      } else {
+        entry.target.classList.remove('animate-in');
+      }
+    });
+  }, {
+    threshold: 0.3
+  });
 
-  slogans.forEach(el => observer.observe(el));  
+  slogans.forEach(slogan => observer.observe(slogan));
 });
+
 
 
 
