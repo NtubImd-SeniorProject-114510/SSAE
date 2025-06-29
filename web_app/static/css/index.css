@@ -271,20 +271,57 @@ to {
   transform: rotate(-15deg); /* 預設角度，會被每個 .slogan-n 覆蓋 */
 }
 
-/* 內層：控制樣式與動畫 */
+/* 內層：便籤紙樣式與動畫 */
 .slogan-inner {
-  font-size: 28px;
-  font-weight: bold;
-  color: #9479C1;
-  opacity: 0.5;
-  background-color: rgba(255, 255, 255, 0.745); /* 半透明白底 */
-  padding: 10px 10px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
-  display: inline-block;
-  transform: scale(0.6) translateY(-60px);
-  transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+    background: white;
+    padding: 20px 25px;
+    border-radius: 0;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        0 1px 3px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    display: inline-block;
+    position: relative;
+    font-family: 'Microsoft JhengHei', sans-serif;
+    line-height: 1.4;
+    min-width: 180px;
+    transform: scale(0.6) translateY(-60px);
+    transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+    opacity: 0.9;
+    border-left: 8px solid #9479C1;
+}
+
+/* 便籤紙陰影層 */
+.slogan-inner::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
+    border-radius: 50%;
+    transform: perspective(10px) rotateX(45deg);
+}
+
+/* 懸浮動畫效果 */
+.floating-slogan:hover .slogan-inner {
+    transform: scale(0.65) translateY(-65px);
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.2),
+        0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* 縮排樣式 */
+.indent {
+    display: block;
+    margin-left: 20px;
+    font-size: 14px;
+    opacity: 0.8;
+    margin-top: 5px;
 }
 
 /* 進場動畫觸發 */
@@ -318,10 +355,6 @@ to {
   transform: rotate(-8deg);
 }
 
-.indent {
-  display: inline-block;
-  text-indent: 2.5em;
-}
 
 
 
@@ -357,7 +390,7 @@ to {
 }
 
 #owl-container canvas {
-  width: 400px;
+  width: 450px;
   height: 400px;
   display: block;
   position: relative;

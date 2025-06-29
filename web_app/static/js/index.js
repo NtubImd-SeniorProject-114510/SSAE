@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     owlGroup.add(owl);
     owlGroup.add(platform);
     owlGroup.scale.set(1.5, 1.5, 1.5); // 調整倍率
-    owlGroup.position.y = 0.4; // 調高一點
+    owlGroup.position.y = 0.2; // 調高一點
 
     scene.add(owlGroup);
 
