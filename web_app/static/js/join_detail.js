@@ -1,243 +1,235 @@
-// 報名按鈕功能
-const ctaButtons = document.querySelectorAll('.fixed-cta');
-ctaButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        alert('報名成功！請於 4/5 前完成繳費，活動詳情將發送到您的個人儀表板。');
-    });
-});
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
-    let commentCount = 3;
-    let commentId = 4;
-
-    // 按讚功能
-    document.querySelectorAll('.like-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const likeCountSpan = this.querySelector('.like-count');
-            let count = parseInt(likeCountSpan.textContent);
-            
-            if (this.classList.contains('liked')) {
-                this.classList.remove('liked');
-                likeCountSpan.textContent = count - 1;
-            } else {
-                this.classList.add('liked');
-                likeCountSpan.textContent = count + 1;
-            }
-        });
-    });
-
-    // 回覆按鈕功能
-    document.querySelectorAll('.reply-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const commentId = this.getAttribute('data-comment-id');
-            const replyForm = document.getElementById(`replyForm${commentId}`);
-            
-            if (replyForm.style.display === 'none') {
-                replyForm.style.display = 'block';
-                replyForm.querySelector('.reply-textarea').focus();
-            } else {
-                replyForm.style.display = 'none';
-            }
-        });
-    });
-
-    // 取消回覆按鈕
-    document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const commentId = this.getAttribute('data-comment-id');
-            const replyForm = document.getElementById(`replyForm${commentId}`);
-            replyForm.style.display = 'none';
-            replyForm.querySelector('.reply-textarea').value = '';
-        });
-    });
-
-    // 提交回覆按鈕
-    document.querySelectorAll('.submit-reply-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const commentId = this.getAttribute('data-comment-id');
-            const replyForm = document.getElementById(`replyForm${commentId}`);
-            const textarea = replyForm.querySelector('.reply-textarea');
-            const replyText = textarea.value.trim();
-            
-            if (replyText) {
-                const repliesContainer = document.getElementById(`replies${commentId}`);
-                const now = new Date();
-                const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-                
-                const replyHTML = `
-                    <div class="reply">
-                        <div class="user-avatar small">
-                            <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                        </div>
-                        <div class="reply-content">
-                            <div class="reply-header">
-                                <span class="user-name">你</span>
-                                <span class="reply-date">${dateStr}</span>
-                            </div>
-                            <p>${replyText}</p>
-                            <div class="reply-actions">
-                                <button class="reply-to-reply">回覆</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                repliesContainer.insertAdjacentHTML('beforeend', replyHTML);
-                replyForm.style.display = 'none';
-                textarea.value = '';
-            }
-        });
-    });
-
-    // 發表新留言
-    document.getElementById('submitComment').addEventListener('click', function() {
-        const textarea = document.getElementById('newCommentText');
-        const commentText = textarea.value.trim();
+    // --- Discussion Section Logic ---
+    const discussionSection = document.querySelector('.discussion-section');
+    if (discussionSection) {
+        let commentCountElement = document.getElementById('commentCount');
+        // Initialize comment count from the element, or default to the number of existing comments.
+        let commentCount = commentCountElement ? parseInt(commentCountElement.textContent.match(/\d+/)[0]) : document.querySelectorAll('.comment-card').length;
         
-        if (commentText) {
-            const commentsSection = document.getElementById('commentsSection');
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-            
-            const commentHTML = `
-                <article class="comment-card">
-                    <div class="comment-header">
-                        <div class="user-info-container">
-                            <div class="user-avatar">
-                                <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                            </div>
-                            <div class="user-info">
-                                <span class="user-name">你</span>
-                                <div class="comment-meta">
-                                    <div class="stars" data-rating="5">
-                                        <i class="fa-solid fa-star"></i>
-                                        <i class="fa-solid fa-star"></i>
-                                        <i class="fa-solid fa-star"></i>
-                                        <i class="fa-solid fa-star"></i>
-                                        <i class="fa-solid fa-star"></i>
-                                    </div>
-                                    <span class="comment-date">${dateStr}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="like-btn" data-comment-id="${commentId}">
-                            <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
-                            <span class="like-count">0</span>
-                        </button>
-                    </div>
-                    <div class="comment-content">
-                        <p>${commentText}</p>
-                    </div>
-                    <div class="comment-actions">
-                        <button class="reply-btn" data-comment-id="${commentId}">回覆</button>
-                    </div>
-                    
-                    <div class="reply-form" id="replyForm${commentId}" style="display: none;">
-                        <div class="form-group">
-                            <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button class="cancel-reply-btn" data-comment-id="${commentId}">取消</button>
-                            <button class="submit-reply-btn" data-comment-id="${commentId}">發送</button>
-                        </div>
-                    </div>
-                    
-                    <div class="replies-container" id="replies${commentId}"></div>
-                </article>
-            `;
-            
-            commentsSection.insertAdjacentHTML('beforeend', commentHTML);
-            
-            // 為新留言添加事件監聽器
-            const newComment = commentsSection.lastElementChild;
-            
-            // 按讚功能
-            const likeBtn = newComment.querySelector('.like-btn');
-            likeBtn.addEventListener('click', function() {
-                const likeCountSpan = this.querySelector('.like-count');
-                let count = parseInt(likeCountSpan.textContent);
-                
-                if (this.classList.contains('liked')) {
-                    this.classList.remove('liked');
-                    likeCountSpan.textContent = count - 1;
-                } else {
-                    this.classList.add('liked');
-                    likeCountSpan.textContent = count + 1;
-                }
+        // Determine the next comment ID to avoid conflicts.
+        const existingComments = document.querySelectorAll('.comment-card');
+        let nextCommentId = existingComments.length > 0 ? existingComments.length + 1 : 1;
+
+        // Use event delegation for all interactive elements within the discussion section.
+        discussionSection.addEventListener('click', function(e) {
+            const target = e.target;
+
+            const likeBtn = target.closest('.like-btn');
+            if (likeBtn) {
+                e.preventDefault();
+                handleLike(likeBtn);
+                return;
+            }
+
+            const replyBtn = target.closest('.reply-btn, .reply-to-reply');
+            if (replyBtn) {
+                e.preventDefault();
+                handleReply(replyBtn);
+                return;
+            }
+
+            const cancelBtn = target.closest('.cancel-reply-btn');
+            if (cancelBtn) {
+                e.preventDefault();
+                handleCancelReply(cancelBtn);
+                return;
+            }
+
+            const submitBtn = target.closest('.submit-reply-btn');
+            if (submitBtn) {
+                e.preventDefault();
+                handleSubmitReply(submitBtn);
+                return;
+            }
+        });
+
+        const submitCommentBtn = document.getElementById('submitComment');
+        if (submitCommentBtn) {
+            submitCommentBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleSubmitNewComment();
             });
-            
-            // 回覆功能
-            const replyBtn = newComment.querySelector('.reply-btn');
-            replyBtn.addEventListener('click', function() {
-                const cId = this.getAttribute('data-comment-id');
-                const replyForm = document.getElementById(`replyForm${cId}`);
-                
-                if (replyForm.style.display === 'none') {
-                    replyForm.style.display = 'block';
-                    replyForm.querySelector('.reply-textarea').focus();
-                } else {
-                    replyForm.style.display = 'none';
-                }
-            });
-            
-            // 取消回覆
-            const cancelBtn = newComment.querySelector('.cancel-reply-btn');
-            cancelBtn.addEventListener('click', function() {
-                const cId = this.getAttribute('data-comment-id');
-                const replyForm = document.getElementById(`replyForm${cId}`);
-                replyForm.style.display = 'none';
-                replyForm.querySelector('.reply-textarea').value = '';
-            });
-            
-            // 提交回覆
-            const submitBtn = newComment.querySelector('.submit-reply-btn');
-            submitBtn.addEventListener('click', function() {
-                const cId = this.getAttribute('data-comment-id');
-                const replyForm = document.getElementById(`replyForm${cId}`);
-                const replyTextarea = replyForm.querySelector('.reply-textarea');
-                const replyText = replyTextarea.value.trim();
-                
-                if (replyText) {
-                    const repliesContainer = document.getElementById(`replies${cId}`);
-                    const now = new Date();
-                    const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-                    
-                    const replyHTML = `
-                        <div class="reply">
-                            <div class="user-avatar small">
-                                <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                            </div>
-                            <div class="reply-content">
-                                <div class="reply-header">
-                                    <span class="user-name">你</span>
-                                    <span class="reply-date">${dateStr}</span>
-                                </div>
-                                <p>${replyText}</p>
-                                <div class="reply-actions">
-                                    <button class="reply-to-reply">回覆</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    repliesContainer.insertAdjacentHTML('beforeend', replyHTML);
-                    replyForm.style.display = 'none';
-                    replyTextarea.value = '';
-                }
-            });
-            
-            // 更新留言計數
-            commentCount++;
-            commentId++;
-            document.getElementById('commentCount').textContent = `(${commentCount}則評論)`;
-            
-            // 清空輸入框
-            textarea.value = '';
-            
-            // 滾動到新留言
-            newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
+        function handleLike(button) {
+            const likeCountSpan = button.querySelector('.like-count');
+            let count = parseInt(likeCountSpan.textContent);
+            // .toggle returns true if class is added, false if removed.
+            if (button.classList.toggle('liked')) {
+                likeCountSpan.textContent = count + 1; // Liked
+            } else {
+                likeCountSpan.textContent = count - 1; // Unliked
+            }
+        }
+
+        function handleReply(button) {
+            const parentCard = button.closest('.comment-card, .reply');
+            if (!parentCard) return;
+
+            // Remove any other open reply form to keep the UI clean.
+            const existingForm = discussionSection.querySelector('.reply-form-container');
+            if (existingForm) {
+                existingForm.remove();
+            }
+
+            const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
+            const replyForm = createReplyForm(userName);
+            
+            // Insert form right after the actions container for proper placement.
+            const actionsDiv = parentCard.querySelector('.comment-actions, .reply-actions');
+            if (actionsDiv) {
+                actionsDiv.insertAdjacentElement('afterend', replyForm);
+            } else {
+                parentCard.appendChild(replyForm); // Fallback
+            }
+            replyForm.querySelector('.reply-textarea').focus();
+        }
+
+        function handleCancelReply(button) {
+            const form = button.closest('.reply-form-container');
+            if (form) {
+                form.remove();
+            }
+        }
+
+        function handleSubmitReply(button) {
+            const formContainer = button.closest('.reply-form-container');
+            const textarea = formContainer.querySelector('.reply-textarea');
+            const replyText = textarea.value.trim();
+
+            if (replyText) {
+                const parentCard = formContainer.closest('.comment-card, .reply');
+                let repliesContainer = parentCard.querySelector('.replies-container');
+
+                // If a replies container doesn't exist, create one.
+                if (!repliesContainer) {
+                    repliesContainer = document.createElement('div');
+                    repliesContainer.className = 'replies-container';
+                    const insertAfter = parentCard.querySelector('.comment-actions, .reply-actions');
+                    insertAfter.insertAdjacentElement('afterend', repliesContainer);
+                }
+                
+                const newReply = createReplyElement(replyText);
+                repliesContainer.appendChild(newReply);
+                formContainer.remove(); // Clean up the form after submission.
+            }
+        }
+        
+        function handleSubmitNewComment() {
+            const textarea = document.getElementById('newCommentText');
+            const commentText = textarea.value.trim();
+
+            if (commentText) {
+                const commentsSection = document.getElementById('commentsSection');
+                const newComment = createCommentElement(commentText, nextCommentId);
+                commentsSection.appendChild(newComment);
+                
+                textarea.value = ''; // Clear input field.
+                commentCount++;
+                nextCommentId++;
+                if (commentCountElement) {
+                    commentCountElement.textContent = `(${commentCount}則評論)`;
+                }
+                newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function createReplyForm(replyTo = '') {
+            const formContainer = document.createElement('div');
+            formContainer.className = 'reply-form-container';
+            formContainer.innerHTML = `
+                <div class="reply-form">
+                    <div class="form-group">
+                        <textarea class="form-control reply-textarea" rows="3" placeholder="回覆 @${replyTo}..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-reply-btn">取消</button>
+                        <button type="button" class="submit-reply-btn">發送</button>
+                    </div>
+                </div>`;
+            return formContainer;
+        }
+
+        function createReplyElement(text) {
+            const replyElement = document.createElement('div');
+            replyElement.className = 'reply';
+            const dateStr = new Date().toLocaleDateString('zh-TW');
+            const staticAvatarPath = '/static/image/activity_test.jpg'; // Consistent avatar path
+
+            replyElement.innerHTML = `
+                <div class="user-avatar small"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
+                <div class="reply-content">
+                    <div class="reply-header"><span class="user-name">你</span><span class="reply-date">${dateStr}</span></div>
+                    <p>${text}</p>
+                    <div class="reply-actions"><button class="reply-to-reply">回覆</button></div>
+                </div>`;
+            return replyElement;
+        }
+
+        function createCommentElement(text, commentId) {
+            const commentElement = document.createElement('article');
+            commentElement.className = 'comment-card';
+            const dateStr = new Date().toLocaleDateString('zh-TW');
+            const staticAvatarPath = '/static/image/activity_test.jpg'; // Consistent avatar path
+
+            commentElement.innerHTML = `
+                <div class="comment-header">
+                    <div class="user-info-container">
+                        <div class="user-avatar"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
+                        <div class="user-info">
+                            <span class="user-name">你</span>
+                            <div class="comment-meta">
+                                <div class="stars" data-rating="5"></div>
+                                <span class="comment-date">${dateStr}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="like-btn" data-comment-id="${commentId}"><span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span><span class="like-count">0</span></button>
+                </div>
+                <div class="comment-content"><p>${text}</p></div>
+                <div class="comment-actions"><button class="reply-btn" data-comment-id="${commentId}">回覆</button></div>
+                <div class="replies-container"></div>`;
+            
+            // Dynamically create and update stars for the new comment.
+            const starsContainer = commentElement.querySelector('.stars');
+            updateStarIcons(starsContainer, 5); // New comments default to 5 stars.
+            return commentElement;
+        }
+        
+        // Initialize star ratings for all comments loaded with the page.
+        document.querySelectorAll('.stars').forEach(starsContainer => {
+            const rating = parseFloat(starsContainer.getAttribute('data-rating'));
+            updateStarIcons(starsContainer, rating);
+        });
+
+        function updateStarIcons(container, rating) {
+            if (!container) return;
+            container.innerHTML = ''; // Clear existing stars to prevent duplicates.
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                if (rating >= i) {
+                    star.className = 'fa-solid fa-star';
+                } else if (rating > i - 1 && rating < i) {
+                    star.className = 'fa-solid fa-star-half-stroke';
+                } else {
+                    star.className = 'fa-regular fa-star';
+                }
+                container.appendChild(star);
+            }
+        }
+    }
+
+    // --- CTA Button Logic for smooth scrolling ---
+    const ctaButtons = document.querySelectorAll('.fixed-cta');
+    ctaButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
     });
 });
