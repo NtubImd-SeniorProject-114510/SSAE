@@ -207,33 +207,36 @@ color: black;
 
 
 
-.stroke-group {
-transform: translate(-20px, 20px); /* 起始位置，與fill重疊 */
-opacity: 0;
-animation: strokeMove 1s ease-out forwards;
-animation-delay: 0.5s;
+.stroke-group,
+.stroke-group-r {
+  opacity: 0;
+}
+
+/* 共用動畫 class */
+.stroke-group.animate-stroke {
+  animation: strokeMove 1s ease-out forwards;
+  animation-delay: 0.5s;
+}
+
+.stroke-group-r.animate-stroke {
+  animation: strokeMoveLeftUp 1s ease-out forwards;
+  animation-delay: 0.5s;
 }
 
 @keyframes strokeMove {
-to {
+  to {
     transform: translate(0, 0);
     opacity: 1;
-}
-}
-
-.stroke-group-r {
-transform: translate(60px, -60px); /* 起始位置：從右上 */
-opacity: 0;
-animation: strokeMoveLeftUp 1s ease-out forwards;
-animation-delay: 0.5s;
+  }
 }
 
 @keyframes strokeMoveLeftUp {
-to {
+  to {
     transform: translate(0, 0);
     opacity: 1;
+  }
 }
-}
+
   
   
 #triangle-1{

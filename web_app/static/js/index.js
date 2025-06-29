@@ -53,25 +53,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const pathLength = path.getTotalLength();
     path.style.strokeDasharray = pathLength;
     path.style.strokeDashoffset = pathLength;
-
-    // 播放圓圈動畫
     path.style.animation = "drawCircle 3s ease-in-out forwards";
 
-    // 當圓圈動畫完成後才啟用觀察器
     path.addEventListener("animationend", function () {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+          const el = entry.target;
+
           if (entry.isIntersecting) {
-            if (entry.target.classList.contains("stroke-group")) {
-              entry.target.classList.add("animate-stroke-left");
-            } else if (entry.target.classList.contains("stroke-group-r")) {
-              entry.target.classList.add("animate-stroke-right");
-            }
-            observer.unobserve(entry.target); // 只觸發一次
+            // 👉 強制重播動畫的技巧
+            el.classList.remove("animate-stroke"); // 自訂共用 class
+            void el.offsetWidth; // 觸發 reflow
+            el.classList.add("animate-stroke");
+          } else {
+            el.classList.remove("animate-stroke");
           }
         });
       }, {
-        threshold: 0.5 // 超過一半才觸發
+        threshold: 0.5
       });
 
       if (strokeGroup) observer.observe(strokeGroup);
@@ -79,6 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+
 
 
 //dialog
