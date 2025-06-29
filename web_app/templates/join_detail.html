@@ -152,79 +152,175 @@
             </div>
             
             <div class="section">
-                <h2 class="section-title">活動討論區 <span class="comment-count">(3則評論)</span></h2>
-                <div class="comments-section">
-                
-                <!-- 評論 1 -->
-                <article class="comment-card">
-                    <div class="comment-header">
-                        <div class="user-avatar">
-                            <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                        </div>
-                        <div class="user-info">
-                            <span class="user-name">阿華</span>
-                            <div class="comment-meta">
-                                <div class="stars" data-rating="4.5">
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
-                                    <i class="fa-regular fa-star"></i>
+                <div class="discussion-section">
+                    <h2 class="section-title">活動討論區 <span class="comment-count" id="commentCount">(3則評論)</span></h2>
+                    
+                    <div class="comments-section" id="commentsSection">
+                        <!-- 評論 1 -->
+                        <article class="comment-card">
+                            <div class="comment-header">
+                                <div class="user-info-container">
+                                    <div class="user-avatar">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">阿華</span>
+                                        <div class="comment-meta">
+                                            <div class="stars" data-rating="4.5">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                            </div>
+                                            <span class="comment-date">2024/04/10</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span class="comment-date">2024/04/10</span>
+                                <button class="like-btn" data-comment-id="1">
+                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                                    <span class="like-count">12</span>
+                                </button>
                             </div>
-                        </div>
-                        <button class="like-btn small">
-                            <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
-                            <span class="like-count">12</span>
-                        </button>
-                    </div>
-                    <div class="comment-content">
-                        <p>請問可以帶朋友一起參加嗎？我有一位朋友也很想來，但他不是北商的學生。</p>
-                    </div>
-                    <div class="comment-actions">
-                        <button class="reply-btn">回覆</button>
+                            <div class="comment-content">
+                                <p>請問可以帶朋友一起參加嗎？我有一位朋友也很想來，但他不是北商的學生。</p>
+                            </div>
+                            <div class="comment-actions">
+                                <button class="reply-btn" data-comment-id="1">回覆</button>
+                            </div>
+                            
+                            <!-- 回覆表單 (預設隱藏) -->
+                            <div class="reply-form" id="replyForm1" style="display: none;">
+                                <div class="form-group">
+                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="cancel-reply-btn" data-comment-id="1">取消</button>
+                                    <button class="submit-reply-btn" data-comment-id="1">發送</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 回覆區塊 -->
+                            <div class="replies-container" id="replies1">
+                                <div class="reply">
+                                    <div class="user-avatar small">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="reply-content">
+                                        <div class="reply-header">
+                                            <span class="user-name">烤肉達人</span>
+                                            <span class="reply-date">2024/04/11</span>
+                                        </div>
+                                        <p>可以的！這次活動其實不限北商學生，只要是你的朋友都歡迎參加，記得幫他報名和繳費就行了。</p>
+                                        <div class="reply-actions">
+                                            <button class="reply-to-reply" data-reply-to="烤肉達人">回覆</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- 評論 2 -->
+                        <article class="comment-card">
+                            <div class="comment-header">
+                                <div class="user-info-container">
+                                    <div class="user-avatar">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">小明</span>
+                                        <div class="comment-meta">
+                                            <div class="stars" data-rating="5">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <span class="comment-date">2024/04/12</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="like-btn" data-comment-id="2">
+                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                                    <span class="like-count">8</span>
+                                </button>
+                            </div>
+                            <div class="comment-content">
+                                <p>看起來很有趣！我已經報名了，期待週六的烤肉活動～</p>
+                            </div>
+                            <div class="comment-actions">
+                                <button class="reply-btn" data-comment-id="2">回覆</button>
+                            </div>
+                            
+                            <div class="reply-form" id="replyForm2" style="display: none;">
+                                <div class="form-group">
+                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="cancel-reply-btn" data-comment-id="2">取消</button>
+                                    <button class="submit-reply-btn" data-comment-id="2">發送</button>
+                                </div>
+                            </div>
+                            
+                            <div class="replies-container" id="replies2"></div>
+                        </article>
+
+                        <!-- 評論 3 -->
+                        <article class="comment-card">
+                            <div class="comment-header">
+                                <div class="user-info-container">
+                                    <div class="user-avatar">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">小芳</span>
+                                        <div class="comment-meta">
+                                            <div class="stars" data-rating="4">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                            </div>
+                                            <span class="comment-date">2024/04/13</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="like-btn" data-comment-id="3">
+                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                                    <span class="like-count">5</span>
+                                </button>
+                            </div>
+                            <div class="comment-content">
+                                <p>請問會提供素食選項嗎？我是吃素的，想知道有沒有適合的食材。</p>
+                            </div>
+                            <div class="comment-actions">
+                                <button class="reply-btn" data-comment-id="3">回覆</button>
+                            </div>
+                            
+                            <div class="reply-form" id="replyForm3" style="display: none;">
+                                <div class="form-group">
+                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="cancel-reply-btn" data-comment-id="3">取消</button>
+                                    <button class="submit-reply-btn" data-comment-id="3">發送</button>
+                                </div>
+                            </div>
+                            
+                            <div class="replies-container" id="replies3"></div>
+                        </article>
                     </div>
                     
-                    <!-- 回覆表單 (預設隱藏) -->
-                    <div class="reply-form" style="display: none;">
+                    <!-- 新增留言表單 -->
+                    <div class="add-comment-form">
+                        <h3>發表留言</h3>
                         <div class="form-group">
-                            <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                            <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
                         </div>
-                        <div class="form-actions">
-                            <button class="cancel-reply-btn">取消</button>
-                            <button class="submit-reply-btn">發送</button>
-                        </div>
+                        <button id="submitComment" class="submit-comment-btn">發表留言</button>
                     </div>
-                    
-                    <!-- 回覆區塊 -->
-                    <div class="replies-container">
-                        <div class="reply">
-                            <div class="user-avatar small">
-                                <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                            </div>
-                            <div class="reply-content">
-                                <div class="reply-header">
-                                    <span class="user-name">烤肉達人</span>
-                                    <span class="reply-date">2024/04/11</span>
-                                </div>
-                                <p>可以的！這次活動其實不限北商學生，只要是你的朋友都歡迎參加，記得幫他報名和繳費就行了。</p>
-                                <div class="reply-actions">
-                                    <button class="reply-to-reply">回覆</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-                </div>
-                
-                <!-- 新增留言表單 -->
-                <div class="add-comment-form">
-                    <h3>發表留言</h3>
-                    <div class="form-group">
-                        <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
-                    </div>
-                    <button id="submitComment" class="submit-comment-btn">發表留言</button>
                 </div>
             </div>
 
