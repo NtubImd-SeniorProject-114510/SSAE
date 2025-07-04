@@ -168,3 +168,50 @@ footer .wave#wave4{
   cursor: pointer;
 }
 
+@media (max-width: 768px) {
+  .footer-info {
+    flex-direction: column;
+    padding: 40px 20px;
+    align-items: flex-start;
+  }
+
+  .footer-links,
+  .footer-contact,
+  .footer-backup {
+    width: 100%;
+    margin-bottom: 20px;
+    flex-direction: column;
+  }
+
+  .footer-links {
+    border-left: none;
+    border-right: none;
+  }
+
+  .footer-links .name,
+  .footer-contact .name {
+    margin-bottom: 8px;
+  }
+
+  .footer-contact {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .footer-contact .details {
+    margin-top: 5px;
+  }
+
+  .social-icons {
+    justify-content: flex-start;
+  }
+
+  .footer-backup {
+    text-align: left;
+  }
+
+  .backupowl {
+    width: 100px;
+    height: 100px;
+  }
+}
