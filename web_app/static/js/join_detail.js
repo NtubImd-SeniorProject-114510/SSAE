@@ -1,9 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Discussion Section Logic ---
     const discussionSection = document.querySelector('.discussion-section');
     if (discussionSection) {
         let commentCountElement = document.getElementById('commentCount');
-        // Initialize comment count from the element, or default to the number of existing comments.
         let commentCount = commentCountElement ? parseInt(commentCountElement.textContent.match(/\d+/)[0]) : document.querySelectorAll('.comment-card').length;
         
         // Determine the next comment ID to avoid conflicts.
