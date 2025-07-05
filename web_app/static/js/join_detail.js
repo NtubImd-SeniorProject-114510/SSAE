@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const parentCard = button.closest('.comment-card, .reply');
             if (!parentCard) return;
 
-            // Remove any other open reply form to keep the UI clean.
             const existingForm = discussionSection.querySelector('.reply-form-container');
             if (existingForm) {
                 existingForm.remove();
@@ -70,12 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
             const replyForm = createReplyForm(userName);
             
-            // Insert form right after the actions container for proper placement.
             const actionsDiv = parentCard.querySelector('.comment-actions, .reply-actions');
             if (actionsDiv) {
                 actionsDiv.insertAdjacentElement('afterend', replyForm);
             } else {
-                parentCard.appendChild(replyForm); // Fallback
+                parentCard.appendChild(replyForm);
             }
             replyForm.querySelector('.reply-textarea').focus();
         }
@@ -96,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const parentCard = formContainer.closest('.comment-card, .reply');
                 let repliesContainer = parentCard.querySelector('.replies-container');
 
-                // If a replies container doesn't exist, create one.
                 if (!repliesContainer) {
                     repliesContainer = document.createElement('div');
                     repliesContainer.className = 'replies-container';
@@ -106,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const newReply = createReplyElement(replyText);
                 repliesContainer.appendChild(newReply);
-                formContainer.remove(); // Clean up the form after submission.
+                formContainer.remove();
             }
         }
         
@@ -119,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newComment = createCommentElement(commentText, nextCommentId);
                 commentsSection.appendChild(newComment);
                 
-                textarea.value = ''; // Clear input field.
+                textarea.value = '';
                 commentCount++;
                 nextCommentId++;
                 if (commentCountElement) {
@@ -185,13 +182,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="comment-actions"><button class="reply-btn" data-comment-id="${commentId}">回覆</button></div>
                 <div class="replies-container"></div>`;
             
-            // Dynamically create and update stars for the new comment.
             const starsContainer = commentElement.querySelector('.stars');
-            updateStarIcons(starsContainer, 5); // New comments default to 5 stars.
+            updateStarIcons(starsContainer, 5);
             return commentElement;
         }
         
-        // Initialize star ratings for all comments loaded with the page.
         document.querySelectorAll('.stars').forEach(starsContainer => {
             const rating = parseFloat(starsContainer.getAttribute('data-rating'));
             updateStarIcons(starsContainer, rating);
