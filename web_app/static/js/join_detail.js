@@ -4,11 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let commentCountElement = document.getElementById('commentCount');
         let commentCount = commentCountElement ? parseInt(commentCountElement.textContent.match(/\d+/)[0]) : document.querySelectorAll('.comment-card').length;
         
-        // Determine the next comment ID to avoid conflicts.
         const existingComments = document.querySelectorAll('.comment-card');
         let nextCommentId = existingComments.length > 0 ? existingComments.length + 1 : 1;
 
-        // Use event delegation for all interactive elements within the discussion section.
         discussionSection.addEventListener('click', function(e) {
             const target = e.target;
 
@@ -52,11 +50,10 @@ document.addEventListener('DOMContentLoaded', function() {
         function handleLike(button) {
             const likeCountSpan = button.querySelector('.like-count');
             let count = parseInt(likeCountSpan.textContent);
-            // .toggle returns true if class is added, false if removed.
             if (button.classList.toggle('liked')) {
-                likeCountSpan.textContent = count + 1; // Liked
+                likeCountSpan.textContent = count + 1;
             } else {
-                likeCountSpan.textContent = count - 1; // Unliked
+                likeCountSpan.textContent = count - 1;
             }
         }
 
