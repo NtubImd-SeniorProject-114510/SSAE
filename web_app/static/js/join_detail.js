@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function updateStarIcons(container, rating) {
             if (!container) return;
-            container.innerHTML = ''; // Clear existing stars to prevent duplicates.
+            container.innerHTML = '';
             for (let i = 1; i <= 5; i++) {
                 const star = document.createElement('i');
                 if (rating >= i) {
@@ -209,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- CTA Button Logic for smooth scrolling ---
     const ctaButtons = document.querySelectorAll('.fixed-cta');
     ctaButtons.forEach(button => {
         button.addEventListener('click', function() {
