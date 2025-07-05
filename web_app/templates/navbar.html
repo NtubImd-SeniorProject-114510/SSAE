@@ -38,8 +38,42 @@
                 </form>
             </div>
         </div>
+        <div class="phone-menu">
+            <div class="phone-circle" id="phoneMenuButton">             
+                <i class="fa-solid fa-bars iconMenu"></i>     
+            </div>
+        </div>  
     </nav>     
     {% endblock %}      
+    
+    <!-- 手機菜單覆蓋層和面板 -->
+    <div class="phone-menu-overlay" id="phoneMenuOverlay"></div>
+    <div class="phone-dropdown" id="phoneDropdown">
+        <button class="close-btn" id="phoneMenuClose">
+            <i class="fa-solid fa-times"></i>
+        </button>
+        
+        <div class="user-section">
+            <a class="user-icon" href="/personal/">
+                <i class="fa-solid fa-user iconPhoneMenu"></i>
+                <span>個人中心</span>
+            </a>
+            <p class="Now-Account">登入帳號：{{ user.username }}</p>
+        </div>
+        
+        <div class="nav-section">
+            <a href="/chat/">校規查詢</a> 
+            <a href="/comment/">課程評論區</a>
+            <a href="/join/">活動召集</a>
+            <a href="/book/">二手書專區</a>
+            
+        </div>
+
+        <div class="logout-section">
+            <a href="#" class="phone-dropdown-item" id="phoneLoginButton">登入</a>
+            <a href="/welcome/" class="phone-dropdown-item" id="phoneLogoutButton">登出</a>
+        </div>
+    </div>
     
     {% block content %}{% endblock %}        
     
