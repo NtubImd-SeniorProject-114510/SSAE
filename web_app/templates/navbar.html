@@ -30,17 +30,65 @@
                 <i class="fa-solid fa-user"></i>         
             </div>
             <div class="user-dropdown" id="userDropdown">
-                <a href="#" class="dropdown-item" id="loginButton">登入</a>
+              {% if user.is_authenticated %}
                 <a href="/personal/" class="dropdown-item" id="personalButton">個人中心</a>
-                <form action="{% url 'logout' %}" method="post" id="logoutForm" style="cursor: pointer;">
+                <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
                     {% csrf_token %}
-                    <a href="/welcome/" type="button" class="dropdown-item" id="logoutButton">登出</a>
+                    <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item" id="logoutButton">登出</a>
                 </form>
+              {% else %}
+                <a href="{% url 'social:begin' 'google-oauth2' %}" class="dropdown-item" id="loginButton">登入</a>
+              {% endif %}
             </div>
         </div>
-    </nav>     
+        <div class="phone-menu">
+            <div class="phone-circle" id="phoneMenuButton">             
+                <i class="fa-solid fa-bars iconMenu"></i>     
+            </div>
+        </div>
+      </nav>
+  
+      <!-- 手機菜單覆蓋層和面板 -->
+      <div class="phone-menu-overlay" id="phoneMenuOverlay"></div>
+      <div class="phone-dropdown" id="phoneDropdown">
+          <button class="close-btn" id="phoneMenuClose">
+              <i class="fa-solid fa-times"></i>
+          </button>
+          
+          <div class="user-section">
+            {% if user.is_authenticated %}
+              <a class="user-icon" href="/personal/">
+                  <i class="fa-solid fa-user iconPhoneMenu"></i>
+                  <span>個人中心</span>
+              </a>
+            {% else %}
+              <a href="{% url 'social:begin' 'google-oauth2' %}" class="user-icon dropdown-item" id="loginButton">
+                <i class="fa-solid fa-user iconPhoneMenu"></i>
+                <span>請先登入學校帳號</span>
+              </a>
+            {% endif %}
+          </div>
+          
+          <div class="nav-section">
+              <a href="/chat/">校規查詢</a> 
+              <a href="/comment/">課程評論區</a>
+              <a href="/join/">活動召集</a>
+              <a href="/book/">二手書專區</a>
+              
+          </div>
+  
+          <div class="logout-section">
+              {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
+                  {% csrf_token %}
+                  <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item" id="logoutButton">登出</a>
+                </form>
+              {% else %}
+              {% endif %}
+          </div>
+    </div>
     {% endblock %}      
-    
+
     {% block content %}{% endblock %}        
     
     {% block footer %}{% endblock %}          
