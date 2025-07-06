@@ -1,16 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Discussion Section Logic ---
     const discussionSection = document.querySelector('.discussion-section');
     if (discussionSection) {
         let commentCountElement = document.getElementById('commentCount');
-        // Initialize comment count from the element, or default to the number of existing comments.
         let commentCount = commentCountElement ? parseInt(commentCountElement.textContent.match(/\d+/)[0]) : document.querySelectorAll('.comment-card').length;
         
-        // Determine the next comment ID to avoid conflicts.
         const existingComments = document.querySelectorAll('.comment-card');
         let nextCommentId = existingComments.length > 0 ? existingComments.length + 1 : 1;
 
-        // Use event delegation for all interactive elements within the discussion section.
         discussionSection.addEventListener('click', function(e) {
             const target = e.target;
 
@@ -54,11 +50,10 @@ document.addEventListener('DOMContentLoaded', function() {
         function handleLike(button) {
             const likeCountSpan = button.querySelector('.like-count');
             let count = parseInt(likeCountSpan.textContent);
-            // .toggle returns true if class is added, false if removed.
             if (button.classList.toggle('liked')) {
-                likeCountSpan.textContent = count + 1; // Liked
+                likeCountSpan.textContent = count + 1;
             } else {
-                likeCountSpan.textContent = count - 1; // Unliked
+                likeCountSpan.textContent = count - 1;
             }
         }
 
@@ -66,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const parentCard = button.closest('.comment-card, .reply');
             if (!parentCard) return;
 
-            // Remove any other open reply form to keep the UI clean.
             const existingForm = discussionSection.querySelector('.reply-form-container');
             if (existingForm) {
                 existingForm.remove();
@@ -75,12 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
             const replyForm = createReplyForm(userName);
             
-            // Insert form right after the actions container for proper placement.
             const actionsDiv = parentCard.querySelector('.comment-actions, .reply-actions');
             if (actionsDiv) {
                 actionsDiv.insertAdjacentElement('afterend', replyForm);
             } else {
-                parentCard.appendChild(replyForm); // Fallback
+                parentCard.appendChild(replyForm);
             }
             replyForm.querySelector('.reply-textarea').focus();
         }
@@ -101,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const parentCard = formContainer.closest('.comment-card, .reply');
                 let repliesContainer = parentCard.querySelector('.replies-container');
 
-                // If a replies container doesn't exist, create one.
                 if (!repliesContainer) {
                     repliesContainer = document.createElement('div');
                     repliesContainer.className = 'replies-container';
@@ -111,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const newReply = createReplyElement(replyText);
                 repliesContainer.appendChild(newReply);
-                formContainer.remove(); // Clean up the form after submission.
+                formContainer.remove();
             }
         }
         
@@ -124,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newComment = createCommentElement(commentText, nextCommentId);
                 commentsSection.appendChild(newComment);
                 
-                textarea.value = ''; // Clear input field.
+                textarea.value = '';
                 commentCount++;
                 nextCommentId++;
                 if (commentCountElement) {
@@ -190,13 +182,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="comment-actions"><button class="reply-btn" data-comment-id="${commentId}">回覆</button></div>
                 <div class="replies-container"></div>`;
             
-            // Dynamically create and update stars for the new comment.
             const starsContainer = commentElement.querySelector('.stars');
-            updateStarIcons(starsContainer, 5); // New comments default to 5 stars.
+            updateStarIcons(starsContainer, 5);
             return commentElement;
         }
         
-        // Initialize star ratings for all comments loaded with the page.
         document.querySelectorAll('.stars').forEach(starsContainer => {
             const rating = parseFloat(starsContainer.getAttribute('data-rating'));
             updateStarIcons(starsContainer, rating);
@@ -204,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function updateStarIcons(container, rating) {
             if (!container) return;
-            container.innerHTML = ''; // Clear existing stars to prevent duplicates.
+            container.innerHTML = '';
             for (let i = 1; i <= 5; i++) {
                 const star = document.createElement('i');
                 if (rating >= i) {
@@ -219,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- CTA Button Logic for smooth scrolling ---
     const ctaButtons = document.querySelectorAll('.fixed-cta');
     ctaButtons.forEach(button => {
         button.addEventListener('click', function() {
