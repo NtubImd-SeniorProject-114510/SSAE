@@ -53,25 +53,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const pathLength = path.getTotalLength();
     path.style.strokeDasharray = pathLength;
     path.style.strokeDashoffset = pathLength;
-
-    // 播放圓圈動畫
     path.style.animation = "drawCircle 3s ease-in-out forwards";
 
-    // 當圓圈動畫完成後才啟用觀察器
     path.addEventListener("animationend", function () {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+          const el = entry.target;
+
           if (entry.isIntersecting) {
-            if (entry.target.classList.contains("stroke-group")) {
-              entry.target.classList.add("animate-stroke-left");
-            } else if (entry.target.classList.contains("stroke-group-r")) {
-              entry.target.classList.add("animate-stroke-right");
-            }
-            observer.unobserve(entry.target); // 只觸發一次
+            // 👉 強制重播動畫的技巧
+            el.classList.remove("animate-stroke"); // 自訂共用 class
+            void el.offsetWidth; // 觸發 reflow
+            el.classList.add("animate-stroke");
+          } else {
+            el.classList.remove("animate-stroke");
           }
         });
       }, {
-        threshold: 0.5 // 超過一半才觸發
+        threshold: 0.5
       });
 
       if (strokeGroup) observer.observe(strokeGroup);
@@ -111,31 +110,23 @@ window.addEventListener('DOMContentLoaded', () => {
 // 場景設置
 document.addEventListener('DOMContentLoaded', () => {
     const scene = new THREE.Scene();
-
-    // 固定大小
-    const width = 400;
-    const height = 400;
-
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     // 使用指定的 canvas 元素
     const canvas = document.createElement('canvas');
-
     // 清空 owl-container 並插入canvas
     const container = document.getElementById('owl-container');
     container.innerHTML = '';
     container.appendChild(canvas);
-
     const renderer = new THREE.WebGLRenderer({ 
         canvas: canvas, 
         antialias: true, 
         alpha: true
     });
-
-    renderer.setSize(width, height);
+    renderer.setSize(400, 400);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0xD1C5D1, 0.3);
+    // renderer.setClearColor(0xffffff);
 
     // 燈光設置
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -180,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 shape.lineTo(x, y);
             }
         }
-
+        
         const extrudeSettings = {
             depth: depth,
             bevelEnabled: true,
@@ -201,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     body.position.y = 0; // 調整到中心位置
     body.position.z = -0.3;
     body.castShadow = true;
-    body.scale.x = 1.3; // 原本是 1，這樣會變寬 30%
+    body.scale.x = 1.1;
     owl.add(body);
 
 
@@ -532,43 +523,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
     scene.add(owlGroup);
 
-    // 相機位置
+    // 相機位置 - 調整以適應新的佈局
     camera.position.set(0, 1, 9);
     camera.lookAt(0, 0, 0);
 
-    // 滑鼠控制變數
+    
     let mouseNormX = 0;
     let mouseNormY = 0;
 
     window.addEventListener('mousemove', (event) => {
+        // 將滑鼠座標轉換為 -1 到 1 的範圍（相對於整個視窗）
         mouseNormX = (event.clientX / window.innerWidth) * 2 - 1;
-        mouseNormY = -((event.clientY / window.innerHeight) * 2 - 1);
+        mouseNormY = -((event.clientY / window.innerHeight) * 2 - 1); // Y 軸反轉
     });
 
-    // 動畫與互動
+    // // 滑鼠控制變數
+    // let mouseX = 0;
+    // let mouseY = 0;
+    // let targetRotationX = 0;
+    // let targetRotationY = 0;
+    // let mouseDown = false;
+    // let userControlling = false;
+
+    // // 滑鼠事件，只作用在 owlContainer 上
+    // const interactionCanvas = canvas;
+    // interactionCanvas.addEventListener('mousedown', (event) => {
+    //     mouseDown = true;
+    //     userControlling = true;
+    //     mouseX = event.clientX;
+    //     mouseY = event.clientY;
+    // });
+
+    // window.addEventListener('mouseup', () => {
+    //     mouseDown = false;
+    //     setTimeout(() => {
+    //         userControlling = false;
+    //     }, 3000);
+    // });
+
+    // interactionCanvas.addEventListener('mousemove', (event) => {
+    //     if (mouseDown) {
+    //         targetRotationY += (event.clientX - mouseX) * 0.01;
+    //         targetRotationX += (event.clientY - mouseY) * 0.01;
+    //         mouseX = event.clientX;
+    //         mouseY = event.clientY;
+    //     }
+    // });
+
+    // // 滾輪縮放，只在 canvas 上觸發
+    // interactionCanvas.addEventListener('wheel', (event) => {
+    //     event.preventDefault(); // 防止頁面滾動
+    //     camera.position.z += event.deltaY * 0.01;
+    //     camera.position.z = Math.max(3, Math.min(10, camera.position.z));
+    // }, { passive: false });
+
+    // 眨眼動畫
     let blinkTimer = 0;
     let isBlinking = false;
 
     function animate() {
         requestAnimationFrame(animate);
 
-        // 滑鼠控制旋轉
-        const targetY = mouseNormX * Math.PI / 6;
-        const targetX = -mouseNormY * Math.PI / 12;
+        // 根據滑鼠位置讓 owlGroup 轉動
+        const targetY = mouseNormX * Math.PI / 6;  // 左右最多 ±30 度
+        const targetX = -mouseNormY * Math.PI / 12; // 上下最多 ±15 度
 
         owl.rotation.y += (targetY - owl.rotation.y) * 0.05;
         owl.rotation.x += (targetX - owl.rotation.x) * 0.05;
 
+        // 自動旋轉（當用戶沒有控制時）
+        // if (!userControlling) {
+        //     const time = Date.now() * 0.0005; // 調整速度變慢
+        //     owl.rotation.y = Math.sin(time - Math.PI / 4) * (Math.PI / 4);
+        // } else {
+        //     owl.rotation.y += (targetRotationY - owl.rotation.y) * 0.05;
+        //     owl.rotation.x += (targetRotationX - owl.rotation.x) * 0.05;
+        // }
+
         // 輕微的上下浮動
         owl.position.y = Math.sin(Date.now() * 0.001) * 0.05;
 
-        // 流蘇搖擺
-        if (typeof tassalString !== 'undefined') {
-            tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
-        }
-        if (typeof tassalGroup !== 'undefined') {
-            tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.03;
-        }
+        // 流蘇輕微搖擺
+        tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
+        tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.03;
 
         // 眨眼動畫
         blinkTimer++;
@@ -580,14 +617,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isBlinking) {
             const blinkProgress = blinkTimer / 8;
             if (blinkProgress < 1) {
-                if (typeof leftEye !== 'undefined') leftEye.scale.y = 1 - blinkProgress * 0.8;
-                if (typeof rightEye !== 'undefined') rightEye.scale.y = 1 - blinkProgress * 0.8;
+                leftEye.scale.y = 1 - blinkProgress * 0.8;
+                rightEye.scale.y = 1 - blinkProgress * 0.8;
             } else if (blinkProgress < 2) {
-                if (typeof leftEye !== 'undefined') leftEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
-                if (typeof rightEye !== 'undefined') rightEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
+                leftEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
+                rightEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
             } else {
-                if (typeof leftEye !== 'undefined') leftEye.scale.y = 1;
-                if (typeof rightEye !== 'undefined') rightEye.scale.y = 1;
+                leftEye.scale.y = 1;
+                rightEye.scale.y = 1;
                 isBlinking = false;
                 blinkTimer = 0;
             }
@@ -595,6 +632,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderer.render(scene, camera);
     }
+
+    // 響應式設計
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
     animate();
 });
