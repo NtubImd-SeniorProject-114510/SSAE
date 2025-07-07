@@ -208,7 +208,7 @@ color: black;
 
 
 .stroke-group {
-  transform: translate(-20px, 20px); /* 起始位置，與fill重疊 */
+  transform: translate(-6%, 6%); /* 起始位置，與fill重疊，使用百分比以隨視窗縮放 */
   opacity: 0;
   animation: strokeMove 1s ease-out forwards;
   animation-delay: 0.5s;
@@ -223,7 +223,7 @@ to {
 
 
 .stroke-group-r {
-transform: translate(60px, -60px); /* 起始位置：從右上 */
+transform: translate(25%, -12%); /* 起始位置：從右上，使用百分比以隨視窗縮放 */
 opacity: 0;
 animation: strokeMoveLeftUp 1s ease-out forwards;
 animation-delay: 0.5s;
@@ -425,35 +425,10 @@ animation-delay: 0.5s;
 }
 
 
-#owl-container{
-  position: relative;
-  background-color: white;
-  overflow: visible;
-  z-index: 0;
-  /* 不設寬高，讓html/js決定 */
-}
-
 /* 保持owl canvas固定比例與大小，不因RWD縮放 */
 #owl-container canvas {
-  width: 400px !important;
-  height: 400px !important;
-  min-width: 400px !important;
-  min-height: 400px !important;
-  max-width: 400px !important;
-  max-height: 400px !important;
-  display: block;
-  position: relative;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  background: transparent;
-  pointer-events: auto;
-}
-
-
-#owl-container canvas {
-  width: 450px;
-  height: 400px;
+  width: 400px ;
+  height: 400px ;
   display: block;
   position: relative;
   top: 0;

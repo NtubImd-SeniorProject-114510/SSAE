@@ -1,3 +1,24 @@
+function handleResponsiveRedirect() {
+    const isMobile = window.innerWidth <= 768;
+    const onMobilePage = window.location.pathname.startsWith('/mobile');
+    if (isMobile && !onMobilePage) {
+        window.location.href = '/mobile/';
+    } else if (!isMobile && onMobilePage) {
+        // return to desktop version; assume desktop lives at /index/ or root
+        window.location.href = '/index/';
+    }
+}
+
+// initial check (DOMContentLoaded may already be fired)
+handleResponsiveRedirect();
+
+// add resize listener with basic debounce
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
+});
+
 // //loading
 // document.addEventListener("DOMContentLoaded", () => {
 //   const loadingScreen = document.getElementById("loading-screen");
@@ -110,7 +131,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // 場景設置
 document.addEventListener('DOMContentLoaded', () => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     // 使用指定的 canvas 元素
     const canvas = document.createElement('canvas');
     // 清空 owl-container 並插入canvas
@@ -123,6 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
         alpha: true
     });
     renderer.setSize(400, 400);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    renderer.domElement.style.width = '400px';
+    renderer.domElement.style.height = '400px';
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0xD1C5D1, 0.3);
@@ -192,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     body.position.y = 0; // 調整到中心位置
     body.position.z = -0.3;
     body.castShadow = true;
-    body.scale.x = 1.1;
+    // body.scale.x = 1.1;
     owl.add(body);
 
 
@@ -632,13 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderer.render(scene, camera);
     }
-
-    // 響應式設計
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
 
     animate();
 });
