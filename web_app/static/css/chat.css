@@ -721,3 +721,24 @@ body.sidebar-collapsed .input-container {
         padding: 10px 14px;
     }
 }
+
+.source-btn {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.source-btn:hover {
+    background: #bbdefb;
+    transform: translateY(-1px);
+}
+
+.source-indicator {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 8px;
+}

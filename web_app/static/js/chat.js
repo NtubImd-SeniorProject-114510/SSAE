@@ -398,6 +398,7 @@ newChatBtn.addEventListener('click', async () => {
 });
 
 // 發送訊息
+// 發送訊息
 async function sendQuestion() {
     const questionEl = document.getElementById('messageInput');
     const question = questionEl.value.trim();
@@ -445,12 +446,28 @@ async function sendQuestion() {
         // 移除載入指示器
         chatContainer.removeChild(loadingMsg);
         
+        // 建立機器人回覆內容
+        let botContent = `<div class="message-content bot-content">${data.answer || data.error}`;
+        
+        // 如果有來源文檔，添加查看按鈕
+        if (data.has_sources && data.sources && data.sources.length > 0) {
+            botContent += `
+                <div class="source-indicator" style="margin-top: 8px;">
+                    <button class="source-btn" onclick="showSources(${JSON.stringify(data.sources).replace(/"/g, '&quot;')})">
+                        🗒️ 查看資料來源
+                    </button>
+                </div>
+            `;
+        }
+        
+        botContent += `</div>`;
+        
         // 在聊天區域加入機器人回覆
         const botMsg = document.createElement('div');
         botMsg.className = 'message-container bot-container';
         botMsg.innerHTML = `
             <div class="avatar bot-avatar">AI</div>
-            <div class="message-content bot-content">${data.answer || data.error}</div>
+            ${botContent}
         `;
         chatContainer.appendChild(botMsg);
         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -470,6 +487,84 @@ async function sendQuestion() {
     } catch (error) {
         console.error('發送問題失敗:', error);
     }
+}
+
+// 新增顯示來源的函數
+function showSources(sources) {
+    const modal = document.createElement('div');
+    modal.className = 'source-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80%;
+        overflow-y: auto;
+    `;
+    
+    let sourcesHtml = '<h3>資料來源</h3>';
+    sources.forEach(source => {
+        sourcesHtml += `
+            <div style="margin: 10px 0;">
+                <button onclick="viewPDF('${source}')" style="
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: inline-block;
+                ">
+                    📄 ${source}
+                </button>
+            </div>
+        `;
+    });
+    
+    sourcesHtml += `
+        <div style="margin-top: 20px; text-align: right;">
+            <button onclick="this.closest('.source-modal').remove()" style="
+                background: #6c757d;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+            ">關閉</button>
+        </div>
+    `;
+    
+    modalContent.innerHTML = sourcesHtml;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // 點擊背景關閉
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// 新增查看 PDF 的函數
+function viewPDF(filename) {
+    window.open(`/api/pdf/${filename}/`, '_blank');
 }
 
 // 發送按鈕點擊事件
