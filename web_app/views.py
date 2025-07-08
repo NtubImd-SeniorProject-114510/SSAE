@@ -141,10 +141,17 @@ def api_ask(request):
         return JsonResponse({"error": "缺少 question 或 conversation_id"}, status=400)
 
     # 呼叫現有 RAG 邏輯
-    answer = ask_question(question)
+    result = ask_question(question)
+    answer = result["answer"]
+    
     # 存入 MongoDB
     add_message(convo_id, question, answer)
-    return JsonResponse({"answer": answer})
+    
+    return JsonResponse({
+        "answer": answer,
+        "has_sources": result["has_sources"],
+        "sources": result["sources"]
+    })
 
 @csrf_exempt
 def upload_files(request):
@@ -286,3 +293,22 @@ def api_export_conversation(request, convo_id):
     )
     resp["Content-Disposition"] = f'attachment; filename="conversation_{convo_id}.xlsx"'
     return resp
+
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+import mimetypes
+
+def view_pdf(request, filename):
+    """顯示 PDF 檔案"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    pdf_dir = os.path.join(current_dir, "..", "uploaded_files")
+    pdf_path = os.path.join(pdf_dir, filename)
+    
+    if not os.path.exists(pdf_path) or not filename.endswith('.pdf'):
+        return JsonResponse({"error": "檔案不存在"}, status=404)
+    
+    return FileResponse(
+        open(pdf_path, 'rb'),
+        content_type='application/pdf',
+        filename=filename
+    )
