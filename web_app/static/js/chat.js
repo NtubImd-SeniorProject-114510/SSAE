@@ -489,7 +489,7 @@ async function sendQuestion() {
     }
 }
 
-// 新增顯示來源的函數
+// 修正後的 showSources 函數
 function showSources(sources) {
     const modal = document.createElement('div');
     modal.className = 'source-modal';
@@ -503,50 +503,81 @@ function showSources(sources) {
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 10000;
+        z-index: 9999;
+        backdrop-filter: blur(1px);
+        animation: fadeIn 0.3s ease;
     `;
     
     const modalContent = document.createElement('div');
     modalContent.style.cssText = `
         background: white;
-        padding: 20px;
-        border-radius: 8px;
+        padding: 24px;
+        border-radius: 12px;
         max-width: 500px;
         width: 90%;
         max-height: 80%;
         overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease;
     `;
     
-    let sourcesHtml = '<h3>資料來源</h3>';
+    let sourcesHtml = '<h3 style="margin-top:0; color:#333; font-size:18px; font-weight:600;">📚 資料來源</h3>';
+    
     sources.forEach(source => {
         sourcesHtml += `
-            <div style="margin: 10px 0;">
-                <button onclick="viewPDF('${source}')" style="
-                    background: #007bff;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    display: inline-block;
-                ">
-                    📄 ${source}
-                </button>
+            <div style="margin: 12px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="viewPDF('${source}')" style="
+                        background: linear-gradient(135deg, #007bff, #0056b3);
+                        color: white;
+                        border: none;
+                        padding: 10px 16px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+                        flex: 1;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,123,255,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,123,255,0.2)'">
+                        📄 ${source}
+                    </button>
+                    <button onclick="window.open('/api/pdf/${encodeURIComponent(source)}/', '_blank')" style="
+                        background: #28a745;
+                        color: white;
+                        border: none;
+                        padding: 10px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 4px rgba(40,167,69,0.2);
+                    " title="新分頁開啟">
+                        🔗
+                    </button>
+                </div>
             </div>
         `;
     });
     
     sourcesHtml += `
-        <div style="margin-top: 20px; text-align: right;">
+        <div style="margin-top: 24px; text-align: right; border-top: 1px solid #eee; padding-top: 16px;">
             <button onclick="this.closest('.source-modal').remove()" style="
                 background: #6c757d;
                 color: white;
                 border: none;
                 padding: 8px 16px;
-                border-radius: 4px;
+                border-radius: 6px;
                 cursor: pointer;
-            ">關閉</button>
+                font-size: 14px;
+                transition: background 0.2s ease;
+            " onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+                關閉
+            </button>
         </div>
     `;
     
@@ -560,11 +591,348 @@ function showSources(sources) {
             modal.remove();
         }
     });
+    
+    // ESC 鍵關閉
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
 }
 
-// 新增查看 PDF 的函數
+// 修正後的 viewPDF 函數
 function viewPDF(filename) {
-    window.open(`/api/pdf/${filename}/`, '_blank');
+    console.log('開啟 PDF:', filename);
+    
+    // 檢查檔案名稱
+    if (!filename || !filename.trim()) {
+        alert('無效的檔案名稱');
+        return;
+    }
+    
+    // 建立 PDF URL
+    const pdfUrl = `/api/pdf/${encodeURIComponent(filename)}/`;
+    console.log('PDF URL:', pdfUrl);
+    
+    // 直接顯示 PDF 模態框，不進行 HEAD 請求測試
+    showPDFModal(pdfUrl, filename);
+}
+
+function showPDFModal(pdfUrl, filename) {
+    // 創建模態框
+    const modal = document.createElement('div');
+    modal.className = 'pdf-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(2px);
+    `;
+    
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.cssText = `
+        position: relative;
+        width: 90%;
+        height: 90%;
+        max-width: 1200px;
+        max-height: 800px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    `;
+    
+    // 標題欄
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        flex-shrink: 0;
+    `;
+    
+    const title = document.createElement('h3');
+    title.textContent = filename;
+    title.style.cssText = `
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 15px;
+    `;
+    
+    // 操作按鈕組
+    const buttonGroup = document.createElement('div');
+    buttonGroup.style.cssText = `
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    `;
+    
+    // 新分頁開啟按鈕
+    const newTabBtn = document.createElement('button');
+    newTabBtn.innerHTML = '🔗 新分頁開啟';
+    newTabBtn.style.cssText = `
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    `;
+    newTabBtn.onclick = () => {
+        window.open(pdfUrl, '_blank');
+    };
+    
+    // 下載按鈕
+    const downloadBtn = document.createElement('button');
+    downloadBtn.innerHTML = '📥 下載';
+    downloadBtn.style.cssText = `
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    `;
+    downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = filename;
+        a.click();
+    };
+    
+    // 關閉按鈕
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #666;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: color 0.2s ease;
+    `;
+    closeBtn.onmouseover = () => closeBtn.style.color = '#333';
+    closeBtn.onmouseout = () => closeBtn.style.color = '#666';
+    
+    // 內容區域
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = `
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+    `;
+    
+    // 載入指示器
+    const loader = document.createElement('div');
+    loader.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #666;
+        z-index: 1;
+    `;
+    loader.innerHTML = `
+        <div class="spinner" style="
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        "></div>
+        正在載入 PDF...
+    `;
+    
+    // 錯誤提示
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #dc3545;
+        display: none;
+        z-index: 1;
+    `;
+    errorDiv.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">PDF 載入失敗</div>
+        <div style="font-size: 14px; color: #666;">
+            請嘗試點擊「新分頁開啟」或「下載」按鈕
+        </div>
+    `;
+    
+    // 嘗試多種方式載入 PDF
+    function tryLoadPDF() {
+        // 方法1: 直接使用 iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = pdfUrl;
+        iframe.style.cssText = `
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        `;
+        
+        let loadTimeout;
+        let hasLoaded = false;
+        
+        iframe.onload = () => {
+            if (!hasLoaded) {
+                hasLoaded = true;
+                clearTimeout(loadTimeout);
+                loader.style.display = 'none';
+                console.log('PDF iframe 載入成功');
+            }
+        };
+        
+        iframe.onerror = () => {
+            if (!hasLoaded) {
+                hasLoaded = true;
+                clearTimeout(loadTimeout);
+                loader.style.display = 'none';
+                errorDiv.style.display = 'block';
+                console.error('PDF iframe 載入失敗');
+            }
+        };
+        
+        // 設置超時
+        loadTimeout = setTimeout(() => {
+            if (!hasLoaded) {
+                hasLoaded = true;
+                
+                // 移除 iframe 並嘗試方法2
+                if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+                
+                // 方法2: 使用 embed 標籤
+                const embed = document.createElement('embed');
+                embed.src = pdfUrl;
+                embed.type = 'application/pdf';
+                embed.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                `;
+                
+                contentArea.appendChild(embed);
+                loader.style.display = 'none';
+                console.log('使用 embed 標籤載入 PDF');
+                
+                // 如果 embed 也失敗，顯示錯誤
+                setTimeout(() => {
+                    errorDiv.style.display = 'block';
+                }, 3000);
+            }
+        }, 5000);
+        
+        contentArea.appendChild(iframe);
+    }
+    
+    // 組裝
+    buttonGroup.appendChild(newTabBtn);
+    buttonGroup.appendChild(downloadBtn);
+    buttonGroup.appendChild(closeBtn);
+    titleBar.appendChild(title);
+    titleBar.appendChild(buttonGroup);
+    contentArea.appendChild(loader);
+    contentArea.appendChild(errorDiv);
+    pdfContainer.appendChild(titleBar);
+    pdfContainer.appendChild(contentArea);
+    modal.appendChild(pdfContainer);
+    
+    // 關閉功能
+    function closeModal() {
+        if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+        }
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleEscape);
+    }
+    
+    // ESC 鍵關閉
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    };
+    
+    closeBtn.onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+    
+    // 添加動畫樣式
+    const style = document.createElement('style');
+    if (!document.head.querySelector('#pdf-modal-styles')) {
+        style.id = 'pdf-modal-styles';
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .pdf-modal {
+                animation: fadeIn 0.3s ease;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            .pdf-modal > div {
+                animation: slideIn 0.3s ease;
+            }
+            
+            @keyframes slideIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // 顯示模態框
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleEscape);
+    
+    // 開始載入 PDF
+    tryLoadPDF();
 }
 
 // 發送按鈕點擊事件

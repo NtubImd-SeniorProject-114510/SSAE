@@ -312,3 +312,148 @@ def view_pdf(request, filename):
         content_type='application/pdf',
         filename=filename
     )
+
+import os
+import mimetypes
+from django.http import FileResponse, JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils.encoding import smart_str
+from urllib.parse import unquote
+import logging
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+@xframe_options_exempt  # 允許在 iframe 中顯示
+def view_pdf(request, filename):
+    """顯示 PDF 檔案"""
+    try:
+        # URL 解碼檔案名稱
+        filename = unquote(filename)
+        
+        # 取得當前檔案的目錄
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        pdf_dir = os.path.abspath(os.path.join(current_dir, "..", "uploaded_files"))
+        
+        # 安全檢查：防止路徑遍歷攻擊
+        filename = os.path.basename(filename)
+        pdf_path = os.path.join(pdf_dir, filename)
+        
+        logger.info(f"📁 PDF 目錄: {pdf_dir}")
+        logger.info(f"📄 請求檔案: {filename}")
+        logger.info(f"🔍 完整路徑: {pdf_path}")
+        logger.info(f"✅ 檔案存在: {os.path.exists(pdf_path)}")
+        
+        # 檢查檔案是否存在
+        if not os.path.exists(pdf_path):
+            logger.error(f"❌ 檔案不存在: {pdf_path}")
+            return JsonResponse({"error": "檔案不存在"}, status=404)
+        
+        # 檢查是否為 PDF 檔案
+        if not filename.lower().endswith('.pdf'):
+            logger.error(f"❌ 非 PDF 檔案: {filename}")
+            return JsonResponse({"error": "不是有效的 PDF 檔案"}, status=400)
+        
+        # 檢查檔案是否可讀
+        if not os.access(pdf_path, os.R_OK):
+            logger.error(f"❌ 檔案無法讀取: {pdf_path}")
+            return JsonResponse({"error": "檔案無法讀取"}, status=403)
+        
+        # 取得檔案大小
+        file_size = os.path.getsize(pdf_path)
+        logger.info(f"📊 檔案大小: {file_size} bytes")
+        
+        try:
+            # 開啟檔案並創建回應
+            response = FileResponse(
+                open(pdf_path, 'rb'),
+                content_type='application/pdf',
+                as_attachment=False,  # 在瀏覽器中直接顯示
+                filename=smart_str(filename)
+            )
+            
+            # 設定重要的 HTTP 標頭
+            response['Content-Length'] = str(file_size)
+            response['Content-Disposition'] = f'inline; filename="{smart_str(filename)}"'
+            
+            # 設定 CORS 標頭（如果需要）
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            
+            # 設定快取標頭
+            response['Cache-Control'] = 'public, max-age=3600'  # 快取1小時
+            
+            # 設定 X-Frame-Options 允許在 iframe 中顯示
+            response['X-Frame-Options'] = 'SAMEORIGIN'
+            
+            # 設定 Content-Security-Policy
+            response['Content-Security-Policy'] = "frame-ancestors 'self'"
+            
+            logger.info(f"✅ PDF 檔案成功返回: {filename}")
+            return response
+            
+        except Exception as e:
+            logger.error(f"❌ 開啟檔案失敗: {e}")
+            return JsonResponse({"error": f"開啟檔案失敗: {str(e)}"}, status=500)
+            
+    except Exception as e:
+        logger.error(f"❌ view_pdf 函數發生錯誤: {e}")
+        return JsonResponse({"error": f"伺服器錯誤: {str(e)}"}, status=500)
+
+@csrf_exempt
+@xframe_options_exempt
+def view_pdf_streaming(request, filename):
+    """使用 streaming 方式顯示 PDF 檔案"""
+    try:
+        # URL 解碼檔案名稱
+        filename = unquote(filename)
+        
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        pdf_dir = os.path.abspath(os.path.join(current_dir, "..", "uploaded_files"))
+        filename = os.path.basename(filename)
+        pdf_path = os.path.join(pdf_dir, filename)
+        
+        if not os.path.exists(pdf_path) or not filename.lower().endswith('.pdf'):
+            return JsonResponse({"error": "檔案不存在或不是PDF檔案"}, status=404)
+        
+        def file_iterator(file_path, chunk_size=8192):
+            with open(file_path, 'rb') as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+        
+        response = HttpResponse(
+            file_iterator(pdf_path),
+            content_type='application/pdf'
+        )
+        
+        # 設定標頭
+        response['Content-Disposition'] = f'inline; filename="{smart_str(filename)}"'
+        response['Content-Length'] = str(os.path.getsize(pdf_path))
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        response['Content-Security-Policy'] = "frame-ancestors 'self'"
+        response['Cache-Control'] = 'public, max-age=3600'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ streaming PDF 錯誤: {e}")
+        return JsonResponse({"error": f"伺服器錯誤: {str(e)}"}, status=500)
+
+# 如果需要處理 OPTIONS 請求（CORS 預檢）
+@csrf_exempt
+def pdf_options(request, filename):
+    """處理 PDF 檔案的 OPTIONS 請求"""
+    if request.method == 'OPTIONS':
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response['Access-Control-Max-Age'] = '86400'  # 24小時
+        return response
+    else:
+        return view_pdf(request, filename)
