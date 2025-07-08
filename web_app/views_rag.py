@@ -152,6 +152,17 @@ def ask_question(question: str) -> str:
         response = advanced_rag_chain.invoke({"input": question})
         raw_answer = response["answer"].strip()
         
+        # 獲取使用的文檔來源
+        source_documents = response.get("context", [])
+        pdf_sources = []
+        
+        for doc in source_documents:
+            if hasattr(doc, 'metadata') and 'source' in doc.metadata:
+                pdf_path = doc.metadata['source']
+                pdf_name = os.path.basename(pdf_path)
+                if pdf_name not in pdf_sources:
+                    pdf_sources.append(pdf_name)
+                    
         # 先處理所有粗體標記，避免後續處理時被破壞
         raw_answer = re.sub(r'\*\*([^*\n]+?)\*\*', r'<strong style="color:#4A5B73; font-weight:700;">\1</strong>', raw_answer)
         
@@ -210,9 +221,17 @@ def ask_question(question: str) -> str:
         # 合併所有格式化的行
         result = ''.join(formatted_lines)
         
-        return result
+        return {
+            "answer": result,
+            "has_sources": len(pdf_sources) > 0,
+            "sources": pdf_sources
+        }
         
     except Exception as e:
         error_msg = f"處理問題時發生錯誤: {str(e)}"
         print(f"❌ RAG 錯誤: {error_msg}")
-        return f"<p style='color:#8B6B6B;'>抱歉，我在處理您的問題時遇到了一些困難。請稍後再試或換個方式提問。</p>"
+        return {
+            "answer": f"<p style='color:#8B6B6B;'>抱歉，我在處理您的問題時遇到了一些困難。請稍後再試或換個方式提問。</p>",
+            "has_sources": False,
+            "sources": []
+        }
