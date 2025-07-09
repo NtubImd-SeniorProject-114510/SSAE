@@ -25,6 +25,7 @@ urlpatterns = [
     path('base/' , views.base),
     path('login/' , views.login),
     path('welcome/' , views.welcome),
+    path('welcome_mo/' , views.welcome_mo, name='wel_mo'),
     path('' , views.welcome),
     path('index/' , views.index),
     path('mobile/' , views.mobile, name='mobile'),

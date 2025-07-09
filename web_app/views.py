@@ -13,6 +13,9 @@ def base(request):
 def welcome(request):
     return render(request, 'welcome.html')
 
+def welcome_mo(request):
+    return render(request, 'welcome_mo.html')
+
 def index(request):
     return render(request, 'index.html')
 

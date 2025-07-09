@@ -4,7 +4,7 @@
     const lSection = document.querySelector('.lsection');
     if (!lSection) return;
     lSection.innerHTML = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" fill="none">
     <g class="dialog-group-l">
     <path class="path-outline" d="M103.374 3.88477H201.483C201.56 3.88477 201.623 3.9475 201.623 4.02441C201.623 16.1049 191.83 25.8984 179.749 25.8984H81.6396C81.5627 25.8984 81.5 25.8357 81.5 25.7588C81.5001 13.6781 91.2934 3.88481 103.374 3.88477Z" stroke="#9E8C9E"/>
     <path class="path-fill" d="M105.251 0.5H203.36C203.437 0.5 203.5 0.562734 203.5 0.639648C203.5 12.7202 193.707 22.5136 181.626 22.5137H83.5166C83.4397 22.5137 83.377 22.4509 83.377 22.374C83.377 10.2934 93.1703 0.500048 105.251 0.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
