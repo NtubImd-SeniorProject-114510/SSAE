@@ -53,4 +53,5 @@ urlpatterns = [
     path('api/export/<str:convo_id>/', views.api_export_conversation),
     path('auth/', include('social_django.urls', namespace='social')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('api/pdf/<str:filename>/', views.view_pdf, name='view_pdf'),
 ]

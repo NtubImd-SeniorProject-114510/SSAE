@@ -128,6 +128,23 @@ AUTHENTICATION_BACKENDS = (
 LOGIN_URL = '/auth/login/google-oauth2/'
 LOGIN_REDIRECT_URL = '/index'  # 登入成功導向
 LOGOUT_REDIRECT_URL = '/welcome' # 登出成功導向
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'your_app_name': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '37270199093-k1doq535f74tl3423amrrqv9dincdeb4.apps.googleusercontent.com'
 
