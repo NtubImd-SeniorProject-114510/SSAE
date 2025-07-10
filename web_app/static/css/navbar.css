@@ -34,6 +34,7 @@ body {
 
 a.logo img.Logo {
     width: 45px;
+    margin-right: 15px;
 }
 
 .logo {
@@ -41,11 +42,15 @@ a.logo img.Logo {
     font-size: 18px;
     color: black;
     text-decoration: none;
+    display: flex;
+    align-items: center;
+    width: 220px;
 }
 
 .nav-links {
     display: flex;
     list-style: none;
+    margin-left: -220px;
 }
 
 .nav-links li {
@@ -177,6 +182,11 @@ a.logo img.Logo {
 }
 
 /* 響應式設計 */
+@media (max-width: 970px) {
+    .Logo{
+        display: none;
+    }
+}
 @media (max-width: 768px) {
     .navbar {
         padding: 15px 20px;
@@ -232,8 +242,8 @@ a.logo img.Logo {
     .phone-dropdown {
         position: fixed;
         top: 0;
-        right: -67%;
-        width: 67%;
+        right: -50%;
+        width: 50%;
         height: 100vh;
         background-color: #333;
         padding: 80px 20px 20px 20px;
@@ -316,7 +326,8 @@ a.logo img.Logo {
         flex: 1;
     }
 
-    .phone-dropdown .nav-section a {
+    .phone-dropdown .nav-section a,
+    .phone-dropdown .footer-section a {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -329,7 +340,8 @@ a.logo img.Logo {
         position: relative;
     }
 
-    .phone-dropdown .nav-section a::after {
+    .phone-dropdown .nav-section a::after,
+    .phone-dropdown .footer-section a::after {
         content: '＞';
         font-size: 16px;
         color: white;
@@ -337,11 +349,13 @@ a.logo img.Logo {
         opacity: 0.7;
     }
 
-    .phone-dropdown .nav-section a:hover {
+    .phone-dropdown .nav-section a:hover,
+    .phone-dropdown .footer-section a:hover {
         background-color: rgba(255, 255, 255, 0.1);
     }
 
-    .phone-dropdown .nav-section a:last-child {
+    .phone-dropdown .nav-section a:last-child,
+    .phone-dropdown .footer-section a:last-child {
         border-bottom: none;
     }
 

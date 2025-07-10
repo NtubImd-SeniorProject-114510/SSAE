@@ -18,12 +18,13 @@
     <nav class="navbar navbar-initial" id="navbar">         
         <a href="/index/" class="logo">
             <img class="Logo"  src="{% static 'image/logo.png' %}">
-        </a>         
+            智能校事專家
+        </a>
         <ul class="nav-links">             
             <li><a href="/chat/">校規查詢</a></li>             
             <li><a href="/comment/">課程評論區</a></li>             
             <li><a href="/join/">活動召集</a></li>             
-            <li><a href="/book/">二手書專區</a></li>         
+            <li><a href="/book/">二手書專區</a></li>
         </ul>         
         <div class="user-menu">
             <div class="user-circle" id="userMenuButton">             
@@ -76,6 +77,14 @@
               <a href="/book/">二手書專區</a>
               
           </div>
+
+          <div class="footer-section">
+            <a href="#">北商官網</a> 
+            <a href="#">北商blackboard平台</a> 
+            <a href="#">北商Timetable平台</a>
+            <a href="#">北商學生資訊系統</a>
+            
+          </div>
   
           <div class="logout-section">
               {% if user.is_authenticated %}
@@ -86,7 +95,8 @@
               {% else %}
               {% endif %}
           </div>
-    </div>
+      </div>
+    </nav>
     {% endblock %}      
 
     {% block content %}{% endblock %}        
