@@ -11,72 +11,68 @@
 {% endblock %}
 
 {% block content %}
-
-<!-- 背景影片 -->
-<img class="bg-png" src="{% static 'image/wave.png' %}" width="100%" height="100%" alt="背景圖片">
-<!-- 半透明遮罩 -->
-<div class="bg-overlay"></div>
+<div class="chat-bg">
+  <img class="bg-png" src="{% static 'image/wave.png' %}" width="100%" height="100%" alt="背景圖片">
+  <div class="bg-overlay"></div>
+</div>
 <div class="chat-wrapper">
-    <div class="main-content" id="mainContent">
-        <div class="content-wrapper">
-            <div class="unified-header">
-                <!-- 菜單按鈕 -->
-                    <div class="menu-btn-container" id="menuBtnContainer">
-                        <button class="hamburger" id="menuBtn">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </button>
-                    </div>
-                    
-                    <!-- 主內容標題 -->
-                    <div class="chat-header-part">
-                        <h2 id="currentChatTitle">對話</h2>
-                    </div>
-                </div>
-                
-                <!-- 側邊欄 -->
-                <div class="sidebar" id="sidebar">
-                    <button class="new-chat-btn" id="newChatBtn">
-                        <i class="fa-solid fa-plus"></i> <span>新增對話</span>
-                    </button>
+  <!-- 側邊欄（RWD可收合/浮出） -->
+  <aside class="sidebar" id="sidebar">
+    <button class="new-chat-btn" id="newChatBtn">
+      <i class="fa-solid fa-plus"></i> <span>新增對話</span>
+    </button>
+    <div class="sidebar-record">
+      <div>---------------  對話歷史  --------------</div>
+    </div>
+    <div class="chat-history" id="chatHistory">
+      <!-- 對話歷史由 JavaScript 動態載入 -->
+    </div>
+  </aside>
 
-                    <div class="sidebar-record">
-                        <div>---------------  對話歷史  --------------</div>
-                    </div>
-
-                    <div class="chat-history" id="chatHistory">
-                        <!-- 對話歷史由 JavaScript 動態載入 -->
-                    </div>
-                </div>
-                
-                <!-- 聊天容器 (只保留一個) -->
-                <div class="chat-container" id="chatContainer">
-                    <div class="blobs">
-                        <div class="blob"></div>
-                        <div class="blob"></div>
-                        <div class="blob"></div>
-                        <div class="blob"></div>
-                        <div class="blob"></div>
-                        <div class="blob"></div>
-                        <div class="blob"></div>
-                    </div>
-                    
-                    <div class="no-messages" id="noMessages">
-                        開始一個新對話或從側邊欄選擇歷史對話
-                    </div>
-                    <!-- 對話內容由 JavaScript 動態載入 -->
-                </div>
-            </div>
-            <div class="input-container">
-                <textarea class="message-input" id="messageInput" placeholder="輸入訊息..." rows="1"></textarea>
-                <button class="send-btn" id="sendBtn">➤</button>
-            </div>
-        </div>
+  <!-- 主內容區 -->
+  <main class="main-content" id="mainContent">
+    <!-- 漢堡選單（手機浮動）和標題 -->
+    <div class="chat-header-card">
+      <div class="menu-btn-container" id="menuBtnContainer">
+        <button class="hamburger" id="menuBtn">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+      </div>
+      <div class="chat-header-part">
+        <h2 id="currentChatTitle">對話</h2>
+      </div>
     </div>
 
+    <!-- 聊天內容卡片 -->
+    <section class="chat-main-card">
+      <div class="chat-container" id="chatContainer">
+        <div class="blobs">
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+        </div>
+        <div class="no-messages" id="noMessages">
+          開始一個新對話或從側邊欄選擇歷史對話
+        </div>
+        <!-- 對話內容由 JavaScript 動態載入 -->
+      </div>
+    </section>
+
+    <!-- 輸入區塊 -->
+    <div class="input-container">
+      <textarea class="message-input" id="messageInput" placeholder="輸入訊息..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn">➤</button>
+    </div>
+  </main>
+</div>
 {% endblock %}
+
 
 {% block body_js %}
 <script src="{% static 'js/chat.js' %}"></script>
