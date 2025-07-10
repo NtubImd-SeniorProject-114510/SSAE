@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+  background-color: #F8F6F4;
+  font-family: sans-serif;
+  overflow: hidden;
+  width: 40vw;
+  height: 40vh;
+}
+
+.transition-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 容器大小限制 + 裁切內容 */
+.spline-mask {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* Spline 實際內容超出時會被容器擋住 */
+.spline-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 110vh; /* 比容器高，底下30px會被裁掉 */
+}

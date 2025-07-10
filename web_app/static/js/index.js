@@ -1,3 +1,24 @@
+function handleResponsiveRedirect() {
+    const isMobile = window.innerWidth <= 768;
+    const onMobilePage = window.location.pathname.startsWith('/mobile');
+    if (isMobile && !onMobilePage) {
+        window.location.href = '/mobile/';
+    } else if (!isMobile && onMobilePage) {
+        // return to desktop version; assume desktop lives at /index/ or root
+        window.location.href = '/index/';
+    }
+}
+
+// initial check (DOMContentLoaded may already be fired)
+handleResponsiveRedirect();
+
+// add resize listener with basic debounce
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
+});
+
 // //loading
 // document.addEventListener("DOMContentLoaded", () => {
 //   const loadingScreen = document.getElementById("loading-screen");
@@ -44,40 +65,7 @@
 //   }, 3000);
 // });
   
-document.addEventListener("DOMContentLoaded", function () {
-  const path = document.querySelector("#circle-stroke path");
-  const strokeGroup = document.querySelector(".stroke-group");
-  const strokeGroupR = document.querySelector(".stroke-group-r");
 
-  if (path) {
-    const pathLength = path.getTotalLength();
-    path.style.strokeDasharray = pathLength;
-    path.style.strokeDashoffset = pathLength;
-    path.style.animation = "drawCircle 3s ease-in-out forwards";
-
-    path.addEventListener("animationend", function () {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          const el = entry.target;
-
-          if (entry.isIntersecting) {
-            // 👉 強制重播動畫的技巧
-            el.classList.remove("animate-stroke"); // 自訂共用 class
-            void el.offsetWidth; // 觸發 reflow
-            el.classList.add("animate-stroke");
-          } else {
-            el.classList.remove("animate-stroke");
-          }
-        });
-      }, {
-        threshold: 0.5
-      });
-
-      if (strokeGroup) observer.observe(strokeGroup);
-      if (strokeGroupR) observer.observe(strokeGroupR);
-    });
-  }
-});
 
 
 
@@ -110,7 +98,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // 場景設置
 document.addEventListener('DOMContentLoaded', () => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     // 使用指定的 canvas 元素
     const canvas = document.createElement('canvas');
     // 清空 owl-container 並插入canvas
@@ -123,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
         alpha: true
     });
     renderer.setSize(400, 400);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    renderer.domElement.style.width = '400px';
+    renderer.domElement.style.height = '400px';
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0xD1C5D1, 0.3);
@@ -192,7 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
     body.position.y = 0; // 調整到中心位置
     body.position.z = -0.3;
     body.castShadow = true;
-    body.scale.x = 1.1;
+    body.scale.x = 0.96;
+    body.scale.y = 1.05;
     owl.add(body);
 
 
@@ -633,13 +626,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer.render(scene, camera);
     }
 
-    // 響應式設計
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
     animate();
 });
 
@@ -706,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }, {
-      threshold: 0.3 // 元素進入 30% 時觸發
+      threshold: 0.5 // 元素進入 30% 時觸發
     });
 
     featureItems.forEach(item => {
@@ -1311,546 +1297,179 @@ document.addEventListener("DOMContentLoaded", () => {
   initFeatureSvgAnimation();
 });
 
-// SVG 畫線動畫 - 專門針對 feature-item 中的 SVG
-function initFeatureSvgAnimation() {
-  // 選取所有 feature-item 元素
-  const featureItems = document.querySelectorAll('.feature-item');
+
+
+
+
+// // SVG 畫線動畫 - 專門針對 feature-item 中的 SVG
+// function initFeatureSvgAnimation() {
+//   // 選取所有 feature-item 元素
+//   const featureItems = document.querySelectorAll('.feature-item');
   
-  // 設定 CSS 變數以供動畫使用
-  featureItems.forEach(item => {
-    const svg = item.querySelector('svg');
-    if (!svg) return;
+//   // 設定 CSS 變數以供動畫使用
+//   featureItems.forEach(item => {
+//     const svg = item.querySelector('svg');
+//     if (!svg) return;
     
-    // 修改 SVG 元素，使其能夠顯示畫線動畫
-    const paths = svg.querySelectorAll('path');
-    paths.forEach(path => {
-      // 檢查是否有 fill 屬性
-      const fill = path.getAttribute('fill');
+//     // 修改 SVG 元素，使其能夠顯示畫線動畫
+//     const paths = svg.querySelectorAll('path');
+//     paths.forEach(path => {
+//       // 檢查是否有 fill 屬性
+//       const fill = path.getAttribute('fill');
       
-      // 如果是填充路徑，設定為線條路徑
-      if (fill && fill !== 'none') {
-        path.setAttribute('stroke', '#000');
-        path.setAttribute('stroke-width', '4'); // 增加線條粗細
-        path.setAttribute('fill', 'none');
-      }
+//       // 如果是填充路徑，設定為線條路徑
+//       if (fill && fill !== 'none') {
+//         path.setAttribute('stroke', '#000');
+//         path.setAttribute('stroke-width', '4'); // 增加線條粗細
+//         path.setAttribute('fill', 'none');
+//       }
       
-      // 計算路徑總長度
-      const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
-      console.log("SVG路徑總長度:", pathLength);
+//       // 計算路徑總長度
+//       const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+//       console.log("SVG路徑總長度:", pathLength);
       
-      // 設定 CSS 變數以供動畫使用
-      document.documentElement.style.setProperty('--path-length', pathLength);
+//       // 設定 CSS 變數以供動畫使用
+//       document.documentElement.style.setProperty('--path-length', pathLength);
       
-      // 初始化路徑樣式
-      path.style.strokeDasharray = pathLength;
-      path.style.strokeDashoffset = pathLength;
-    });
-  });
+//       // 初始化路徑樣式
+//       path.style.strokeDasharray = pathLength;
+//       path.style.strokeDashoffset = pathLength;
+//     });
+//   });
   
   // 初始化 Intersection Observer
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      const featureItem = entry.target;
-      const svg = featureItem.querySelector('svg');
-      if (!svg) return;
+//   const observer = new IntersectionObserver((entries) => {
+//     entries.forEach(entry => {
+//       const featureItem = entry.target;
+//       const svg = featureItem.querySelector('svg');
+//       if (!svg) return;
       
-      const paths = svg.querySelectorAll('path');
+//       const paths = svg.querySelectorAll('path');
       
-      if (entry.isIntersecting) {
-        // 元素進入視窗範圍
-        console.log("元素進入視窗，開始動畫");
+//       if (entry.isIntersecting) {
+//         // 元素進入視窗範圍
+//         console.log("元素進入視窗，開始動畫");
         
-        // 添加淡入效果
-        featureItem.classList.add('fade-in');
+//         // 添加淡入效果
+//         featureItem.classList.add('fade-in');
         
-        // 重置動畫狀態
-        svg.classList.remove('animated');
-        paths.forEach(path => {
-          const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
-          path.style.animation = 'none';
-          path.style.strokeDashoffset = pathLength;
-        });
+//         // 重置動畫狀態
+//         svg.classList.remove('animated');
+//         paths.forEach(path => {
+//           const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+//           path.style.animation = 'none';
+//           path.style.strokeDashoffset = pathLength;
+//         });
         
-        // 延遲 0.5 秒後開始 SVG 動畫
-        setTimeout(() => {
-          svg.classList.add('animated');
-          paths.forEach(path => {
-            path.style.animation = 'drawPath 3s ease-in-out forwards';
-          });
-        }, 500);
+//         // 延遲 0.5 秒後開始 SVG 動畫
+//         setTimeout(() => {
+//           svg.classList.add('animated');
+//           paths.forEach(path => {
+//             path.style.animation = 'drawPath 3s ease-in-out forwards';
+//           });
+//         }, 500);
         
-      } else {
-        // 元素離開視窗範圍
-        console.log("元素離開視窗，重置動畫");
-        
-        // 移除淡入效果
-        featureItem.classList.remove('fade-in');
-        
-        // 重置 SVG 動畫狀態
-        svg.classList.remove('animated');
-        paths.forEach(path => {
-          const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
-          path.style.animation = 'none';
-          path.style.strokeDashoffset = pathLength;
-        });
-      }
-    });
-  }, {
-    // 當元素 30% 進入視窗時觸發
-    threshold: 0.3,
-    // 提前 50px 開始觸發
-    rootMargin: '0px 0px -50px 0px'
-  });
-  
-  // 開始觀察目標元素（不移除觀察器以實現重複動畫）
-  featureItems.forEach(item => {
-    observer.observe(item);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  const featureItem = document.getElementById('feature-item');
-  const svgElement = document.querySelector('.rules');
-  const path = svgElement.querySelector('path');
-  
-  // 計算路徑總長度
-  const pathLength = path.getTotalLength();
-  console.log("SVG路徑總長度:", pathLength);
-  
-  // 設定CSS變量以供動畫使用
-  document.documentElement.style.setProperty('--path-length', pathLength);
-  
-  // 初始化路徑樣式
-  path.style.strokeDasharray = pathLength;
-  path.style.strokeDashoffset = pathLength;
-  
-  // 創建 Intersection Observer
-  const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-          if (entry.isIntersecting) {
-              // 元素進入視窗範圍
-              console.log("元素進入視窗，開始動畫");
-              
-              // 添加淡入效果
-              featureItem.classList.add('fade-in');
-              
-              // 重置動畫狀態
-              svgElement.classList.remove('animated');
-              path.style.animation = 'none';
-              path.style.strokeDashoffset = pathLength;
-              
-              // 延遲0.5秒後開始SVG動畫
-              setTimeout(() => {
-                  svgElement.classList.add('animated');
-                  path.style.animation = 'drawPath 3s ease-in-out forwards';
-              }, 500);
-              
-          } else {
-              // 元素離開視窗範圍
-              console.log("元素離開視窗，重置動畫");
-              
-              // 移除淡入效果
-              featureItem.classList.remove('fade-in');
-              
-              // 重置SVG動畫狀態
-              svgElement.classList.remove('animated');
-              path.style.animation = 'none';
-              path.style.strokeDashoffset = pathLength;
-          }
-      });
-  }, {
-      // 當元素30%進入視窗時觸發
-      threshold: 0.3,
-      // 提前50px開始觸發
-      rootMargin: '0px 0px -50px 0px'
-  });
-  
-  // 開始觀察目標元素（不移除觀察器以實現重複動畫）
-  observer.observe(featureItem);
-  
-  // 移除滾動指示器當用戶開始滾動
-  let hasScrolled = false;
-  window.addEventListener('scroll', function() {
-      if (!hasScrolled) {
-          const indicator = document.querySelector('.scroll-indicator');
-          if (indicator) {
-              indicator.style.opacity = '0';
-              setTimeout(() => {
-                  indicator.remove();
-              }, 500);
-          }
-          hasScrolled = true;
-      }
-  });
-});
-
-// // 3D 貓頭鷹模型初始化
-// function initOwl3D() {
-//   if (!window.THREE) return;
-//   const container = document.getElementById('owl-container');
-//   if (!container) return;
-//   // 清空內容
-//   container.innerHTML = '';
-//   // 建立 canvas
-//   const canvas = document.createElement('canvas');
-//   canvas.width = 400;
-//   canvas.height = 400;
-//   canvas.style.width = '400px';
-//   canvas.style.height = '400px';
-//   container.appendChild(canvas);
-
-//   const scene = new THREE.Scene();
-//   const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-//   const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-//   renderer.setSize(400, 400);
-//   renderer.shadowMap.enabled = true;
-//   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-//   renderer.setClearColor(0xf0e6ff);
-
-//   // 燈光
-//   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-//   scene.add(ambientLight);
-//   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-//   directionalLight.position.set(7, 7, 5);
-//   directionalLight.castShadow = true;
-//   directionalLight.shadow.mapSize.width = 2048;
-//   directionalLight.shadow.mapSize.height = 2048;
-//   scene.add(directionalLight);
-//   const pointLight = new THREE.PointLight(0xffffff, 0.5);
-//   pointLight.position.set(-10, 10, 10);
-//   scene.add(pointLight);
-
-//   // 貓頭鷹群組
-//   const owl = new THREE.Group();
-//   // 材質
-//   const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x9479C1 });
-//   const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-//   const pupilMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-//   const beakMaterial = new THREE.MeshLambertMaterial({ color: 0xffa500 });
-//   const capMaterial = new THREE.MeshLambertMaterial({ color: 0x2c2c2c });
-//   const tassalMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 });
-//   const eyebrowMaterial = new THREE.MeshLambertMaterial({ color: 0x7a6bb0 });
-//   const footMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-
-//   // 七邊形身體
-//   function createHeptagonGeometry(radius, depth) {
-//     const shape = new THREE.Shape();
-//     const sides = 7;
-//     for (let i = 0; i < sides; i++) {
-//       const angle = (i / sides) * Math.PI * 2;
-//       const x = Math.cos(angle) * radius;
-//       const y = Math.sin(angle) * radius;
-//       if (i === 0) shape.moveTo(x, y);
-//       else shape.lineTo(x, y);
-//     }
-//     const extrudeSettings = {
-//       depth: depth,
-//       bevelEnabled: true,
-//       bevelSegments: 7,
-//       steps: 6,
-//       bevelSize: 0.2,
-//       bevelThickness: 0.2
-//     };
-//     return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-//   }
-//   const bodyGeometry = createHeptagonGeometry(1.2, 0.45);
-//   const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-//   body.rotation.z = -Math.PI / 14;
-//   body.position.y = 0;
-//   body.castShadow = true;
-//   owl.add(body);
-//   // 眼睛
-//   const leftEyeGeometry = new THREE.SphereGeometry(0.55, 32, 32);
-//   const leftEye = new THREE.Mesh(leftEyeGeometry, eyeMaterial);
-//   leftEye.position.set(-0.4, 0.3, 0.5);
-//   leftEye.scale.set(0.85, 1, 0.8);
-//   leftEye.castShadow = true;
-//   owl.add(leftEye);
-//   const rightEyeGeometry = new THREE.SphereGeometry(0.55, 32, 32);
-//   const rightEye = new THREE.Mesh(rightEyeGeometry, eyeMaterial);
-//   rightEye.position.set(0.4, 0.3, 0.5);
-//   rightEye.scale.set(0.85, 1, 0.8);
-//   rightEye.castShadow = true;
-//   owl.add(rightEye);
-//   // 瞳孔
-//   const leftPupilGeometry = new THREE.SphereGeometry(0.12, 16, 16);
-//   const leftPupil = new THREE.Mesh(leftPupilGeometry, pupilMaterial);
-//   leftPupil.position.set(-0.4, 0.3, 0.85);
-//   leftPupil.scale.set(1, 0.25, 1);
-//   leftPupil.rotation.z = Math.PI / 12;
-//   leftPupil.castShadow = true;
-//   owl.add(leftPupil);
-//   const rightPupilGeometry = new THREE.SphereGeometry(0.12, 16, 16);
-//   const rightPupil = new THREE.Mesh(rightPupilGeometry, pupilMaterial);
-//   rightPupil.position.set(0.4, 0.3, 0.85);
-//   rightPupil.scale.set(1, 0.25, 1);
-//   rightPupil.rotation.z = -Math.PI / 12;
-//   rightPupil.castShadow = true;
-//   owl.add(rightPupil);
-//   // 嘴巴
-//   const beakGeometry = new THREE.ConeGeometry(0.15, 0.4, 4);
-//   const beak = new THREE.Mesh(beakGeometry, beakMaterial);
-//   beak.position.set(0, -0.1, 0.9); // 向前移動
-//   // 讓鳥喙稍微後仰（大約 15 度）
-//   beak.rotation.x = Math.PI - (Math.PI / 8);
-//   beak.castShadow = true;
-//   owl.add(beak);
-//   // 白色肚子
-//   const bellyGeometry = new THREE.SphereGeometry(0.6, 32, 32);
-//   const bellyMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-//   const belly = new THREE.Mesh(bellyGeometry, bellyMaterial);
-//   belly.position.set(0, -0.6, 0.7); // 在身體前方
-//   belly.scale.set(1.4, 1, 0.3); // 稍微拉長，壓扁
-//   belly.castShadow = true;
-//   owl.add(belly);
-//   // 肚子上的四個黑色彎曲線條
-//   const curveGeometry = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI * 0.6);
-//   const curve1 = new THREE.Mesh(curveGeometry, pupilMaterial);
-//   curve1.position.set(-0.15, -0.5, 0.9);
-//   curve1.rotation.z = 2;
-//   curve1.castShadow = true;
-//   owl.add(curve1);
-//   const curve2 = new THREE.Mesh(curveGeometry, pupilMaterial);
-//   curve2.position.set(0.15, -0.5, 0.9);
-//   curve2.rotation.z = -1;
-//   curve2.castShadow = true;
-//   owl.add(curve2);
-//   const curve3 = new THREE.Mesh(curveGeometry, pupilMaterial);
-//   curve3.position.set(-0.4, -0.5, 0.9);
-//   curve3.rotation.z = 2;
-//   curve3.castShadow = true;
-//   owl.add(curve3);
-//   const curve4 = new THREE.Mesh(curveGeometry, pupilMaterial);
-//   curve4.position.set(0.4, -0.5, 0.9);
-//   curve4.rotation.z = -1;
-//   curve4.castShadow = true;
-//   owl.add(curve4);
-//   // 手臂
-//   class CurvedHipArm extends THREE.Curve {
-//     getPoint(t) {
-//       const arcAngle = Math.PI * 0.8;
-//       const radius = 0.5;
-//       const angle = t * arcAngle + Math.PI * 0.1;
-//       const y = Math.sin(angle) * radius;
-//       const x = Math.cos(angle) * radius * 0.6;
-//       const z = 0;
-//       return new THREE.Vector3(x, y, z);
-//     }
-//   }
-//   const armPath = new CurvedHipArm();
-//   const armGeometry = new THREE.TubeGeometry(armPath, 64, 0.03, 8, false);
-//   const leftArm = new THREE.Mesh(armGeometry, pupilMaterial);
-//   leftArm.position.set(-1.1, -0.3, 0.4);
-//   leftArm.rotation.z = Math.PI / 2;
-//   leftArm.castShadow = true;
-//   owl.add(leftArm);
-//   const rightArm = new THREE.Mesh(armGeometry.clone(), pupilMaterial);
-//   rightArm.scale.x = -1;
-//   rightArm.position.set(1.1, -0.3, 0.4);
-//   rightArm.rotation.z = -Math.PI / 2;
-//   rightArm.castShadow = true;
-//   owl.add(rightArm);
-//   // 拳頭
-//   const fistRadius = 0.06;
-//   const fistGeometry = new THREE.SphereGeometry(fistRadius, 16, 16);
-//   const leftEnd = armPath.getPoint(1);
-//   const rightEnd = armPath.getPoint(1).clone().multiply(new THREE.Vector3(-1, 1, 1));
-//   const leftFist = new THREE.Mesh(fistGeometry, pupilMaterial);
-//   leftFist.position.copy(leftEnd);
-//   leftFist.position.add(new THREE.Vector3(-0.95, -0.78, 0.4));
-//   leftFist.scale.set(1.3, 1, 1.8);
-//   leftFist.castShadow = true;
-//   owl.add(leftFist);
-//   const rightFist = new THREE.Mesh(fistGeometry.clone(), pupilMaterial);
-//   rightFist.position.copy(rightEnd);
-//   rightFist.position.add(new THREE.Vector3(0.95, -0.78, 0.4));
-//   rightFist.scale.set(1.3, 1, 1.3);
-//   rightFist.castShadow = true;
-//   owl.add(rightFist);
-//   // 小腳
-//   class CurvedFoot extends THREE.Curve {
-//     getPoint(t) {
-//       const arcAngle = Math.PI * 0.9;
-//       const radius = 0.3;
-//       const angle = t * arcAngle + Math.PI * 0.2;
-//       const y = Math.sin(angle) * radius + 1.2;
-//       const x = Math.cos(angle) * radius * 0.7;
-//       const z = 0;
-//       return new THREE.Vector3(x, y, z);
-//     }
-//   }
-//   const footPath = new CurvedFoot();
-//   const footGeometry = new THREE.TubeGeometry(footPath, 32, 0.025, 8, false);
-//   const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
-//   leftFoot.position.set(1.35, -0.6, 0.3);
-//   leftFoot.rotation.z = 2;
-//   leftFoot.scale.x = -1;
-//   leftFoot.scale.y = 1.3;
-//   leftFoot.castShadow = true;
-//   owl.add(leftFoot);
-//   const rightFoot = new THREE.Mesh(footGeometry.clone(), footMaterial);
-//   rightFoot.scale.x = 1;
-//   rightFoot.position.set(-1.35, -0.6, 0.3);
-//   rightFoot.rotation.z = -2;
-//   rightFoot.scale.y = 1.3;
-//   rightFoot.castShadow = true;
-//   owl.add(rightFoot);
-//   // 腳趾
-//   const toeRadius = 0.08;
-//   const toeGeometry = new THREE.SphereGeometry(toeRadius, 16, 16);
-//   const leftToe = new THREE.Mesh(toeGeometry, footMaterial);
-//   const leftEndF = footPath.getPoint(1);
-//   leftToe.position.copy(leftEndF);
-//   leftToe.position.add(new THREE.Vector3(-0.03, -2.67, 0.3)); // 加上左腳基礎位置
-//   leftToe.scale.set(1.5, 1, 1.3);  // 橢圓
-//   leftToe.castShadow = true;
-//   owl.add(leftToe);
-//   const rightToe = new THREE.Mesh(toeGeometry.clone(), footMaterial);
-//   const rightEndF = footPath.getPoint(1).clone().multiply(new THREE.Vector3(-1, 1, 1)); // 鏡像
-//   rightToe.position.copy(rightEndF);
-//   rightToe.position.add(new THREE.Vector3(0.03, -2.67, 0.3)); // 加上右腳基礎位置
-//   rightToe.scale.set(1.5, 1, 1.3);  // 橢圓
-//   rightToe.castShadow = true;
-//   owl.add(rightToe);
-
-
-
-//   // 學士帽
-//   const capBaseGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 32);
-//   const capBase = new THREE.Mesh(capBaseGeometry, capMaterial);
-//   capBase.position.set(0, 1.4, 0.25); // 向上移動更多
-//   capBase.castShadow = true;
-//   owl.add(capBase);
-//   const capTopGeometry = new THREE.BoxGeometry(1.5, 0.1, 1.5);
-//   const capTop = new THREE.Mesh(capTopGeometry, capMaterial);
-//   capTop.position.set(0, 1.6, 0.25); // 對應調整
-//   capTop.castShadow = true;
-//   owl.add(capTop);
-//   // 流蘇 - 對應帽子位置調整
-//   class TassalCurve extends THREE.Curve {
-//       constructor(start, mid, end) {
-//           super();
-//           this.start = start; // 起點
-//           this.mid = mid;     // 轉彎的中點
-//           this.end = end;     // 終點
-//       }
-
-//       getPoint(t) {
-//           if (t < 0.5) {
-//               // 前半段（直線從起點到轉彎點）
-//               const x = this.start.x + (this.mid.x - this.start.x) * 2 * t;
-//               const y = this.start.y + (this.mid.y - this.start.y) * 2 * t;
-//               const z = this.start.z + (this.mid.z - this.start.z) * 2 * t;
-//               return new THREE.Vector3(x, y, z);
-//           } else {
-//               // 後半段（直線從轉彎點到終點）
-//               const x = this.mid.x + (this.end.x - this.mid.x) * 2 * (t - 0.5);
-//               const y = this.mid.y + (this.end.y - this.mid.y) * 2 * (t - 0.5);
-//               const z = this.mid.z + (this.end.z - this.mid.z) * 2 * (t - 0.5);
-//               return new THREE.Vector3(x, y, z);
-//           }
-//       }
-//   }
-//   const start = new THREE.Vector3(0, 1.68, 0.25);
-//   const end = new THREE.Vector3(0.78, 1.4, 0.95);
-//   const mid = new THREE.Vector3(0.78, 1.68, 0.95);
-//   const tassalCurve = new TassalCurve(start, mid, end);
-//   const path = new THREE.CurvePath();
-//   path.add(tassalCurve);
-//   const tassalStringGeometry = new THREE.TubeGeometry(path, 50, 0.02, 8, false);
-//   const tassalString = new THREE.Mesh(tassalStringGeometry, tassalMaterial);
-//   tassalString.castShadow = true;
-//   owl.add(tassalString);
-//   const tassalGroup = new THREE.Group();
-//   const numStrands = 12;
-//   const tassalRadius = 0.02;
-//   const strandLength = 0.2;
-//   for (let i = 0; i < numStrands; i++) {
-//     const angle = (i / numStrands) * Math.PI * 2;
-//     const x = Math.cos(angle) * tassalRadius;
-//     const z = Math.sin(angle) * tassalRadius;
-//     const strandGeometry = new THREE.CylinderGeometry(0.005, 0.005, strandLength, 3);
-//     const strand = new THREE.Mesh(strandGeometry, tassalMaterial);
-//     strand.position.set(x, -strandLength, z);
-//     strand.lookAt(new THREE.Vector3(x, -strandLength, z));
-//     strand.castShadow = true;
-//     tassalGroup.add(strand);
-//   }
-//   tassalGroup.position.set(0.78, 1.5, 0.95);
-//   tassalString.add(tassalGroup);
-//   scene.add(owl);
-//   // 展示台
-//   const platformGeometry = new THREE.CylinderGeometry(2, 2, 0.3, 32);
-//   const platformMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-//   const platform = new THREE.Mesh(platformGeometry, platformMaterial);
-//   platform.position.y = -2;
-//   platform.receiveShadow = true;
-//   scene.add(platform);
-//   camera.position.set(0, 1, 7);
-//   camera.lookAt(0, 0, 0);
-//   // 滑鼠互動
-//   let mouseX = 0, mouseY = 0, targetRotationX = 0, targetRotationY = 0, mouseDown = false, userControlling = false;
-//   canvas.addEventListener('mousedown', (event) => {
-//     mouseDown = true;
-//     userControlling = true;
-//     mouseX = event.clientX;
-//     mouseY = event.clientY;
-//   });
-//   window.addEventListener('mouseup', () => {
-//     mouseDown = false;
-//     setTimeout(() => { userControlling = false; }, 3000);
-//   });
-//   window.addEventListener('mousemove', (event) => {
-//     if (mouseDown) {
-//       targetRotationY += (event.clientX - mouseX) * 0.01;
-//       targetRotationX += (event.clientY - mouseY) * 0.01;
-//       mouseX = event.clientX;
-//       mouseY = event.clientY;
-//     }
-//   });
-//   canvas.addEventListener('wheel', (event) => {
-//     camera.position.z += event.deltaY * 0.01;
-//     camera.position.z = Math.max(3, Math.min(10, camera.position.z));
-//   });
-//   // 眨眼動畫
-//   let blinkTimer = 0;
-//   let isBlinking = false;
-//   function animate() {
-//     requestAnimationFrame(animate);
-//     if (!userControlling) {
-//       owl.rotation.y += 0.005;
-//     } else {
-//       owl.rotation.y += (targetRotationY - owl.rotation.y) * 0.05;
-//       owl.rotation.x += (targetRotationX - owl.rotation.x) * 0.05;
-//     }
-//     owl.position.y = Math.sin(Date.now() * 0.001) * 0.05;
-//     tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.01;
-//     tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
-//     blinkTimer++;
-//     if (blinkTimer > 240 && !isBlinking) {
-//       isBlinking = true;
-//       blinkTimer = 0;
-//     }
-//     if (isBlinking) {
-//       const blinkProgress = blinkTimer / 8;
-//       if (blinkProgress < 1) {
-//         leftEye.scale.y = 1 - blinkProgress * 0.8;
-//         rightEye.scale.y = 1 - blinkProgress * 0.8;
-//       } else if (blinkProgress < 2) {
-//         leftEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
-//         rightEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
 //       } else {
-//         leftEye.scale.y = 1;
-//         rightEye.scale.y = 1;
-//         isBlinking = false;
-//         blinkTimer = 0;
+//         // 元素離開視窗範圍
+//         console.log("元素離開視窗，重置動畫");
+        
+//         // 移除淡入效果
+//         featureItem.classList.remove('fade-in');
+        
+//         // 重置 SVG 動畫狀態
+//         svg.classList.remove('animated');
+//         paths.forEach(path => {
+//           const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+//           path.style.animation = 'none';
+//           path.style.strokeDashoffset = pathLength;
+//         });
 //       }
-//     }
-//     renderer.render(scene, camera);
-//   }
-//   animate();
+//     });
+//   }, {
+//     // 當元素 30% 進入視窗時觸發
+//     threshold: 0.3,
+//     // 提前 50px 開始觸發
+//     rootMargin: '0px 0px -50px 0px'
+//   });
+  
+//   // 開始觀察目標元素（不移除觀察器以實現重複動畫）
+//   featureItems.forEach(item => {
+//     observer.observe(item);
+//   });
 // }
 
-// document.addEventListener('DOMContentLoaded', () => {
-//   initOwl3D();
+// document.addEventListener("DOMContentLoaded", function () {
+//   const featureItem = document.getElementById('feature-item');
+//   const svgElement = document.querySelector('.rules');
+//   const path = svgElement.querySelector('path');
+  
+//   // 計算路徑總長度
+//   const pathLength = path.getTotalLength();
+//   console.log("SVG路徑總長度:", pathLength);
+  
+//   // 設定CSS變量以供動畫使用
+//   document.documentElement.style.setProperty('--path-length', pathLength);
+  
+//   // 初始化路徑樣式
+//   path.style.strokeDasharray = pathLength;
+//   path.style.strokeDashoffset = pathLength;
+  
+//   // 創建 Intersection Observer
+//   const observer = new IntersectionObserver((entries) => {
+//       entries.forEach(entry => {
+//           if (entry.isIntersecting) {
+//               // 元素進入視窗範圍
+//               console.log("元素進入視窗，開始動畫");
+              
+//               // 添加淡入效果
+//               featureItem.classList.add('fade-in');
+              
+//               // 重置動畫狀態
+//               svgElement.classList.remove('animated');
+//               path.style.animation = 'none';
+//               path.style.strokeDashoffset = pathLength;
+              
+//               // 延遲0.5秒後開始SVG動畫
+//               setTimeout(() => {
+//                   svgElement.classList.add('animated');
+//                   path.style.animation = 'drawPath 3s ease-in-out forwards';
+//               }, 500);
+              
+//           } else {
+//               // 元素離開視窗範圍
+//               console.log("元素離開視窗，重置動畫");
+              
+//               // 移除淡入效果
+//               featureItem.classList.remove('fade-in');
+              
+//               // 重置SVG動畫狀態
+//               svgElement.classList.remove('animated');
+//               path.style.animation = 'none';
+//               path.style.strokeDashoffset = pathLength;
+//           }
+//       });
+//   }, {
+//       // 當元素30%進入視窗時觸發
+//       threshold: 0.3,
+//       // 提前50px開始觸發
+//       rootMargin: '0px 0px -50px 0px'
+//   });
+  
+//   // 開始觀察目標元素（不移除觀察器以實現重複動畫）
+//   observer.observe(featureItem);
+  
+//   // 移除滾動指示器當用戶開始滾動
+//   let hasScrolled = false;
+//   window.addEventListener('scroll', function() {
+//       if (!hasScrolled) {
+//           const indicator = document.querySelector('.scroll-indicator');
+//           if (indicator) {
+//               indicator.style.opacity = '0';
+//               setTimeout(() => {
+//                   indicator.remove();
+//               }, 500);
+//           }
+//           hasScrolled = true;
+//       }
+//   });
 // });
