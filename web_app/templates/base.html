@@ -18,12 +18,13 @@
     <nav class="navbar navbar-initial" id="navbar">         
       <a href="/index/" class="logo">
           <img class="Logo"  src="{% static 'image/logo.png' %}">
-      </a>         
+          智能校事專家
+      </a>
       <ul class="nav-links">             
           <li><a href="/chat/">校規查詢</a></li>             
           <li><a href="/comment/">課程評論區</a></li>             
           <li><a href="/join/">活動召集</a></li>             
-          <li><a href="/book/">二手書專區</a></li>         
+          <li><a href="/book/">二手書專區</a></li>
       </ul>         
       <div class="user-menu">
           <div class="user-circle" id="userMenuButton">             
@@ -77,6 +78,14 @@
             
         </div>
 
+        <div class="footer-section">
+          <a href="#">北商官網</a> 
+          <a href="#">北商blackboard平台</a> 
+          <a href="#">北商Timetable平台</a>
+          <a href="#">北商學生資訊系統</a>
+          
+        </div>
+
         <div class="logout-section">
             {% if user.is_authenticated %}
               <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
@@ -86,7 +95,8 @@
             {% else %}
             {% endif %}
         </div>
-    </div>
+      </div>
+    </nav>
     {% endblock %}
 
     <!-- 主要內容區域 -->
@@ -108,8 +118,8 @@
         <div class="footer-info">
           <div class="footer-title">
               <div class="footer-logo">智能校事專家</div>
-              <div></div>
           </div>
+          <div class="space"></div>
           <div class="footer-links">
             <div class="name">簡介</div>
             <div class="aaa">
@@ -129,9 +139,16 @@
               </p>
             </div>
           </div>
-          <div class="footer-backup">
-            <img class="backupowl"  src="{% static 'image/backup.png' %}" alt="backup"  onclick="scrollToTop()">
-          </div>
+          <div></div>
+        </div>
+        
+        <div class="footer-backup">
+          <img class="backupowl"  src="{% static 'image/backup.png' %}" alt="backup"  onclick="scrollToTop()">
+        </div>
+
+        <!-- 手機菜單覆蓋層和面板 -->
+        <div class="phone-footer-copyright">
+          <p>&copy; 智能校事專家114510</p>
         </div>
       </footer>
     {% endblock %}
@@ -145,3 +162,7 @@
     {% block body_js %}{% endblock %}
 </body>
 </html>
+
+
+
+

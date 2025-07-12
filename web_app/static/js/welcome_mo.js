@@ -1,14 +1,3 @@
-const MOBILE_MAX = 768;
-function maybeRedirectToMobile() {
-  if (window.innerWidth <= MOBILE_MAX && !window.location.pathname.includes('welcome_mo')) {
-    window.location.replace('/welcome_mo/');
-  }
-}
-maybeRedirectToMobile();
-window.addEventListener('resize', () => {
-  maybeRedirectToMobile();
-});
-
 document.addEventListener('DOMContentLoaded', function () {
   const viewer = document.querySelector('spline-viewer');
   const REDIRECT_DELAY = 800; // 毫秒延遲

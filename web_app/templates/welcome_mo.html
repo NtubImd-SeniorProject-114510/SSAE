@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>歡迎頁面 (Mobile)</title>
+
+  <link rel="stylesheet" type="text/css" href="{% static 'css/welcome_mo.css' %}" />
+</head>
+<body>
+    <div class="transition-page">
+      <div class="spline-mask">
+        <spline-viewer class="spline-box" url="https://prod.spline.design/NqIZdwsMRcqAJ2cW/scene.splinecode"></spline-viewer>
+      </div>
+    </div>
+
+
+
+      <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.93/build/spline-viewer.js"></script>
+   
+    
+  </body>
+  <script src="{% static 'js/welcome_mo.js' %}"></script>
+  </html>
+
