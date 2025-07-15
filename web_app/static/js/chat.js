@@ -353,9 +353,9 @@ async function selectConvo(id) {
 function renderMessages(messages) {
     chatContainer.innerHTML = '';
     noMessagesEl.style.display = messages.length ? 'none' : 'block';
-    
+
     messages.forEach(msg => {
-        // 用戶訊息
+        // 顯示使用者提問
         const userMsg = document.createElement('div');
         userMsg.className = 'message-container user-container';
         userMsg.innerHTML = `
@@ -363,20 +363,40 @@ function renderMessages(messages) {
             <div class="avatar user-avatar">你</div>
         `;
         chatContainer.appendChild(userMsg);
-        
-        // 機器人訊息
+
+        // 顯示 AI 回答（含來源）
         const botMsg = document.createElement('div');
         botMsg.className = 'message-container bot-container';
+
+        // 主體內容
+        let botContent = `<div class="message-content bot-content">${msg.answer}`;
+
+        // 加入 PDF 資料來源按鈕（如果有）
+        const sources = msg.sources || [];
+        if (sources.length > 0) {
+            botContent += `
+                <div class="source-indicator" style="margin-top: 8px;">
+                    <button class="source-btn" onclick="showSources(${JSON.stringify(sources).replace(/"/g, '&quot;')})">
+                        🗒️ 查看資料來源
+                    </button>
+                </div>
+            `;
+        }
+
+        botContent += `</div>`;
+
         botMsg.innerHTML = `
             <div class="avatar bot-avatar">AI</div>
-            <div class="message-content bot-content">${msg.answer}</div>
+            ${botContent}
         `;
+
         chatContainer.appendChild(botMsg);
     });
-    
-    // 滾動到最新訊息
+
+    // 滾動到最底部
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
+
 
 // 建立新對話
 newChatBtn.addEventListener('click', async () => {
