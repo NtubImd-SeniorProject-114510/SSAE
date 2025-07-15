@@ -93,6 +93,31 @@
             <path d="M427.865 405.544C410.058 421.083 380.198 429.826 357.722 434.987C301.632 447.867 232.721 466.041 176.376 452.745C26.0601 417.273 -22.8193 218.457 52.3417 102.333C108.542 15.5032 311.558 -38.1477 398 39.581C442.352 79.4615 459.733 135.248 468.572 191.564C477.526 248.617 461.694 304.862 427.865 354.745C355.396 461.605 201.869 497.381 85.061 440.17C9.97511 403.395 -3.66047 318.294 3.79737 243.815C13.2755 149.162 76.7975 70.1825 168.677 39.5812C234.178 17.7655 325.493 17.777 380.604 63.8405C436.493 110.555 456.578 184.407 460.584 252.109C464.454 317.491 444.047 373.363 387.02 411.35C350.992 435.348 318.935 447.396 278.383 431.669" stroke="#8C618C" stroke-width="3" stroke-linecap="round"/>
           </svg>
         </div>
+        <div class="chatbox">
+          <div class="input-container">
+              <input type="text" id="userInput" placeholder="歡迎輸入欲使用功能" />
+              <button class="send-button" onclick="handleInput()"><span class="send-icon">➤</span></button>
+          </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div id="modal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="modalTitle">確認操作</div>
+                </div>
+                <div class="modal-content" id="modalContent">
+                    <!-- 動態內容 -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-button cancel" onclick="closeModal()">取消</button>
+                    <button class="modal-button confirm" onclick="confirmAction()">確認</button>
+                </div>
+            </div>
+        </div>
+
+        
         <div class="lsection">
             <svg class="sectionl" xmlns="http://www.w3.org/2000/svg" width="32vw" height="60vh" viewBox="0 0 1522 395" fill="none">
               <g class="dialog-group-l">

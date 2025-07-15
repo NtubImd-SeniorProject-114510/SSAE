@@ -66,7 +66,147 @@ window.addEventListener('resize', () => {
 // });
   
 
+// 詢問框
+let currentShortcut = null;
 
+// 關鍵字與意圖對應表
+const keywordMap = [
+    { keyword: "賣", intent: "sell" },
+    { keyword: "上架", intent: "sell" },
+    { keyword: "買", intent: "buy" },
+    { keyword: "找", intent: "buy" },
+    { keyword: "書", intent: "book" },
+    { keyword: "二手", intent: "used" },
+    { keyword: "活動", intent: "event" },
+    { keyword: "揪團", intent: "event" },
+    { keyword: "評論", intent: "review" },
+    { keyword: "課程", intent: "course" }
+];
+
+// 每個捷徑定義需要包含哪些 intent
+const shortcuts = [
+    {
+      intentSet: ["sell", "book"],
+      action: "redirect",
+      target: "/book/",
+      label: "上傳二手書",
+      popupToOpen: "uploadForm"  // 傳給 book.html 的彈窗ID
+    },
+    {
+        intentSet: ["book"],
+        action: "redirect",
+        target: "/book/",
+        label: "二手書專區"
+    },
+    {
+        intentSet: ["event"],
+        action: "redirect",
+        target: "/activity/"
+    },
+    {
+        intentSet: ["review", "course"],
+        action: "redirect",
+        target: "/course-reviews/"
+    },
+    {
+        intentSet: ["event"],
+        action: "form-fill",
+        target: "/activity/create",
+        prefill: {
+            title: "羽球週五聚",
+            time: "週五晚上7點"
+        }
+    }
+];
+
+function getIntentsFromInput(input) {
+    const result = new Set();
+    for (const entry of keywordMap) {
+        if (input.includes(entry.keyword)) {
+            result.add(entry.intent);
+        }
+    }
+    return Array.from(result);
+}
+
+function showMessage(text, type = 'error') {
+    const messageEl = document.getElementById('message');
+    messageEl.textContent = text;
+    messageEl.className = `message ${type}`;
+    messageEl.classList.add('show');
+    setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, 3000);
+}
+
+function showModal(title, content, shortcut) {
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    // const modalContent = document.getElementById('modalContent');
+
+    modalTitle.textContent = title;
+    // modalContent.innerHTML = content;
+    currentShortcut = shortcut;
+
+    modal.classList.add('show');
+}
+
+function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.remove('show');
+    currentShortcut = null;
+}
+
+function confirmAction() {
+    if (currentShortcut) {
+        if (currentShortcut.action === "redirect") {
+            if (currentShortcut.popupToOpen) {
+                sessionStorage.setItem('openPopup', currentShortcut.popupToOpen);
+            }
+            window.location.href = currentShortcut.target;
+        }
+    }
+}
+
+
+function handleInput() {
+    const input = document.getElementById('userInput');
+    const inputValue = input.value.trim();
+
+    if (!inputValue) {
+        showMessage('請輸入指令');
+        return;
+    }
+
+    const intents = getIntentsFromInput(inputValue);
+
+    for (let shortcut of shortcuts) {
+        const isMatch = shortcut.intentSet.every(intent =>
+            intents.includes(intent)
+        );
+        if (isMatch) {
+            let title = `前往「${shortcut.label || inputValue}」?`;
+            let content = '';
+
+            if (shortcut.action === "redirect") {
+                content = `目標：</strong>${shortcut.target}`;
+            } else if (shortcut.action === "form-fill") {
+                content = `目標：</strong>${shortcut.target}<br><strong>預填資料：</strong><br>• 標題：${shortcut.prefill.title}<br>• 時間：${shortcut.prefill.time}`;
+            }
+
+            showModal(title, content, shortcut);
+            return;
+        }
+    }
+
+    showMessage('無對應捷徑，請重新輸入');
+}
+
+document.getElementById('userInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        handleInput();
+    }
+});
 
 
 

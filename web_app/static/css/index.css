@@ -179,8 +179,239 @@ color: black;
     height: 18%;
 }
 
+/*----------------------------*/
+/*----------------------------*/
+/*----------------------------*/
 
-  
+.chatbox {
+    position: absolute;
+    top: 92%;
+    left: 50%;
+    width: 380px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 18px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    transform: translateX(-50%); /* 水平中心點對齊 */
+}
+
+
+.chatbox:hover {
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+}
+
+.chatbox-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#userInput {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid rgba(230, 226, 240, 0.8);
+    border-radius: 20px;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    outline: none;
+    color: #333;
+}
+
+#userInput:focus {
+    border-color: #a798af;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#userInput::placeholder {
+    color: #a39caf;
+}
+
+.send-button {
+    background-color: #8A7695;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    opacity: 0.8;
+}
+.send-icon {
+    display: inline-block;
+    transform: rotate(-30deg);
+}
+
+.send-button:hover {
+    background: #8A7695;
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.send-button:active {
+    transform: scale(0.95);
+}
+
+.message {
+    position: fixed;
+    top: 55%;
+    left: 50%;
+    background: rgba(188, 70, 70, 0.95);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    z-index: 1001;
+    opacity: 0;
+    transform: translate(100%, -50%);
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.message.show {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+}
+
+
+/* .message.success {
+    background: rgba(16, 185, 129, 0.95);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+} */
+
+/* 彈跳視窗樣式 */
+.modal-overlay {
+    position: absolute;
+    top: 10%;
+    left: 55%;
+    background: (0, 0, 0, 0.5);
+    border-radius: 12px;
+    width: 300px;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* 加漫畫對話框的「小三角形」在左下角 */
+.modal-overlay::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 30px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 10px 0 10px;
+    border-color: #fff transparent transparent transparent;
+    filter: drop-shadow(0 -1px 2px rgba(0,0,0,0.1));
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal {
+    transform: scale(1);
+}
+
+.modal-header {
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+/* .modal-content {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 24px;
+} */
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.modal-button.cancel {
+    background: #dcddde;
+    color: #756b80;
+}
+
+.modal-button.cancel:hover {
+    background: #e9e5eb;
+}
+
+.modal-button.confirm {
+    background: rgba(164, 153, 171, 0.761);
+    color: white;
+}
+
+.modal-button.confirm:hover {
+    background: #9682a1;
+}
+/*-----------------------------*/
+/*----------------------------*/
+/*----------------------------*/
+
+
 
 /* Header */
 /* header {

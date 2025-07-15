@@ -1,3 +1,22 @@
+//index
+window.addEventListener('DOMContentLoaded', () => {
+    const popupId = sessionStorage.getItem('openPopup');
+    if (popupId) {
+        const popup = document.getElementById(popupId);
+        if (popup) {
+            popup.classList.add('show-popup');
+            console.log(`開啟彈窗: ${popupId}`);
+        } else {
+            console.warn(`找不到彈窗 ID: ${popupId}`);
+        }
+        sessionStorage.removeItem('openPopup');
+    }
+});
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // 確俞SVG路徑和上傳按鈕中心點對齊
     alignSvgPathWithUploadButton();
