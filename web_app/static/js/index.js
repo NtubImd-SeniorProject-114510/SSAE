@@ -1,23 +1,82 @@
-function handleResponsiveRedirect() {
-    const isMobile = window.innerWidth <= 768;
-    const onMobilePage = window.location.pathname.startsWith('/mobile');
-    if (isMobile && !onMobilePage) {
-        window.location.href = '/mobile/';
-    } else if (!isMobile && onMobilePage) {
-        // return to desktop version; assume desktop lives at /index/ or root
-        window.location.href = '/index/';
-    }
-}
 
-// initial check (DOMContentLoaded may already be fired)
-handleResponsiveRedirect();
 
-// add resize listener with basic debounce
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
-});
+// 詢問框
+// let currentShortcut = null;
+
+// // 關鍵字與意圖對應表
+// const keywordMap = [
+//     { keyword: "賣", intent: "sell" },
+//     { keyword: "上架", intent: "sell" },
+//     { keyword: "買", intent: "buy" },
+//     { keyword: "找", intent: "buy" },
+//     { keyword: "書", intent: "book" },
+//     { keyword: "二手", intent: "used" },
+//     { keyword: "活動", intent: "event" },
+//     { keyword: "揪團", intent: "event" },
+//     { keyword: "評論", intent: "review" },
+//     { keyword: "課程", intent: "course" }
+// ];
+
+// 每個捷徑定義需要包含哪些 intent
+// const shortcuts = [
+//     {
+//       intentSet: ["sell", "book"],
+//       action: "redirect",
+//       target: "/book/",
+//       label: "上傳二手書",
+//       popupToOpen: "uploadForm"  // 傳給 book.html 的彈窗ID
+//     },
+//     {
+//         intentSet: ["book"],
+//         action: "redirect",
+//         target: "/book/",
+//         label: "二手書專區"
+//     },
+//     {
+//         intentSet: ["event"],
+//         action: "redirect",
+//         target: "/activity/"
+//     },
+//     {
+//         intentSet: ["review", "course"],
+//         action: "redirect",
+//         target: "/course-reviews/"
+//     },
+//     {
+//         intentSet: ["event"],
+//         action: "form-fill",
+//         target: "/activity/create",
+//         prefill: {
+//             title: "羽球週五聚",
+//             time: "週五晚上7點"
+//         }
+//     }
+// ];
+
+
+
+
+
+// function handleResponsiveRedirect() {
+//     const isMobile = window.innerWidth <= 768;
+//     const onMobilePage = window.location.pathname.startsWith('/mobile');
+//     if (isMobile && !onMobilePage) {
+//         window.location.href = '/mobile/';
+//     } else if (!isMobile && onMobilePage) {
+//         // return to desktop version; assume desktop lives at /index/ or root
+//         window.location.href = '/index/';
+//     }
+// }
+
+// // initial check (DOMContentLoaded may already be fired)
+// handleResponsiveRedirect();
+
+// // add resize listener with basic debounce
+// let resizeTimeout;
+// window.addEventListener('resize', () => {
+//     clearTimeout(resizeTimeout);
+//     resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
+// });
 
 // //loading
 // document.addEventListener("DOMContentLoaded", () => {
@@ -48,7 +107,7 @@ window.addEventListener('resize', () => {
 
 
 
-//圓圈線條
+// //圓圈線條
 // document.addEventListener("DOMContentLoaded", function () {
 //   const path = document.querySelector("#circle-stroke path");
 //   const pathLength = path.getTotalLength();
@@ -66,27 +125,63 @@ window.addEventListener('resize', () => {
 // });
   
 
+// const keywordMap = [
+//     { keywords: ["賣", "上架", "上傳"], intent: "up" },
+//     { keywords: ["書", "課本"], intent: "book" },
+//     { keywords: ["查", "規", "學分", "畢業", "門檻"], intent: "rules" },
+//     { keywords: ["舉辦", "發起", "揪", "創"], intent: "hold" },
+//     { keywords: ["活動", "團", "讀書會"], intent: "event" },
+//     { keywords: ["評"], intent: "review" },
+//     { keywords: ["課", "老師"], intent: "course" },
+// ];
+
+
 // 詢問框
 let currentShortcut = null;
 
 // 關鍵字與意圖對應表
 const keywordMap = [
-    { keyword: "賣", intent: "sell" },
-    { keyword: "上架", intent: "sell" },
-    { keyword: "買", intent: "buy" },
-    { keyword: "找", intent: "buy" },
-    { keyword: "書", intent: "book" },
-    { keyword: "二手", intent: "used" },
-    { keyword: "活動", intent: "event" },
-    { keyword: "揪團", intent: "event" },
-    { keyword: "評論", intent: "review" },
-    { keyword: "課程", intent: "course" }
+    { keywords: "賣", intent: "up" },
+    { keywords: "上架", intent: "up" },
+    { keywords: "上傳", intent: "up" },
+    { keywords: "書", intent: "book" },
+    { keywords: "課本", intent: "book" },
+    { keywords: "查", intent: "rules" },
+    { keywords: "規", intent: "rules" },
+    { keywords: "學分", intent: "rules" },
+    { keywords: "畢業", intent: "rules" },
+    { keywords: "門檻", intent: "rules" },
+    { keywords: "舉辦", intent: "hold" },
+    { keywords: "發起", intent: "hold" },
+    { keywords: "揪", intent: "hold" },
+    { keywords: "創", intent: "hold" },
+    { keywords: "活動", intent: "event" },
+    { keywords: "團", intent: "event" },
+    { keywords: "會", intent: "event" },
+    { keywords: "評", intent: "review" },
+    { keywords: "寫", intent: "review" },
+    { keywords: "課", intent: "course" },
+    { keywords: "老師", intent: "course" }
 ];
+
 
 // 每個捷徑定義需要包含哪些 intent
 const shortcuts = [
     {
-      intentSet: ["sell", "book"],
+        intentSet: ["hold", "event"],
+        action: "redirect",
+        target: "/join/",
+        label: "發起活動",
+        popupToOpen: "uploadForm" 
+    },
+    {
+        intentSet: ["event"],
+        action: "redirect",
+        target: "/join/",
+        label: "活動召集"
+    },
+    {
+      intentSet: ["up", "book"],
       action: "redirect",
       target: "/book/",
       label: "上傳二手書",
@@ -99,30 +194,39 @@ const shortcuts = [
         label: "二手書專區"
     },
     {
-        intentSet: ["event"],
+        intentSet: ["rules"],
         action: "redirect",
-        target: "/activity/"
+        target: "/chat/",
+        label: "校規查詢"
     },
     {
         intentSet: ["review", "course"],
         action: "redirect",
-        target: "/course-reviews/"
+        target: "/comment/",
+        label: "新增課程評論",
+        popupToOpen: "rating-modal" 
     },
     {
-        intentSet: ["event"],
-        action: "form-fill",
-        target: "/activity/create",
-        prefill: {
-            title: "羽球週五聚",
-            time: "週五晚上7點"
-        }
-    }
+        intentSet: ["course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "課程評論區"
+    },
+    // {
+    //     intentSet: ["event"],
+    //     action: "form-fill",
+    //     target: "/activity/create",
+        // prefill: {
+        //     title: "羽球週五聚",
+        //     time: "週五晚上7點"
+        // }
+    // }
 ];
 
 function getIntentsFromInput(input) {
     const result = new Set();
     for (const entry of keywordMap) {
-        if (input.includes(entry.keyword)) {
+        if (input.includes(entry.keywords)) {
             result.add(entry.intent);
         }
     }

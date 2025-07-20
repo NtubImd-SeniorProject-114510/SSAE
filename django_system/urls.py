@@ -28,7 +28,7 @@ urlpatterns = [
     path('welcome_mo/' , views.welcome_mo, name='wel_mo'),
     path('' , views.welcome),
     path('index/' , views.index),
-    path('mobile/' , views.mobile, name='mobile'),
+    # path('mobile/' , views.mobile, name='mobile'),
     path('personal/' , views.personal),
     path('chat/' , views.chat),
     path('join/' , views.join),
