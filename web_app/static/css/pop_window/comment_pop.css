@@ -14,6 +14,10 @@
     align-items: center;
 }
 
+.modal.active {
+    display: flex;
+}
+
 .modal.show {
     display: flex; /* 使用 flex 來居中顯示 */
 }

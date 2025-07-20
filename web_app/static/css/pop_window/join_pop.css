@@ -41,6 +41,11 @@
     overflow-y: auto;
 }
 
+.upload-form.active {
+    display: flex;
+}
+
+
 .upload-container {
     background-color: white;
     border-radius: 15px;

@@ -43,6 +43,36 @@ function setupRatingModal() {
             modal.setAttribute('data-course-id', courseId);
         });
     });
+
+    // 綁定右下角加號按鈕
+    const commentBtn = document.getElementById('commentBtn');
+    if (commentBtn) {
+        console.log('找到 #commentBtn，準備綁定點擊事件');
+        commentBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('按下右下角加號，嘗試開啟 #rating-modal');
+            const modal = document.getElementById('rating-modal');
+            if (!modal) {
+                console.error('找不到評分模態框');
+                return;
+            }
+            // 清空課程資訊，顯示預設文字
+            modal.querySelector('.modal-course-name').textContent = '自訂評論';
+            modal.querySelector('.modal-course-teacher').textContent = '';
+            const modalStars = modal.querySelectorAll('.modal-stars i');
+            modalStars.forEach(star => {
+                star.className = 'far fa-star';
+            });
+            modal.querySelector('#modal-rating-value').value = '0';
+            modal.querySelector('.rating-display').textContent = '0.0';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            modal.removeAttribute('data-course-id');
+        });
+    } else {
+        console.warn('找不到 #commentBtn，無法綁定點擊事件');
+    }
+
     
     // 初始化模態框事件處理
     initializeModalEvents();
@@ -184,5 +214,8 @@ function submitRating(courseId, rating) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('評分模態框 JS 已載入');
     // 延遲一點初始化，確保 DOM 元素都已載入
-    setTimeout(setupRatingModal, 100);
+    setTimeout(() => {
+        console.log('執行 setupRatingModal');
+        setupRatingModal();
+    }, 300);
 });

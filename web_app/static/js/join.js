@@ -1,3 +1,22 @@
+//index
+window.addEventListener('DOMContentLoaded', () => {
+  const popupId = sessionStorage.getItem('openPopup');
+  if (popupId) {
+    const popup = document.getElementById(popupId);
+    if (popup) {
+      popup.classList.add('active');
+      console.log(`自動開啟彈窗: ${popupId}`);
+    } else {
+      console.warn(`找不到彈窗 ID: ${popupId}`);
+    }
+    sessionStorage.removeItem('openPopup');
+  }
+});
+
+
+
+
+
 // join.js - 清理版本，專注於頁面特定功能
 
 document.addEventListener('DOMContentLoaded', function() {

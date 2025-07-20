@@ -147,6 +147,7 @@ const keywordMap = [
     { keywords: "書", intent: "book" },
     { keywords: "課本", intent: "book" },
     { keywords: "查", intent: "rules" },
+    { keywords: "問", intent: "rules" },
     { keywords: "規", intent: "rules" },
     { keywords: "學分", intent: "rules" },
     { keywords: "畢業", intent: "rules" },
