@@ -19,15 +19,21 @@ def create_conversation(user_id, title="新對話"):
     result = col.insert_one(doc)
     return str(result.inserted_id)
 
-def add_message(conversation_id, question, answer):
+def add_message(conversation_id, question, answer, sources=None):
+    message_data = {
+        "question": question,
+        "answer": answer,
+        "timestamp": datetime.utcnow(),
+    }
+    if sources:
+        message_data["sources"] = sources
+
     col.update_one(
         {"_id": ObjectId(conversation_id)},
-        {"$push": {"messages": {
-            "question": question,
-            "answer": answer,
-            "timestamp": datetime.utcnow()
-        }}}
+        {"$push": {"messages": message_data}}
     )
+
+
 
 def get_conversations(user_id):
     docs = col.find({"user_id": user_id}).sort("created_at", -1)
