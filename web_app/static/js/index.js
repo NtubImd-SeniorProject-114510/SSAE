@@ -109,6 +109,20 @@
 
 // //圓圈線條
 // document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
+    const path = document.querySelector("#circle-stroke path");
+    if (path) {
+        const length = path.getTotalLength();
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+        // 設定 CSS 變數供動畫用
+        path.style.setProperty('--circle-length', length);
+        path.style.animation = "none";
+        // 強制 reflow 以重啟動畫
+        void path.offsetWidth;
+        path.style.animation = "drawCircle 3s ease-in-out forwards";
+    }
+});
 //   const path = document.querySelector("#circle-stroke path");
 //   const pathLength = path.getTotalLength();
 //   console.log("圓形路徑長度:", pathLength);

@@ -148,27 +148,32 @@ color: black;
     top: 0; /* 頂部對齊 */
     left: 0; /* 左側對齊 */
     z-index: -1; /* 確保它在其他元素之下 */
-    width: 12%;
-    height: 12%;
-}
-
-#lpurple path{
-  transform: translateX(-30px);
+    width: 120px; /* 固定寬度，不隨視窗縮放 */
+    height: auto;
+    transform: scale(0.7);
+    transform-origin: left top;
 }
 
 
 #rpurple {
     position: absolute; /* 固定位置 */
     top: 550px; /* 頂部對齊 */
-    right: -48px; /* 左側對齊 */
+    right: 0; /* 靠右邊界 */
     z-index: -1; /* 確保它在其他元素之下 */
     width: 18%;
-    height: 18%;
+    height: auto;
+    max-height: 40vw;
+    transform: scale(0.7);
+    transform-origin: right top;
 }
 
-#rpurple path{
-  transform: translateX(1.5px);
+@media (max-width: 768px) {
+  #rpurple {
+    top: 800px;
+  }
 }
+
+
 
 #dpurple {
     position: absolute; /* 固定位置 */
@@ -176,7 +181,8 @@ color: black;
     left: -19px; /* 左側對齊 */
     z-index: -1; /* 確保它在其他元素之下 */
     width: 18%;
-    height: 18%;
+    height: auto;
+    max-height: 40vw;
 }
 
 /*----------------------------*/
@@ -458,6 +464,12 @@ to {
   opacity: 0;
   animation: strokeMoveLeftUp 1s ease-out forwards;
   animation-delay: 0.5s;
+  /* 確保跟著父容器 #rpurple 一起縮放 */
+  transform-origin: center center;
+}
+
+.stroke-group-r path {
+  stroke-width: 1.5; /* 設定適當的 stroke 粗細，跟著 SVG 容器縮放 */
 }
 
 
@@ -480,7 +492,7 @@ to {
     height: 10%;
     position: absolute;
     bottom: 0;
-    right: 110px;
+    right: 6vw;
 }
 
 
@@ -492,7 +504,7 @@ to {
 #animated-line path {
     stroke-dasharray: 7549.05908203125; /* 控制總長度，這個值要大於 path 總長度 */
     stroke-dashoffset: 7549.05908203125;
-    animation: drawLine 4s ease-in-out forwards;
+    animation: drawLine 4s ease-in-out forwards; /* 3秒畫完，可以調整時間 */
     transition: stroke-dashoffset 0.1s linear;
 }
   
@@ -783,17 +795,14 @@ to {
     stroke-width: 3;
     stroke-linecap: round;
     fill: none;
-    
-    /* 動畫設置 */
-    stroke-dasharray: 0; /* 這個值會由JavaScript設置為實際路徑長度 */
-    stroke-dashoffset: 0; /* 這個值會由JavaScript設置為實際路徑長度 */
+    stroke-dasharray: 0; /* 由JS設置 */
+    stroke-dashoffset: 0; /* 由JS設置 */
     animation: drawCircle 3s ease-in-out forwards; /* 3秒畫完，可以調整時間 */
-    animation-delay: 10s;
 }
 
 @keyframes drawCircle {
     from {
-        stroke-dashoffset: 3038.013427734375; /* 一個足夠大的值，會被JavaScript重設 */
+        stroke-dashoffset: var(--circle-length, 3038);
     }
     to {
         stroke-dashoffset: 0;
@@ -1352,7 +1361,7 @@ to {
 
 @media (max-width: 768px) {
   .main-container{
-    min-height: calc(200vh);
+    padding-bottom: 400px;
   }
 
   /* General scale down */
@@ -1444,6 +1453,10 @@ to {
 
   .feature-item .feature-title h3 {
     font-size: 32px;
+  }
+
+  .feature-desc{
+    width: 40px;
   }
 
   .feature-desc p {
