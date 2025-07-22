@@ -1,62 +1,3 @@
-
-
-// 詢問框
-// let currentShortcut = null;
-
-// // 關鍵字與意圖對應表
-// const keywordMap = [
-//     { keyword: "賣", intent: "sell" },
-//     { keyword: "上架", intent: "sell" },
-//     { keyword: "買", intent: "buy" },
-//     { keyword: "找", intent: "buy" },
-//     { keyword: "書", intent: "book" },
-//     { keyword: "二手", intent: "used" },
-//     { keyword: "活動", intent: "event" },
-//     { keyword: "揪團", intent: "event" },
-//     { keyword: "評論", intent: "review" },
-//     { keyword: "課程", intent: "course" }
-// ];
-
-// 每個捷徑定義需要包含哪些 intent
-// const shortcuts = [
-//     {
-//       intentSet: ["sell", "book"],
-//       action: "redirect",
-//       target: "/book/",
-//       label: "上傳二手書",
-//       popupToOpen: "uploadForm"  // 傳給 book.html 的彈窗ID
-//     },
-//     {
-//         intentSet: ["book"],
-//         action: "redirect",
-//         target: "/book/",
-//         label: "二手書專區"
-//     },
-//     {
-//         intentSet: ["event"],
-//         action: "redirect",
-//         target: "/activity/"
-//     },
-//     {
-//         intentSet: ["review", "course"],
-//         action: "redirect",
-//         target: "/course-reviews/"
-//     },
-//     {
-//         intentSet: ["event"],
-//         action: "form-fill",
-//         target: "/activity/create",
-//         prefill: {
-//             title: "羽球週五聚",
-//             time: "週五晚上7點"
-//         }
-//     }
-// ];
-
-
-
-
-
 // function handleResponsiveRedirect() {
 //     const isMobile = window.innerWidth <= 768;
 //     const onMobilePage = window.location.pathname.startsWith('/mobile');
@@ -326,6 +267,39 @@ document.getElementById('userInput').addEventListener('keydown', function (e) {
         handleInput();
     }
 });
+
+(function animatePlaceholder() {
+  const input = document.getElementById('userInput');
+  if (!input) return;
+
+  const text = '歡迎輸入欲使用功能';
+  let idx = 0;
+  let direction = 1;
+  let showCursor = true;
+
+  function type() {
+    const cursor = showCursor ? '|' : ' ';
+    input.setAttribute('placeholder', text.slice(0, idx) + cursor);
+
+    showCursor = !showCursor; // 每次切換游標顯示狀態
+
+    if (direction === 1) {
+      if (idx < text.length) {
+        idx++;
+        setTimeout(type, 120); // 輸出下一個字時間距
+      } else {
+        direction = -1;
+        setTimeout(type, 1300); // 文字打完之後停留的時間
+      }
+    } else {
+      idx = 0;
+      direction = 1;
+      setTimeout(type, 100); // 重新開始打字前的等待時間
+    }
+  }
+
+  type();
+})();
 
 
 
@@ -939,6 +913,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // 文字
+
 document.addEventListener('DOMContentLoaded', () => {
     const featureItems = document.querySelectorAll('.feature-item');
 
