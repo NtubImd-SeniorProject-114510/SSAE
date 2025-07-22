@@ -131,7 +131,8 @@ def api_messages(request, convo_id):
             out.append({
                 "question": m["question"],
                 "answer": m["answer"],
-                "timestamp": m["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp": m["timestamp"].strftime("%Y-%m-%d %H:%M:%S"),
+                "sources": m.get("sources", [])
             })
         return JsonResponse({"messages": out})
     return HttpResponseNotAllowed(["GET"])
@@ -151,8 +152,9 @@ def api_ask(request):
     answer = result["answer"]
     
     # 存入 MongoDB
-    add_message(convo_id, question, answer)
-    
+    # 存入 MongoDB（含 PDF 來源）
+    add_message(convo_id, question, answer, result.get("sources", []))
+
     return JsonResponse({
         "answer": answer,
         "has_sources": result["has_sources"],
