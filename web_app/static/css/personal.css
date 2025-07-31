@@ -87,7 +87,7 @@ h1, h2, h3 {
 
 /* 卡片樣式 */
 .card {
-    background: #FFFFFF;
+    background: #ffffff86;
     border-radius: 16px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
     padding: 24px;
@@ -116,6 +116,27 @@ h1, h2, h3 {
 .calendar-card {
     border-top-color: rgba(170, 157, 169, 0.2);
 }
+
+/* 讓卡片等高並有下方間距 */
+@media (min-width: 769px) {
+    .calendar-card,
+    .detail-card {
+        margin-bottom: 50px;
+        height: 600px;
+    }
+}
+
+
+/* 行事曆事件內容過長時自動截斷 */
+.calendar-card .calendar-event-text {
+    display: inline-block;
+    max-width: 6em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
 
 .todo-card {
     border-top-color: #AA9DA9;
@@ -175,9 +196,13 @@ h1, h2, h3 {
 }
 
 .schedule-table .time {
-    width: 80px;
+    width: 56px;
+    min-width: 40px;
+    max-width: 64px;
     background-color: #9479C1;
     color: white;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .schedule-table .has-class {
@@ -557,7 +582,7 @@ h1, h2, h3 {
     padding: 2px 4px;
     margin-top: 4px;
     font-size: 0.8rem;
-    text-align: left;
+    text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
 }
@@ -1017,6 +1042,19 @@ h1, h2, h3 {
 
 /* 響應式調整 */
 @media (max-width: 768px) {
+    .schedule-table th,
+    .schedule-table td {
+        font-size: 0.85rem;
+        word-break: break-word;
+        white-space: normal;
+        padding: 4px 6px;
+    }
+    .schedule-table .class-name, .schedule-table .class-room {
+        font-size: 0.6rem;
+        word-break: break-word;
+        white-space: normal;
+    }
+
     .row {
         flex-direction: column;
     }
@@ -1055,7 +1093,13 @@ h1, h2, h3 {
     .todo-detail-input {
         min-height: 100px;
     }
+
+
+    .event {
+        font-size: 0.6rem;
+    }
 }
+
 
 .todo-item.completed label {
     color: #aaa;

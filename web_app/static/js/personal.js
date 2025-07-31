@@ -128,6 +128,26 @@ function renderCalendar(year, month) {
 
 
 function renderCalendarEvents() {
+    // 新增：點擊事件讓點擊有事件的td滾動到詳細卡片
+    setTimeout(function() {
+        const calendarBody = document.getElementById('calendarBody');
+        if (!calendarBody) return;
+        calendarBody.querySelectorAll('td').forEach(td => {
+            td.removeEventListener('click', td.__scrollToDetailHandler);
+            td.__scrollToDetailHandler = function(e) {
+                // 只對本月且有 .event 的 td 作用
+                if (td.classList.contains('other-month')) return;
+                if (!td.querySelector('.event')) return;
+                const detailCard = document.querySelector('.detail-card');
+                if (detailCard) {
+                    detailCard.style.display = '';
+                    detailCard.scrollIntoView({behavior: 'smooth'});
+                }
+            };
+            td.addEventListener('click', td.__scrollToDetailHandler);
+        });
+    }, 0);
+
     // 只顯示當月事件
     const calendarBody = document.getElementById('calendarBody');
     if (!calendarBody) return;
@@ -511,6 +531,14 @@ window.addEventListener('DOMContentLoaded', function () {
     const addDetailBtn = document.getElementById('addDetailTask');
     if (addDetailBtn) {
         addDetailBtn.addEventListener('click', function () {
+            // 新增：點擊新增事項後滾動回行事曆
+            setTimeout(function() {
+                const calendarCard = document.querySelector('.calendar-card');
+                if (calendarCard) {
+                    calendarCard.scrollIntoView({behavior: 'smooth'});
+                }
+            }, 350); // 稍微延遲，讓新增動畫/渲染完成
+
             const titleInput = document.getElementById('newDetailTaskTitle');
             const descriptionInput = document.getElementById('newDetailTaskDescription');
 
