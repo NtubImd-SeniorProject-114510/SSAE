@@ -569,6 +569,7 @@ h1, h2, h3 {
 /* 待辦事項樣式 */
 .todo-card {
     flex: 1;
+    margin-bottom: 50px;
 }
 
 .todo-list {
@@ -783,6 +784,7 @@ h1, h2, h3 {
 .detail-card {
     flex: 1;
     max-width: 100%;
+    margin-bottom: 50px;
 }
 
 .profile-card {
@@ -1015,24 +1017,41 @@ h1, h2, h3 {
 
 /* 響應式調整 */
 @media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+    .card.profile-card {
+        order: 1;
+    }
+    .card.course-schedule {
+        order: 2;
+    }
+    .card.activities-card {
+        order: 3;
+    }
+    .card.calendar-card {
+        order: 4;
+    }
+    .card.todo-card {
+        order: 5;
+    }
+    .card.detail-card{
+        order: 5;
+    }
     .detail-content {
         padding: var(--space-md);
     }
-    
     .add-todo-detail {
         padding: var(--space-md);
     }
-    
     .todo-actions {
         flex-direction: column;
     }
-    
     .btn-primary-detail,
     .btn-secondary-detail {
         width: 100%;
         justify-content: center;
     }
-    
     .todo-detail-input {
         min-height: 100px;
     }
