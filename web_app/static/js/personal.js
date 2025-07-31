@@ -599,6 +599,50 @@ window.addEventListener('DOMContentLoaded', function () {
     }
 
     initCalendarPage();
+
+// User name edit logic (no HTML change, pure JS)
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const userNameDiv = document.querySelector('.profile-image .user-name');
+        const editBtn = document.querySelector('.profile-image .btn-secondary');
+        let editing = false;
+        let inputEl = null;
+        if (userNameDiv && editBtn) {
+            editBtn.addEventListener('click', function () {
+                if (!editing) {
+                    // Create input
+                    inputEl = document.createElement('input');
+                    inputEl.type = 'text';
+                    inputEl.className = 'user-name-input';
+                    inputEl.value = userNameDiv.textContent.trim();
+                    inputEl.style.width = '100%';
+                    inputEl.style.marginTop = '8px';
+                    inputEl.maxLength = 20;
+                    userNameDiv.style.display = 'none';
+                    userNameDiv.parentNode.insertBefore(inputEl, editBtn);
+                    inputEl.focus();
+                    editBtn.textContent = '儲存';
+                    editing = true;
+
+                    // Save on blur or enter
+                    function saveName() {
+                        userNameDiv.textContent = inputEl.value.trim() || userNameDiv.textContent;
+                        userNameDiv.style.display = '';
+                        inputEl.remove();
+                        editBtn.textContent = '編輯資料';
+                        editing = false;
+                    }
+                    inputEl.addEventListener('blur', saveName);
+                    inputEl.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            saveName();
+                        }
+                    });
+                }
+            });
+        }
+    });
+})();
 });
 
 
