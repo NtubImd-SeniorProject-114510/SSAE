@@ -53,11 +53,11 @@
     </div>-->
 
 
-    <svg id="lpurple" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 167 313" fill="none">
+    <svg id="lpurple" xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 180 313" fill="none">
       <path d="M112.996 138.372C45.8411 277.273 -0.448727 312.743 -0.448727 312.743L-0.448406 0.743164L165.552 0.743168C165.552 0.743168 178.463 2.96186 112.996 138.372Z" fill="#AA9DA9"/>
     </svg>
     
-    <svg id="rpurple" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 237 496" fill="none">
+    <svg id="rpurple" xmlns="http://www.w3.org/2000/svg" viewBox="-1 11 238 419" fill="none">
       <path d="M123.555 185.371C190.71 46.4701 237 11 237 11L237 323L70.9997 323C70.9997 323 58.0882 320.781 123.555 185.371Z" fill="#AA9DA9"/>
       <g class="stroke-group-r">
         <path d="M64.7663 292.352C131.921 153.451 178.211 117.98 178.211 117.98L178.211 429.98L12.2106 429.98C12.2106 429.98 -0.700821 427.762 64.7663 292.352Z" stroke="black"/>
@@ -93,6 +93,30 @@
             <path d="M427.865 405.544C410.058 421.083 380.198 429.826 357.722 434.987C301.632 447.867 232.721 466.041 176.376 452.745C26.0601 417.273 -22.8193 218.457 52.3417 102.333C108.542 15.5032 311.558 -38.1477 398 39.581C442.352 79.4615 459.733 135.248 468.572 191.564C477.526 248.617 461.694 304.862 427.865 354.745C355.396 461.605 201.869 497.381 85.061 440.17C9.97511 403.395 -3.66047 318.294 3.79737 243.815C13.2755 149.162 76.7975 70.1825 168.677 39.5812C234.178 17.7655 325.493 17.777 380.604 63.8405C436.493 110.555 456.578 184.407 460.584 252.109C464.454 317.491 444.047 373.363 387.02 411.35C350.992 435.348 318.935 447.396 278.383 431.669" stroke="#8C618C" stroke-width="3" stroke-linecap="round"/>
           </svg>
         </div>
+        <div class="chatbox">
+          <div class="input-container">
+              <input type="text" id="userInput" placeholder="歡迎輸入欲使用功能" />
+              <button class="send-button" onclick="handleInput()"><span class="send-icon">➤</span></button>
+          </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div id="modal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="modalTitle">確認操作</div>
+                </div>
+                <div class="modal-content" id="modalContent">
+                    <!-- 動態內容 -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-button cancel" onclick="closeModal()">取消</button>
+                    <button class="modal-button confirm" onclick="confirmAction()">確認</button>
+                </div>
+            </div>
+        </div>
+
         <div class="lsection">
             <svg class="sectionl" xmlns="http://www.w3.org/2000/svg" width="32vw" height="60vh" viewBox="0 0 1522 395" fill="none">
               <g class="dialog-group-l">
@@ -116,6 +140,21 @@
                 <path class="path-outline" d="M171 322.5H397.73C398.007 322.5 398.23 322.724 398.23 323V355C398.23 374.054 382.784 389.5 363.73 389.5H137C136.724 389.5 136.5 389.276 136.5 389V357C136.5 337.946 151.946 322.5 171 322.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M177 312.5H403.73C404.007 312.5 404.23 312.724 404.23 313V345C404.23 364.054 388.784 379.5 369.73 379.5H143C142.724 379.5 142.5 379.276 142.5 379V347C142.5 327.946 157.946 312.5 177 312.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
               </g>
+            </svg>
+
+            <svg class="svg-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" fill="none">
+              <g class="dialog-group-l">
+              <path class="path-outline" d="M103.374 3.88477H201.483C201.56 3.88477 201.623 3.9475 201.623 4.02441C201.623 16.1049 191.83 25.8984 179.749 25.8984H81.6396C81.5627 25.8984 81.5 25.8357 81.5 25.7588C81.5001 13.6781 91.2934 3.88481 103.374 3.88477Z" stroke="#9E8C9E"/>
+              <path class="path-fill" d="M105.251 0.5H203.36C203.437 0.5 203.5 0.562734 203.5 0.639648C203.5 12.7202 193.707 22.5136 181.626 22.5137H83.5166C83.4397 22.5137 83.377 22.4509 83.377 22.374C83.377 10.2934 93.1703 0.500048 105.251 0.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-l"> 
+              <path class="path-outline" d="M22.8848 40.9609H140.019C140.104 40.9609 140.173 41.0303 140.173 41.1152C140.173 53.4776 130.151 63.499 117.788 63.499H0.654297C0.569417 63.499 0.500138 63.4306 0.5 63.3457C0.5 50.9831 10.5221 40.9609 22.8848 40.9609Z" stroke="#9E8C9E"/>
+              <path class="path-fill" d="M27.2119 37.5H144.346C144.431 37.5 144.5 37.5693 144.5 37.6543C144.5 50.0167 134.478 60.0381 122.115 60.0381H4.98145C4.89657 60.0381 4.82729 59.9696 4.82715 59.8848C4.82715 47.5221 14.8493 37.5 27.2119 37.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-l">
+              <path class="path-outline" d="M96.0371 78.833H254.241C254.313 78.833 254.371 78.8913 254.371 78.9629C254.371 90.8575 244.729 100.5 232.834 100.5H74.6299C74.5583 100.5 74.5 100.442 74.5 100.37C74.5001 88.4755 84.1425 78.8331 96.0371 78.833Z" stroke="#9E8C9E"/>
+              <path class="path-fill" d="M100.166 75.5H258.37C258.442 75.5 258.5 75.5583 258.5 75.6299C258.5 87.5245 248.858 97.167 236.963 97.167H78.7588C78.6872 97.167 78.6289 97.1087 78.6289 97.0371C78.629 85.1425 88.2714 75.5001 100.166 75.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+            </g>
             </svg>
           </div>
 

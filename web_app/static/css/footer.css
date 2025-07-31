@@ -17,7 +17,7 @@ footer {
 .fowl {
   width: 150px;
   height: 150px;
-  background-image: url('../image/lay.png'); /* 換成你的圖片路徑 */
+  background-image: url('../image/lay.png');
   background-size: contain;
   background-repeat: no-repeat;
   position: absolute;
@@ -234,6 +234,10 @@ footer .wave#wave4{
 }
 
 @media (max-width: 768px) {
+  footer{
+    min-height: 150px;
+  }
+
   .footer-info {
     display: none;
   }
@@ -261,4 +265,5 @@ footer .wave#wave4{
   .fowl {
     width: 120px;
     height: 120px;
+}
 }

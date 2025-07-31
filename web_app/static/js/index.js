@@ -1,23 +1,23 @@
-function handleResponsiveRedirect() {
-    const isMobile = window.innerWidth <= 768;
-    const onMobilePage = window.location.pathname.startsWith('/mobile');
-    if (isMobile && !onMobilePage) {
-        window.location.href = '/mobile/';
-    } else if (!isMobile && onMobilePage) {
-        // return to desktop version; assume desktop lives at /index/ or root
-        window.location.href = '/index/';
-    }
-}
+// function handleResponsiveRedirect() {
+//     const isMobile = window.innerWidth <= 768;
+//     const onMobilePage = window.location.pathname.startsWith('/mobile');
+//     if (isMobile && !onMobilePage) {
+//         window.location.href = '/mobile/';
+//     } else if (!isMobile && onMobilePage) {
+//         // return to desktop version; assume desktop lives at /index/ or root
+//         window.location.href = '/index/';
+//     }
+// }
 
-// initial check (DOMContentLoaded may already be fired)
-handleResponsiveRedirect();
+// // initial check (DOMContentLoaded may already be fired)
+// handleResponsiveRedirect();
 
-// add resize listener with basic debounce
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
-});
+// // add resize listener with basic debounce
+// let resizeTimeout;
+// window.addEventListener('resize', () => {
+//     clearTimeout(resizeTimeout);
+//     resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
+// });
 
 // //loading
 // document.addEventListener("DOMContentLoaded", () => {
@@ -48,8 +48,22 @@ window.addEventListener('resize', () => {
 
 
 
-//圓圈線條
+// //圓圈線條
 // document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
+    const path = document.querySelector("#circle-stroke path");
+    if (path) {
+        const length = path.getTotalLength();
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+        // 設定 CSS 變數供動畫用
+        path.style.setProperty('--circle-length', length);
+        path.style.animation = "none";
+        // 強制 reflow 以重啟動畫
+        void path.offsetWidth;
+        path.style.animation = "drawCircle 3s ease-in-out forwards";
+    }
+});
 //   const path = document.querySelector("#circle-stroke path");
 //   const pathLength = path.getTotalLength();
 //   console.log("圓形路徑長度:", pathLength);
@@ -66,7 +80,226 @@ window.addEventListener('resize', () => {
 // });
   
 
+// const keywordMap = [
+//     { keywords: ["賣", "上架", "上傳"], intent: "up" },
+//     { keywords: ["書", "課本"], intent: "book" },
+//     { keywords: ["查", "規", "學分", "畢業", "門檻"], intent: "rules" },
+//     { keywords: ["舉辦", "發起", "揪", "創"], intent: "hold" },
+//     { keywords: ["活動", "團", "讀書會"], intent: "event" },
+//     { keywords: ["評"], intent: "review" },
+//     { keywords: ["課", "老師"], intent: "course" },
+// ];
 
+
+// 詢問框
+let currentShortcut = null;
+
+// 關鍵字與意圖對應表
+const keywordMap = [
+    { keywords: "賣", intent: "up" },
+    { keywords: "上架", intent: "up" },
+    { keywords: "上傳", intent: "up" },
+    { keywords: "書", intent: "book" },
+    { keywords: "課本", intent: "book" },
+    { keywords: "查", intent: "rules" },
+    { keywords: "問", intent: "rules" },
+    { keywords: "規", intent: "rules" },
+    { keywords: "學分", intent: "rules" },
+    { keywords: "畢業", intent: "rules" },
+    { keywords: "門檻", intent: "rules" },
+    { keywords: "舉辦", intent: "hold" },
+    { keywords: "發起", intent: "hold" },
+    { keywords: "揪", intent: "hold" },
+    { keywords: "創", intent: "hold" },
+    { keywords: "活動", intent: "event" },
+    { keywords: "團", intent: "event" },
+    { keywords: "會", intent: "event" },
+    { keywords: "評", intent: "review" },
+    { keywords: "寫", intent: "review" },
+    { keywords: "課", intent: "course" },
+    { keywords: "老師", intent: "course" }
+];
+
+
+// 每個捷徑定義需要包含哪些 intent
+const shortcuts = [
+    {
+        intentSet: ["hold", "event"],
+        action: "redirect",
+        target: "/join/",
+        label: "發起活動",
+        popupToOpen: "uploadForm" 
+    },
+    {
+        intentSet: ["event"],
+        action: "redirect",
+        target: "/join/",
+        label: "活動召集"
+    },
+    {
+      intentSet: ["up", "book"],
+      action: "redirect",
+      target: "/book/",
+      label: "上傳二手書",
+      popupToOpen: "uploadForm"  // 傳給 book.html 的彈窗ID
+    },
+    {
+        intentSet: ["book"],
+        action: "redirect",
+        target: "/book/",
+        label: "二手書專區"
+    },
+    {
+        intentSet: ["rules"],
+        action: "redirect",
+        target: "/chat/",
+        label: "校規查詢"
+    },
+    {
+        intentSet: ["review", "course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "新增課程評論",
+        popupToOpen: "rating-modal" 
+    },
+    {
+        intentSet: ["course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "課程評論區"
+    },
+    // {
+    //     intentSet: ["event"],
+    //     action: "form-fill",
+    //     target: "/activity/create",
+        // prefill: {
+        //     title: "羽球週五聚",
+        //     time: "週五晚上7點"
+        // }
+    // }
+];
+
+function getIntentsFromInput(input) {
+    const result = new Set();
+    for (const entry of keywordMap) {
+        if (input.includes(entry.keywords)) {
+            result.add(entry.intent);
+        }
+    }
+    return Array.from(result);
+}
+
+function showMessage(text, type = 'error') {
+    const messageEl = document.getElementById('message');
+    messageEl.textContent = text;
+    messageEl.className = `message ${type}`;
+    messageEl.classList.add('show');
+    setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, 3000);
+}
+
+function showModal(title, content, shortcut) {
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    // const modalContent = document.getElementById('modalContent');
+
+    modalTitle.textContent = title;
+    // modalContent.innerHTML = content;
+    currentShortcut = shortcut;
+
+    modal.classList.add('show');
+}
+
+function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.remove('show');
+    currentShortcut = null;
+}
+
+function confirmAction() {
+    if (currentShortcut) {
+        if (currentShortcut.action === "redirect") {
+            if (currentShortcut.popupToOpen) {
+                sessionStorage.setItem('openPopup', currentShortcut.popupToOpen);
+            }
+            window.location.href = currentShortcut.target;
+        }
+    }
+}
+
+
+function handleInput() {
+    const input = document.getElementById('userInput');
+    const inputValue = input.value.trim();
+
+    if (!inputValue) {
+        showMessage('請輸入指令');
+        return;
+    }
+
+    const intents = getIntentsFromInput(inputValue);
+
+    for (let shortcut of shortcuts) {
+        const isMatch = shortcut.intentSet.every(intent =>
+            intents.includes(intent)
+        );
+        if (isMatch) {
+            let title = `前往「${shortcut.label || inputValue}」?`;
+            let content = '';
+
+            if (shortcut.action === "redirect") {
+                content = `目標：</strong>${shortcut.target}`;
+            } else if (shortcut.action === "form-fill") {
+                content = `目標：</strong>${shortcut.target}<br><strong>預填資料：</strong><br>• 標題：${shortcut.prefill.title}<br>• 時間：${shortcut.prefill.time}`;
+            }
+
+            showModal(title, content, shortcut);
+            return;
+        }
+    }
+
+    showMessage('無對應捷徑，請重新輸入');
+}
+
+document.getElementById('userInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        handleInput();
+    }
+});
+
+(function animatePlaceholder() {
+  const input = document.getElementById('userInput');
+  if (!input) return;
+
+  const text = '歡迎輸入欲使用功能';
+  let idx = 0;
+  let direction = 1;
+  let showCursor = true;
+
+  function type() {
+    const cursor = showCursor ? '|' : ' ';
+    input.setAttribute('placeholder', text.slice(0, idx) + cursor);
+
+    showCursor = !showCursor; // 每次切換游標顯示狀態
+
+    if (direction === 1) {
+      if (idx < text.length) {
+        idx++;
+        setTimeout(type, 120); // 輸出下一個字時間距
+      } else {
+        direction = -1;
+        setTimeout(type, 1300); // 文字打完之後停留的時間
+      }
+    } else {
+      idx = 0;
+      direction = 1;
+      setTimeout(type, 100); // 重新開始打字前的等待時間
+    }
+  }
+
+  type();
+})();
 
 
 
@@ -680,6 +913,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // 文字
+
 document.addEventListener('DOMContentLoaded', () => {
     const featureItems = document.querySelectorAll('.feature-item');
 

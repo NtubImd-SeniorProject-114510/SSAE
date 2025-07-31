@@ -148,27 +148,32 @@ color: black;
     top: 0; /* 頂部對齊 */
     left: 0; /* 左側對齊 */
     z-index: -1; /* 確保它在其他元素之下 */
-    width: 12%;
-    height: 12%;
-}
-
-#lpurple path{
-  transform: translateX(-30px);
+    width: 120px; /* 固定寬度，不隨視窗縮放 */
+    height: auto;
+    transform: scale(0.7);
+    transform-origin: left top;
 }
 
 
 #rpurple {
     position: absolute; /* 固定位置 */
     top: 550px; /* 頂部對齊 */
-    right: -48px; /* 左側對齊 */
+    right: 0; /* 靠右邊界 */
     z-index: -1; /* 確保它在其他元素之下 */
     width: 18%;
-    height: 18%;
+    height: auto;
+    max-height: 40vw;
+    transform: scale(0.7);
+    transform-origin: right top;
 }
 
-#rpurple path{
-  transform: translateX(1.5px);
+@media (max-width: 768px) {
+  #rpurple {
+    top: 800px;
+  }
 }
+
+
 
 #dpurple {
     position: absolute; /* 固定位置 */
@@ -176,11 +181,243 @@ color: black;
     left: -19px; /* 左側對齊 */
     z-index: -1; /* 確保它在其他元素之下 */
     width: 18%;
-    height: 18%;
+    height: auto;
+    max-height: 40vw;
+}
+
+/*----------------------------*/
+/*----------------------------*/
+/*----------------------------*/
+
+.chatbox {
+    position: absolute;
+    top: 92%;
+    left: 50%;
+    width: 380px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 18px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    transform: translateX(-50%); /* 水平中心點對齊 */
 }
 
 
-  
+.chatbox:hover {
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+}
+
+.chatbox-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#userInput {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid rgba(230, 226, 240, 0.8);
+    border-radius: 20px;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    outline: none;
+    color: #333;
+}
+
+#userInput:focus {
+    border-color: #a798af;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#userInput::placeholder {
+    color: #a39caf;
+}
+
+.send-button {
+    background-color: #8A7695;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    opacity: 0.8;
+}
+.send-icon {
+    display: inline-block;
+    transform: rotate(-30deg);
+}
+
+.send-button:hover {
+    background: #8A7695;
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.send-button:active {
+    transform: scale(0.95);
+}
+
+.message {
+    position: fixed;
+    top: 55%;
+    left: 50%;
+    background: #e5383b;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    z-index: 1001;
+    opacity: 0;
+    transform: translate(100%, -50%);
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.message.show {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+}
+
+
+/* .message.success {
+    background: rgba(16, 185, 129, 0.95);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+} */
+
+/* 彈跳視窗樣式 */
+.modal-overlay {
+    position: absolute;
+    top: 10%;
+    left: 55%;
+    background: (0, 0, 0, 0.5);
+    border-radius: 12px;
+    width: 300px;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* 加漫畫對話框的「小三角形」在左下角 */
+.modal-overlay::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 30px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 10px 0 10px;
+    border-color: #fff transparent transparent transparent;
+    filter: drop-shadow(0 -1px 2px rgba(0,0,0,0.1));
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal {
+    transform: scale(1);
+}
+
+.modal-header {
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+/* .modal-content {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 24px;
+} */
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.modal-button.cancel {
+    background: #dcddde;
+    color: #756b80;
+}
+
+.modal-button.cancel:hover {
+    background: #e9e5eb;
+}
+
+.modal-button.confirm {
+    background: rgba(164, 153, 171, 0.761);
+    color: white;
+}
+
+.modal-button.confirm:hover {
+    background: #9682a1;
+}
+/*-----------------------------*/
+/*----------------------------*/
+/*----------------------------*/
+
+
 
 /* Header */
 /* header {
@@ -227,6 +464,12 @@ to {
   opacity: 0;
   animation: strokeMoveLeftUp 1s ease-out forwards;
   animation-delay: 0.5s;
+  /* 確保跟著父容器 #rpurple 一起縮放 */
+  transform-origin: center center;
+}
+
+.stroke-group-r path {
+  stroke-width: 1.5; /* 設定適當的 stroke 粗細，跟著 SVG 容器縮放 */
 }
 
 
@@ -249,7 +492,7 @@ to {
     height: 10%;
     position: absolute;
     bottom: 0;
-    right: 110px;
+    right: 6vw;
 }
 
 
@@ -261,7 +504,7 @@ to {
 #animated-line path {
     stroke-dasharray: 7549.05908203125; /* 控制總長度，這個值要大於 path 總長度 */
     stroke-dashoffset: 7549.05908203125;
-    animation: drawLine 4s ease-in-out forwards;
+    animation: drawLine 4s ease-in-out forwards; /* 3秒畫完，可以調整時間 */
     transition: stroke-dashoffset 0.1s linear;
 }
   
@@ -288,8 +531,8 @@ to {
     min-width: 15vw;
     border-left: 1vw solid #8F7ABC;
     transform-style: preserve-3d;
-    font-size: clamp(12px, 1.5vw, 20px);
-    padding: clamp(6px, 1vw, 20px) clamp(6px, 2vw, 30px);
+    font-size: clamp(6px, 1.5vw, 20px);
+    padding: clamp(3px, 1vw, 20px) clamp(3px, 2vw, 30px);
 
 
     /* 初始狀態 */
@@ -422,7 +665,7 @@ to {
   z-index: 100;
   left: 0;
   top: 0;
-  background-color: white;
+  background-color: rgb(209, 197, 209, 0.4);
 }
 
 
@@ -552,17 +795,14 @@ to {
     stroke-width: 3;
     stroke-linecap: round;
     fill: none;
-    
-    /* 動畫設置 */
-    stroke-dasharray: 0; /* 這個值會由JavaScript設置為實際路徑長度 */
-    stroke-dashoffset: 0; /* 這個值會由JavaScript設置為實際路徑長度 */
+    stroke-dasharray: 0; /* 由JS設置 */
+    stroke-dashoffset: 0; /* 由JS設置 */
     animation: drawCircle 3s ease-in-out forwards; /* 3秒畫完，可以調整時間 */
-    animation-delay: 10s;
 }
 
 @keyframes drawCircle {
     from {
-        stroke-dashoffset: 3038.013427734375; /* 一個足夠大的值，會被JavaScript重設 */
+        stroke-dashoffset: var(--circle-length, 3038);
     }
     to {
         stroke-dashoffset: 0;
@@ -805,28 +1045,6 @@ to {
         cursor: pointer;
     }
 
-/* ================= RWD 響應式設計 ================= */
-@media (max-width: 1200px) {
-  .main-container {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .dialog-group-l:nth-child(2) {
-    animation-delay: 1.3s;
-  }
-  .dialog-group-l:nth-child(3) {
-    animation-delay: 1s;
-  }
-  
-  .dialog-group-r:nth-child(1) {
-    animation-delay: 1.9s;
-  }
-  .dialog-group-r:nth-child(2) {
-    animation-delay: 2.2s;
-  }
-  /* 已移除進場動畫與空白規則集 */
-}
 
 
 /* Feature sections */
@@ -1119,3 +1337,149 @@ to {
     margin: 0 auto 15px auto;
   }
 } */
+
+.svg-mobile {
+  display: none;
+}
+
+.sectionl {
+  display: block;
+}
+
+@media screen and (max-width: 768px) {
+  .sectionl {
+    display: none;
+  }
+
+  .svg-mobile {
+    display: block;
+  }
+}
+
+
+/* Mobile specific overrides for index page */
+
+@media (max-width: 768px) {
+  .main-container{
+    padding-bottom: 400px;
+  }
+
+  /* General scale down */
+  body {
+    width: 100%;
+    font-size: 8px;
+  }
+
+  /* Decorative purple shapes responsive size
+  #lpurple,
+  #rpurple,
+  #dpurple {
+    width: clamp(120px, 25vw, 180px);
+    height: auto;
+  } */
+
+  #lpurple{
+    top: -12px;
+  }
+
+  /* Hide right chat section */
+  .rsection {
+    display: none;
+  }
+
+  /* Re-position left chat section under the circle */
+  .lsection {
+    position: relative;
+    width: 480px;
+    height: 200px;
+    top: 550px;
+    left: 50%;
+    transform: translateX(-50%);
+    overflow: visible; /* prevent clipping */
+    animation: none; /* stop floating */
+  }
+
+  /* Make embedded SVG scale with container */
+  .lsection svg {
+    top: 0;
+    width: 480px; /* shrink overall dialog size */
+    height: 200px;
+  }
+
+  /* Remove shadow & scale down dialog on mobile */
+  .lsection .dialog-group-l {
+    top: 0;
+    transform: scale(2.5);
+    filter: none;
+    box-shadow: none;
+    transform-origin: top left;
+    animation: none; /* 移除桌面版 fly-out 動畫 */
+    opacity: 1; /* 確保可見 */
+  }
+
+
+  /* Fine-tune hover offset for scaled dialogs */
+  .lsection .dialog-group-l:hover .path-outline {
+    transform: translate(3.2px, -3px); /* 比桌面版小，避免位移過大 */
+  }
+
+  .lsection .dialog-group-l:hover .path-outline .stroke-group {
+    transform: translate(-6%, 6%); /* 起始位置，與fill重疊，使用百分比以隨視窗縮放 */
+  }
+
+  .feature-container{
+    top: 400px;
+  }
+
+  
+  /* .feature-container #triangle-1,
+  .feature-container #triangle-2 {
+    width: clamp(80px, 10vw, 100px); 在 160~260px 範圍內隨螢幕寬度變化
+    height: auto;
+    transform: none; 以寬度控制大小，不額外縮放
+  } */
+
+  /* .feature-container #animated-line {
+    width: clamp(240px, 70vw, 520px);
+    height: auto;
+    transform: none;
+  } */
+
+
+  /* Scale down feature section */
+  .feature-box {
+    transform: scale(0.8);
+    transform-origin: top center;
+  }
+
+  .feature-item {
+    transform: scale(0.8);
+  }
+
+  .feature-item .feature-title h3 {
+    font-size: 26px;
+  }
+
+  .feature-desc{
+    width: 40%;
+  }
+
+  .feature-desc p {
+    font-size: 2vw;
+  }
+
+  .feature-title{
+    width: 300px;
+  }
+
+  .slogan-4{
+    top: 88%;
+    left: 12%;
+  }
+
+  .feature-item:nth-child(4) .feature-desc {
+    bottom: 40%;
+    left: 29%;
+  }
+
+}

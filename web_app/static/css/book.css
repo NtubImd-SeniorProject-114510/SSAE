@@ -563,6 +563,11 @@ body {
 
 /* 上傳按鈕和功能  */
 
+.upload-form.show-popup {
+  display: flex;
+}
+
+
 #imageUpload {
   display: none;
 }

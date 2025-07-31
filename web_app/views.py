@@ -19,8 +19,8 @@ def welcome_mo(request):
 def index(request):
     return render(request, 'index.html')
 
-def mobile(request):
-    return render(request, 'mobile.html')
+# def mobile(request):
+#     return render(request, 'mobile.html')
 
 def login(request):
     return render(request, 'login.html')
