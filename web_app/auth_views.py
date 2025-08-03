@@ -34,14 +34,16 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     except User.DoesNotExist:
         pass
 
-    # 創建新使用者
+    # 創建新使用者（不給予後台權限）
     user = User.objects.create_user(
         username=username,
         email=email,
         first_name=first_name,
         last_name=last_name,
-        password=strategy.random_password(),
-        is_active=True
+        password=generate_random_password(),
+        is_active=True,
+        is_staff=False,  # 確保沒有後台訪問權限
+        is_superuser=False  # 確保沒有超級用戶權限
     )
     
     # 獲取 Google 帳號照片
@@ -59,3 +61,11 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
             except Exception as e:
                 print(f"Error getting Google photo: {str(e)}")
     return {'is_new': True, 'user': user}
+
+import string
+import random
+
+def generate_random_password(length=12):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choices(characters, k=length))
+
