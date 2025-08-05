@@ -255,12 +255,19 @@ function bindCalendarDayClick() {
         if (!td.classList.contains('other-month')) {
             td.style.cursor = 'pointer';
             td.onclick = function() {
-                selectedDay = parseInt(td.textContent);
+                selectedDay = parseInt(td.childNodes[0]?.nodeValue?.trim());
                 updateSelectedDateDisplay();
                 // 高亮顯示
                 document.querySelectorAll('#calendarBody td').forEach(t => t.classList.remove('selected-calendar-day'));
                 td.classList.add('selected-calendar-day');
                 showDetailCard();
+                // 動畫：確保卡片顯示後再滾動
+                setTimeout(function() {
+                    const detailCard = document.querySelector('.detail-card');
+                    if (detailCard) {
+                        detailCard.scrollIntoView({behavior: 'smooth'});
+                    }
+                }, 100);
             };
         } else {
             td.onclick = null;
@@ -268,6 +275,8 @@ function bindCalendarDayClick() {
         }
     });
 }
+
+
 
 // 顯示詳細資訊卡片，隱藏待辦事項卡片，並載入該天事項
 function showDetailCard() {
