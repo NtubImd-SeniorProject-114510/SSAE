@@ -128,6 +128,26 @@ function renderCalendar(year, month) {
 
 
 function renderCalendarEvents() {
+    // 新增：點擊事件讓點擊有事件的td滾動到詳細卡片
+    setTimeout(function() {
+        const calendarBody = document.getElementById('calendarBody');
+        if (!calendarBody) return;
+        calendarBody.querySelectorAll('td').forEach(td => {
+            td.removeEventListener('click', td.__scrollToDetailHandler);
+            td.__scrollToDetailHandler = function(e) {
+                // 只對本月且有 .event 的 td 作用
+                if (td.classList.contains('other-month')) return;
+                if (!td.querySelector('.event')) return;
+                const detailCard = document.querySelector('.detail-card');
+                if (detailCard) {
+                    detailCard.style.display = '';
+                    detailCard.scrollIntoView({behavior: 'smooth'});
+                }
+            };
+            td.addEventListener('click', td.__scrollToDetailHandler);
+        });
+    }, 0);
+
     // 只顯示當月事件
     const calendarBody = document.getElementById('calendarBody');
     if (!calendarBody) return;
@@ -511,6 +531,14 @@ window.addEventListener('DOMContentLoaded', function () {
     const addDetailBtn = document.getElementById('addDetailTask');
     if (addDetailBtn) {
         addDetailBtn.addEventListener('click', function () {
+            // 新增：點擊新增事項後滾動回行事曆
+            setTimeout(function() {
+                const calendarCard = document.querySelector('.calendar-card');
+                if (calendarCard) {
+                    calendarCard.scrollIntoView({behavior: 'smooth'});
+                }
+            }, 350); // 稍微延遲，讓新增動畫/渲染完成
+
             const titleInput = document.getElementById('newDetailTaskTitle');
             const descriptionInput = document.getElementById('newDetailTaskDescription');
 
@@ -599,6 +627,50 @@ window.addEventListener('DOMContentLoaded', function () {
     }
 
     initCalendarPage();
+
+// User name edit logic (no HTML change, pure JS)
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const userNameDiv = document.querySelector('.profile-image .user-name');
+        const editBtn = document.querySelector('.profile-image .btn-secondary');
+        let editing = false;
+        let inputEl = null;
+        if (userNameDiv && editBtn) {
+            editBtn.addEventListener('click', function () {
+                if (!editing) {
+                    // Create input
+                    inputEl = document.createElement('input');
+                    inputEl.type = 'text';
+                    inputEl.className = 'user-name-input';
+                    inputEl.value = userNameDiv.textContent.trim();
+                    inputEl.style.width = '100%';
+                    inputEl.style.marginTop = '8px';
+                    inputEl.maxLength = 20;
+                    userNameDiv.style.display = 'none';
+                    userNameDiv.parentNode.insertBefore(inputEl, editBtn);
+                    inputEl.focus();
+                    editBtn.textContent = '儲存';
+                    editing = true;
+
+                    // Save on blur or enter
+                    function saveName() {
+                        userNameDiv.textContent = inputEl.value.trim() || userNameDiv.textContent;
+                        userNameDiv.style.display = '';
+                        inputEl.remove();
+                        editBtn.textContent = '編輯資料';
+                        editing = false;
+                    }
+                    inputEl.addEventListener('blur', saveName);
+                    inputEl.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            saveName();
+                        }
+                    });
+                }
+            });
+        }
+    });
+})();
 });
 
 

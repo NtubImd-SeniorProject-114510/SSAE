@@ -1397,6 +1397,7 @@ to {
     transform: translateX(-50%);
     overflow: visible; /* prevent clipping */
     animation: none; /* stop floating */
+    box-sizing: border-box;
   }
 
   /* Make embedded SVG scale with container */
