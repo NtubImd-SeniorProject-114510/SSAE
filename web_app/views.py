@@ -147,12 +147,14 @@ def api_ask(request):
     if not question or not convo_id:
         return JsonResponse({"error": "缺少 question 或 conversation_id"}, status=400)
 
-    # 呼叫現有 RAG 邏輯
-    result = ask_question(question)
+    # 🔥 關鍵：獲取「這個對話」的歷史記錄
+    conversation_history = get_messages(convo_id)
+    
+    # 🔥 關鍵：將歷史記錄傳給 RAG 系統
+    result = ask_question(question, conversation_history)
     answer = result["answer"]
     
     # 存入 MongoDB
-    # 存入 MongoDB（含 PDF 來源）
     add_message(convo_id, question, answer, result.get("sources", []))
 
     return JsonResponse({
