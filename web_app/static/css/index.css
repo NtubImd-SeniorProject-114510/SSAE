@@ -718,6 +718,36 @@ to {
   pointer-events: auto;
 }
 
+@media (max-width: 768px) {
+  .circle-container {
+    width: 350px;
+    height: 350px;
+  }
+  .marquee-container{
+    width: 340px;  
+  }
+  .circle-particles {
+    width: 350px !important;
+    height: 350px !important;
+  }
+  .circle-background {
+    min-width: 350px !important;
+    min-height: 350px !important;
+  }
+
+  .chatbox{
+    width: 320px;
+  }
+  .modal-overlay{
+    width: 45vw;
+  }
+  .message{
+    top: 45%;
+    left: 45%;
+  }
+}
+
+
 .circle-particles {
   width: 400px;
   height: 400px;
@@ -856,7 +886,7 @@ to {
 .lsection {
   position: absolute;
   left: 15vw;
-  top: 5px;
+  top: 20%;
   width: 20vw;
   height: 400px;
   z-index: 2;
@@ -866,8 +896,7 @@ to {
   position: absolute;
   /* transform: translateY(5vh); */
   right: 0;
-  top: 9vh;
-  bottom: 6vh;
+  top: -12vw;
   
 }
 
@@ -875,9 +904,9 @@ to {
 .rsection {
   position: absolute;
   right: 15vw;
-  top: 5px;
+  top: 20%;
   width: 20vw;
-  height: 75vh;
+  height: 400px;
   z-index: 2;
   animation: float-right 8s ease-in-out infinite;
 }
@@ -885,9 +914,22 @@ to {
 .sectionr{
   position: relative;
   /* transform: translateY(5vh); */
-  top: 9vh;
-  bottom: 6vh;
+  top: -12vw;
   
+}
+
+@media (max-width: 950px) {
+  .sectionr{
+    position: relative;
+    /* transform: translateY(5vh); */
+    top: -60px;
+  }
+  .sectionl{
+    position: absolute;
+    /* transform: translateY(5vh); */
+    right: 0;
+    top: -60px;  
+  }
 }
 
 /* Floating animations */
