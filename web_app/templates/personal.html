@@ -268,15 +268,24 @@
                 <div class="calendar">
                     <table>
                         <thead>
-                            <tr>
-                                <th>星期日</th>
-                                <th>星期一</th>
-                                <th>星期二</th>
-                                <th>星期三</th>
-                                <th>星期四</th>
-                                <th>星期五</th>
-                                <th>星期六</th>
-                            </tr>
+                            <tr class="calendar-header-full">
+                            <th>星期日</th>
+                            <th>星期一</th>
+                            <th>星期二</th>
+                            <th>星期三</th>
+                            <th>星期四</th>
+                            <th>星期五</th>
+                            <th>星期六</th>
+                        </tr>
+                        <tr class="calendar-header-short" style="display:none;">
+                            <th>日</th>
+                            <th>一</th>
+                            <th>二</th>
+                            <th>三</th>
+                            <th>四</th>
+                            <th>五</th>
+                            <th>六</th>
+                        </tr>
                         </thead>
                         <tbody id="calendarBody">
                             <tr>
