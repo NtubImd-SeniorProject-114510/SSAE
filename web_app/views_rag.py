@@ -81,14 +81,14 @@ def create_advanced_rag_chain(retriever):
         "Use the following retrieved context to answer the question. "
         "If you don't know the answer, just say you don't know, and do not make up anything. "
         "You must answer **only in Traditional Chinese**, never use Simplified Chinese. "
-        "Your tone should be lively and cute (like a friendly NTUB student helper), "
+        "Your tone should be friendly and professional (like a knowledgeable NTUB student helper), "
         "but your information must be accurate and based on the context. "
         "Always clearly mention that the information is from NTUB regulations, by saying things like '根據國立臺北商業大學的校規顯示'. "
         "Use bold (** **) or headers (like # or ##) to highlight key points and make the answer easier to read. "
         "When listing items, use proper numbering (1. 2. 3.) or bullet points (•) with consistent spacing. "
         "Organize your response with clear structure and consistent formatting.\n\n{context}"
     )
-
+    
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("human", "{input}"),

@@ -374,13 +374,7 @@ function renderMessages(messages) {
         // 加入 PDF 資料來源按鈕（如果有）
         const sources = msg.sources || [];
         if (sources.length > 0) {
-            botContent += `
-                <div class="source-indicator" style="margin-top: 8px;">
-                    <button class="source-btn" onclick="showSources(${JSON.stringify(sources).replace(/"/g, '&quot;')})">
-                        🗒️ 查看資料來源
-                    </button>
-                </div>
-            `;
+            botContent += `<div class="source-indicator"><button class="source-btn" onclick="showSources(${JSON.stringify(sources).replace(/"/g, '&quot;')})">📑</button></div>`;
         }
 
         botContent += `</div>`;
@@ -471,17 +465,11 @@ async function sendQuestion() {
         
         // 如果有來源文檔，添加查看按鈕
         if (data.has_sources && data.sources && data.sources.length > 0) {
-            botContent += `
-                <div class="source-indicator" style="margin-top: 8px;">
-                    <button class="source-btn" onclick="showSources(${JSON.stringify(data.sources).replace(/"/g, '&quot;')})">
-                        🗒️ 查看資料來源
-                    </button>
-                </div>
-            `;
+            botContent += `<div class="source-indicator"><button class="source-btn" onclick="showSources(${JSON.stringify(data.sources).replace(/"/g, '&quot;')})">📑</button></div>`;
         }
-        
+
         botContent += `</div>`;
-        
+
         // 在聊天區域加入機器人回覆
         const botMsg = document.createElement('div');
         botMsg.className = 'message-container bot-container';
