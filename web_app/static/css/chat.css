@@ -651,7 +651,7 @@ body.sidebar-collapsed .input-container {
 /* 消息樣式 - 修正文字超出問題 */
 .message-container {
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     width: 100%;
     /* 確保容器不會超出父容器 */
     max-width: 100%;
@@ -700,6 +700,7 @@ body.sidebar-collapsed .input-container {
     line-height: 1.5;
     /* 確保內容不會水平溢出 */
     overflow: hidden;
+    margin-bottom: 0;  /* 加上這行，確保沒有下邊距 */
 }
 
 /* 針對用戶和機器人消息的特別設定 */
@@ -715,6 +716,7 @@ body.sidebar-collapsed .input-container {
     color: #333;
     border-radius: 4px 18px 18px 18px;
     max-width: 70%;
+    margin-bottom: 0;  /* 確保沒有額外的下邊距 */
 }
 
 /* 確保編號列表和內容正確顯示 */
@@ -846,23 +848,59 @@ body.sidebar-collapsed .input-container {
     }
 }
 
+.source-indicator {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    height: 0;           /* 加上這行，不占垂直空間 */
+    line-height: 0;      /* 加上這行，消除行高 */
+    overflow: visible;   /* 確保按鈕可見 */
+}
+
 .source-btn {
-    background: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #bbdefb;
-    padding: 4px 8px;
-    border-radius: 4px;
+    position: absolute;
+    right: -3px;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(45deg, #b37392 0%, #e3a5d0 50%, #fecfef 100%);
+    border: none;
+    border-radius: 50%;
     cursor: pointer;
     font-size: 12px;
-    transition: all 0.3s ease;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
 }
 
 .source-btn:hover {
-    background: #bbdefb;
-    transform: translateY(-1px);
+    transform: scale(1.2);
+    box-shadow: 0 6px 15px rgba(255, 154, 158, 0.4);
 }
 
-.source-indicator {
-    border-top: 1px solid #f0f0f0;
-    padding-top: 8px;
+.source-btn::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: inherit;
+    animation: ripple 2s infinite;
+    z-index: -1;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
 }

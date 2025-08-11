@@ -374,13 +374,7 @@ function renderMessages(messages) {
         // 加入 PDF 資料來源按鈕（如果有）
         const sources = msg.sources || [];
         if (sources.length > 0) {
-            botContent += `
-                <div class="source-indicator" style="margin-top: 8px;">
-                    <button class="source-btn" onclick="showSources(${JSON.stringify(sources).replace(/"/g, '&quot;')})">
-                        🗒️ 查看資料來源
-                    </button>
-                </div>
-            `;
+            botContent += `<div class="source-indicator"><button class="source-btn" onclick="showSources(${JSON.stringify(sources).replace(/"/g, '&quot;')})">📑</button></div>`;
         }
 
         botContent += `</div>`;
@@ -471,17 +465,11 @@ async function sendQuestion() {
         
         // 如果有來源文檔，添加查看按鈕
         if (data.has_sources && data.sources && data.sources.length > 0) {
-            botContent += `
-                <div class="source-indicator" style="margin-top: 8px;">
-                    <button class="source-btn" onclick="showSources(${JSON.stringify(data.sources).replace(/"/g, '&quot;')})">
-                        🗒️ 查看資料來源
-                    </button>
-                </div>
-            `;
+            botContent += `<div class="source-indicator"><button class="source-btn" onclick="showSources(${JSON.stringify(data.sources).replace(/"/g, '&quot;')})">📑</button></div>`;
         }
-        
+
         botContent += `</div>`;
-        
+
         // 在聊天區域加入機器人回覆
         const botMsg = document.createElement('div');
         botMsg.className = 'message-container bot-container';
@@ -545,11 +533,11 @@ function showSources(sources) {
     
     sources.forEach(source => {
         sourcesHtml += `
-            <div style="margin: 12px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+            <div style="margin: 12px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #9187b2ff;">
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button onclick="viewPDF('${source}')" style="
-                        background: linear-gradient(135deg, #007bff, #0056b3);
-                        color: white;
+                        background: linear-gradient(135deg, #dbcfdfff, #dbcfdfff);
+                        color: #615a5aff;
                         border: none;
                         padding: 10px 16px;
                         border-radius: 6px;
@@ -561,21 +549,21 @@ function showSources(sources) {
                         font-size: 14px;
                         font-weight: 500;
                         transition: all 0.3s ease;
-                        box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.27);
                         flex: 1;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,123,255,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,123,255,0.2)'">
-                        📄 ${source}
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(24, 24, 24, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(49, 49, 49, 0.2)'">
+                        📝 ${source}
                     </button>
                     <button onclick="window.open('/api/pdf/${encodeURIComponent(source)}/', '_blank')" style="
-                        background: #28a745;
-                        color: white;
+                        background: #eacb315c;
+                        color: black;
                         border: none;
                         padding: 10px 12px;
                         border-radius: 6px;
                         cursor: pointer;
                         font-size: 14px;
                         transition: all 0.3s ease;
-                        box-shadow: 0 2px 4px rgba(40,167,69,0.2);
+                        box-shadow: 0 2px 4px rgba(183, 183, 183, 0.2);
                     " title="新分頁開啟">
                         🔗
                     </button>
