@@ -620,29 +620,54 @@ to {
 }
 
 /* 個別位置與旋轉設定 */
+.floating-slogan {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* 桌機版（預設）：全域定位，維持原本的畫面位置與旋轉 */
 .slogan-1 {
     top: 9%;
     left: 3%;
+    right: auto;
     transform: rotate(-15deg);
 }
-
 .slogan-2 {
-    top: 46%;
-    right: 10%;
+    top: 62%;
+    right: 7%;
+    left: auto;
     transform: rotate(5deg);
 }
-
 .slogan-3 {
-    top: 59%;
+    top: 40%;
     left: 8%;
+    right: auto;
     transform: rotate(-12deg);
 }
-
 .slogan-4 {
-    top: 95%;
+    top: 60%;
     left: 18%;
+    right: auto;
     transform: rotate(-8deg);
 }
+
+/* 手機版：以 feature-item 為父元素定位（覆蓋桌機設定） */
+@media (max-width: 768px) {
+  .slogan-3 {
+      top: 35%;
+      left: 3%;
+      right: auto;
+      transform: rotate(-12deg);
+  }
+  .slogan-4 {
+      top: 95%;
+      left: 18%;
+      right: auto;
+      transform: rotate(-8deg);
+  }
+}
+
 
 
 
@@ -692,6 +717,36 @@ to {
   height: 400px;
   pointer-events: auto;
 }
+
+@media (max-width: 768px) {
+  .circle-container {
+    width: 350px;
+    height: 350px;
+  }
+  .marquee-container{
+    width: 340px;  
+  }
+  .circle-particles {
+    width: 350px !important;
+    height: 350px !important;
+  }
+  .circle-background {
+    min-width: 350px !important;
+    min-height: 350px !important;
+  }
+
+  .chatbox{
+    width: 320px;
+  }
+  .modal-overlay{
+    width: 45vw;
+  }
+  .message{
+    top: 45%;
+    left: 45%;
+  }
+}
+
 
 .circle-particles {
   width: 400px;
@@ -831,9 +886,9 @@ to {
 .lsection {
   position: absolute;
   left: 15vw;
-  top: 5px;
+  top: 20%;
   width: 20vw;
-  height: 75vh;
+  height: 400px;
   z-index: 2;
   animation: float-left 8s ease-in-out infinite;
 }
@@ -841,8 +896,7 @@ to {
   position: absolute;
   /* transform: translateY(5vh); */
   right: 0;
-  top: 9vh;
-  bottom: 6vh;
+  top: -12vw;
   
 }
 
@@ -850,9 +904,9 @@ to {
 .rsection {
   position: absolute;
   right: 15vw;
-  top: 5px;
+  top: 20%;
   width: 20vw;
-  height: 75vh;
+  height: 400px;
   z-index: 2;
   animation: float-right 8s ease-in-out infinite;
 }
@@ -860,9 +914,22 @@ to {
 .sectionr{
   position: relative;
   /* transform: translateY(5vh); */
-  top: 9vh;
-  bottom: 6vh;
+  top: -12vw;
   
+}
+
+@media (max-width: 950px) {
+  .sectionr{
+    position: relative;
+    /* transform: translateY(5vh); */
+    top: -60px;
+  }
+  .sectionl{
+    position: absolute;
+    /* transform: translateY(5vh); */
+    right: 0;
+    top: -60px;  
+  }
 }
 
 /* Floating animations */
@@ -1189,10 +1256,11 @@ to {
 
 
 .feature-title h3 {
-  font-size: clamp(6px, 4vw, 65px);
+  /* font-size: clamp(6px, 4vw, 65px); */
   font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
   color: #635C63;
   font-weight: 600;
+  font-size: 5vw;
 }
 
 .feature-desc p {
@@ -1410,7 +1478,7 @@ to {
   /* Remove shadow & scale down dialog on mobile */
   .lsection .dialog-group-l {
     top: 0;
-    transform: scale(2.5);
+    transform: scale(2.2);
     filter: none;
     box-shadow: none;
     transform-origin: top left;
@@ -1458,7 +1526,7 @@ to {
   }
 
   .feature-item .feature-title h3 {
-    font-size: 26px;
+    font-size: 5vw;
   }
 
   .feature-desc{
