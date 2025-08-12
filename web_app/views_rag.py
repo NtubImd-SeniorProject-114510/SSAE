@@ -81,14 +81,14 @@ def create_advanced_rag_chain(retriever):
         "Use the following retrieved context to answer the question. "
         "If you don't know the answer, just say you don't know, and do not make up anything. "
         "You must answer **only in Traditional Chinese**, never use Simplified Chinese. "
-        "Your tone should be lively and cute (like a friendly NTUB student helper), "
+        "Your tone should be friendly and professional (like a knowledgeable NTUB student helper), "
         "but your information must be accurate and based on the context. "
         "Always clearly mention that the information is from NTUB regulations, by saying things like '根據國立臺北商業大學的校規顯示'. "
         "Use bold (** **) or headers (like # or ##) to highlight key points and make the answer easier to read. "
         "When listing items, use proper numbering (1. 2. 3.) or bullet points (•) with consistent spacing. "
         "Organize your response with clear structure and consistent formatting.\n\n{context}"
     )
-
+    
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("human", "{input}"),
@@ -147,9 +147,23 @@ print("✅ 進階 RAG 系統初始化完成。")
 
 # 修正後的查詢函式
 # 只需要替換您原本的 ask_question 函式即可：
-def ask_question(question: str) -> str:
+def ask_question(question: str, conversation_history: list = None) -> str:
     try:
-        response = advanced_rag_chain.invoke({"input": question})
+        # 🔥 如果有歷史對話，就加入到當前問題中
+        if conversation_history:
+            # 只取最近幾輪對話，避免太長
+            recent_history = conversation_history[-8:] if len(conversation_history) > 8 else conversation_history
+            
+            history_context = "之前的對話內容：\n"
+            for msg in recent_history:
+                history_context += f"Q: {msg['question']}\nA: {msg['answer']}\n\n"
+            
+            # 將歷史對話和新問題結合
+            full_question = f"{history_context}現在的新問題：{question}"
+        else:
+            full_question = question
+            
+        response = advanced_rag_chain.invoke({"input": full_question})
         raw_answer = response["answer"].strip()
         
         # 獲取使用的文檔來源

@@ -344,7 +344,7 @@ textarea:focus {
 .comment-text-area, 
 .comment-preview {
     flex: 1;
-    min-width: 300px;
+    min-width: 200px;
 }
 
 /* Arrows and convert button */
@@ -490,6 +490,7 @@ body {
     }
     
     .form-col {
+        display: block;
         width: 100%;
     }
     
