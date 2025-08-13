@@ -1099,10 +1099,12 @@ h1, h2, h3 {
         flex-direction: column;
     }
 @media (max-width: 495px) {
+  .activities-card {
+    padding: 10px;
+  }
+
   .card.course-schedule {
-    width: 495px;
-    min-width: 495px;
-    max-width: 495px;
+    width: 100%;
     /* 根據視窗寬度等比例縮小 */
     transform: scale(calc(100vw / 495));
     transform-origin: top left;
@@ -1111,6 +1113,7 @@ h1, h2, h3 {
     right: 0;
     margin: 0 auto 24px auto;
     z-index: 1;
+    padding: 10px;
   }
   /* 外層容器允許橫向捲動，避免被裁切 */
   .page-container {
@@ -1119,9 +1122,42 @@ h1, h2, h3 {
   /* 不讓表格內容換行 */
   .card.course-schedule .schedule-table,
   .card.course-schedule .schedule-table th,
-  .card.course-schedule .schedule-table td {
+  .card.course-schedule .schedule-table td.time {
     white-space: nowrap;
+    transform: scale(calc(100vw / 495));
+    transform-origin: top left;
+    font-size: 10px;
   }
+
+  /* .card.course-schedule .schedule-table td {
+    font-size: 4px;
+  } */
+
+  .card.course-schedule .schedule-table th:first-child,
+  .card.course-schedule .schedule-table td.time {
+    display: none;
+  }
+
+  .schedule-table tr:nth-child(5) .class-item {
+    border-left-color: none;
+  }
+
+  .class-item {
+    border-radius: 3px;
+    padding: 2px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    border-left: 0px solid #AA9DA9;
+    transition: transform 0.2s;
+  }
+
+  .detail-content {
+    min-width: 200px;
+  }
+   
 }
     }
     .card.course-schedule {
