@@ -1,0 +1,2305 @@
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\pop_window\join_pop.html
+<!-- join_pop.html - 發起揪團彈跳視窗 -->
+<div class="upload-form" id="uploadForm">
+    <div class="upload-container">
+        <div class="upload-header">
+            <div class="upload-title">發起揪團</div>
+            <button class="close-btn" id="closeUploadBtn">&times;</button>
+        </div>
+        
+        <form id="create-group-form">
+            <div class="form-group">
+                <label for="activity-title" class="form-label">活動標題</label>
+                <input type="text" id="activity-title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-type" class="form-label">活動類型</label>
+                        <select id="activity-type" class="form-select" required>
+                            <option value="" disabled selected>請選擇活動類型</option>
+                            <option value="food">美食</option>
+                            <option value="sport">運動</option>
+                            <option value="study">讀書</option>
+                            <option value="travel">旅遊</option>
+                            <option value="movie">電影</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-location" class="form-label">活動地點</label>
+                        <input type="text" id="activity-location" class="form-input" placeholder="請輸入活動地點" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-date" class="form-label">活動日期</label>
+                        <input type="date" id="activity-date" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-time" class="form-label">活動時間</label>
+                        <input type="time" id="activity-time" class="form-input" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="min-participants" class="form-label">最少參加人數</label>
+                        <input type="number" id="min-participants" class="form-input" min="2" value="2" required>
+                        <div class="help-text">若未達最少人數，活動將被取消</div>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="max-participants" class="form-label">最多參加人數</label>
+                        <input type="number" id="max-participants" class="form-input" min="2" value="10" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="activity-description" class="form-label">活動說明</label>
+                <textarea id="activity-description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">活動封面圖片</label>
+                <div class="image-upload-container" id="image-upload-area">
+                    <div class="image-upload-icon"><i class="fa-solid fa-camera"></i></div>
+                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+                </div>
+                <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="activity-deadline" class="form-label">報名截止日期</label>
+                <input type="date" id="activity-deadline" class="form-input" required>
+                <div class="help-text">報名截止日期必須早於活動日期</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="contact-info" class="form-label">聯絡方式（選填）</label>
+                <input type="text" id="contact-info" class="form-input" placeholder="LINE ID、IG、電話等，方便參加者聯繫">
+            </div>
+            
+            <div class="preview-section">
+                <div class="preview-title">
+                    <span class="preview-icon"><i class="fa-solid fa-eye"></i></span>
+                    活動預覽
+                </div>
+                <div class="preview-card">
+                    <div class="preview-image">
+                        圖片預覽區域
+                        <div class="preview-tag" id="preview-tag">活動類型</div>
+                    </div>
+                    <div class="preview-content">
+                        <h3 class="preview-activity-title" id="preview-title">活動標題</h3>
+                        <div class="preview-info">
+                            <div class="preview-location">
+                                <span class="location-icon"><i class="fa-solid fa-map-pin"></i></span>
+                                <span id="preview-location">活動地點</span>
+                            </div>
+                            <div class="preview-time">
+                                <span class="time-icon"><i class="fa-solid fa-clock"></i></span>
+                                <span id="preview-time">活動時間</span>
+                            </div>
+                        </div>
+                        <p class="preview-description" id="preview-description">活動說明將顯示在這裡...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="buttons-container">
+                <button type="button" class="cancel-btn" id="cancel-create-btn">取消</button>
+                <button type="submit" class="submit-btn">發布活動</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\pop_window\login_pop.html
+<!-- login_pop.html - 登入彈跳視窗 -->
+<div id="loginModal" class="login-modal">
+    <div class="login-container">
+        <span class="close-modal">&times;</span>
+        <div class="login-sidebar">
+            <h2>登入</h2>
+            <div class="sidebar-text">
+                請使用學校帳號進行登入
+            </div>
+        </div>
+        <div class="login-form">
+            <form id="loginForm">
+                <div class="login-buttons">
+                    <a class="other-login-btn" href="{% url 'social:begin' 'google-oauth2' %}?prompt=select_account">
+                        <img class="login-img" src="/static/image/login.png" alt="Google 登入">
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\add_comment.html
+{% extends 'navbar.html' %}
+
+{% block title %}新增評論{% endblock %}
+
+{% block lang %}zh{% endblock %}
+
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/add_comment.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="margin-top: 80px;"></div>
+<div class="comment-container">
+
+    <div class="back-button" onclick="history.back()">
+        <a href="#">返回</a>
+    </div>
+    
+    <form method="POST" class="comment-form" id="commentForm" onsubmit="return confirmSubmission()"> 
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-col-left">
+                <div class="form-group">
+                    <label for="school_year">學年度</label>
+                    <select id="school_year" name="school_year" class="form-control">
+                        <option value="">選擇學年度</option>
+                        <option value="112">112</option>
+                        <option value="111">111</option>
+                        <option value="110">110</option>
+                        <option value="109">109</option>
+                        <option value="108">108</option>
+                        <option value="107">107</option>
+                        <option value="106">106</option>
+                        <option value="105">105</option>
+                        <option value="104">104</option>
+                        <option value="103">103</option>
+                        <option value="102">102</option>
+                        <option value="101">101</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">學制</label>
+                    <select id="category" name="category" class="form-control">
+                        <option value="">學制</option>
+                        <option value="進四技">進四技</option>
+                        <option value="五專">五專</option>
+                        <option value="二技">二技</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="class_info">選擇班級</label>
+                    <select id="class_info" name="class_info" class="form-control">
+                        <option value="">選擇班級</option>
+                        <option value="進四技資管一甲班">資管一年甲班</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="course">課程</label>
+                    <select id="course" name="course" class="form-control">
+                        <option value="">選擇課程</option>
+                        <option value="計算機概論(上)">計算機概論(上)</option>
+                        <option value="程式設計(一)">程式設計(一)</option>
+                        <option value="資料庫管理">資料庫管理</option>
+                        <option value="網頁程式設計">網頁程式設計</option>
+                        <option value="系統分析與設計">系統分析與設計</option>
+                        <option value="專題製作">專題製作</option>
+                        <option value="網路概論">網路概論</option>
+                        <option value="作業系統">作業系統</option>
+                        <option value="資料結構">資料結構</option>
+                        <option value="演算法">演算法</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="display-mode-container">
+                    <label>顯示方式</label>
+                    <div class="user-info-container">
+                        <div class="user-info">
+                            <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
+                            <span class="username">匿名</span>
+                        </div>
+                        <div class="anonymous-options">
+                            <input type="radio" id="anonymous_yes" name="anonymous" value="no" checked>
+                            <label for="anonymous_yes">匿名</label>
+                            <input type="radio" id="anonymous_no" name="anonymous" value="yes">
+                            <label for="anonymous_no">實名</label>
+                        </div>
+                    </div>
+                </div>    
+                <div class="rating-container">
+                    <label>課程評分</label>
+                    <div class="rating-controls">
+                        <div class="stars editable" id="rating-stars" data-rating="1">
+                            <i class="fa-regular fa-star" data-rating="1"></i>
+                            <i class="fa-regular fa-star" data-rating="2"></i>
+                            <i class="fa-regular fa-star" data-rating="3"></i>
+                            <i class="fa-regular fa-star" data-rating="4"></i>
+                            <i class="fa-regular fa-star" data-rating="5"></i>
+                            <input type="hidden" name="rating" id="rating-input" value="1">
+                            <span class="rating-text">1.0 / 5.0</span>
+                        </div>
+
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="top-row-container">
+            <div class="course-info-container">
+                <div class="comment-header">
+                    <h3>112年五專資管系一年甲班計算機概論</h3>
+                    <h3>任課教師:</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comment-content">
+            <div class="comment-text-area">
+                <!-- 這門課超爛，老師根本不會教，完全是照著投影片念，講話有夠無聊，根本是在整學生，每週都要熬夜寫報告，完全沒有人性，奉勸大家不要踩雷，能避就避！ -->
+                <textarea id="comment_text" name="comment_text" rows="10" placeholder="輸入評論內容..."></textarea>
+            </div>
+            
+            <div class="arrows-container">
+                <div class="arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+                <button type="button" id="convert_btn" class="btn-convert">轉換</button>
+                <div class="arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+            </div>
+            
+            <div class="comment-preview">
+                <div class="preview-content">
+                    <textarea id="preview_text" placeholder="可以在這裡直接編輯或使用轉換按鈕..."></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="add-comment-form-actions">
+            <button type="submit" class="btn-submit">送出</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+{% block body_js %}
+<script src="{% static 'js/add_comment.js' %}"></script>
+{% endblock %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\ask.html
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>智能校事專家 Chatbot</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; font-family:sans-serif; }
+    body { display:flex; height:100vh; overflow:hidden; }
+
+    /* 左側會話列表 */
+    #sidebar {
+      width:260px; background:#f0f0f0; border-right:1px solid #ccc;
+      display:flex; flex-direction:column;
+    }
+    #sidebar h3 { margin:0; padding:12px; background:#0078d4; color:#fff; }
+    #convoList { flex:1; overflow-y:auto; list-style:none; margin:0; padding:0;}
+    #convoList li {
+      position:relative;
+      display:flex; align-items:center;
+      padding:8px 12px; border-bottom:1px solid #ddd; cursor:pointer;
+    }
+    #convoList li.active { background:#e1f0ff; font-weight:bold; }
+
+    /* 標題與按鈕區 */
+    #convoList li .title {
+      flex:1; margin-right:8px;
+      font-size:14px;
+      line-height:1.2;
+    }
+    #convoList li input.title {
+      flex:1; margin-right:8px;
+      font-size:14px; line-height:1.2;
+      padding:2px 4px; height:auto;
+      border:1px solid #ccc; border-radius:4px;
+      box-sizing:border-box;
+    }
+    #convoList li .action-btns {
+      display:flex; align-items:center;
+    }
+    #convoList li .edit-btn,
+    #convoList li .delete-btn {
+      background:transparent; border:none; cursor:pointer; font-size:16px;
+      margin-left:4px;
+    }
+    #convoList li .delete-btn { color:#e74c3c; }
+    #newConvo { padding:10px; border:none; background:#0078d4; color:#fff; cursor:pointer; }
+
+    /* 主聊天區 */
+    .main { flex:1; display:flex; flex-direction:column; }
+    .chat-container {
+      flex:1; display:flex; flex-direction:column;
+      justify-content:flex-end; overflow-y:auto; padding:20px; background:#fff;
+    }
+    .message-row { display:flex; align-items:flex-end; margin:10px 0; }
+    .message-row.user { justify-content:flex-end; }
+    .message-row.bot  { justify-content:flex-start; }
+    .avatar { font-size:24px; margin:0 10px; }
+    .message {
+      max-width:70%; padding:10px 14px; border-radius:14px;
+      word-wrap:break-word; white-space:pre-wrap;
+    }
+    .user .message { background:#e6f7ff; }
+    .bot  .message { background:#f0f0f0; }
+
+    .input-area {
+      position:sticky; bottom:0; display:flex; padding:10px;
+      background:#fff; border-top:1px solid #ccc;
+    }
+    textarea {
+      flex:1; resize:none; padding:10px; font-size:1em;
+      border:1px solid #ccc; border-radius:6px; height:60px;
+      line-height:1.4;
+    }
+    #sendBtn {
+      margin-left:10px; padding:10px 16px; font-size:1em;
+      cursor:pointer; background:#4CAF50; color:#fff;
+      border:none; border-radius:6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 左側：會話列表 -->
+  <div id="sidebar">
+    <h3>對話列表</h3>
+    <ul id="convoList"></ul>
+    <button id="newConvo">＋ 新對話</button>
+  </div>
+
+  <!-- 右側：主聊天區 -->
+  <div class="main">
+    <div class="chat-container" id="chatBox"></div>
+
+    <div class="input-area">
+      <textarea id="question" placeholder="請輸入問題..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendQuestion();}"></textarea>
+      <button id="sendBtn">送出</button>
+    </div>
+  </div>
+
+  <script>
+    let conversations = [];
+    let currentId = null;
+    let nextSeq = 1;
+
+    async function loadConvos() {
+      const res = await fetch('/api/conversations/');
+      conversations = (await res.json()).conversations;
+      nextSeq = conversations.length + 1;
+      renderConvos();
+    }
+
+    function renderConvos() {
+      const ul = document.getElementById('convoList');
+      ul.innerHTML = '';
+      conversations.forEach(c => {
+        const li = document.createElement('li');
+        li.dataset.id = c.id;
+        if(c.id === currentId) li.classList.add('active');
+
+        // 標題區
+        const span = document.createElement('span');
+        span.className = 'title';
+        span.textContent = c.title;
+        li.appendChild(span);
+
+        // 按鈕區
+        const actions = document.createElement('div');
+        actions.className = 'action-btns';
+
+        // 編輯按鈕
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '✏️';
+        editBtn.onclick = e => {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = c.title;
+          input.className = 'title';
+          // 按 Enter 儲存
+          input.onkeydown = async evt => {
+            if(evt.key === 'Enter') {
+              evt.preventDefault();
+              const newTitle = input.value.trim() || '無標題';
+              await fetch(`/api/conversations/${c.id}/`, {
+                method:'PATCH', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({title:newTitle})
+              });
+              c.title = newTitle;
+              loadConvos();
+            }
+          };
+          li.replaceChild(input, span);
+          input.focus();
+        };
+        actions.appendChild(editBtn);
+
+        // 匯出按鈕
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'export-btn';
+        exportBtn.textContent = '⬇️';
+        exportBtn.title = '匯出Excel';
+        exportBtn.onclick = e => {
+          e.stopPropagation();
+          // 直接設定 window.location 會觸發下載
+          window.location.assign(`/api/conversations/${c.id}/export_excel/`);
+        };
+
+        actions.appendChild(exportBtn);
+
+
+        // 刪除按鈕
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.textContent = '🗑️';
+        delBtn.onclick = async e => {
+          e.stopPropagation();
+          if(!confirm('確定刪除此對話？')) return;
+          await fetch(`/api/conversations/${c.id}/`, { method:'DELETE' });
+          conversations = conversations.filter(x=> x.id !== c.id);
+          if(currentId === c.id) currentId = null;
+          loadConvos();
+        };
+        actions.appendChild(delBtn);
+
+        li.appendChild(actions);
+        li.onclick = () => selectConvo(c.id, li);
+        ul.appendChild(li);
+      });
+    }
+
+    async function selectConvo(id, el){
+      currentId = id;
+      document.querySelectorAll("#convoList li").forEach(li=>li.classList.remove("active"));
+      el.classList.add("active");
+      const res = await fetch(`/api/conversations/${id}/messages/`);
+      const msgs = (await res.json()).messages;
+      renderMsgs(msgs);
+    }
+
+    function renderMsgs(msgs){
+      const box = document.getElementById("chatBox");
+      box.innerHTML = "";
+      msgs.forEach(m=>{
+        const u = document.createElement("div"); u.className="message-row user";
+        u.innerHTML=`<div class="message">${m.question}</div><div class="avatar">😀</div>`;
+        box.appendChild(u);
+        const b = document.createElement("div"); b.className="message-row bot";
+        b.innerHTML=`<div class="avatar">🦉</div><div class="message">${m.answer}</div>`;
+        box.appendChild(b);
+      });
+      box.scrollTop=box.scrollHeight;
+    }
+
+    document.getElementById("newConvo").onclick = async ()=>{
+      const title = `新對話${nextSeq++}`;
+      const res = await fetch("/api/conversations/", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({title})
+      });
+      const c = await res.json();
+      currentId=c.id;
+      await loadConvos();
+      document.querySelector(`#convoList li[data-id="${c.id}"]`).click();
+    };
+
+    async function sendQuestion(){
+      const qEl = document.getElementById("question");
+      const q = qEl.value.trim();
+      if(!q||!currentId) return;
+      const box = document.getElementById("chatBox");
+      const u = document.createElement("div"); u.className="message-row user";
+      u.innerHTML=`<div class="message">${q}</div><div class="avatar">😀</div>`;
+      box.appendChild(u);
+      qEl.value="";
+      const res = await fetch("/api/ask/", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({conversation_id:currentId, question:q})
+      });
+      const data = await res.json();
+      const b = document.createElement("div"); b.className="message-row bot";
+      b.innerHTML=`<div class="avatar">🦉</div><div class="message">${data.answer||data.error}</div>`;
+      box.appendChild(b);
+      box.scrollTop=box.scrollHeight;
+    }
+    document.getElementById("sendBtn").onclick = sendQuestion;
+    document.getElementById("question").addEventListener("keydown", e=>{
+      if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendQuestion(); }
+    });
+
+    (async ()=>{
+      await loadConvos();
+      if(conversations.length) {
+        document.querySelector("#convoList li").click();
+      } else {
+        document.getElementById("newConvo").click();
+      }
+    })();
+
+    function uploadZip(file) {
+      // 你的原本上傳ZIP程式不動
+      if (!file || !file.name.endsWith('.zip')) { alert("請選擇 zip 檔！"); return; }
+      const formData = new FormData(); formData.append("zip_file", file);
+      const progressBox = document.getElementById("floating-progress");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      progressBox.style.display = "block"; progressBar.style.width = "0%"; progressText.innerText = "上傳中...";
+      const xhr = new XMLHttpRequest(); xhr.open("POST", "/upload_zip/", true);
+      xhr.upload.onprogress = e => { if (e.lengthComputable) { progressBar.style.width = Math.round(e.loaded/e.total*100)+"%"; }};
+      xhr.onload = () => { const res = JSON.parse(xhr.responseText); progressText.innerText = res.message?"✅ 上傳完成":`❌ 錯誤：${res.error}`; setTimeout(()=>progressBox.style.display="none",5000); };
+      xhr.onerror = () => { progressText.innerText = "❌ 上傳錯誤"; setTimeout(()=>progressBox.style.display="none",5000); };
+      xhr.send(formData);
+    }
+  </script>
+</body>
+</html>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\base.html
+<!DOCTYPE html>
+<html lang="{% block lang %}en{% endblock %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}智能校事專家{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pop_window/login_pop.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    {% block css %}{% endblock %}
+    {% block head_js %}{% endblock %}
+</head>
+
+<body>
+    {% block header %}
+    <nav class="navbar navbar-initial" id="navbar">         
+      <a href="/index/" class="logo">
+          <img class="Logo"  src="{% static 'image/logo.png' %}">
+          智能校事專家
+      </a>
+      <ul class="nav-links">             
+          <li><a href="/chat/">校規查詢</a></li>             
+          <li><a href="/comment/">課程評論區</a></li>             
+          <li><a href="/join/">活動召集</a></li>             
+          <li><a href="/book/">二手書專區</a></li>
+      </ul>         
+      <div class="user-menu">
+          <div class="user-circle" id="userMenuButton">             
+              <i class="fa-solid fa-user"></i>         
+          </div>
+          <div class="user-dropdown" id="userDropdown">
+            {% if user.is_authenticated %}
+              <a href="/personal/" class="dropdown-item" id="personalButton">個人中心</a>
+              <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
+                  {% csrf_token %}
+                  <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item" id="logoutButton">登出</a>
+              </form>
+            {% else %}
+              <a href="{% url 'social:begin' 'google-oauth2' %}" class="dropdown-item" id="loginButton">登入</a>
+            {% endif %}
+          </div>
+      </div>
+      <div class="phone-menu">
+          <div class="phone-circle" id="phoneMenuButton">             
+              <i class="fa-solid fa-bars iconMenu"></i>     
+          </div>
+      </div>
+    </nav>
+
+    <!-- 手機菜單覆蓋層和面板 -->
+    <div class="phone-menu-overlay" id="phoneMenuOverlay"></div>
+    <div class="phone-dropdown" id="phoneDropdown">
+        <button class="close-btn" id="phoneMenuClose">
+            <i class="fa-solid fa-times"></i>
+        </button>
+        
+        <div class="user-section">
+          {% if user.is_authenticated %}
+            <a class="user-icon" href="/personal/">
+                <i class="fa-solid fa-user iconPhoneMenu"></i>
+                <span>個人中心</span>
+            </a>
+          {% else %}
+            <a href="{% url 'social:begin' 'google-oauth2' %}" class="user-icon dropdown-item" id="loginButton">
+              <i class="fa-solid fa-user iconPhoneMenu"></i>
+              <span>請先登入學校帳號</span>
+            </a>
+          {% endif %}
+        </div>
+        
+        <div class="nav-section">
+            <a href="/chat/">校規查詢</a> 
+            <a href="/comment/">課程評論區</a>
+            <a href="/join/">活動召集</a>
+            <a href="/book/">二手書專區</a>
+            
+        </div>
+
+        <div class="footer-section">
+          <a href="#">北商官網</a> 
+          <a href="#">北商blackboard平台</a> 
+          <a href="#">北商Timetable平台</a>
+          <a href="#">北商學生資訊系統</a>
+          
+        </div>
+
+        <div class="logout-section">
+            {% if user.is_authenticated %}
+              <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
+                {% csrf_token %}
+                <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item" id="logoutButton">登出</a>
+              </form>
+            {% else %}
+            {% endif %}
+        </div>
+      </div>
+    </nav>
+    {% endblock %}
+
+    <!-- 主要內容區域 -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- 頁腳 -->
+    {% block footer %}
+      <footer>
+        <div class="fowl"></div>
+        <div class="waves">
+          <div class="wave" id="wave1"></div>
+          <div class="wave" id="wave2"></div>
+          <div class="wave" id="wave3"></div>
+          <div class="wave" id="wave4"></div>
+        </div>
+        
+        <div class="footer-info">
+          <div class="footer-title">
+              <div class="footer-logo">智能校事專家</div>
+          </div>
+          <div class="space"></div>
+          <div class="footer-links">
+            <div class="name">簡介</div>
+            <div class="aaa">
+              <p>北商blackboard平台</p>
+              <p>北商Timetable平台</p>
+              <p>北商學生資訊系統</p>
+            </div>
+          </div>
+          <div class="footer-contact">
+            <div class="name">聯絡資訊</div>
+            <div class="details">
+              <p>02 - 5392 - 7084</p>
+              <p>ntubimd114510@gmail.com</p>
+              <p class="social-icons">
+              <i class="fa-brands fa-square-facebook"></i>
+              <i class="fa-brands fa-instagram"></i>
+              </p>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        
+        <div class="footer-backup">
+          <img class="backupowl"  src="{% static 'image/backup.png' %}" alt="backup"  onclick="scrollToTop()">
+        </div>
+
+        <!-- 手機菜單覆蓋層和面板 -->
+        <div class="phone-footer-copyright">
+          <p>&copy; 智能校事專家114510</p>
+        </div>
+      </footer>
+    {% endblock %}
+
+    {% include 'pop_window/login_pop.html' %}
+    
+    <!-- JavaScript 文件 -->
+    <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
+    <script src="{% static 'js/navbar.js' %}"></script>
+    <script src="{% static 'js/footer.js' %}"></script>
+    {% block body_js %}{% endblock %}
+</body>
+</html>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\book_detail.html
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block title %}智能校事專家 - 二手書詳情{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/book_detail.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">    
+    <!-- 返回按鈕 -->
+    <div class="back-button" onclick="history.back()">
+        <a href="#">返回</a>
+    </div>
+    
+    <!-- 書籍主要資訊區域 -->
+    <div class="book-main-section">
+        <!-- 書籍基本資訊 -->
+        <div class="book-info">
+            <div class="book-content-layout">
+                <div class="book-image-container">
+                    <img src="{% static 'image/test/b1.jpg' %}" alt="Python範例學習書" class="book-image">
+                </div>
+                <div class="book-details-container">
+                    <div class="book-title-container">
+                        <h1 class="book-title">Python範例學習書</h1>
+                    </div>
+                    
+                    <!-- 書籍資訊卡片 -->
+                    <div class="info-cards">
+                        <div class="info-card">
+                            <div class="info-label">書籍類別</div>
+                            <div class="info-value">教科書</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-label">賣家</div>
+                            <div class="info-value">陳大明（資訊工程學系）</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-label">售價</div>
+                            <div class="info-value">新台幣 100 元</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-label">書籍狀況</div>
+                            <div class="info-value">
+                                <select class="condition-select" disabled>
+                                    <option>全新</option>
+                                    <option selected>九成新</option>
+                                    <option>八成新</option>
+                                    <option>七成新</option>
+                                    <option>六成新</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 交易方式區域 -->
+    <div class="section">
+        <h2 class="section-title">交易方式</h2>
+        <div class="transaction-options">
+            <div class="transaction-option">
+                <div class="option-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="option-details">
+                    <h3>面交</h3>
+                    <p>地點：北商校園內</p>
+                </div>
+            </div>
+            
+            <div class="transaction-option">
+                <div class="option-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="option-details">
+                    <h3>郵寄</h3>
+                    <p>運費：買家負擔</p>
+                </div>
+            </div>
+            
+            <div class="transaction-option">
+                <div class="option-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="option-details">
+                    <h3>付款方式</h3>
+                    <p>面交現金、轉帳</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 賣家資訊區域 -->
+    <div class="section">
+        <h2 class="section-title">賣家資訊</h2>
+        <div class="seller-profile">
+            <div class="seller-avatar">
+                <img src="{% static 'images/default-avatar.png' %}" alt="賣家頭像">
+            </div>
+            <div class="seller-info">
+                <h3 class="seller-name">陳大明</h3>
+                <p class="seller-department">資訊工程學系大二</p>
+                <div class="seller-rating">
+                    <span class="rating-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </span>
+                    <span class="rating-value">4.8</span>
+                </div>
+                <button class="contact-seller-btn">聯絡賣家</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 相關書籍推薦區域 -->
+    <div class="section">
+        <h2 class="section-title">相關書籍推薦</h2>
+        <div class="related-grid">
+            <a href="#" class="related-book-card">
+                <div class="related-book-image">
+                    <img src="{% static 'image/test/b1.jpg' %}" alt="統計學概論">
+                </div>
+                <div class="related-book-info">
+                    <h3>統計學概論</h3>
+                    <p class="related-book-price">NT$300</p>
+                </div>
+            </a>
+            
+            <a href="#" class="related-book-card">
+                <div class="related-book-image">
+                    <img src="{% static 'image/test/b2.jpg' %}" alt="經濟學原理">
+                </div>
+                <div class="related-book-info">
+                    <h3>經濟學原理</h3>
+                    <p class="related-book-price">NT$420</p>
+                </div>
+            </a>
+            
+            <a href="#" class="related-book-card">
+                <div class="related-book-image">
+                    <img src="{% static 'image/test/b3.webp' %}" alt="財務管理">
+                </div>
+                <div class="related-book-info">
+                    <h3>財務管理</h3>
+                    <p class="related-book-price">NT$380</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- 固定在下方的購買按鈕 -->
+    <button class="fixed-cta">立即購買</button>
+    
+    <!-- 聯絡賣家彈出視窗 -->
+    <div id="contactSellerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>聯絡賣家</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="seller-brief">
+                    <div class="seller-avatar-small">
+                        <img src="{% static 'image/default-avatar.png' %}" alt="賣家頭像">
+                    </div>
+                    <div class="seller-brief-info">
+                        <h4>王小明</h4>
+                        <p>會計系三年級</p>
+                    </div>
+                </div>
+                
+                <div class="message-form">
+                    <div class="form-group">
+                        <label for="messageSubject">主旨</label>
+                        <input type="text" id="messageSubject" placeholder="請輸入主旨" value="關於「會計學原理（第七版）」的詢問">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="messageContent">訊息內容</label>
+                        <textarea id="messageContent" rows="5" placeholder="請輸入您想要詢問的內容..."></textarea>
+                    </div>
+                    
+                    <div class="contact-method-title">選擇聯絡方式</div>
+                    
+                    <div class="contact-methods">
+                        <div class="contact-method" id="lineMethod">
+                            <div class="method-header">
+                                <input type="radio" name="contactMethod" id="contactLine" checked>
+                                <label for="contactLine">
+                                    <i class="fab fa-line"></i> LINE聯絡
+                                </label>
+                            </div>
+                            <div class="method-details">
+                                <p>賣家LINE ID: <strong>wang_ntub</strong></p>
+                                <p>加入好友後可直接聯絡賣家洽談書籍詳情</p>
+                                <button class="add-line-btn"><i class="fas fa-plus-circle"></i> 加入LINE好友</button>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-method" id="emailMethod">
+                            <div class="method-header">
+                                <input type="radio" name="contactMethod" id="contactEmail">
+                                <label for="contactEmail">
+                                    <i class="fas fa-envelope"></i> 電子郵件
+                                </label>
+                            </div>
+                            <div class="method-details" style="display: none;">
+                                <p>賣家信箱: <strong>wang_ntub@example.com</strong></p>
+                                <p>平均回覆時間: 24小時內</p>
+                                <a href="mailto:wang_ntub@example.com" class="send-email-btn"><i class="fas fa-paper-plane"></i> 發送電子郵件</a>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-method" id="phoneMethod">
+                            <div class="method-header">
+                                <input type="radio" name="contactMethod" id="contactPhone">
+                                <label for="contactPhone">
+                                    <i class="fas fa-phone-alt"></i> 手機聯絡
+                                </label>
+                            </div>
+                            <div class="method-details" style="display: none;">
+                                <p>賣家手機: <strong>0912-345-678</strong></p>
+                                <p>適合聯絡時間: 周一至周五 10:00-18:00</p>
+                                <a href="tel:0912345678" class="call-btn"><i class="fas fa-phone"></i> 撥打電話</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn">取消</button>
+                <button class="send-btn">發送訊息</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/book_detail.js' %}"></script>
+{% endblock %}
+
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\book.html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}智能校事專家 - 二手書專區{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/book.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="bg-text">SECOND HAND BOOK SECOND HAND BOOK</div>
+
+    <header class="page-header">
+        <h1 class="page-title">二手書專區</h1>
+        <p class="page-subtitle">（尋找教科書・節省花費）</p>
+    </header>
+
+    <div class="filter-section">
+        <select class="filter-item">
+            <option>全部系所</option>
+            <option>資訊工程學系</option>
+            <option>電機工程學系</option>
+            <option>企業管理學系</option>
+            <option>外國語文學系</option>
+            <option>經濟學系</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部年級</option>
+            <option>專一</option>
+            <option>專二</option>
+            <option>專三</option>
+            <option>專四</option>
+            <option>大一</option>
+            <option>大二</option>
+            <option>大三</option>
+            <option>大四</option>
+            <option>研究所</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部狀態</option>
+            <option>全新</option>
+            <option>九成新</option>
+            <option>八成新</option>
+            <option>七成新</option>
+            <option>五成新以下</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部價格</option>
+            <option>$100以下</option>
+            <option>$100-$300</option>
+            <option>$300-$500</option>
+            <option>$500-$800</option>
+            <option>$800以上</option>
+        </select>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="搜尋書名或關鍵字...">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <section class="books-container">
+        <div class="books-grid">
+            <!-- 書籍卡片 1 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">Python範例學習書</div>
+                <div class="book-image">
+                    <img src="{% static 'image/test/b1.jpg' %}" alt="Python範例學習書" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">資訊工程學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$100</div>
+                </div>
+            </a>
+            
+            <!-- 書籍卡片 2 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">我沒事</div>
+                <div class="book-image">
+                    <img src="{% static 'image/test/b2.jpg' %}" alt="我沒事" class="book-cover">
+                    <div class="book-tag literature">文學</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">外國語文學系</span>
+                        <span class="book-grade">大一</span>
+                        <span class="book-condition">八成新</span>
+                    </div>
+                    <div class="book-price">$180</div>
+                </div>
+            </a>
+            
+            <!-- 書籍卡片 3 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">作業系統精論</div>
+                <div class="book-image">
+                    <img src="{% static 'image/test/b3.webp' %}" alt="作業系統精論" class="book-cover">
+                    <div class="book-tag reference">參考書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">資訊工程學系</span>
+                        <span class="book-grade">大三</span>
+                        <span class="book-condition">全新</span>
+                    </div>
+                    <div class="book-price">$700</div>
+                </div>
+            </a>
+            
+            <!-- 書籍卡片 4 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">微積分與工程數學</div>
+                <div class="book-image">
+                    <img src="/api/placeholder/400/320" alt="微積分與工程數學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">電機工程學系</span>
+                        <span class="book-grade">大一</span>
+                        <span class="book-condition">七成新</span>
+                    </div>
+                    <div class="book-price">$280</div>
+                </div>
+            </a>
+            
+            <!-- 書籍卡片 5 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">行銷管理學</div>
+                <div class="book-image">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">企業管理學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$320</div>
+                </div>
+            </a>
+            
+            <!-- 書籍卡片 6 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">經濟學原理</div>
+                <div class="book-image">
+                    <img src="/api/placeholder/400/320" alt="經濟學原理" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">經濟學系</span>
+                        <span class="book-grade">大一</span>
+                        <span class="book-condition">八成新</span>
+                    </div>
+                    <div class="book-price">$250</div>
+                </div>
+            </a>
+            <!-- 書籍卡片 7 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">行銷管理學</div>
+                <div class="book-image">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">企業管理學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$320</div>
+                </div>
+            </a>
+            <!-- 書籍卡片 8 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">行銷管理學</div>
+                <div class="book-image">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">企業管理學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$320</div>
+                </div>
+            </a>
+            <!-- 書籍卡片 9 -->
+            <a href="{% url 'book_detail' %}" class="book-card">
+                <div class="book-header">行銷管理學</div>
+                <div class="book-image">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                    <div class="book-tag textbook">教科書</div>
+                </div>
+                <div class="book-info">
+                    <div class="book-meta">
+                        <span class="book-department">企業管理學系</span>
+                        <span class="book-grade">大二</span>
+                        <span class="book-condition">九成新</span>
+                    </div>
+                    <div class="book-price">$320</div>
+                </div>
+            </a>
+        </div>
+    </main>
+    
+    <!-- 右下角的圓形logo和上傳按鈕 -->
+    <div class="floating-action-button">
+        <div class="circular-logo">
+            <div class="circular-text">
+                <svg viewBox="0 0 100 100">
+                    <path id="curve" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" fill="transparent"/>
+                    <text>
+                        <textPath href="#curve" textLength="250">
+                            search by life classification • 
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="upload-btn-center" id="centerUploadBtn">
+                <span>＋</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 上傳表單 -->
+    <div class="upload-form" id="uploadForm">
+        <div class="upload-container">
+            <div class="form-header">
+                <h2>上傳二手書</h2>
+                <button type="button" class="close-btn" id="closeFormBtn">×</button>
+            </div>
+            
+            <div class="scrollable-content">
+                <!-- CSRF Token -->
+                {% csrf_token %}
+                
+                <div class="image-upload-section">
+                    <div class="image-upload-area">
+                        <input type="file" id="imageUpload" accept="image/*">
+                        <div class="preview-container">
+                            <div class="preview-placeholder" id="previewPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>點擊或拖曳上傳圖片</p>
+                            </div>
+                            <img id="previewImage" class="preview-image" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="upload-form-fields">
+                    <div class="form-group">
+                    <label for="bookTitle">書名 <span class="required">*</span></label>
+                    <input type="text" id="bookTitle" placeholder="請輸入書名" required>
+                    <div class="error-message" id="bookTitleError" style="display: none; color: red; font-size: 12px;">請輸入書名</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="department">系所</label>
+                        <select id="department" required>
+                            <option value="" disabled selected>請選擇系所</option>
+                            <option value="會計系">會計系</option>
+                            <option value="財務金融系">財務金融系</option>
+                            <option value="國際商務系">國際商務系</option>
+                            <option value="企業管理系">企業管理系</option>
+                            <option value="資訊管理系">資訊管理系</option>
+                            <option value="應用外語系">應用外語系</option>
+                            <option value="財政稅務系">財政稅務系</option>
+                            <option value="國際貿易系">國際貿易系</option>
+                            <option value="商業設計系">商業設計系</option>
+                            <option value="資訊科技系">資訊科技系</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group form-group-half">
+                        <label for="grade">年級</label>
+                        <select id="grade" required>
+                            <option value="" disabled selected>請選擇年級</option>
+                            <option value="1">大一</option>
+                            <option value="2">大二</option>
+                            <option value="3">大三</option>
+                            <option value="4">大四</option>
+                            <option value="5">研究所</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="bookType">書籍類型</label>
+                        <select id="bookType" required>
+                            <option value="" disabled selected>請選擇書籍類型</option>
+                            <option value="會計學">會計學</option>
+                            <option value="經濟學">經濟學</option>
+                            <option value="統計學">統計學</option>
+                            <option value="行銷學">行銷學</option>
+                            <option value="管理學">管理學</option>
+                            <option value="財務管理">財務管理</option>
+                            <option value="資訊管理">資訊管理</option>
+                            <option value="程式設計">程式設計</option>
+                            <option value="英文">英文</option>
+                            <option value="日文">日文</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group form-group-half">
+                        <label for="condition">書籍狀況</label>
+                        <select id="condition" required>
+                            <option value="" disabled selected>請選擇書籍狀況</option>
+                            <option value="全新">全新</option>
+                            <option value="九成新">九成新</option>
+                            <option value="八成新">八成新</option>
+                            <option value="七成新">七成新</option>
+                            <option value="六成新">六成新</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="price">價格 (NT$) <span class="required">*</span></label>
+                        <input type="number" id="price" min="0" placeholder="請輸入價格" required>
+                        <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
+                    </div>
+                    
+                    <div class="form-group form-group-half">
+                        <label>交易方式 <span class="required">*</span></label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="faceToFace" name="transactionMethod" value="面交" class="required-checkbox">
+                                <label for="faceToFace">面交</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="shipping" name="transactionMethod" value="郵寄" class="required-checkbox">
+                                <label for="shipping">郵寄</label>
+                            </div>
+                        </div>
+                        <div class="error-message" id="transactionMethodError" style="display: none; color: red; font-size: 12px;">請選擇至少一種交易方式</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookDescription">書籍描述 (選填)</label>
+                    <textarea id="bookDescription" rows="4" placeholder="請輸入書籍描述，例如：使用情況、有無筆記、有無劃線等"></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+                    <button type="button" class="submit-btn" id="submitBtn">上架</button>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </section>
+
+    
+    <div class="deco-line"></div>
+</div>
+
+<!-- 載入上傳二手書彈跳視窗 -->
+<div class="upload-form" id="uploadForm">
+    <div class="upload-container">
+        <div class="form-header">
+            <h2>上傳二手書</h2>
+            <button type="button" class="close-btn" id="closeFormBtn">×</button>
+        </div>
+        <div class="upload-form-fields">
+            <!-- 上傳表單內容 -->
+            <div class="button-group">
+                <button type="button" class="cancel-btn" id="cancelPopupBtn">取消</button>
+                <button type="button" class="submit-btn" id="submitPopupBtn">上傳書籍</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/book.js' %}"></script>
+{% endblock %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\chat.html
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block title %}智能校事專家 - Chatbot{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="chat-bg">
+  <img class="bg-png" src="{% static 'image/wave.png' %}" width="100%" height="100%" alt="背景圖片">
+  <div class="bg-overlay"></div>
+</div>
+<div class="chat-wrapper">
+  <!-- 側邊欄（RWD可收合/浮出） -->
+  <aside class="sidebar" id="sidebar">
+    <button class="new-chat-btn" id="newChatBtn">
+      <i class="fa-solid fa-plus"></i> <span>新增對話</span>
+    </button>
+    <div class="sidebar-record">
+      <div>---------------  對話歷史  --------------</div>
+    </div>
+    <div class="chat-history" id="chatHistory">
+      <!-- 對話歷史由 JavaScript 動態載入 -->
+    </div>
+  </aside>
+
+  <!-- 主內容區 -->
+  <main class="main-content" id="mainContent">
+    <!-- 漢堡選單（手機浮動）和標題 -->
+    <div class="chat-header-card">
+      <div class="menu-btn-container" id="menuBtnContainer">
+        <button class="hamburger" id="menuBtn">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+      </div>
+      <div class="chat-header-part">
+        <h2 id="currentChatTitle">對話</h2>
+      </div>
+    </div>
+
+    <!-- 聊天內容卡片 -->
+    <section class="chat-main-card">
+      <div class="chat-container" id="chatContainer">
+        <div class="blobs">
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+          <div class="blob"></div>
+        </div>
+        <div class="no-messages" id="noMessages">
+          開始一個新對話或從側邊欄選擇歷史對話
+        </div>
+        <!-- 對話內容由 JavaScript 動態載入 -->
+      </div>
+    </section>
+
+    <!-- 輸入區塊 -->
+    <div class="input-container">
+      <textarea class="message-input" id="messageInput" placeholder="輸入訊息..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn">➤</button>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+
+{% block body_js %}
+<script src="{% static 'js/chat.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+{% endblock %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\comment_detail.html
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block title %}智能校事專家 - 課程評論{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/comment_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
+{% endblock %}
+
+{% block content %}
+<body>
+    <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
+    <div class="course-item" data-course-id="1" style="display: none;">
+        <div class="course-name">計算機概論</div>
+        <div class="course-teacher">王大明教授</div>
+        <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
+        <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
+    </div>
+    
+    <!-- Fixed Add Comment Button -->
+    <a href="#" class="fixed-add-comment-btn" id="add-comment-btn">＋ 新增評論</a>
+    
+    <!-- Background text -->
+    <div class="bg-text">COURSE REVIEWS</div>
+    
+    <!-- Cloud decorations -->
+    <div class="cloud-shape" style="width: 200px; height: 200px; top: 150px; left: 10%; opacity: 0.2;"></div>
+    <div class="cloud-shape" style="width: 150px; height: 150px; top: 400px; right: 15%; opacity: 0.2;"></div>
+    <div class="cloud-shape" style="width: 250px; height: 250px; top: 800px; left: 20%; opacity: 0.2;"></div>
+    
+    <div class="main-container">
+        <div class="back-button" onclick="history.back()">
+            <a href="#">返回</a>
+        </div>
+        <!-- 課程資訊區塊 -->
+        <div class="course-info">
+            <div class="course-header">
+                <h1 class="course-title">計算機概論</h1>
+                <div class="course-rating">
+                    <div class="stars" data-rating="4.5">
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <span class="rating-text">4.5/5.0 (24則評論)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="course-meta">
+                <span class="course-semester">112 學年度 第 2 學期</span>
+                <span class="course-department">資訊管理系</span>
+                <span class="course-teacher">授課教師：王大明 教授</span>
+            </div>
+        </div>
+        
+        <!-- 評論區塊 -->
+        <section class="comments-section">
+            <h2 class="section-title">課程評論 <span class="comment-count">(24則評論)</span></h2>
+            
+            <!-- 評論 1 -->
+            <article class="comment-card">
+                <div class="comment-header">
+                    <div class="user-avatar">
+                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">匿名學生</span>
+                        <div class="comment-meta">
+                            <div class="stars" data-rating="4.5">
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="comment-date">2024/04/10</span>
+                        </div>
+                    </div>
+                    <button class="like-btn small">
+                        <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                        <span class="like-count">12</span>
+                    </button>
+                </div>
+                <div class="comment-content">
+                    <p>老師上課很認真，教材準備充分，會用很多生活化的例子來解釋計算機科學的概念，讓非本科系的學生也能輕鬆理解。</p>
+                </div>
+                <div class="comment-actions">
+                    <button class="reply-btn">回覆</button>
+                </div>
+                
+                <!-- 回覆表單 (預設隱藏) -->
+                <div class="reply-form" style="display: none;">
+                    <div class="form-group">
+                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="cancel-reply-btn">取消</button>
+                        <button class="submit-reply-btn">發送</button>
+                    </div>
+                </div>
+                
+                <!-- 回覆區塊 -->
+                <div class="replies-container">
+                    <div class="reply">
+                        <div class="user-avatar small">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                        </div>
+                        <div class="reply-content">
+                            <div class="reply-header">
+                                <span class="user-name">助教小幫手</span>
+                                <span class="reply-date">2024/04/11</span>
+                            </div>
+                            <p>謝謝您的回饋！老師確實很用心準備教材，有任何問題也歡迎隨時在課堂上發問喔！</p>
+                            <div class="reply-actions">
+                                <button class="reply-to-reply">回覆</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 評論 2 -->
+            <article class="comment-card">
+                <div class="comment-header">
+                    <div class="user-avatar">
+                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">資管系學生</span>
+                        <div class="comment-meta">
+                            <div class="stars" data-rating="4.0">
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="comment-date">2024/04/05</span>
+                        </div>
+                    </div>
+                    <button class="like-btn small">
+                        <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                        <span class="like-count">8</span>
+                    </button>
+                </div>
+                <div class="comment-content">
+                    <p>課程內容豐富，但節奏有點快，建議可以多一點實作時間。老師很親切，下課後問問題都會耐心解答。</p>
+                </div>
+                <div class="comment-actions">
+                    <button class="reply-btn">回覆</button>
+                </div>
+                
+                <!-- 回覆表單 (預設隱藏) -->
+                <div class="reply-form" style="display: none;">
+                    <div class="form-group">
+                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="cancel-reply-btn">取消</button>
+                        <button class="submit-reply-btn">發送</button>
+                    </div>
+                </div>
+                
+                <!-- 回覆區塊 -->
+                <div class="replies-container"></div>
+            </article>
+
+            <!-- 評論 3 -->
+            <article class="comment-card">
+                <div class="comment-header">
+                    <div class="user-avatar">
+                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">匿名</span>
+                        <div class="comment-meta">
+                            <div class="stars" data-rating="5.0">
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                            <span class="comment-date">2024/03/28</span>
+                        </div>
+                    </div>
+                    <button class="like-btn small">
+                        <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                        <span class="like-count">15</span>
+                    </button>
+                </div>
+                <div class="comment-content">
+                    <p>作業量適中，但考試難度較高，建議要認真聽講並複習課本內容。老師上課會補充很多實用的業界知識，收穫很多！</p>
+                </div>
+                <div class="comment-actions">
+                    <button class="reply-btn">回覆</button>
+                </div>
+                
+                <!-- 回覆表單 (預設隱藏) -->
+                <div class="reply-form" style="display: none;">
+                    <div class="form-group">
+                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="cancel-reply-btn">取消</button>
+                        <button class="submit-reply-btn">發送</button>
+                    </div>
+                </div>
+                
+                <!-- 回覆區塊 -->
+                <div class="replies-container"></div>
+            </article>
+        </section>
+    </div>
+    
+    <div class="deco-line"></div>
+</body>
+
+<!-- 載入模態框HTML -->
+{% include 'pop_window/comment_pop.html' %}
+
+{% endblock %}
+
+{% block body_js %}
+<script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+<script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
+<script src="{% static 'js/comment_detail.js' %}"></script>
+{% endblock %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\comment.html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}智能校事專家 - 課程評論列表{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/comment.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- 背景的ACTIVITY GROUP ACTIVITY GROUP -->
+    <div class="bg-text">COURSE COMMENT COURSE COMMENT</div>
+
+    <!-- 標題 -->
+    <header class="page-header">
+        <h1 class="page-title">課程評論區</h1>
+        <p class="page-subtitle">（選擇課程・查看評價）</p>
+    </header>
+    
+    <!-- 頂部搜尋與過濾區 -->
+    <div class="filter-section">
+        <select class="filter-item">
+            <option>所有科系</option>
+            <option>資訊管理系</option>
+            <option>企業管理系</option>
+            <option>會計系</option>
+            <option>財務金融系</option>
+            <option>國際商務系</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>所有學年</option>
+            <option>112學年</option>
+            <option>111學年</option>
+            <option>110學年</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>所有學期</option>
+            <option>第1學期</option>
+            <option>第2學期</option>
+        </select>
+        
+        <input type="text" class="search-box" placeholder="搜尋課程或教師...">
+    </div>
+    
+    <!-- 課程列表和分頁 -->
+    <section class="activities-container">
+        <div class="activity-grid">
+            <!-- 課程項目 -->
+            <div class="course-item" data-department="國際商務系" data-year="111" data-semester="1" data-course-id="1">
+                    <div class="course-top">
+                        <div>
+                            <h3 class="course-name">國際貿易實務</h3>
+                            <div class="course-meta">
+                                <span class="course-teacher"><i class="fas fa-user-tie"></i> 劉世芳 教授</span>
+                                <span class="course-department"><i class="fas fa-building"></i> 國際商務系</span>
+                            </div>
+                        </div>
+                        
+                        <div class="course-rating">
+                            <div class="stars" data-rating="4.6">
+                                <span class="rating-text">4.6</span>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="rating-count">(28則評論)</div>
+                        </div>
+                        
+                    </div>
+                    <div class="course-bottom">
+                        <p class="last-date">最新評論: 2023/01/12</p>
+                        <div class="course-summary">
+                            <div class="user-info">
+                                <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
+                                <span class="username">匿名</span>
+                            </div>
+                            <p>老師有豐富的實務經驗，課程包含許多真實案例分析。期中報告要完成一份國際貿易流程文件，期末有小組模擬談判，非常實用...</p>
+                        </div>
+                        <div class="buttons-container">
+                            <a href="#" class="create-btn">新增評論</a>
+                            <a href="/comment_detail/" class="join-btn">查看所有評論</a>
+                        </div>
+                    </div>
+            </div>
+
+            <div class="course-item" data-department="資訊管理系" data-year="112" data-semester="2" data-course-id="2">
+                <div class="course-top">
+                    <div>
+                        <h3 class="course-name">計算機概論</h3>
+                        <div class="course-meta">
+                            <span class="course-teacher"><i class="fas fa-user-tie"></i> 王大明 教授</span>
+                            <span class="course-department"><i class="fas fa-building"></i> 資訊管理系</span>
+                        </div>
+                    </div>
+                    
+                    <div class="course-rating">
+                        <div class="stars" data-rating="4.5">
+                            <span class="rating-text">4.5</span>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="rating-count">(24則評論)</div>
+                    </div>
+                    
+                </div>
+                <div class="course-bottom">
+                    <p class="last-date">最新評論: 2024/04/10</p>
+                    <div class="course-summary">
+                        <div class="user-info">
+                            <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
+                            <span class="username">匿名</span>
+                        </div>
+                        <p>教材準備充分，會用很多生活化的例子來解釋計算機科學的概念，讓非本科系的學生也能輕鬆理解。作業量適中，但考試難度較高...</p>
+                    </div>
+                    <div class="buttons-container">
+                        <a href="#" class="create-btn">新增評論</a>
+                        <a href="/comment_detail/" class="join-btn">查看所有評論</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-item" data-department="企業管理系" data-year="112" data-semester="2" data-course-id="3">
+                <div class="course-top">
+                    <div>
+                        <h3 class="course-name">行銷管理</h3>
+                    <div class="course-meta">
+                        <span class="course-teacher"><i class="fas fa-user-tie"></i> 林美玲 教授</span>
+                        <span class="course-department"><i class="fas fa-building"></i> 企業管理系</span>
+                    </div>
+                </div>
+                
+                <div class="course-rating">
+                    <div class="stars" data-rating="4.8">
+                        <span class="rating-text">4.8</span>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="rating-count">(32則評論)</div>
+                </div>
+                
+                </div>
+                <div class="course-bottom">
+                    <p class="last-date">最新評論: 2024/04/05</p>
+                    <div class="course-summary">
+                        <div class="user-info">
+                            <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
+                            <span class="username">匿名</span>
+                        </div>
+                        <p>課程結合理論與實務，講師擁有豐富業界經驗。小組作業能夠實際應用所學知識，期末專案需設計完整行銷計畫，收穫很多...</p>
+                    </div>
+                    <div class="buttons-container">
+                        <a href="#" class="create-btn">新增評論</a>
+                        <a href="/comment_detail/" class="join-btn">查看所有評論</a>
+                    </div>
+                </div>
+        </div>
+        
+    </section>
+        
+    <!-- 右下角的圓形logo和上傳按鈕 -->
+    <div class="floating-action-button">
+        <div class="circular-logo">
+            <div class="circular-text">
+                <svg viewBox="0 0 100 100">
+                    <path id="curve" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" fill="transparent"/>
+                    <text>
+                        <textPath href="#curve" textLength="250">
+                            share your course experience • 
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="upload-btn-center" id="commentBtn">
+                <span>＋</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="deco-line"></div>
+</div>
+
+<!-- 載入模態框HTML -->
+{% include 'pop_window/comment_pop.html' %}
+
+{% endblock %}
+
+{% block body_js %}
+    <script src="{% static 'js/comment.js' %}"></script>
+    <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
+{% endblock %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\footer.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+</head>
+<body>
+  {% block footer %}
+  <footer>
+    <div class="fowl"></div>
+    <div class="waves">
+      <div class="wave" id="wave1"></div>
+      <div class="wave" id="wave2"></div>
+      <div class="wave" id="wave3"></div>
+      <div class="wave" id="wave4"></div>
+    </div>
+    
+    <div class="footer-info">
+      <div class="footer-title">
+          <div class="footer-logo">智能校事專家</div>
+      </div>
+      <div class="space"></div>
+      <div class="footer-links">
+        <div class="name">簡介</div>
+        <div class="aaa">
+          <p>北商blackboard平台</p>
+          <p>北商Timetable平台</p>
+          <p>北商學生資訊系統</p>
+        </div>
+      </div>
+      <div class="footer-contact">
+        <div class="name">聯絡資訊</div>
+        <div class="details">
+          <p>02 - 5392 - 7084</p>
+          <p>ntubimd114510@gmail.com</p>
+          <p class="social-icons">
+          <i class="fa-brands fa-square-facebook"></i>
+          <i class="fa-brands fa-instagram"></i>
+          </p>
+        </div>
+      </div>
+      <div></div>
+    </div>
+    
+    <div class="footer-backup">
+      <img class="backupowl"  src="{% static 'image/backup.png' %}" alt="backup"  onclick="scrollToTop()">
+    </div>
+
+    <!-- 手機菜單覆蓋層和面板 -->
+    <div class="phone-footer-copyright">
+      <p>&copy; 智能校事專家114510</p>
+    </div>
+  </footer>
+  {% endblock %}
+  <script src="{% static 'js/footer.js' %}"></script>
+</body>
+</html>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\index.html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}智能校事專家 - 首頁{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=La+Belle+Aurore&display=swap" rel="stylesheet">
+
+{% endblock %}
+
+{% block head_js %}
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@1.42.4/tsparticles.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- 背景影片 -->
+<video autoplay muted loop id="bg-video">
+  <source src="{% static 'image/wavevideo.mp4' %}" type="video/mp4">
+</video>
+
+<!-- 半透明遮罩 -->
+<div class="bg-overlay"></div>
+
+<!--<div id="loading-screen">
+  <div class="scene">
+    <div class="cube">
+      <div class="face front">WELCOME</div>
+      <div class="face bottom" id="final-text">智能校事專家</div>
+    </div>
+  </div>
+</div> -->
+
+
+
+
+  <!--<div class="blobs">
+    <div class="blob"></div>
+    <div class="blob"></div>
+    <div class="blob"></div>
+    <div class="blob"></div>
+    <div class="blob"></div>
+    <div class="blob"></div>
+    <div class="blob"></div>
+  </div>-->
+
+  <div class="main-container">
+    <!--<div class="marquee-container-2">
+      <h2 class="floating-marquee">倒數不知道幾天！啊啊啊啊啊我要被吃掉了</h2>
+    </div>-->
+
+
+    <svg id="lpurple" xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 180 313" fill="none">
+      <path d="M112.996 138.372C45.8411 277.273 -0.448727 312.743 -0.448727 312.743L-0.448406 0.743164L165.552 0.743168C165.552 0.743168 178.463 2.96186 112.996 138.372Z" fill="#AA9DA9"/>
+    </svg>
+    
+    <svg id="rpurple" xmlns="http://www.w3.org/2000/svg" viewBox="-1 11 238 419" fill="none">
+      <path d="M123.555 185.371C190.71 46.4701 237 11 237 11L237 323L70.9997 323C70.9997 323 58.0882 320.781 123.555 185.371Z" fill="#AA9DA9"/>
+      <g class="stroke-group-r">
+        <path d="M64.7663 292.352C131.921 153.451 178.211 117.98 178.211 117.98L178.211 429.98L12.2106 429.98C12.2106 429.98 -0.700821 427.762 64.7663 292.352Z" stroke="black"/>
+      </g>
+    </svg>
+
+    <svg id="dpurple" xmlns="http://www.w3.org/2000/svg" width="356" height="339" viewBox="0 0 356 339" fill="none">
+      <path d="M124.011 100.599C262.373 168.857 297.474 215.428 297.474 215.428L-14.5161 212.945L-13.1953 46.9501C-13.1953 46.9501 -10.8739 34.0567 124.011 100.599Z" fill="#AA9DA9"/>
+      <g class="stroke-group">
+        <path d="M171.011 65.8115C309.373 134.069 344.474 180.64 344.474 180.64L32.4839 178.157L33.8047 12.1625C33.8047 12.1625 36.1261 -0.730928 171.011 65.8115Z" stroke="black"/>
+      </g>
+    </svg>
+    
+
+
+      <!-- Decorative elements -->
+      <div class="shape">
+        <div class="circle-container">
+          <div class="marquee-container">
+            <div class="marquee-track">
+              <h2 class="floating-marquee">WELCOME TO SSAE 快來使用校規查詢功能吧</h2>
+            </div>
+          </div>
+
+          <div class="circle-particles">
+            <div class="circle-background">
+              <!--<img class="center-logo"  src="{% static 'image/logo.png' %}" width="200" alt="Logo">-->
+              <div class="owl-canvas">
+                <div id="owl-container" style="width: 400px; height: 400px;"></div>
+              </div>
+            </div> <!-- 新增這一層背景 -->
+            <div id="tsparticles"></div> <!-- 粒子效果在上層 -->
+          </div>
+          
+          <svg id="circle-stroke" xmlns="http://www.w3.org/2000/svg" width="473" height="469" viewBox="0 0 473 469" fill="none">
+            <path d="M427.865 405.544C410.058 421.083 380.198 429.826 357.722 434.987C301.632 447.867 232.721 466.041 176.376 452.745C26.0601 417.273 -22.8193 218.457 52.3417 102.333C108.542 15.5032 311.558 -38.1477 398 39.581C442.352 79.4615 459.733 135.248 468.572 191.564C477.526 248.617 461.694 304.862 427.865 354.745C355.396 461.605 201.869 497.381 85.061 440.17C9.97511 403.395 -3.66047 318.294 3.79737 243.815C13.2755 149.162 76.7975 70.1825 168.677 39.5812C234.178 17.7655 325.493 17.777 380.604 63.8405C436.493 110.555 456.578 184.407 460.584 252.109C464.454 317.491 444.047 373.363 387.02 411.35C350.992 435.348 318.935 447.396 278.383 431.669" stroke="#8C618C" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="chatbox">
+          <div class="input-container">
+              <input type="text" id="userInput" placeholder="歡迎輸入欲使用功能" />
+              <button class="send-button" onclick="handleInput()"><span class="send-icon">➤</span></button>
+          </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div id="modal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="modalTitle">確認操作</div>
+                </div>
+                <div class="modal-content" id="modalContent">
+                    <!-- 動態內容 -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="modal-button cancel" onclick="closeModal()">取消</button>
+                    <button class="modal-button confirm" onclick="confirmAction()">確認</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lsection">
+            <svg class="sectionl" xmlns="http://www.w3.org/2000/svg" width="32vw" height="60vw" viewBox="0 0 1522 395" fill="none">
+              <g class="dialog-group-l">
+                <defs>
+                  <clipPath id="dialogClip">
+                    <path d="M41 0.5H387.233C387.509 0.500133 382.733 0.723942 382.733 1V33C387.733 52.0537 372.287 67.4999 353.233 67.5H7C6.72386 67.5 6.5 67.2761 6.5 67V35C6.5 15.9462 21.9462 0.500001 41 0.5Z" />
+                  </clipPath>
+                </defs>
+                <path class="path-outline" d="M35 10.5H386.233C386.509 10.5001 386.733 10.7239 386.733 11V43C386.733 62.0537 371.287 77.4999 352.233 77.5H1C0.723857 77.5 0.5 77.2761 0.5 77V45C0.500001 25.9462 15.9462 10.5 35 10.5Z" stroke-width="2" stroke="#9E8C9E"/>
+                <path class="path-fill" d="M41 0.5H392.233C392.509 0.500133 392.733 0.723942 392.733 1V33C392.733 52.0537 377.287 67.4999 358.233 67.5H7C6.72386 67.5 6.5 67.2761 6.5 67V35C6.5 15.9462 21.9462 0.500001 41 0.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+                <g clip-path="url(#dialogClip)">
+                  <text class="dialog-text" x="30" y="42" fill="black">最新！課程評論：</text>
+                </g>
+              </g>
+              
+              <g class="dialog-group-l">
+                <path class="path-outline" d="M285 166.5H444.087C444.363 166.5 444.587 166.724 444.587 167V199C444.587 218.054 429.141 233.5 410.087 233.5H251C250.724 233.5 250.5 233.276 250.5 233V201C250.5 181.946 265.946 166.5 285 166.5Z" stroke-width="2" stroke="#9E8C9E"/>
+                <path class="path-fill" d="M291 156.5H450.087C450.363 156.5 450.587 156.724 450.587 157V189C450.587 208.054 435.141 223.5 416.087 223.5H257C256.724 223.5 256.5 223.276 256.5 223V191C256.5 171.946 271.946 156.5 291 156.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-l">
+                <path class="path-outline" d="M171 322.5H397.73C398.007 322.5 398.23 322.724 398.23 323V355C398.23 374.054 382.784 389.5 363.73 389.5H137C136.724 389.5 136.5 389.276 136.5 389V357C136.5 337.946 151.946 322.5 171 322.5Z" stroke-width="2" stroke="#9E8C9E"/>
+                <path class="path-fill" d="M177 312.5H403.73C404.007 312.5 404.23 312.724 404.23 313V345C404.23 364.054 388.784 379.5 369.73 379.5H143C142.724 379.5 142.5 379.276 142.5 379V347C142.5 327.946 157.946 312.5 177 312.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+              </g>
+            </svg>
+
+            <svg class="svg-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 300" fill="none">
+              <g class="dialog-group-l">
+              <path class="path-outline" d="M103.374 3.88477H201.483C201.56 3.88477 201.623 3.9475 201.623 4.02441C201.623 16.1049 191.83 25.8984 179.749 25.8984H81.6396C81.5627 25.8984 81.5 25.8357 81.5 25.7588C81.5001 13.6781 91.2934 3.88481 103.374 3.88477Z" stroke="#9E8C9E"/>
+              <path class="path-fill" d="M105.251 0.5H203.36C203.437 0.5 203.5 0.562734 203.5 0.639648C203.5 12.7202 193.707 22.5136 181.626 22.5137H83.5166C83.4397 22.5137 83.377 22.4509 83.377 22.374C83.377 10.2934 93.1703 0.500048 105.251 0.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-l"> 
+              <path class="path-outline" d="M22.8848 40.9609H140.019C140.104 40.9609 140.173 41.0303 140.173 41.1152C140.173 53.4776 130.151 63.499 117.788 63.499H0.654297C0.569417 63.499 0.500138 63.4306 0.5 63.3457C0.5 50.9831 10.5221 40.9609 22.8848 40.9609Z" stroke="#9E8C9E"/>
+              <path class="path-fill" d="M27.2119 37.5H144.346C144.431 37.5 144.5 37.5693 144.5 37.6543C144.5 50.0167 134.478 60.0381 122.115 60.0381H4.98145C4.89657 60.0381 4.82729 59.9696 4.82715 59.8848C4.82715 47.5221 14.8493 37.5 27.2119 37.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-l">
+              <path class="path-outline" d="M96.0371 78.833H254.241C254.313 78.833 254.371 78.8913 254.371 78.9629C254.371 90.8575 244.729 100.5 232.834 100.5H74.6299C74.5583 100.5 74.5 100.442 74.5 100.37C74.5001 88.4755 84.1425 78.8331 96.0371 78.833Z" stroke="#9E8C9E"/>
+              <path class="path-fill" d="M100.166 75.5H258.37C258.442 75.5 258.5 75.5583 258.5 75.6299C258.5 87.5245 248.858 97.167 236.963 97.167H78.7588C78.6872 97.167 78.6289 97.1087 78.6289 97.0371C78.629 85.1425 88.2714 75.5001 100.166 75.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+            </g>
+            </svg>
+          </div>
+
+          <div class="rsection">
+            <svg class="sectionr" xmlns="http://www.w3.org/2000/svg" width="32vw" height="60vw" viewBox="0 0 1522 395" fill="none">
+              <g class="dialog-group-r">
+                <path class="path-outline" d="M298 10.5H138.913C138.637 10.5 138.413 10.7239 138.413 11V43C138.413 62.0538 153.859 77.5 172.913 77.5H332C332.276 77.5 332.5 77.2761 332.5 77V45C332.5 25.9462 317.054 10.5 298 10.5Z" stroke-width="2" stroke="#9E8C9E"/>
+                <path class="path-fill" d="M292 0.5H132.913C132.637 0.5 132.413 0.723861 132.413 1V33C132.413 52.0538 147.859 67.5 166.913 67.5H326C326.276 67.5 326.5 67.2761 326.5 67V35C326.5 15.9462 311.054 0.5 292 0.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-r">
+                <path class="path-outline" d="M234 166.5H7.26953C6.99345 166.5 6.76953 166.724 6.76953 167V199C6.76953 218.054 22.2158 233.5 41.2695 233.5H268C268.276 233.5 268.5 233.276 268.5 233V201C268.5 181.946 253.054 166.5 234 166.5Z" stroke-width="2" stroke="#9E8C9E"/>
+                <path class="path-fill" d="M228 156.5H1.26953C0.993446 156.5 0.769531 156.724 0.769531 157V189C0.769532 208.054 16.2158 223.5 35.2695 223.5H262C262.276 223.5 262.5 223.276 262.5 223V191C262.5 171.946 247.054 156.5 228 156.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+              </g>
+              <g class="dialog-group-r">
+                <path class="path-outline" d="M442 322.5H90.7666C90.4906 322.5 90.2666 322.724 90.2666 323V355C90.2666 374.054 105.713 389.5 124.767 389.5H476C476.276 389.5 476.5 389.276 476.5 389V357C476.5 337.946 461.054 322.5 442 322.5Z" stroke-width="2" stroke="#9E8C9E"/>
+                <path class="path-fill" d="M436 312.5H84.7666C84.4906 312.5 84.2666 312.724 84.2666 313V345C84.2666 364.054 99.7129 379.5 118.767 379.5H470C470.276 379.5 470.5 379.276 470.5 379V347C470.5 327.946 455.054 312.5 436 312.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+
+      <!-- Feature sections with curved path connections -->
+      <div class="feature-container">
+        <svg id="triangle-1" xmlns="http://www.w3.org/2000/svg" width="188" height="143" viewBox="0 0 188 143" fill="none">
+          <path d="M152.521 102.905L104.945 47.015L80.1997 115.423L152.521 102.905Z" fill="#D1C5D1"/> 
+          <path d="M94.2181 81.8137L46.6427 25.9242L21.897 94.3321L94.2181 81.8137Z" fill="#D1C5D1"/> 
+          <!-- stroke 包進 g -->
+          <g class="stroke-group">
+            <path d="M125.569 35.5694L101.994 100.739L170.893 88.8138L125.569 35.5694Z" stroke="#635C63" stroke-width="2"/>
+            <path d="M67.266 14.4791L43.6915 79.6489L112.59 67.7235L67.266 14.4791Z" stroke="#635C63" stroke-width="2"/>
+          </g>
+        </svg>
+
+        <svg id="animated-line" xmlns="http://www.w3.org/2000/svg" width="1826" height="1736" viewBox="0 0 1826 1736" fill="none">
+          <path d="M182.717 1C182.717 1 788.061 316.164 570.5 336.5C-670.5 452.5 1231.5 612 1344 609C1404 603 1520 588 1533 545.5C1546.24 502.224 1488.91 477.05 1445 488C1393.78 500.772 1358 513.5 1344 609C1329 721.5 1461 1142.5 1736.5 1321.5C1840.79 1389.26 1881.45 1319.22 1696 1310.5C1451.5 1299 966.283 1193.5 793.783 1180C348.564 1145.16 -293.147 1268.99 151.5 1310.5C236.46 1318.43 438.783 1361 370 1310.5C345.197 1292.29 328.324 1283.72 298 1278.5C185.052 1259.07 306 1369.5 370 1467.5C655.429 1904.56 1508 1673 1508 1673" stroke="#5A355A" stroke-width="3"/>
+        </svg>
+
+
+        <div class="feature-box">
+          <div class="feature-item">
+            <div class="floating-slogan slogan-1">
+              <div class="slogan-inner">資管系畢業要修滿幾學分？</div>
+            </div>
+            <div class="feature-title">
+              <h3>校規查詢</h3>
+            </div>
+            <img class="s-owl" src="{% static 'image/sowl.gif' %}">
+            <div class="feature-desc">
+              <p>即問即答，透過關鍵字快速查詢校規，獲得清楚、精準的答案。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="floating-slogan slogan-2">
+              <div class="slogan-inner">
+                要不要修多媒體製作導論勒<br>
+                <span class="indent">不知道會不會跟不上進度...</span>
+              </div>
+            </div>
+            <div class="feature-title">
+              <h3>課程評論</h3>
+            </div>
+            <img class="c-owl" src="{% static 'image/cowl.gif' %}">
+            <div class="feature-desc">
+              <p>讓學生分享對於課程的看法和建議，並優化語意提升參考價值。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="floating-slogan slogan-3">
+              <div class="slogan-inner">有人也想修這門課嗎？</div>
+            </div>
+            <div class="feature-title">
+              <h3>活動召集</h3>
+            </div>
+            <img class="a-owl" src="{% static 'image/aowl.gif' %}">
+            <div class="feature-desc">
+              <p>協助學生快速找到志同道合的夥伴，一起參與校內活動或課程。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="floating-slogan slogan-4">
+              <div class="slogan-inner">全新的原文書好貴歐，但直屬的書不見了:(</div>
+            </div>
+            <div class="feature-title">
+              <h3>二手書專區</h3>
+            </div>
+            <img class="b-owl" src="{% static 'image/bowl.gif' %}">
+            <div class="feature-desc">
+              <p>提供便捷的二手書管道，讓教材資源充分再利用。</p>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Icon containers (獨立的 80x80 容器) -->
+        <!--<div class="icon-container">
+        </div>
+        <div class="icon-container">
+          i
+         </div>
+        <div class="icon-container">
+          m
+        </div>
+        <div class="icon-container">
+          c
+        </div>
+        <div class="icon-container">
+          b
+        </div>-->
+
+
+
+        <svg id="triangle-2" xmlns="http://www.w3.org/2000/svg" width="224" height="197" viewBox="0 0 224 197" fill="none">
+          <path d="M177.938 108.543L114.582 71.4881L113.801 144.23L177.938 108.543Z" fill="#D1C5D1"/>
+          <path d="M115.941 107.877L52.5853 70.822L51.8043 143.564L115.941 107.877Z" fill="#D1C5D1"/>
+          <g class="stroke-group">
+          <path d="M130.272 53.8771L129.528 123.176L190.63 89.1785L130.272 53.8771Z" stroke="#635C63" stroke-width="2"/>
+          <path d="M68.2753 53.2116L67.5312 122.51L128.633 88.513L68.2753 53.2116Z" stroke="#635C63" stroke-width="2"/>
+          </g>
+        </svg>
+      </div>
+
+  </div>
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/index.js' %}"></script>
+<script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+

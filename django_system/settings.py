@@ -1,3 +1,5 @@
+#django_system\settings.py
+
 """
 Django settings for django_system project.
 

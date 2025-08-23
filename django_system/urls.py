@@ -1,3 +1,5 @@
+#django_system\urls.py
+
 """
 URL configuration for django_system project.
 

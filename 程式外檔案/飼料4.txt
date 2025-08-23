@@ -1,0 +1,3877 @@
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\comment_detail.js
+// comment_detail.js - 清理版本，專注於頁面特定功能
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('comment_detail.js 已載入');
+ 
+    // 初始化星級評分顯示
+    initializeRatings();
+ 
+    // 按讚按鈕功能
+    initializeLikeButtons();
+ 
+    // 回覆功能
+    initializeReplyButtons();
+ 
+    // 連接到 comment_pop.js 的評分模態框功能
+    initializeRatingModalConnection();
+ 
+    // Initialize star ratings with Font Awesome icons
+    function initializeRatings() {
+        document.querySelectorAll('.stars').forEach(starsContainer => {
+            const rating = parseFloat(starsContainer.getAttribute('data-rating'));
+            const stars = Array.from(starsContainer.querySelectorAll('i'));
+ 
+            // Set initial rating display
+            updateStarIcons(stars, rating);
+ 
+            // Make stars clickable for rating input (if needed)
+            if (starsContainer.closest('.editable-rating')) {
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', () => {
+                        const newRating = index + 1;
+                        starsContainer.setAttribute('data-rating', newRating);
+                        updateStarIcons(stars, newRating);
+                    });
+                });
+            }
+        });
+    }
+ 
+    function updateStarIcons(stars, rating) {
+        stars.forEach((star, index) => {
+            const starValue = index + 1;
+ 
+            if (rating >= starValue) {
+                // Full star
+                star.className = 'fa-solid fa-star';
+            } else if (rating > starValue - 1 && rating < starValue) {
+                // Half star (for decimal values like 4.5, 3.5, etc.)
+                star.className = 'fa-solid fa-star-half-stroke';
+            } else {
+                // Empty star
+                star.className = 'fa-regular fa-star';
+            }
+        });
+    }
+ 
+    // Like button functionality
+    function initializeLikeButtons() {
+        const likeButtons = document.querySelectorAll('.like-btn');
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const likeCount = this.querySelector('.like-count');
+                if (!likeCount) return;
+ 
+                const currentCount = parseInt(likeCount.textContent);
+                const isLiked = this.classList.contains('liked');
+                const likeIcon = this.querySelector('.like-icon');
+ 
+                if (isLiked) {
+                    likeCount.textContent = currentCount - 1;
+                    this.classList.remove('liked');
+                    if (likeIcon) {
+                        likeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up">';
+                    }
+                } else {
+                    likeCount.textContent = currentCount + 1;
+                    this.classList.add('liked');
+                    if (likeIcon) {
+                        likeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up">';
+ 
+                        // Add animation
+                        const icon = likeIcon.querySelector('i');
+                        if (icon) {
+                            icon.style.transform = 'scale(1.3)';
+                            setTimeout(() => {
+                                icon.style.transform = 'scale(1)';
+                            }, 200);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // Reply functionality
+    function initializeReplyButtons() {
+        // Handle main reply buttons
+        document.addEventListener('click', function(e) {
+            // Reply button click
+            if (e.target.closest('.reply-btn')) {
+                const button = e.target.closest('.reply-btn');
+                const commentCard = button.closest('.comment-card');
+                const replyForm = commentCard.querySelector('.reply-form');
+ 
+                if (!replyForm) return;
+ 
+                // Hide all other reply forms
+                document.querySelectorAll('.reply-form').forEach(form => {
+                    if (form !== replyForm) {
+                        form.style.display = 'none';
+                    }
+                });
+ 
+                // Toggle current reply form
+                if (replyForm.style.display === 'block') {
+                    replyForm.style.display = 'none';
+                } else {
+                    replyForm.style.display = 'block';
+                    replyForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+ 
+            // Reply to reply button click
+            if (e.target.closest('.reply-to-reply')) {
+                const replyBtn = e.target.closest('.reply-to-reply');
+                const replyContainer = replyBtn.closest('.replies-container');
+                if (!replyContainer) return;
+ 
+                const replyForm = replyContainer.querySelector('.reply-form');
+ 
+                if (replyForm) {
+                    replyForm.style.display = replyForm.style.display === 'block' ? 'none' : 'block';
+                    if (replyForm.style.display === 'block') {
+                        replyForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            }
+ 
+            // Cancel reply button click
+            if (e.target.closest('.cancel-reply-btn')) {
+                const cancelBtn = e.target.closest('.cancel-reply-btn');
+                const form = cancelBtn.closest('.reply-form');
+                if (form) {
+                    form.style.display = 'none';
+                }
+            }
+ 
+            // Submit reply button click
+            if (e.target.closest('.submit-reply-btn')) {
+                const submitBtn = e.target.closest('.submit-reply-btn');
+                const form = submitBtn.closest('.reply-form');
+                if (!form) return;
+ 
+                const textarea = form.querySelector('textarea');
+                if (!textarea) return;
+ 
+                const replyText = textarea.value.trim();
+ 
+                if (replyText) {
+                    let repliesContainer = form.closest('.replies-container');
+ 
+                    // If not inside a replies-container, look for one in the parent comment-card
+                    if (!repliesContainer) {
+                        const commentCard = form.closest('.comment-card');
+                        if (commentCard) {
+                            repliesContainer = commentCard.querySelector('.replies-container');
+ 
+                            // Create a replies-container if it doesn't exist
+                            if (!repliesContainer) {
+                                repliesContainer = document.createElement('div');
+                                repliesContainer.className = 'replies-container';
+                                commentCard.appendChild(repliesContainer);
+                            }
+                        }
+                    }
+ 
+                    if (repliesContainer) {
+                        // Create new reply element
+                        const newReply = document.createElement('div');
+                        newReply.className = 'reply';
+                        newReply.innerHTML = `
+                            <div class="user-avatar small">
+                                <img src="/static/images/default-avatar.png" alt="使用者頭像">
+                            </div>
+                            <div class="reply-content">
+                                <div class="reply-header">
+                                    <span class="user-name">匿名用戶</span>
+                                    <span class="reply-date">剛剛</span>
+                                </div>
+                                <p>${replyText}</p>
+                                <div class="reply-actions">
+                                    <button class="reply-to-reply">回覆</button>
+                                </div>
+                            </div>
+                        `;
+ 
+                        // Insert new reply
+                        repliesContainer.appendChild(newReply);
+ 
+                        // Clear and hide form
+                        textarea.value = '';
+                        form.style.display = 'none';
+ 
+                        // Show success message
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'success-message';
+                        successMsg.textContent = '回覆已送出！';
+                        successMsg.style.textAlign = 'center';
+                        successMsg.style.padding = '10px';
+                        successMsg.style.color = '#4CAF50';
+                        successMsg.style.margin = '10px 0';
+ 
+                        form.parentNode.insertBefore(successMsg, form.nextSibling);
+ 
+                        // Remove success message after 3 seconds
+                        setTimeout(() => {
+                            successMsg.remove();
+                        }, 3000);
+                    }
+                }
+            }
+        });
+    }
+ 
+    // 連接到 comment_pop.js 的評分模態框功能
+    function initializeRatingModalConnection() {
+        const addCommentBtn = document.getElementById('add-comment-btn');
+        const hiddenCreateBtn = document.querySelector('.hidden-create-btn');
+ 
+        if (addCommentBtn && hiddenCreateBtn) {
+            addCommentBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('觸發評分模態框');
+ 
+                // 觸發隱藏按鈕的點擊事件，讓 comment_pop.js 處理
+                hiddenCreateBtn.click();
+            });
+        } else {
+            console.error('找不到必要的按鈕元素');
+        }
+    }
+});
+
+// Function to handle adding a new comment (to be called from the add comment page)
+function submitComment(commentData) {
+    // This function would be called from the add comment page
+    // after the form is submitted successfully
+    console.log('New comment submitted:', commentData);
+    // Here you would typically make an AJAX request to save the comment
+    // and then update the UI with the new comment
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\comment.js
+//index
+window.addEventListener('DOMContentLoaded', () => {
+  const popupId = sessionStorage.getItem('openPopup');
+  if (popupId) {
+    const popup = document.getElementById(popupId);
+    if (popup) {
+      popup.classList.add('active');
+      console.log(`自動開啟彈窗: ${popupId}`);
+    } else {
+      console.warn(`找不到彈窗 ID: ${popupId}`);
+    }
+    sessionStorage.removeItem('openPopup');
+  }
+});
+
+// comment.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('評論頁面 JS 已加載');
+ 
+    // 初始化星級評分顯示
+    initializeStarRatings();
+ 
+    // 設置搜尋和過濾功能
+    setupSearchAndFilters();
+ 
+    // 設置分頁
+    setupPagination();
+ 
+    // 初始化交互元素
+    initializeInteractions();
+ 
+    // 添加視差滾動效果
+    initializeParallax();
+ 
+    // 注意：評分模態框功能現在由 comment_pop.js 處理
+});
+
+// 滾動動畫
+function initializeScrollAnimations() {
+    const allCards = document.querySelectorAll('.activity-card');
+ 
+    function checkVisibility() {
+        const windowHeight = window.innerHeight;
+ 
+        allCards.forEach((card, index) => {
+            const cardTop = card.getBoundingClientRect().top;
+ 
+            if (cardTop < windowHeight - 100) {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 100); // 錯開動畫時間
+            }
+        });
+    }
+ 
+    // 初始檢查
+    checkVisibility();
+ 
+    // 滾動事件監聽
+    window.addEventListener('scroll', checkVisibility);
+}
+
+// 背景文字視差效果
+function initializeParallax() {
+    const bgText = document.querySelector('.bg-text');
+ 
+    function parallaxScroll() {
+        const scrollPosition = window.pageYOffset;
+        if (bgText) {
+            bgText.style.transform = `translateX(${scrollPosition \* -0.1}px)`;
+        }
+    }
+ 
+    window.addEventListener('scroll', parallaxScroll);
+}
+
+
+// 初始化星級評分顯示
+function initializeStarRatings() {
+    document.querySelectorAll('.stars').forEach(starsContainer => {
+        const rating = parseFloat(starsContainer.getAttribute('data-rating'));
+        const stars = Array.from(starsContainer.querySelectorAll('i'));
+ 
+        // 根據評分更新星級圖標
+        stars.forEach((star, index) => {
+            const position = index + 1;
+ 
+            if (rating >= position) {
+                // 全星
+                star.className = 'fas fa-star';
+            } else if (rating > position - 0.5 && rating < position) {
+                // 半星
+                star.className = 'fas fa-star-half-alt';
+            } else {
+                // 空星
+                star.className = 'far fa-star';
+            }
+        });
+    });
+}
+
+// 設置搜尋和過濾功能
+function setupSearchAndFilters() {
+    const filterItems = document.querySelectorAll('.filter-item');
+    const searchBox = document.querySelector('.search-box');
+    const courseItems = document.querySelectorAll('.course-item');
+ 
+    // 組合過濾功能
+    function filterCourses() {
+        // 搜尋和過濾邏輯實現...
+    }
+ 
+    // 添加事件監聽器
+    if (searchBox) {
+        searchBox.addEventListener('input', filterCourses);
+    }
+ 
+    filterItems.forEach(item => {
+        item.addEventListener('change', filterCourses);
+    });
+}
+
+// 設置分頁
+function setupPagination() {
+    const pageButtons = document.querySelectorAll('.page-btn');
+    const nextButton = document.querySelector('.page-next');
+ 
+    // 添加頁面按鈕點擊事件
+    pageButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // 移除所有按鈕的活躍狀態
+            pageButtons.forEach(btn => btn.classList.remove('active'));
+            // 添加活躍狀態到被點擊的按鈕
+            this.classList.add('active');
+ 
+            // 滾動到頁面頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+ 
+    // 下一頁按鈕功能
+    if (nextButton) {
+        nextButton.addEventListener('click', function() {
+            const activeButton = document.querySelector('.page-btn.active');
+            if (activeButton) {
+                const nextPageButton = activeButton.nextElementSibling;
+                if (nextPageButton && nextPageButton.classList.contains('page-btn')) {
+                    nextPageButton.click();
+                }
+            }
+        });
+    }
+}
+
+// 初始化其他交互元素
+function initializeInteractions() {
+    // 滾動時的統計數據動畫
+    const statItems = document.querySelectorAll('.stat-item');
+ 
+    if (statItems.length > 0) {
+        // 當統計項目進入視窗時的動畫
+        function animateStats() {
+            statItems.forEach(item => {
+                const position = item.getBoundingClientRect();
+ 
+                // 如果統計項目在視窗內
+                if (position.top < window.innerHeight && position.bottom >= 0) {
+                    item.classList.add('animated');
+                }
+            });
+        }
+ 
+        // 添加動畫類到統計項目
+        statItems.forEach(item => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        });
+ 
+        // 檢查初始位置並在滾動時檢查
+        animateStats();
+        window.addEventListener('scroll', animateStats);
+ 
+        // 稍有延遲後，動畫統計數據
+        setTimeout(() => {
+            statItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }, 300);
+    }
+ 
+    // 圓形上傳按鈕點擊事件
+    const commentBtn = document.getElementById('commentBtn');
+    if (commentBtn) {
+        commentBtn.addEventListener('click', function() {
+            const modal = document.getElementById('commentModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    }
+ 
+    // 創建評論按鈕點擊事件
+    const createBtns = document.querySelectorAll('.create-btn');
+    createBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = document.getElementById('commentModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    });
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\footer.js
+
+// 回到最頂層
+function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' // 加 smooth 會平滑滾動
+    });
+  }
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\index.js
+// function handleResponsiveRedirect() {
+//     const isMobile = window.innerWidth <= 768;
+//     const onMobilePage = window.location.pathname.startsWith('/mobile');
+//     if (isMobile && !onMobilePage) {
+//         window.location.href = '/mobile/';
+//     } else if (!isMobile && onMobilePage) {
+//         // return to desktop version; assume desktop lives at /index/ or root
+//         window.location.href = '/index/';
+//     }
+// }
+
+// // initial check (DOMContentLoaded may already be fired)
+// handleResponsiveRedirect();
+
+// // add resize listener with basic debounce
+// let resizeTimeout;
+// window.addEventListener('resize', () => {
+//     clearTimeout(resizeTimeout);
+//     resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
+// });
+
+// //loading
+// document.addEventListener("DOMContentLoaded", () => {
+//   const loadingScreen = document.getElementById("loading-screen");
+//   const finalText = document.getElementById("final-text");
+
+//   // 開始翻轉：Welcome 顯示 0.8 秒後
+//   setTimeout(() => {
+//     document.querySelector('.cube').style.animation = 'flip-up 0.4s ease forwards';
+//   }, 800);
+
+//   // 顯示「智能校事專家」0.3 秒後縮小 + 移動
+//   setTimeout(() => {
+//     finalText.classList.add("shrink-and-move");
+//   }, 1200); // 延遲讓動畫顯得更平滑
+
+//   // 整個 loading 淡出
+//   setTimeout(() => {
+//     loadingScreen.style.transition = "opacity 0.3s ease";
+//     loadingScreen.style.opacity = "0";
+
+//     setTimeout(() => {
+//       loadingScreen.style.display = "none";
+//     }, 300);
+//   }, 1500); // 1.5秒後開始淡出
+// });
+
+
+
+
+// //圓圈線條
+// document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
+    const path = document.querySelector("#circle-stroke path");
+    if (path) {
+        const length = path.getTotalLength();
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+        // 設定 CSS 變數供動畫用
+        path.style.setProperty('--circle-length', length);
+        path.style.animation = "none";
+        // 強制 reflow 以重啟動畫
+        void path.offsetWidth;
+        path.style.animation = "drawCircle 3s ease-in-out forwards";
+    }
+});
+//   const path = document.querySelector("#circle-stroke path");
+//   const pathLength = path.getTotalLength();
+//   console.log("圓形路徑長度:", pathLength);
+
+//   // 使用 JavaScript 設定動畫的 dash 值
+//   path.style.strokeDasharray = pathLength;
+//   path.style.strokeDashoffset = pathLength;
+
+//   // 觸發動畫（加上類名或強制重繪）
+//   path.getBoundingClientRect(); // 強制重繪
+//   setTimeout(() => {
+//     path.style.animation = "drawCircle 3s ease-in-out forwards";
+//   }, 3000);
+// });
+  
+
+// const keywordMap = [
+//     { keywords: ["賣", "上架", "上傳"], intent: "up" },
+//     { keywords: ["書", "課本"], intent: "book" },
+//     { keywords: ["查", "規", "學分", "畢業", "門檻"], intent: "rules" },
+//     { keywords: ["舉辦", "發起", "揪", "創"], intent: "hold" },
+//     { keywords: ["活動", "團", "讀書會"], intent: "event" },
+//     { keywords: ["評"], intent: "review" },
+//     { keywords: ["課", "老師"], intent: "course" },
+// ];
+
+
+// 詢問框
+let currentShortcut = null;
+
+// 關鍵字與意圖對應表
+const keywordMap = [
+    { keywords: "賣", intent: "up" },
+    { keywords: "上架", intent: "up" },
+    { keywords: "上傳", intent: "up" },
+    { keywords: "書", intent: "book" },
+    { keywords: "課本", intent: "book" },
+    { keywords: "查", intent: "rules" },
+    { keywords: "問", intent: "rules" },
+    { keywords: "規", intent: "rules" },
+    { keywords: "學分", intent: "rules" },
+    { keywords: "畢業", intent: "rules" },
+    { keywords: "門檻", intent: "rules" },
+    { keywords: "舉辦", intent: "hold" },
+    { keywords: "發起", intent: "hold" },
+    { keywords: "揪", intent: "hold" },
+    { keywords: "創", intent: "hold" },
+    { keywords: "活動", intent: "event" },
+    { keywords: "團", intent: "event" },
+    { keywords: "會", intent: "event" },
+    { keywords: "評", intent: "review" },
+    { keywords: "寫", intent: "review" },
+    { keywords: "課", intent: "course" },
+    { keywords: "老師", intent: "course" }
+];
+
+
+// 每個捷徑定義需要包含哪些 intent
+const shortcuts = [
+    {
+        intentSet: ["hold", "event"],
+        action: "redirect",
+        target: "/join/",
+        label: "發起活動",
+        popupToOpen: "uploadForm" 
+    },
+    {
+        intentSet: ["event"],
+        action: "redirect",
+        target: "/join/",
+        label: "活動召集"
+    },
+    {
+      intentSet: ["up", "book"],
+      action: "redirect",
+      target: "/book/",
+      label: "上傳二手書",
+      popupToOpen: "uploadForm"  // 傳給 book.html 的彈窗ID
+    },
+    {
+        intentSet: ["book"],
+        action: "redirect",
+        target: "/book/",
+        label: "二手書專區"
+    },
+    {
+        intentSet: ["rules"],
+        action: "redirect",
+        target: "/chat/",
+        label: "校規查詢"
+    },
+    {
+        intentSet: ["review", "course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "新增課程評論",
+        popupToOpen: "rating-modal" 
+    },
+    {
+        intentSet: ["course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "課程評論區"
+    },
+    // {
+    //     intentSet: ["event"],
+    //     action: "form-fill",
+    //     target: "/activity/create",
+        // prefill: {
+        //     title: "羽球週五聚",
+        //     time: "週五晚上7點"
+        // }
+    // }
+];
+
+function getIntentsFromInput(input) {
+    const result = new Set();
+    for (const entry of keywordMap) {
+        if (input.includes(entry.keywords)) {
+            result.add(entry.intent);
+        }
+    }
+    return Array.from(result);
+}
+
+function showMessage(text, type = 'error') {
+    const messageEl = document.getElementById('message');
+    messageEl.textContent = text;
+    messageEl.className = `message ${type}`;
+    messageEl.classList.add('show');
+    setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, 3000);
+}
+
+function showModal(title, content, shortcut) {
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    // const modalContent = document.getElementById('modalContent');
+
+    modalTitle.textContent = title;
+    // modalContent.innerHTML = content;
+    currentShortcut = shortcut;
+
+    modal.classList.add('show');
+}
+
+function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.remove('show');
+    currentShortcut = null;
+}
+
+function confirmAction() {
+    if (currentShortcut) {
+        if (currentShortcut.action === "redirect") {
+            if (currentShortcut.popupToOpen) {
+                sessionStorage.setItem('openPopup', currentShortcut.popupToOpen);
+            }
+            window.location.href = currentShortcut.target;
+        }
+    }
+}
+
+
+function handleInput() {
+    const input = document.getElementById('userInput');
+    const inputValue = input.value.trim();
+
+    if (!inputValue) {
+        showMessage('請輸入指令');
+        return;
+    }
+
+    const intents = getIntentsFromInput(inputValue);
+
+    for (let shortcut of shortcuts) {
+        const isMatch = shortcut.intentSet.every(intent =>
+            intents.includes(intent)
+        );
+        if (isMatch) {
+            let title = `前往「${shortcut.label || inputValue}」?`;
+            let content = '';
+
+            if (shortcut.action === "redirect") {
+                content = `目標：</strong>${shortcut.target}`;
+            } else if (shortcut.action === "form-fill") {
+                content = `目標：</strong>${shortcut.target}<br><strong>預填資料：</strong><br>• 標題：${shortcut.prefill.title}<br>• 時間：${shortcut.prefill.time}`;
+            }
+
+            showModal(title, content, shortcut);
+            return;
+        }
+    }
+
+    showMessage('無對應捷徑，請重新輸入');
+}
+
+document.getElementById('userInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        handleInput();
+    }
+});
+
+(function animatePlaceholder() {
+  const input = document.getElementById('userInput');
+  if (!input) return;
+
+  const text = '歡迎輸入欲使用功能';
+  let idx = 0;
+  let direction = 1;
+  let showCursor = true;
+
+  function type() {
+    const cursor = showCursor ? '|' : ' ';
+    input.setAttribute('placeholder', text.slice(0, idx) + cursor);
+
+    showCursor = !showCursor; // 每次切換游標顯示狀態
+
+    if (direction === 1) {
+      if (idx < text.length) {
+        idx++;
+        setTimeout(type, 120); // 輸出下一個字時間距
+      } else {
+        direction = -1;
+        setTimeout(type, 1300); // 文字打完之後停留的時間
+      }
+    } else {
+      idx = 0;
+      direction = 1;
+      setTimeout(type, 100); // 重新開始打字前的等待時間
+    }
+  }
+
+  type();
+})();
+
+
+
+//dialog
+window.addEventListener('DOMContentLoaded', () => {
+  const circle = document.querySelector('.circle-container');
+  const dialogs = document.querySelectorAll('.dialog-group-l, .dialog-group-r');
+
+  if (!circle) return;
+
+  const circleRect = circle.getBoundingClientRect();
+
+  dialogs.forEach((dialog, index) => {
+    const dialogRect = dialog.getBoundingClientRect();
+
+    // 計算中心點差距
+    const startX = circleRect.left + circleRect.width ;
+    const startY = circleRect.top + circleRect.height ;
+
+    // 設定 CSS 變數
+    dialog.style.setProperty('--start-x', `${startX}px`);
+    dialog.style.setProperty('--start-y', `${startY}px`);
+  });
+});
+
+
+
+//
+// 場景設置
+document.addEventListener('DOMContentLoaded', () => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    // 使用指定的 canvas 元素
+    const canvas = document.createElement('canvas');
+    // 清空 owl-container 並插入canvas
+    const container = document.getElementById('owl-container');
+    container.innerHTML = '';
+    container.appendChild(canvas);
+    const renderer = new THREE.WebGLRenderer({ 
+        canvas: canvas, 
+        antialias: true, 
+        alpha: true
+    });
+    renderer.setSize(400, 400);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    renderer.domElement.style.width = '400px';
+    renderer.domElement.style.height = '400px';
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setClearColor(0xD1C5D1, 0.3);
+    // renderer.setClearColor(0xffffff);
+
+    // 燈光設置
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(7, 7, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.5);
+    pointLight.position.set(-10, 10, 10);
+    scene.add(pointLight);
+
+    // 貓頭鷹群組
+    const owl = new THREE.Group();
+
+    // 材質定義
+    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x9479C1 });
+    const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const pupilMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+    const beakMaterial = new THREE.MeshLambertMaterial({ color: 0xffa500 });
+    const capMaterial = new THREE.MeshLambertMaterial({ color: 0x2c2c2c });
+    const tassalMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 });
+    const footMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+
+    // 創建七邊形幾何體
+    function createHeptagonGeometry(radius, depth) {
+        const shape = new THREE.Shape();
+        const sides = 7;
+        
+        for (let i = 0; i < sides; i++) {
+            const angle = (i / sides) * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            if (i === 0) {
+                shape.moveTo(x, y);
+            } else {
+                shape.lineTo(x, y);
+            }
+        }
+        
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelSegments: 7,
+            steps: 6,
+            bevelSize: 0.2,
+            bevelThickness: 0.2
+        };
+        
+        return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    }
+
+    // 七邊形身體 - 改為垂直方向，底邊平行於畫面，尖角朝上
+    const bodyGeometry = createHeptagonGeometry(1.2, 0.7);
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    // 旋轉讓底邊平行於畫面，尖角朝上
+    body.rotation.z = -Math.PI / 14; // 負角度讓尖角朝上
+    body.position.y = 0; // 調整到中心位置
+    body.position.z = -0.3;
+    body.castShadow = true;
+    body.scale.x = 0.96;
+    body.scale.y = 1.05;
+    owl.add(body);
+
+
+    // 大眼睛 - 向前移動避免與身體重疊
+    const leftEyeGeometry = new THREE.SphereGeometry(0.55, 32, 32);
+    const leftEye = new THREE.Mesh(leftEyeGeometry, eyeMaterial);
+    leftEye.position.set(-0.4, 0.3, 0.5); // z軸向前移動更多
+    leftEye.scale.set(0.85, 1, 0.8);
+    leftEye.castShadow = true;
+    owl.add(leftEye);
+
+    const rightEyeGeometry = new THREE.SphereGeometry(0.55, 32, 32);
+    const rightEye = new THREE.Mesh(rightEyeGeometry, eyeMaterial);
+    rightEye.position.set(0.4, 0.3, 0.5); // z軸向前移動更多
+    rightEye.scale.set(0.85, 1, 0.8);
+    rightEye.castShadow = true;
+    owl.add(rightEye);
+
+    // 瞳孔（眯眯眼）- 對應眼睛位置調整
+    const leftPupilGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+    const leftPupil = new THREE.Mesh(leftPupilGeometry, pupilMaterial);
+    leftPupil.position.set(-0.4, 0.3, 0.85); // 對應調整
+    leftPupil.scale.set(1, 0.25, 1);
+    leftPupil.rotation.z = Math.PI / 12; // 左眼下垂
+    leftPupil.castShadow = true;
+    owl.add(leftPupil);
+
+    const rightPupilGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+    const rightPupil = new THREE.Mesh(rightPupilGeometry, pupilMaterial);
+    rightPupil.position.set(0.4, 0.3, 0.85); // 對應調整
+    rightPupil.scale.set(1, 0.25, 1);
+    rightPupil.rotation.z = -Math.PI / 12; // 右眼下垂
+    rightPupil.castShadow = true;
+    owl.add(rightPupil);
+
+    // // 眉毛 - 對應眼睛位置調整
+    // const leftEyebrowGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    // const leftEyebrow = new THREE.Mesh(leftEyebrowGeometry, eyebrowMaterial);
+    // leftEyebrow.position.set(-0.4, 0.95, 1.2); // 向上和向前移動
+    // leftEyebrow.scale.set(2, 0.3, 0.5);
+    // leftEyebrow.rotation.z = 0.3;
+    // owl.add(leftEyebrow);
+
+    // const rightEyebrowGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    // const rightEyebrow = new THREE.Mesh(rightEyebrowGeometry, eyebrowMaterial);
+    // rightEyebrow.position.set(0.4, 0.95, 1.2); // 向上和向前移動
+    // rightEyebrow.scale.set(2, 0.3, 0.5);
+    // rightEyebrow.rotation.z = -0.3;
+    // owl.add(rightEyebrow);
+
+    // 嘴巴 - 向前移動
+    const beakGeometry = new THREE.ConeGeometry(0.15, 0.4, 4);
+    const beak = new THREE.Mesh(beakGeometry, beakMaterial);
+    beak.position.set(0, -0.1, 0.9); // 向前移動
+    // 讓鳥喙稍微後仰（大約 15 度）
+    beak.rotation.x = Math.PI - (Math.PI / 8);
+    beak.castShadow = true;
+    owl.add(beak);
+
+    // 白色肚子
+    const bellyGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+    const bellyMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const belly = new THREE.Mesh(bellyGeometry, bellyMaterial);
+    belly.position.set(0, -0.6, 0.7); // 在身體前方
+    belly.scale.set(1.4, 1, 0.3); // 稍微拉長，壓扁
+    belly.castShadow = true;
+    owl.add(belly);
+
+    // 肚子上的四個黑色彎曲線條
+    const curveGeometry = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI * 0.6);
+
+    // 左內側弧線
+    const curve1 = new THREE.Mesh(curveGeometry, pupilMaterial);
+    curve1.position.set(-0.15, -0.5, 0.9);
+    curve1.rotation.z = 2;
+    curve1.castShadow = true;
+    owl.add(curve1);
+    
+    // 右內側弧線
+    const curve2 = new THREE.Mesh(curveGeometry, pupilMaterial);
+    curve2.position.set(0.15, -0.5, 0.9);
+    curve2.rotation.z = -1;
+    curve2.castShadow = true;
+    owl.add(curve2);
+    
+    // 左外側弧線
+    const curve3 = new THREE.Mesh(curveGeometry, pupilMaterial);
+    curve3.position.set(-0.4, -0.5, 0.9);
+    curve3.rotation.z = 2;
+    curve3.castShadow = true;
+    owl.add(curve3);
+    
+    // 右外側弧線
+    const curve4 = new THREE.Mesh(curveGeometry, pupilMaterial);
+    curve4.position.set(0.4, -0.5, 0.9);
+    curve4.rotation.z = -1;
+    curve4.castShadow = true;
+    owl.add(curve4);
+
+
+
+    // 手
+    // 手臂曲線：上段較平，後段才彎下
+    class CurvedHipArm extends THREE.Curve {
+    getPoint(t) {
+        const arcAngle = Math.PI * 0.8; // 弧度略小於半圓
+        const radius = 0.5;
+        const angle = t * arcAngle + Math.PI * 0.1; // 起點向下偏，讓手從下往上彎
+
+        const y = Math.sin(angle) * radius;              // 垂直方向
+        const x = Math.cos(angle) * radius * 0.6;        // 水平收進來一點
+        const z = 0;
+        return new THREE.Vector3(x, y, z);
+    }
+    }
+
+    // 幾何
+    const armPath = new CurvedHipArm();
+    const armGeometry = new THREE.TubeGeometry(armPath, 64, 0.03, 8, false);
+
+    // 左手
+    const leftArm = new THREE.Mesh(armGeometry, pupilMaterial);
+    leftArm.position.set(-1.1, -0.3, 0.4);  // 微調貼近身體
+    leftArm.rotation.z = Math.PI / 2;       // 垂直
+    leftArm.castShadow = true;
+    owl.add(leftArm);
+
+    // 右手
+    const rightArm = new THREE.Mesh(armGeometry.clone(), pupilMaterial);
+    rightArm.scale.x = -1;
+    rightArm.position.set(1.1, -0.3, 0.4);
+    rightArm.rotation.z = -Math.PI / 2;     // 垂直、鏡像
+    rightArm.castShadow = true;
+    owl.add(rightArm);
+
+    // 拳頭大小
+    const fistRadius = 0.06;
+    const fistGeometry = new THREE.SphereGeometry(fistRadius, 16, 16);
+
+    // 拿到手臂終點位置（t = 1）
+    const leftEnd = armPath.getPoint(1);
+    const rightEnd = armPath.getPoint(1).clone().multiply(new THREE.Vector3(-1, 1, 1)); // 鏡像
+
+    // 左拳頭
+    const leftFist = new THREE.Mesh(fistGeometry, pupilMaterial);
+    leftFist.position.copy(leftEnd);
+    leftFist.position.add(new THREE.Vector3(-0.95, -0.78, 0.4)); // 加上左手基礎位置
+    leftFist.scale.set(1.3, 1, 1.8);
+    leftFist.castShadow = true; 
+    owl.add(leftFist);
+
+    // 右拳頭
+    const rightFist = new THREE.Mesh(fistGeometry.clone(), pupilMaterial);
+    rightFist.position.copy(rightEnd);
+    rightFist.position.add(new THREE.Vector3(0.95, -0.78, 0.4)); // 加上右手基礎位置
+    rightFist.scale.set(1.3, 1, 1.3);
+    rightFist.castShadow = true;
+    owl.add(rightFist);
+
+
+    // 小腳 - 反轉 180 度
+    // 1. 小腳的圓弧曲線（反向）
+    class CurvedFoot extends THREE.Curve {
+    getPoint(t) {
+        const arcAngle = Math.PI * 0.9;  // 弧度略小於半圓
+        const radius = 0.3;              // 比手臂短
+        const angle = t * arcAngle + Math.PI * 0.2; // 起點稍微偏角度
+
+        // 反向方向：將腳彎曲向上
+        const y = Math.sin(angle) * radius + 1.2;   // 往上偏移，讓腳朝向反向
+        const x = Math.cos(angle) * radius * 0.7;   // 水平收進來一點，更貼腳
+        const z = 0;
+        return new THREE.Vector3(x, y, z);
+    }
+    }
+
+    // 2. 幾何與材質
+    const footPath = new CurvedFoot();
+    // 改變 `radius` 來使線條變細
+    const footGeometry = new THREE.TubeGeometry(footPath, 32, 0.025, 8, false);  // 將半徑設為 0.02
+
+    // 左腳
+    const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
+    leftFoot.position.set(1.35, -0.6, 0.3); // 左腳微調位置
+    leftFoot.rotation.z = 2;    // 旋轉180度，朝下
+    leftFoot.scale.x = -1;      // 反轉 x 軸
+    leftFoot.scale.y = 1.3;
+    leftFoot.castShadow = true;
+    owl.add(leftFoot);
+
+    // 右腳
+    const rightFoot = new THREE.Mesh(footGeometry.clone(), footMaterial);
+    rightFoot.scale.x = 1;                 // 反轉回來
+    rightFoot.position.set(-1.35, -0.6, 0.3); // 右腳微調位置
+    rightFoot.rotation.z = -2;    // 旋轉180度，朝下
+    rightFoot.scale.y = 1.3;
+    rightFoot.castShadow = true;
+    owl.add(rightFoot);
+
+
+    // 3. 腳趾球（橢圓形）
+    const toeRadius = 0.08;
+    const toeGeometry = new THREE.SphereGeometry(toeRadius, 16, 16);
+
+    // 左腳趾
+    const leftToe = new THREE.Mesh(toeGeometry, footMaterial);
+    const leftEndF = footPath.getPoint(1);
+    leftToe.position.copy(leftEndF);
+    leftToe.position.add(new THREE.Vector3(-0.03, -2.67, 0.3)); // 加上左腳基礎位置
+    leftToe.scale.set(1.5, 1, 1.3);  // 橢圓
+    leftToe.castShadow = true;
+    owl.add(leftToe);
+
+    // 右腳趾
+    const rightToe = new THREE.Mesh(toeGeometry.clone(), footMaterial);
+    const rightEndF = footPath.getPoint(1).clone().multiply(new THREE.Vector3(-1, 1, 1)); // 鏡像
+    rightToe.position.copy(rightEndF);
+    rightToe.position.add(new THREE.Vector3(0.03, -2.67, 0.3)); // 加上右腳基礎位置
+    rightToe.scale.set(1.5, 1, 1.3);  // 橢圓
+    rightToe.castShadow = true;
+    owl.add(rightToe);
+
+
+
+    // 學士帽 - 向上移動更多
+    // 帽子底部
+    const capBaseGeometry = new THREE.CylinderGeometry(0.7, 0.7, 0.4, 32);
+    const capBase = new THREE.Mesh(capBaseGeometry, capMaterial);
+    capBase.position.set(0, 1.4, 0.1); // 向上移動更多
+    capBase.castShadow = true;
+    owl.add(capBase);
+
+    // 帽子頂部方形
+    const capTopGeometry = new THREE.BoxGeometry(1.7, 0.1, 1.7);
+    const capTop = new THREE.Mesh(capTopGeometry, capMaterial);
+    capTop.position.set(0, 1.6, 0.1); // 對應調整
+    capTop.castShadow = true;
+    owl.add(capTop);
+
+    // 流蘇 - 對應帽子位置調整
+    // 創建流蘇的曲線（從平行開始轉到垂直）
+    class TassalCurve extends THREE.Curve {
+        constructor(start, mid, end) {
+            super();
+            this.start = start; // 起點
+            this.mid = mid;     // 轉彎的中點
+            this.end = end;     // 終點
+        }
+
+        getPoint(t) {
+            if (t < 0.5) {
+                // 前半段（直線從起點到轉彎點）
+                const x = this.start.x + (this.mid.x - this.start.x) * 2 * t;
+                const y = this.start.y + (this.mid.y - this.start.y) * 2 * t;
+                const z = this.start.z + (this.mid.z - this.start.z) * 2 * t;
+                return new THREE.Vector3(x, y, z);
+            } else {
+                // 後半段（直線從轉彎點到終點）
+                const x = this.mid.x + (this.end.x - this.mid.x) * 2 * (t - 0.5);
+                const y = this.mid.y + (this.end.y - this.mid.y) * 2 * (t - 0.5);
+                const z = this.mid.z + (this.end.z - this.mid.z) * 2 * (t - 0.5);
+                return new THREE.Vector3(x, y, z);
+            }
+        }
+    }
+
+    // 設置流蘇曲線的起點、中點控制點和終點
+    const start = new THREE.Vector3(0, 1.68, 0.25); // 起點
+    const end = new THREE.Vector3(0.78, 1.4, 0.95);   // 終點（稍微向下）
+    const mid = new THREE.Vector3(0.78, 1.68, 0.95); // 中間控制點，讓它有點彎曲的效果
+
+    // 創建曲線
+    const tassalCurve = new TassalCurve(start, mid, end);
+
+    // 使用曲線來生成流蘇的幾何形狀
+    const path = new THREE.CurvePath();
+    path.add(tassalCurve);
+
+    // 創建流蘇的圓柱形網格
+    const tassalStringGeometry = new THREE.TubeGeometry(path, 50, 0.02, 8, false);
+    const tassalString = new THREE.Mesh(tassalStringGeometry, tassalMaterial);
+
+    // 將流蘇放置到帽子上
+    tassalString.castShadow = true;
+    owl.add(tassalString);
+
+    const tassalGroup = new THREE.Group(); // 群組來收所有流蘇線
+    const numStrands = 12; // 線條數
+    const radius = 0.02; // 流蘇線離中心的距離
+    const strandLength = 0.2;
+
+    for (let i = 0; i < numStrands; i++) {
+        const angle = (i / numStrands) * Math.PI * 2;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+
+        // 每條線的起點是中心，終點是這個 (x, -length/2, z)
+        const strandGeometry = new THREE.CylinderGeometry(0.005, 0.005, strandLength, 3);
+        const strand = new THREE.Mesh(strandGeometry, tassalMaterial);
+
+        // 將圓柱先移動到底部對準原點，讓它從中心「伸出去」
+        strand.position.set(x, -strandLength, z); // 中心與終點中間點
+        strand.lookAt(new THREE.Vector3(x, -strandLength, z)); // 朝向末端方向
+        strand.castShadow = true;
+
+        tassalGroup.add(strand);
+    }
+
+    // 設定整個流蘇群組的位置（同原本球體）
+    tassalGroup.position.set(0.78, 1.5, 0.95);
+
+    // 將整個流蘇群組加到 tassalString 上
+    tassalString.add(tassalGroup);
+
+    // 展示台
+    const platformGeometry = new THREE.CylinderGeometry(2, 2, 0.3, 32);
+    const platformMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+    platform.position.y = -2;
+    platform.receiveShadow = true;
+    scene.add(platform);
+
+    const owlGroup = new THREE.Group();
+    owlGroup.add(owl);
+    owlGroup.add(platform);
+    owlGroup.scale.set(1.5, 1.5, 1.5); // 調整倍率
+    owlGroup.position.y = 0.2; // 調高一點
+
+    scene.add(owlGroup);
+
+    // 相機位置 - 調整以適應新的佈局
+    camera.position.set(0, 1, 9);
+    camera.lookAt(0, 0, 0);
+
+    
+    let mouseNormX = 0;
+    let mouseNormY = 0;
+
+    window.addEventListener('mousemove', (event) => {
+        // 將滑鼠座標轉換為 -1 到 1 的範圍（相對於整個視窗）
+        mouseNormX = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseNormY = -((event.clientY / window.innerHeight) * 2 - 1); // Y 軸反轉
+    });
+
+    // // 滑鼠控制變數
+    // let mouseX = 0;
+    // let mouseY = 0;
+    // let targetRotationX = 0;
+    // let targetRotationY = 0;
+    // let mouseDown = false;
+    // let userControlling = false;
+
+    // // 滑鼠事件，只作用在 owlContainer 上
+    // const interactionCanvas = canvas;
+    // interactionCanvas.addEventListener('mousedown', (event) => {
+    //     mouseDown = true;
+    //     userControlling = true;
+    //     mouseX = event.clientX;
+    //     mouseY = event.clientY;
+    // });
+
+    // window.addEventListener('mouseup', () => {
+    //     mouseDown = false;
+    //     setTimeout(() => {
+    //         userControlling = false;
+    //     }, 3000);
+    // });
+
+    // interactionCanvas.addEventListener('mousemove', (event) => {
+    //     if (mouseDown) {
+    //         targetRotationY += (event.clientX - mouseX) * 0.01;
+    //         targetRotationX += (event.clientY - mouseY) * 0.01;
+    //         mouseX = event.clientX;
+    //         mouseY = event.clientY;
+    //     }
+    // });
+
+    // // 滾輪縮放，只在 canvas 上觸發
+    // interactionCanvas.addEventListener('wheel', (event) => {
+    //     event.preventDefault(); // 防止頁面滾動
+    //     camera.position.z += event.deltaY * 0.01;
+    //     camera.position.z = Math.max(3, Math.min(10, camera.position.z));
+    // }, { passive: false });
+
+    // 眨眼動畫
+    let blinkTimer = 0;
+    let isBlinking = false;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // 根據滑鼠位置讓 owlGroup 轉動
+        const targetY = mouseNormX * Math.PI / 6;  // 左右最多 ±30 度
+        const targetX = -mouseNormY * Math.PI / 12; // 上下最多 ±15 度
+
+        owl.rotation.y += (targetY - owl.rotation.y) * 0.05;
+        owl.rotation.x += (targetX - owl.rotation.x) * 0.05;
+
+        // 自動旋轉（當用戶沒有控制時）
+        // if (!userControlling) {
+        //     const time = Date.now() * 0.0005; // 調整速度變慢
+        //     owl.rotation.y = Math.sin(time - Math.PI / 4) * (Math.PI / 4);
+        // } else {
+        //     owl.rotation.y += (targetRotationY - owl.rotation.y) * 0.05;
+        //     owl.rotation.x += (targetRotationX - owl.rotation.x) * 0.05;
+        // }
+
+        // 輕微的上下浮動
+        owl.position.y = Math.sin(Date.now() * 0.001) * 0.05;
+
+        // 流蘇輕微搖擺
+        tassalString.rotation.z = Math.sin(Date.now() * 0.003) * 0.02;
+        tassalGroup.rotation.z = Math.sin(Date.now() * 0.003) * 0.03;
+
+        // 眨眼動畫
+        blinkTimer++;
+        if (blinkTimer > 80 && !isBlinking) {
+            isBlinking = true;
+            blinkTimer = 0;
+        }
+
+        if (isBlinking) {
+            const blinkProgress = blinkTimer / 8;
+            if (blinkProgress < 1) {
+                leftEye.scale.y = 1 - blinkProgress * 0.8;
+                rightEye.scale.y = 1 - blinkProgress * 0.8;
+            } else if (blinkProgress < 2) {
+                leftEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
+                rightEye.scale.y = 0.2 + (blinkProgress - 1) * 0.8;
+            } else {
+                leftEye.scale.y = 1;
+                rightEye.scale.y = 1;
+                isBlinking = false;
+                blinkTimer = 0;
+            }
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+});
+
+        
+
+
+// 便利標籤貼
+document.addEventListener("DOMContentLoaded", function () {
+  const slogans = document.querySelectorAll('.slogan-inner');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate-in');
+      } else {
+        entry.target.classList.remove('animate-in');
+      }
+    });
+  }, {
+    threshold: 0.3
+  });
+
+  slogans.forEach(slogan => observer.observe(slogan));
+});
+
+
+
+
+// 字母
+// document.addEventListener("DOMContentLoaded", () => {
+//   const icons = document.querySelectorAll('.icon-container');
+
+//   const observer = new IntersectionObserver((entries) => {
+//     entries.forEach(entry => {
+//       if (entry.isIntersecting) {
+//         entry.target.classList.add('animate');
+
+//         // 移除後可再次進入視窗時再觸發
+//         setTimeout(() => {
+//           entry.target.classList.remove('animate');
+//         }, 1000);
+//       }
+//     });
+//   }, {
+//     threshold: 0.6 // 元素進入畫面 60% 時觸發
+//   });
+
+//   icons.forEach(icon => {
+//     observer.observe(icon);
+//   });
+// });
+
+
+// 文字
+
+document.addEventListener('DOMContentLoaded', () => {
+    const featureItems = document.querySelectorAll('.feature-item');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');  // 進入視口 => 顯示
+        } else {
+          entry.target.classList.remove('visible');  // 離開視口 => 隱藏
+        }
+      });
+    }, {
+      threshold: 0.5 // 元素進入 30% 時觸發
+    });
+
+    featureItems.forEach(item => {
+      observer.observe(item);
+    });
+  });
+
+
+
+
+//線條
+document.addEventListener("DOMContentLoaded", function() {
+    const path = document.querySelector("#animated-line path");
+  
+    // 獲取路徑的實際長度
+    const pathLength = path.getTotalLength();
+    console.log("SVG路徑長度:", pathLength);
+  
+    // 顯示初始的 5% 線段
+    const initialVisiblePercentage = 0.02; // 5%
+    const initialDrawLength = pathLength * (1 - initialVisiblePercentage);
+  
+    // 設置初始狀態 - 顯示一小段線條
+    path.style.strokeDasharray = pathLength;
+    path.style.strokeDashoffset = initialDrawLength;
+  
+    // 監聽滾動事件
+    window.addEventListener("scroll", function() {
+      // 計算滾動百分比
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrollPercentage = scrollTop / height;
+  
+      // 根據滾動百分比更新線條長度（從初始狀態繼續）
+      const drawLength = pathLength * (1 - scrollPercentage);
+      path.style.strokeDashoffset = Math.min(drawLength, initialDrawLength); // 防止倒退
+    });
+  });
+  
+
+//背景
+  const MIN_SPEED = 0.5;
+  const MAX_SPEED = 2;
+  
+  // Seeded random
+  function seededRandom(seed) {
+    let x = Math.sin(seed) * 980;
+    return x - Math.floor(x);
+  }
+  
+  function randomNumber(min, max, seed) {
+    return seededRandom(seed) * (max - min) + min;
+  }
+  
+  class Blob {
+    constructor(el, seed) {
+      this.el = el;
+      const boundingRect = this.el.getBoundingClientRect();
+      this.size = boundingRect.width;
+  
+      // 使用固定種子來生成穩定的初始位置
+      this.initialX = randomNumber(0, window.innerWidth - this.size, seed + 1);
+      this.initialY = randomNumber(0, window.innerHeight - this.size, seed + 2);
+      this.el.style.top = `${this.initialY}px`;
+      this.el.style.left = `${this.initialX}px`;
+  
+      // 固定速度與方向
+      const directionX = (seed % 2 === 0) ? 1 : -1;
+      const directionY = (seed % 3 === 0) ? 1 : -1;
+      this.vx = randomNumber(MIN_SPEED, MAX_SPEED, seed + 3) * directionX;
+      this.vy = randomNumber(MIN_SPEED, MAX_SPEED, seed + 4) * directionY;
+  
+      this.x = this.initialX;
+      this.y = this.initialY;
+    }
+  
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+  
+      if (this.x >= window.innerWidth - this.size || this.x <= 0) {
+        this.vx *= -1;
+      }
+      if (this.y >= window.innerHeight - this.size || this.y <= 0) {
+        this.vy *= -1;
+      }
+  
+      this.el.style.transform =
+        `translate(${this.x - this.initialX}px, ${this.y - this.initialY}px)`;
+    }
+  }
+  
+  function initBlobs() {
+    const blobs = document.querySelectorAll('.blob');
+  
+    blobs.forEach((blob, index) => {
+      const seed = index + 100; // 確保每個 blob 都有不同但固定的 seed
+  
+      const initialXPercent = randomNumber(0, 100, seed + 10);
+      const initialYPercent = randomNumber(0, 100, seed + 11);
+      blob.style.left = `${initialXPercent}%`;
+      blob.style.top = `${initialYPercent}%`;
+  
+      const keyframes = [
+        {
+          transform: `translate(${randomNumber(-25, 25, seed + 20)}%, ${randomNumber(-25, 25, seed + 21)}%)`
+        },
+        {
+          transform: `translate(${randomNumber(-25, 25, seed + 22)}%, ${randomNumber(-25, 25, seed + 23)}%)`
+        },
+        {
+          transform: `translate(${randomNumber(-25, 25, seed + 24)}%, ${randomNumber(-25, 25, seed + 25)}%)`
+        },
+        {
+          transform: `translate(${randomNumber(-25, 25, seed + 26)}%, ${randomNumber(-25, 25, seed + 27)}%)`
+        }
+      ];
+  
+      blob.animate(keyframes, {
+        duration: 2000 + index * 1000,
+        iterations: Infinity,
+        direction: 'alternate',
+        easing: 'ease-in-out'
+      });
+    });
+  }
+  
+
+
+// 粒子
+function initTechParticles() {
+  const particleContainer = document.getElementById('tsparticles');
+  if (!particleContainer) return;
+  
+  // 創建自定義流場函數 - 模擬流體動力學
+  const customFlowField = {
+    resolution: 40, // 流場網格解析度
+    points: [],
+    time: 0,
+    
+    // 初始化流場
+    initialize: function() {
+      this.points = [];
+      
+      // 建立流場網格
+      for (let y = 0; y < this.resolution; y++) {
+        for (let x = 0; x < this.resolution; x++) {
+          // 將座標正規化到 0-1 範圍
+          const nx = x / this.resolution;
+          const ny = y / this.resolution;
+          
+          // 使用某種函數生成初始流場向量
+          const angle = this.simplex2(nx * 5, ny * 5 + this.time) * Math.PI * 2;
+          
+          // 均勻的微小流動，沒有整體向右的偏移
+          const vx = Math.cos(angle) * 0.8;
+          const vy = Math.sin(angle) * 0.8;
+          
+          this.points.push({ vx, vy });
+        }
+      }
+    },
+    
+    update: function() {
+      this.time += 0.002;
+      
+      // 更新流場向量
+      for (let i = 0; i < this.points.length; i++) {
+        const p = this.points[i];
+        const nx = i % this.resolution / this.resolution;
+        const ny = Math.floor(i / this.resolution) / this.resolution;
+        
+        const angle = this.simplex2(nx * 5, ny * 5 + this.time) * Math.PI * 2;
+        
+        p.vx = Math.cos(angle) * 0.8;
+        p.vy = Math.sin(angle) * 0.8;
+      }
+    },
+    
+    // 簡化的柏林噪聲函數
+    simplex2: function(x, y) {
+      const dot = (x, y, vx, vy) => x * vx + y * vy;
+      const F2 = 0.5 * (Math.sqrt(3) - 1);
+      const G2 = (3 - Math.sqrt(3)) / 6;
+      
+      const s = (x + y) * F2;
+      const i = Math.floor(x + s);
+      const j = Math.floor(y + s);
+      const t = (i + j) * G2;
+      
+      const X0 = i - t;
+      const Y0 = j - t;
+      const x0 = x - X0;
+      const y0 = y - Y0;
+      
+      const i1 = x0 > y0 ? 1 : 0;
+      const j1 = x0 > y0 ? 0 : 1;
+      
+      const x1 = x0 - i1 + G2;
+      const y1 = y0 - j1 + G2;
+      const x2 = x0 - 1 + 2 * G2;
+      const y2 = y0 - 1 + 2 * G2;
+      
+      // 使用哈希函數生成偽隨機梯度向量
+      const hash = (x, y) => {
+        return Math.sin(x * 12.9898 + y * 78.233) * 43758.5453 % 1;
+      };
+      
+      const n0 = this.gradientDot(hash(i, j), hash(i + 1, j), x0, y0);
+      const n1 = this.gradientDot(hash(i + i1, j + j1), hash(i + i1 + 1, j + j1), x1, y1);
+      const n2 = this.gradientDot(hash(i + 1, j + 1), hash(i + 2, j + 1), x2, y2);
+      
+      // 混合結果
+      return 0.5 * (n0 + n1 + n2);
+    },
+    
+    gradientDot: function(h1, h2, x, y) {
+      const angle1 = h1 * Math.PI * 2;
+      const angle2 = h2 * Math.PI * 2;
+      const vx1 = Math.cos(angle1);
+      const vy1 = Math.sin(angle1);
+      const vx2 = Math.cos(angle2);
+      const vy2 = Math.sin(angle2);
+      
+      return x * vx1 + y * vy1 + x * vx2 + y * vy2;
+    },
+    
+    // 獲取指定位置的流場向量
+    getFlowVector: function(x, y) {
+      // 將座標歸一化到 0-1 範圍
+      const nx = Math.max(0, Math.min(1, x));
+      const ny = Math.max(0, Math.min(1, y));
+      
+      // 找到最近的流場點
+      const gridX = Math.floor(nx * this.resolution);
+      const gridY = Math.floor(ny * this.resolution);
+      const index = gridY * this.resolution + gridX;
+      
+      if (index >= 0 && index < this.points.length) {
+        return this.points[index];
+      }
+      
+      return { vx: 0, vy: 0 };
+    }
+  };
+  
+  // 初始化流場
+  customFlowField.initialize();
+  
+  // 粒子系統配置 - 超高密度粒子效果，充滿整個圓形
+  const particleConfig = {
+    particles: {
+      number: {
+        value: 1500, // 大幅增加粒子數量使圓形充滿
+        density: {
+          enable: true,
+          value_area: 400 // 降低面積使粒子更密集
+        }
+      },
+      color: {
+        // value: ["#D1C5D1", "#AA9DA9", "#e0d3e0", "#c8b8c8", "#d8d0d8", "#ffffff", "#f0e8f0"] // 紫色系粒子
+        // value: ["#9761DD", "#A577E6", "#BA91EC", "#C6A3F0", "#D4B7F4", "#ffffff"]
+        value: ["#B5A9B5", "#8F7C8F", "#C2B3C2", "#A899A8", "#B9ADB9", "#ffffff"]
+      },
+      shape: {
+        type: "triangle", // 使用三角形形狀
+      },
+      opacity: {
+        value: 0.9, // 增加不透明度
+        random: true,
+        anim: {
+          enable: true,
+          speed: 0.9,
+          opacity_min: 0.4,
+          sync: false
+        }
+      },
+      size: {
+        value: 2.5, // 使粒子大小適中
+        random: true,
+        anim: {
+          enable: true,
+          speed: 0.5,
+          size_min: 1.2, // 增加最小尺寸
+          sync: false
+        }
+      },
+      line_linked: {
+        enable: true,
+        distance: 50, // 增加連線距離以創建更多連接
+        color: "#D1C5D1", // 紫色系連線
+        opacity: 0.25, // 增加線條不透明度
+        width: 1.5 // 調整線條粗細
+      },
+      move: {
+        enable: true,
+        speed: 0.6,
+        direction: "none",
+        random: false,
+        straight: false,
+        out_mode: "bounce", // 確保粒子不會離開容器
+        bounce: true, // 開啟反彈效果
+        attract: {
+          enable: false
+        }
+      }
+    },
+    interactivity: {
+      detect_on: "canvas",
+      events: {
+        onhover: {
+          enable: true,
+          mode: "repulse"
+        },
+        onclick: {
+          enable: true,
+          mode: "push"
+        },
+        resize: true
+      },
+      modes: {
+        repulse: {
+          distance: 120,
+          duration: 0.8,
+          speed: 10,
+          easing: "ease-out-cubic"
+        },
+        push: {
+          particles_nb: 6
+        }
+      }
+    },
+    retina_detect: true,
+    fpsLimit: 60,
+    fullScreen: {
+      enable: false
+    }
+  };
+
+  // 初始化粒子系統
+  const particles = tsParticles.load("tsparticles", particleConfig);
+  
+  // 添加自定義更新函數，實現流體動力學效果
+  let lastTime = 0;
+  let mouseX = 0, mouseY = 0;
+  let isMouseInteracting = false;
+  let mouseInteractionTimeout;
+  
+  // 追蹤滑鼠位置和互動
+  let isMouseOver = false;
+  let lastMouseMove = Date.now();
+  let flowAnimation;
+  
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    lastMouseMove = Date.now();
+    
+    const circle = document.querySelector('.circle-particles');
+    if (!circle) return;
+    
+    const rect = circle.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distance = Math.sqrt(Math.pow(mouseX - centerX, 2) + Math.pow(mouseY - centerY, 2));
+    
+    // 檢測滑鼠是否在圓形附近
+    if (distance < rect.width) {
+      isMouseInteracting = true;
+      isMouseOver = true;
+      // 不再使用延遲恢復，當滑鼠離開區域時會立即重設狀態
+      
+      // 停止自動流動動畫
+      if (flowAnimation) {
+        cancelAnimationFrame(flowAnimation);
+        flowAnimation = null;
+      }
+    } else if (isMouseOver) {
+      isMouseOver = false;
+      isMouseInteracting = false; // 立即停止互動狀態
+      // 立即恢復圓形狀態，不再有任何延遲
+      startFlowAnimation(); // 直接啟動流動動畫，無需等待
+    }
+  });
+  
+  // 圓形容器上的互動事件
+  const circleContainer = document.querySelector('.circle-particles');
+  if (circleContainer) {
+    circleContainer.addEventListener('mouseover', () => {
+      isMouseOver = true;
+      if (flowAnimation) {
+        cancelAnimationFrame(flowAnimation);
+        flowAnimation = null;
+      }
+    });
+    
+    circleContainer.addEventListener('mouseout', () => {
+      isMouseOver = false;
+      isMouseInteracting = false; // 立即停止互動狀態
+      // 立即恢復圓形狀態，不再有任何延遲
+      startFlowAnimation(); // 直接啟動流動動畫，無需等待
+    });
+  }
+  
+  // 自定義粒子更新函數
+  function customParticleUpdate(container) {
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+    
+    if (!container || !container.particles) return;
+    
+    // 更新流場
+    customFlowField.update();
+    
+    // 獲取圓形容器
+    const circle = document.querySelector('.circle-particles');
+    if (!circle) return;
+    const rect = circle.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const radius = rect.width / 2;
+    
+    // 更新每個粒子
+    container.particles.array.forEach(particle => {
+      // 計算粒子在畫布中的相對位置 (0-1)
+      const canvasWidth = container.canvas.size.width;
+      const canvasHeight = container.canvas.size.height;
+      const relX = particle.position.x / canvasWidth;
+      const relY = particle.position.y / canvasHeight;
+      
+      // 獲取流場向量
+      const flowVector = customFlowField.getFlowVector(relX, relY);
+      
+      // 計算粒子到圓心的距離
+      const particleScreenX = rect.left + relX * rect.width;
+      const particleScreenY = rect.top + relY * rect.height;
+      const distToCenter = Math.sqrt(Math.pow(particleScreenX - centerX, 2) + Math.pow(particleScreenY - centerY, 2));
+      
+      // 計算粒子到滑鼠的距離
+      const distToMouse = Math.sqrt(Math.pow(particleScreenX - mouseX, 2) + Math.pow(particleScreenY - mouseY, 2));
+      
+      // 基本流場影響
+      let vx = flowVector.vx * 0.3;
+      let vy = flowVector.vy * 0.3;
+      
+      // 計算到圓心的正規化距離
+      const normalizedDist = distToCenter / radius;
+      
+      // 根據是否有滑鼠互動來調整粒子行為
+      const isParticleInteracting = distToMouse < 80; // 判斷該粒子是否與滑鼠互動
+
+      if (isParticleInteracting) {
+        // 滑鼠靠近該粒子，讓它逃離並加些隨機擾動
+        const angleFromMouse = Math.atan2(particleScreenY - mouseY, particleScreenX - mouseX);
+        const repulseFactor = Math.max(0, 1 - distToMouse / 80) * 6;
+        vx += Math.cos(angleFromMouse) * repulseFactor;
+        vy += Math.sin(angleFromMouse) * repulseFactor;
+
+        // 添加隨機擾動
+        vx += (Math.random() - 0.5) * 0.6;
+        vy += (Math.random() - 0.5) * 0.6;
+      } else {
+        // 滑鼠不再靠近此粒子，回歸原位（有晃動）
+        if (!particle.basePosition) {
+          particle.basePosition = { x: particle.position.x, y: particle.position.y };
+        }
+        if (!particle.baseOrigin) {
+          particle.baseOrigin = { x: particle.basePosition.x, y: particle.basePosition.y };
+        }
+
+        const t = Date.now() * 0.002 + (particle.baseOrigin.x % 100);
+        const swing = Math.sin(t) * 6;
+        const swingX = particle.baseOrigin.x + swing;
+
+        const dx = swingX - particle.position.x;
+        const dy = particle.baseOrigin.y - particle.position.y;
+        const distToBase = Math.sqrt(dx * dx + dy * dy);
+        const returnSpeed = 0.18;
+        if (distToBase > 0.5) {
+          vx = dx * returnSpeed;
+          vy = dy * returnSpeed;
+        } else {
+          particle.position.x = swingX;
+          particle.position.y = particle.baseOrigin.y;
+          particle.velocity.x = 0;
+          particle.velocity.y = 0;
+          vx = 0;
+          vy = 0;
+        }
+      }
+
+      
+      
+      // 滑鼠互動 - 逃離效果，減少互動範圍
+      if (isMouseInteracting && distToMouse < 200) { // 減少影響半徑從 150 到 80
+        const repulseFactor = Math.max(0, 1 - distToMouse / 80) * 6; // 增強逃離力度
+        const angleFromMouse = Math.atan2(particleScreenY - mouseY, particleScreenX - mouseX);
+        vx += Math.cos(angleFromMouse) * repulseFactor;
+        vy += Math.sin(angleFromMouse) * repulseFactor;
+      }
+      
+      // 應用速度（滑鼠不在時，直接設為 vx/vy）
+      if (!isMouseInteracting) {
+        particle.velocity.x = vx;
+        particle.velocity.y = vy;
+      } else {
+        particle.velocity.x = particle.velocity.x * 0.92 + vx * 0.08;
+        particle.velocity.y = particle.velocity.y * 0.92 + vy * 0.08;
+      }
+      
+      // 限制最大速度
+      const speed = Math.sqrt(particle.velocity.x * particle.velocity.x + particle.velocity.y * particle.velocity.y);
+      if (speed > 2) {
+        particle.velocity.x = (particle.velocity.x / speed) * 2;
+        particle.velocity.y = (particle.velocity.y / speed) * 2;
+      }
+    });
+  }
+  
+  // 添加自定義更新函數到粒子系統
+  particles.then(container => {
+    if (container) {
+      // 覆蓋默認更新函數
+      const originalUpdate = container.particles.update.bind(container.particles);
+      container.particles.update = (delta) => {
+        originalUpdate(delta);
+        customParticleUpdate(container);
+      };
+    }
+  });
+  
+  // 自動流動動畫函數 - 小幅度均勻流動
+  function startFlowAnimation() {
+    if (isMouseOver || flowAnimation) return;
+    
+    const circle = document.querySelector('.circle-particles');
+    if (!circle) return;
+    
+    let time = 0;
+    const animate = () => {
+      time += 0.006; // 降低速度，使運動更柔和
+      
+      // 創建均勻的圓形路徑運動，不往任何特定方向偏移
+      const x = Math.sin(time) * 3;
+      const y = Math.cos(time * 1.2) * 3; // 使用不同的频率使運動更自然
+      
+      circle.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+      
+      flowAnimation = requestAnimationFrame(animate);
+    };
+    
+    flowAnimation = requestAnimationFrame(animate);
+  }
+  
+  // 圓形容器的輕微移動效果
+  function animateCircleContainer() {
+    const circle = document.querySelector('.circle-particles');
+    if (!circle) return;
+    
+    // 初始化圓形狀態 - 將容器置中
+    circle.style.transform = 'translate(-50%, -50%)';
+    
+    // 立即啟動均勻的微小流動，不會往任何特定方向偏移
+    startFlowAnimation();
+  }
+  
+  // 啟動圓形容器動畫
+  animateCircleContainer();
+  
+  // SVG 筆畫動畫觸發
+  function isInViewport(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.top < window.innerHeight &&
+      rect.bottom > 0
+    );
+  }
+
+  function triggerSvgDrawAnimation() {
+    document.querySelectorAll('.feature-item').forEach(item => {
+      const svg = item.querySelector('svg.animated-stroke');
+      if (svg) {
+        if (isInViewport(item)) {
+          svg.classList.add('svg-animate-start');
+        } else {
+          svg.classList.remove('svg-animate-start');
+        }
+      }
+    });
+  }
+
+  window.addEventListener('scroll', triggerSvgDrawAnimation);
+  window.addEventListener('resize', triggerSvgDrawAnimation);
+  document.addEventListener('DOMContentLoaded', triggerSvgDrawAnimation);
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initBlobs();
+  initTechParticles();
+  initFeatureSvgAnimation();
+});
+
+
+
+
+
+// // SVG 畫線動畫 - 專門針對 feature-item 中的 SVG
+// function initFeatureSvgAnimation() {
+//   // 選取所有 feature-item 元素
+//   const featureItems = document.querySelectorAll('.feature-item');
+  
+//   // 設定 CSS 變數以供動畫使用
+//   featureItems.forEach(item => {
+//     const svg = item.querySelector('svg');
+//     if (!svg) return;
+    
+//     // 修改 SVG 元素，使其能夠顯示畫線動畫
+//     const paths = svg.querySelectorAll('path');
+//     paths.forEach(path => {
+//       // 檢查是否有 fill 屬性
+//       const fill = path.getAttribute('fill');
+      
+//       // 如果是填充路徑，設定為線條路徑
+//       if (fill && fill !== 'none') {
+//         path.setAttribute('stroke', '#000');
+//         path.setAttribute('stroke-width', '4'); // 增加線條粗細
+//         path.setAttribute('fill', 'none');
+//       }
+      
+//       // 計算路徑總長度
+//       const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+//       console.log("SVG路徑總長度:", pathLength);
+      
+//       // 設定 CSS 變數以供動畫使用
+//       document.documentElement.style.setProperty('--path-length', pathLength);
+      
+//       // 初始化路徑樣式
+//       path.style.strokeDasharray = pathLength;
+//       path.style.strokeDashoffset = pathLength;
+//     });
+//   });
+  
+  // 初始化 Intersection Observer
+//   const observer = new IntersectionObserver((entries) => {
+//     entries.forEach(entry => {
+//       const featureItem = entry.target;
+//       const svg = featureItem.querySelector('svg');
+//       if (!svg) return;
+      
+//       const paths = svg.querySelectorAll('path');
+      
+//       if (entry.isIntersecting) {
+//         // 元素進入視窗範圍
+//         console.log("元素進入視窗，開始動畫");
+        
+//         // 添加淡入效果
+//         featureItem.classList.add('fade-in');
+        
+//         // 重置動畫狀態
+//         svg.classList.remove('animated');
+//         paths.forEach(path => {
+//           const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+//           path.style.animation = 'none';
+//           path.style.strokeDashoffset = pathLength;
+//         });
+        
+//         // 延遲 0.5 秒後開始 SVG 動畫
+//         setTimeout(() => {
+//           svg.classList.add('animated');
+//           paths.forEach(path => {
+//             path.style.animation = 'drawPath 3s ease-in-out forwards';
+//           });
+//         }, 500);
+        
+//       } else {
+//         // 元素離開視窗範圍
+//         console.log("元素離開視窗，重置動畫");
+        
+//         // 移除淡入效果
+//         featureItem.classList.remove('fade-in');
+        
+//         // 重置 SVG 動畫狀態
+//         svg.classList.remove('animated');
+//         paths.forEach(path => {
+//           const pathLength = path.getTotalLength ? path.getTotalLength() : 1000;
+//           path.style.animation = 'none';
+//           path.style.strokeDashoffset = pathLength;
+//         });
+//       }
+//     });
+//   }, {
+//     // 當元素 30% 進入視窗時觸發
+//     threshold: 0.3,
+//     // 提前 50px 開始觸發
+//     rootMargin: '0px 0px -50px 0px'
+//   });
+  
+//   // 開始觀察目標元素（不移除觀察器以實現重複動畫）
+//   featureItems.forEach(item => {
+//     observer.observe(item);
+//   });
+// }
+
+// document.addEventListener("DOMContentLoaded", function () {
+//   const featureItem = document.getElementById('feature-item');
+//   const svgElement = document.querySelector('.rules');
+//   const path = svgElement.querySelector('path');
+  
+//   // 計算路徑總長度
+//   const pathLength = path.getTotalLength();
+//   console.log("SVG路徑總長度:", pathLength);
+  
+//   // 設定CSS變量以供動畫使用
+//   document.documentElement.style.setProperty('--path-length', pathLength);
+  
+//   // 初始化路徑樣式
+//   path.style.strokeDasharray = pathLength;
+//   path.style.strokeDashoffset = pathLength;
+  
+//   // 創建 Intersection Observer
+//   const observer = new IntersectionObserver((entries) => {
+//       entries.forEach(entry => {
+//           if (entry.isIntersecting) {
+//               // 元素進入視窗範圍
+//               console.log("元素進入視窗，開始動畫");
+              
+//               // 添加淡入效果
+//               featureItem.classList.add('fade-in');
+              
+//               // 重置動畫狀態
+//               svgElement.classList.remove('animated');
+//               path.style.animation = 'none';
+//               path.style.strokeDashoffset = pathLength;
+              
+//               // 延遲0.5秒後開始SVG動畫
+//               setTimeout(() => {
+//                   svgElement.classList.add('animated');
+//                   path.style.animation = 'drawPath 3s ease-in-out forwards';
+//               }, 500);
+              
+//           } else {
+//               // 元素離開視窗範圍
+//               console.log("元素離開視窗，重置動畫");
+              
+//               // 移除淡入效果
+//               featureItem.classList.remove('fade-in');
+              
+//               // 重置SVG動畫狀態
+//               svgElement.classList.remove('animated');
+//               path.style.animation = 'none';
+//               path.style.strokeDashoffset = pathLength;
+//           }
+//       });
+//   }, {
+//       // 當元素30%進入視窗時觸發
+//       threshold: 0.3,
+//       // 提前50px開始觸發
+//       rootMargin: '0px 0px -50px 0px'
+//   });
+  
+//   // 開始觀察目標元素（不移除觀察器以實現重複動畫）
+//   observer.observe(featureItem);
+  
+//   // 移除滾動指示器當用戶開始滾動
+//   let hasScrolled = false;
+//   window.addEventListener('scroll', function() {
+//       if (!hasScrolled) {
+//           const indicator = document.querySelector('.scroll-indicator');
+//           if (indicator) {
+//               indicator.style.opacity = '0';
+//               setTimeout(() => {
+//                   indicator.remove();
+//               }, 500);
+//           }
+//           hasScrolled = true;
+//       }
+//   });
+// });
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\join_create.js
+// 即時預覽功能
+const activityTitle = document.getElementById('activity-title');
+const activityType = document.getElementById('activity-type');
+const activityLocation = document.getElementById('activity-location');
+const activityDate = document.getElementById('activity-date');
+const activityTime = document.getElementById('activity-time');
+const activityDescription = document.getElementById('activity-description');
+
+const previewTitle = document.getElementById('preview-title');
+const previewTag = document.getElementById('preview-tag');
+const previewLocation = document.getElementById('preview-location');
+const previewTime = document.getElementById('preview-time');
+const previewDescription = document.getElementById('preview-description');
+
+// 標題預覽
+activityTitle.addEventListener('input', () => {
+    previewTitle.textContent = activityTitle.value || '活動標題';
+});
+
+// 類型預覽
+activityType.addEventListener('change', () => {
+    const typeMap = {
+        'food': '美食',
+        'sport': '運動',
+        'study': '讀書',
+        'travel': '旅遊',
+        'movie': '電影',
+        'other': '其他'
+    };
+    previewTag.textContent = typeMap[activityType.value] || '活動類型';
+});
+
+// 地點預覽
+activityLocation.addEventListener('input', () => {
+    previewLocation.textContent = activityLocation.value || '活動地點';
+});
+
+// 時間預覽
+function updateTimePreview() {
+    if (activityDate.value && activityTime.value) {
+        const date = new Date(activityDate.value);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const formattedTime = activityTime.value.substring(0, 5);
+        previewTime.textContent = `${month}/${day} ${formattedTime}`;
+    } else {
+        previewTime.textContent = '活動時間';
+    }
+}
+
+activityDate.addEventListener('input', updateTimePreview);
+activityTime.addEventListener('input', updateTimePreview);
+
+// 描述預覽
+activityDescription.addEventListener('input', () => {
+    previewDescription.textContent = activityDescription.value || '活動說明將顯示在這裡...';
+});
+
+// 表單提交處理
+document.getElementById('create-group-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // 確認截止日期在活動日期之前
+    const deadlineDate = new Date(document.getElementById('activity-deadline').value);
+    const eventDate = new Date(activityDate.value);
+    
+    if (deadlineDate >= eventDate) {
+        alert('報名截止日期必須早於活動日期！');
+        return false;
+    }
+    
+    // 確認最少人數小於最多人數
+    const minParticipants = parseInt(document.getElementById('min-participants').value);
+    const maxParticipants = parseInt(document.getElementById('max-participants').value);
+    
+    if (minParticipants > maxParticipants) {
+        alert('最少參加人數不能大於最多參加人數！');
+        return false;
+    }
+    
+    // 這裡可以加入表單提交的AJAX請求
+    alert('活動發布成功！');
+    window.location.href = 'group-activities.html';
+});
+
+// 圖片上傳預覽
+const imageUploadArea = document.getElementById('image-upload-area');
+
+imageUploadArea.addEventListener('click', () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.click();
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const previewImage = document.querySelector('.preview-image');
+                previewImage.innerHTML = '';
+                previewImage.style.backgroundImage = `url(${event.target.result})`;
+                previewImage.style.backgroundSize = 'cover';
+                previewImage.style.backgroundPosition = 'center';
+                
+                // 保留標籤
+                const tag = document.createElement('div');
+                tag.className = 'preview-tag';
+                tag.id = 'preview-tag';
+                tag.textContent = previewTag.textContent;
+                previewImage.appendChild(tag);
+            }
+            
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+});
+
+// 拖曳上傳功能
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    imageUploadArea.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    imageUploadArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    imageUploadArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+    imageUploadArea.style.borderColor = '#34495e';
+    imageUploadArea.style.backgroundColor = '#f0f7ff';
+}
+
+function unhighlight() {
+    imageUploadArea.style.borderColor = '#ddd';
+    imageUploadArea.style.backgroundColor = 'transparent';
+}
+
+imageUploadArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    
+    if (files && files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+            const previewImage = document.querySelector('.preview-image');
+            previewImage.innerHTML = '';
+            previewImage.style.backgroundImage = `url(${event.target.result})`;
+            previewImage.style.backgroundSize = 'cover';
+            previewImage.style.backgroundPosition = 'center';
+            
+            // 保留標籤
+            const tag = document.createElement('div');
+            tag.className = 'preview-tag';
+            tag.id = 'preview-tag';
+            tag.textContent = previewTag.textContent;
+            previewImage.appendChild(tag);
+        }
+        
+        reader.readAsDataURL(files[0]);
+    }
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\join_detail.js
+document.addEventListener('DOMContentLoaded', function() {
+    const discussionSection = document.querySelector('.discussion-section');
+    if (discussionSection) {
+        let commentCountElement = document.getElementById('commentCount');
+        let commentCount = commentCountElement ? parseInt(commentCountElement.textContent.match(/\d+/)[0]) : document.querySelectorAll('.comment-card').length;
+        
+        const existingComments = document.querySelectorAll('.comment-card');
+        let nextCommentId = existingComments.length > 0 ? existingComments.length + 1 : 1;
+
+        discussionSection.addEventListener('click', function(e) {
+            const target = e.target;
+
+            const likeBtn = target.closest('.like-btn');
+            if (likeBtn) {
+                e.preventDefault();
+                handleLike(likeBtn);
+                return;
+            }
+
+            const replyBtn = target.closest('.reply-btn, .reply-to-reply');
+            if (replyBtn) {
+                e.preventDefault();
+                handleReply(replyBtn);
+                return;
+            }
+
+            const cancelBtn = target.closest('.cancel-reply-btn');
+            if (cancelBtn) {
+                e.preventDefault();
+                handleCancelReply(cancelBtn);
+                return;
+            }
+
+            const submitBtn = target.closest('.submit-reply-btn');
+            if (submitBtn) {
+                e.preventDefault();
+                handleSubmitReply(submitBtn);
+                return;
+            }
+        });
+
+        const submitCommentBtn = document.getElementById('submitComment');
+        if (submitCommentBtn) {
+            submitCommentBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleSubmitNewComment();
+            });
+        }
+
+        function handleLike(button) {
+            const likeCountSpan = button.querySelector('.like-count');
+            let count = parseInt(likeCountSpan.textContent);
+            if (button.classList.toggle('liked')) {
+                likeCountSpan.textContent = count + 1;
+            } else {
+                likeCountSpan.textContent = count - 1;
+            }
+        }
+
+        function handleReply(button) {
+            const parentCard = button.closest('.comment-card, .reply');
+            if (!parentCard) return;
+
+            const existingForm = discussionSection.querySelector('.reply-form-container');
+            if (existingForm) {
+                existingForm.remove();
+            }
+
+            const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
+            const replyForm = createReplyForm(userName);
+            
+            const actionsDiv = parentCard.querySelector('.comment-actions, .reply-actions');
+            if (actionsDiv) {
+                actionsDiv.insertAdjacentElement('afterend', replyForm);
+            } else {
+                parentCard.appendChild(replyForm);
+            }
+            replyForm.querySelector('.reply-textarea').focus();
+        }
+
+        function handleCancelReply(button) {
+            const form = button.closest('.reply-form-container');
+            if (form) {
+                form.remove();
+            }
+        }
+
+        function handleSubmitReply(button) {
+            const formContainer = button.closest('.reply-form-container');
+            const textarea = formContainer.querySelector('.reply-textarea');
+            const replyText = textarea.value.trim();
+
+            if (replyText) {
+                const parentCard = formContainer.closest('.comment-card, .reply');
+                let repliesContainer = parentCard.querySelector('.replies-container');
+
+                if (!repliesContainer) {
+                    repliesContainer = document.createElement('div');
+                    repliesContainer.className = 'replies-container';
+                    const insertAfter = parentCard.querySelector('.comment-actions, .reply-actions');
+                    insertAfter.insertAdjacentElement('afterend', repliesContainer);
+                }
+                
+                const newReply = createReplyElement(replyText);
+                repliesContainer.appendChild(newReply);
+                formContainer.remove();
+            }
+        }
+        
+        function handleSubmitNewComment() {
+            const textarea = document.getElementById('newCommentText');
+            const commentText = textarea.value.trim();
+
+            if (commentText) {
+                const commentsSection = document.getElementById('commentsSection');
+                const newComment = createCommentElement(commentText, nextCommentId);
+                commentsSection.appendChild(newComment);
+                
+                textarea.value = '';
+                commentCount++;
+                nextCommentId++;
+                if (commentCountElement) {
+                    commentCountElement.textContent = `(${commentCount}則評論)`;
+                }
+                newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function createReplyForm(replyTo = '') {
+            const formContainer = document.createElement('div');
+            formContainer.className = 'reply-form-container';
+            formContainer.innerHTML = `
+                <div class="reply-form">
+                    <div class="form-group">
+                        <textarea class="form-control reply-textarea" rows="3" placeholder="回覆 @${replyTo}..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-reply-btn">取消</button>
+                        <button type="button" class="submit-reply-btn">發送</button>
+                    </div>
+                </div>`;
+            return formContainer;
+        }
+
+        function createReplyElement(text) {
+            const replyElement = document.createElement('div');
+            replyElement.className = 'reply';
+            const dateStr = new Date().toLocaleDateString('zh-TW');
+            const staticAvatarPath = '/static/image/activity_test.jpg'; // Consistent avatar path
+
+            replyElement.innerHTML = `
+                <div class="user-avatar small"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
+                <div class="reply-content">
+                    <div class="reply-header"><span class="user-name">你</span><span class="reply-date">${dateStr}</span></div>
+                    <p>${text}</p>
+                    <div class="reply-actions"><button class="reply-to-reply">回覆</button></div>
+                </div>`;
+            return replyElement;
+        }
+
+        function createCommentElement(text, commentId) {
+            const commentElement = document.createElement('article');
+            commentElement.className = 'comment-card';
+            const dateStr = new Date().toLocaleDateString('zh-TW');
+            const staticAvatarPath = '/static/image/activity_test.jpg'; // Consistent avatar path
+
+            commentElement.innerHTML = `
+                <div class="comment-header">
+                    <div class="user-info-container">
+                        <div class="user-avatar"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
+                        <div class="user-info">
+                            <span class="user-name">你</span>
+                            <div class="comment-meta">
+                                <div class="stars" data-rating="5"></div>
+                                <span class="comment-date">${dateStr}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="like-btn" data-comment-id="${commentId}"><span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span><span class="like-count">0</span></button>
+                </div>
+                <div class="comment-content"><p>${text}</p></div>
+                <div class="comment-actions"><button class="reply-btn" data-comment-id="${commentId}">回覆</button></div>
+                <div class="replies-container"></div>`;
+            
+            const starsContainer = commentElement.querySelector('.stars');
+            updateStarIcons(starsContainer, 5);
+            return commentElement;
+        }
+        
+        document.querySelectorAll('.stars').forEach(starsContainer => {
+            const rating = parseFloat(starsContainer.getAttribute('data-rating'));
+            updateStarIcons(starsContainer, rating);
+        });
+
+        function updateStarIcons(container, rating) {
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                if (rating >= i) {
+                    star.className = 'fa-solid fa-star';
+                } else if (rating > i - 1 && rating < i) {
+                    star.className = 'fa-solid fa-star-half-stroke';
+                } else {
+                    star.className = 'fa-regular fa-star';
+                }
+                container.appendChild(star);
+            }
+        }
+    }
+
+    const ctaButtons = document.querySelectorAll('.fixed-cta');
+    ctaButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\join.js
+//index
+window.addEventListener('DOMContentLoaded', () => {
+  const popupId = sessionStorage.getItem('openPopup');
+  if (popupId) {
+    const popup = document.getElementById(popupId);
+    if (popup) {
+      popup.classList.add('active');
+      console.log(`自動開啟彈窗: ${popupId}`);
+    } else {
+      console.warn(`找不到彈窗 ID: ${popupId}`);
+    }
+    sessionStorage.removeItem('openPopup');
+  }
+});
+
+
+
+
+
+// join.js - 清理版本，專注於頁面特定功能
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('join.js 已載入');
+    
+    // 初始化頁面功能
+    initializeScrollAnimations();
+    initializeParallax();
+    initializeRandomClouds();
+    initializeActivityCards();
+});
+
+// 滾動動畫
+function initializeScrollAnimations() {
+    const allCards = document.querySelectorAll('.activity-card');
+    
+    function checkVisibility() {
+        const windowHeight = window.innerHeight;
+        
+        allCards.forEach((card, index) => {
+            const cardTop = card.getBoundingClientRect().top;
+            
+            if (cardTop < windowHeight - 100) {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 100); // 錯開動畫時間
+            }
+        });
+    }
+    
+    // 初始檢查
+    checkVisibility();
+    
+    // 滾動事件監聽
+    window.addEventListener('scroll', checkVisibility);
+}
+
+// 背景文字視差效果
+function initializeParallax() {
+    const bgText = document.querySelector('.bg-text');
+    
+    function parallaxScroll() {
+        const scrollPosition = window.pageYOffset;
+        if (bgText) {
+            bgText.style.transform = `translateX(${scrollPosition * -0.1}px)`;
+        }
+    }
+    
+    window.addEventListener('scroll', parallaxScroll);
+}
+
+// 初始化活動卡片功能
+function initializeActivityCards() {
+    // 獲取所有活動卡片
+    const activityCards = document.querySelectorAll('.activity-card');
+    
+    // 為每個活動卡片添加點擊事件監聽器
+    activityCards.forEach(function(card) {
+        card.style.cursor = 'pointer'; // 添加手型游標，提示可點擊
+        
+        // 確保卡片點擊功能正常
+        card.addEventListener('click', function(e) {
+            // 如果點擊的是 "我要參加" 按鈕，不執行卡片點擊
+            if (e.target.closest('.join-btn')) {
+                return;
+            }
+            
+            // 獲取跳轉 URL（如果有設定 onclick）
+            const clickHandler = this.getAttribute('onclick');
+            if (clickHandler) {
+                // 執行原本的 onclick 邏輯
+                eval(clickHandler);
+            }
+        });
+    });
+    
+    // 防止"我要參加"按鈕冒泡事件
+    const joinButtons = document.querySelectorAll('.join-btn');
+    joinButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation(); // 阻止事件冒泡
+            console.log('參加活動:', this.href);
+        });
+    });
+}
+
+// 過濾功能
+function initializeFilters() {
+    const filterItems = document.querySelectorAll('.filter-item');
+    const searchBox = document.querySelector('.search-box');
+    const activityCards = document.querySelectorAll('.activity-card');
+    
+    // 過濾器事件監聽
+    filterItems.forEach(filter => {
+        filter.addEventListener('change', applyFilters);
+    });
+    
+    // 搜尋框事件監聽
+    if (searchBox) {
+        searchBox.addEventListener('input', applyFilters);
+    }
+    
+    function applyFilters() {
+        const searchTerm = searchBox ? searchBox.value.toLowerCase() : '';
+        
+        activityCards.forEach(card => {
+            const title = card.querySelector('.activity-title')?.textContent.toLowerCase() || '';
+            const description = card.querySelector('.activity-description')?.textContent.toLowerCase() || '';
+            const location = card.querySelector('.activity-location')?.textContent.toLowerCase() || '';
+            
+            // 檢查是否符合搜尋條件
+            const matchesSearch = !searchTerm || 
+                title.includes(searchTerm) || 
+                description.includes(searchTerm) || 
+                location.includes(searchTerm);
+            
+            // 顯示或隱藏卡片
+            if (matchesSearch) {
+                card.style.display = 'block';
+                // 重新觸發動畫
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, 100);
+            } else {
+                card.style.display = 'none';
+                card.classList.remove('visible');
+            }
+        });
+    }
+}
+
+// 工具函數：獲取活動資料
+function getActivityData(card) {
+    return {
+        title: card.querySelector('.activity-title')?.textContent || '',
+        description: card.querySelector('.activity-description')?.textContent || '',
+        location: card.querySelector('.activity-location span:last-child')?.textContent || '',
+        time: card.querySelector('.activity-time span:last-child')?.textContent || '',
+        participants: card.querySelector('.participant-count')?.textContent || '',
+        type: card.querySelector('.activity-tag')?.textContent || ''
+    };
+}
+
+// 初始化過濾功能（如果需要的話）
+// initializeFilters();
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\login.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Change the eye icon based on password visibility
+            const eyeIcon = this.querySelector('img');
+            if (eyeIcon) {
+                if (type === 'password') {
+                    eyeIcon.src = '../static/image/eye.svg';
+                } else {
+                    eyeIcon.src = '../static/image/eye-slash.svg';
+                }
+            }
+        });
+    }
+    
+    // Form submission
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Show error message when form is submitted
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) {
+                errorMessage.style.display = 'block';
+            }
+            
+            // Here you would typically send the data to a server
+            console.log('Login attempt:', username);
+            
+            // For demo purposes, simulate a successful login
+            // Uncomment for actual implementation
+            // alert('登入成功！');
+            // Redirect to home page or dashboard
+            // window.location.href = '/dashboard';
+        });
+    }
+    
+    // Cancel button
+    const cancelButton = document.querySelector('.btn-cancel');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            // Clear form fields
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            // Hide error message when cancel is clicked
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+            
+            // Or redirect to home page
+            // window.location.href = '/';
+        });
+    }
+    
+    // Animated background effect enhancement
+    const waves = document.querySelectorAll('.wave');
+    
+    // Add random movement to waves for more natural effect
+    waves.forEach((wave, index) => {
+        // Apply slight random variations to each wave's animation
+        const randomDelay = Math.random() * 5;
+        const randomDuration = 15 + Math.random() * 10;
+        
+        wave.style.animationDelay = `${randomDelay}s`;
+        wave.style.animationDuration = `${randomDuration}s`;
+    });
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\navbar.js
+// navbar.js - 包含桌面和手機菜單功能
+
+// 監聽滾動事件
+window.addEventListener('scroll', function() {
+    const navbar = document.getElementById('navbar');
+    
+    // 當滾動超過50px時，切換到滾動狀態的導航欄
+    if (window.scrollY > 50) {
+        navbar.classList.remove('navbar-initial');
+        navbar.classList.add('navbar-scrolled');
+    } else {
+        navbar.classList.add('navbar-initial');
+        navbar.classList.remove('navbar-scrolled');
+    }
+});
+
+// 使用者菜單功能
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('navbar.js 已載入');
+    
+    // 初始化用戶菜單
+    initializeUserMenu();
+    
+    // 初始化手機菜單
+    initializePhoneMenu();
+});
+
+// 初始化用戶菜單功能
+function initializeUserMenu() {
+    // 獲取元素
+    const userMenuButton = document.getElementById('userMenuButton');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    if (!userMenuButton || !userDropdown) {
+        console.log('桌面用戶菜單元素未找到（可能是手機版）');
+        return;
+    }
+    
+    // 點擊用戶圖標顯示/隱藏下拉菜單
+    userMenuButton.addEventListener('click', function(e) {
+        e.stopPropagation(); // 防止點擊事件傳播
+        console.log('切換用戶下拉菜單');
+        userDropdown.classList.toggle('show');
+    });
+    
+    // 點擊頁面其他部分關閉下拉菜單
+    document.addEventListener('click', function(e) {
+        if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+        }
+    });
+    
+    // ESC 鍵關閉下拉菜單
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && userDropdown.classList.contains('show')) {
+            userDropdown.classList.remove('show');
+        }
+    });
+    
+    // 處理下拉菜單項目點擊
+    const dropdownItems = userDropdown.querySelectorAll('.dropdown-item');
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // 如果是登入按鈕，讓 login_pop.js 處理
+            if (this.id === 'loginButton') {
+                // 隱藏下拉菜單
+                userDropdown.classList.remove('show');
+                // 其他邏輯由 login_pop.js 處理
+                return;
+            }
+            
+            // 其他菜單項目的處理
+            console.log('點擊菜單項目:', this.textContent);
+            userDropdown.classList.remove('show');
+        });
+    });
+}
+
+// 初始化手機菜單功能
+function initializePhoneMenu() {
+    // 獲取元素
+    const phoneMenuButton = document.getElementById('phoneMenuButton');
+    const phoneMenuOverlay = document.getElementById('phoneMenuOverlay');
+    const phoneDropdown = document.getElementById('phoneDropdown');
+    const phoneMenuClose = document.getElementById('phoneMenuClose');
+    
+    if (!phoneMenuButton || !phoneMenuOverlay || !phoneDropdown || !phoneMenuClose) {
+        console.log('手機菜單元素未找到（可能是桌面版）');
+        return;
+    }
+    
+    // 點擊菜單按鈕打開菜單
+    phoneMenuButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('打開手機菜單');
+        openPhoneMenu();
+    });
+    
+    // 點擊關閉按鈕
+    phoneMenuClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('關閉手機菜單');
+        closePhoneMenu();
+    });
+    
+    // 點擊覆蓋層關閉菜單
+    phoneMenuOverlay.addEventListener('click', function() {
+        console.log('點擊覆蓋層關閉菜單');
+        closePhoneMenu();
+    });
+    
+    // ESC 鍵關閉菜單
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && phoneDropdown.classList.contains('show')) {
+            closePhoneMenu();
+        }
+    });
+    
+    // 處理手機菜單項目點擊
+    const phoneDropdownItems = phoneDropdown.querySelectorAll('a');
+    phoneDropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // 如果是登入按鈕，讓 login_pop.js 處理
+            if (this.id === 'phoneLoginButton') {
+                // 關閉手機菜單
+                closePhoneMenu();
+                // 其他邏輯由 login_pop.js 處理
+                return;
+            }
+            
+            // 其他菜單項目的處理
+            console.log('點擊手機菜單項目:', this.textContent);
+            
+            // 如果是內部連結，關閉菜單
+            if (this.href && !this.href.includes('#')) {
+                closePhoneMenu();
+            }
+        });
+    });
+    
+    // 防止菜單面板內部點擊關閉菜單
+    phoneDropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+}
+
+// 打開手機菜單
+function openPhoneMenu() {
+    const phoneMenuOverlay = document.getElementById('phoneMenuOverlay');
+    const phoneDropdown = document.getElementById('phoneDropdown');
+    
+    if (phoneMenuOverlay && phoneDropdown) {
+        phoneMenuOverlay.classList.add('show');
+        phoneDropdown.classList.add('show');
+        
+        // 防止背景滾動
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// 關閉手機菜單
+function closePhoneMenu() {
+    const phoneMenuOverlay = document.getElementById('phoneMenuOverlay');
+    const phoneDropdown = document.getElementById('phoneDropdown');
+    
+    if (phoneMenuOverlay && phoneDropdown) {
+        phoneMenuOverlay.classList.remove('show');
+        phoneDropdown.classList.remove('show');
+        
+        // 恢復背景滾動
+        document.body.style.overflow = '';
+    }
+}
+
+// 工具函數：手動顯示用戶下拉菜單
+function showUserDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown) {
+        userDropdown.classList.add('show');
+    }
+}
+
+// 工具函數：手動隱藏用戶下拉菜單
+function hideUserDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown) {
+        userDropdown.classList.remove('show');
+    }
+}
+
+// 視窗大小改變時處理
+window.addEventListener('resize', function() {
+    // 如果切換到桌面版，關閉手機菜單
+    if (window.innerWidth > 768) {
+        closePhoneMenu();
+    }
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\personal.js
+function initializeParallax() {
+    const bgText = document.querySelector('.bg-text');
+
+    function parallaxScroll() {
+        const scrollPosition = window.pageYOffset;
+        if (bgText) {
+            bgText.style.transform = `translateX(${scrollPosition * -0.7}px)`;
+        }
+    }
+
+    window.addEventListener('scroll', parallaxScroll);
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+    initializeParallax(); // <== 確保執行初始化
+});
+
+
+// 學分進度條
+const segments = document.querySelectorAll('.progress-segment');
+const tooltip = document.getElementById('tooltip');
+
+segments.forEach(segment => {
+    segment.addEventListener('mouseenter', function(e) {
+        const tooltipText = this.getAttribute('data-tooltip');
+        if (tooltipText && this.style.width !== '0%') {
+            tooltip.textContent = tooltipText;
+            tooltip.classList.add('show');
+            
+            // 计算tooltip位置
+            const rect = this.getBoundingClientRect();
+            const containerRect = this.closest('.profile-item').getBoundingClientRect();
+            
+            const left = rect.left - containerRect.left + (rect.width / 2);
+            tooltip.style.left = left + 'px';
+            tooltip.style.transform = `translateX(-90%) translateY(6px)`;
+        }
+    });
+    
+    segment.addEventListener('mouseleave', function() {
+        tooltip.classList.remove('show');
+    });
+});
+
+// 页面加载时触发动画
+window.addEventListener('load', function() {
+    const segments = document.querySelectorAll('.progress-segment.animate');
+    segments.forEach((segment, index) => {
+        setTimeout(() => {
+            segment.style.animationDelay = `${index * 0.2}s`;
+        }, 100);
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    segments.forEach(segment => {
+        if (segment.style.width === '0%') {
+            segment.style.pointerEvents = 'none';
+        }
+    });
+});
+
+
+
+// 日期相關函數
+// 全域狀態
+let calendarYear, calendarMonth;
+let todoEvents = [];
+
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function getCurrentMonthYearObj() {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+}
+
+function getMonthYearText(year, month) {
+    return `${year}年${month}月`;
+}
+
+function updateCurrentMonth() {
+    document.getElementById('currentMonth').textContent = getMonthYearText(calendarYear, calendarMonth);
+}
+
+function renderCalendar(year, month) {
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const prevMonthDays = new Date(year, month - 1, 0).getDate();
+    const calendarBody = document.getElementById('calendarBody');
+    calendarBody.innerHTML = '';
+
+    let row = document.createElement('tr');
+    // 上月補空格
+    for (let i = 0; i < firstDay; i++) {
+        const td = document.createElement('td');
+        td.className = 'other-month';
+        td.textContent = prevMonthDays - firstDay + i + 1;
+        row.appendChild(td);
+    }
+
+    let day = 1;
+    for (let i = firstDay; i < 7; i++) {
+        const td = document.createElement('td');
+        td.textContent = day++;
+        row.appendChild(td);
+    }
+    calendarBody.appendChild(row);
+
+    // 其餘日期
+    let nextMonthDay = 1;
+    while (day <= daysInMonth) {
+        row = document.createElement('tr');
+        for (let i = 0; i < 7; i++) {
+            const td = document.createElement('td');
+            if (day > daysInMonth) {
+                td.className = 'other-month';
+                td.textContent = nextMonthDay++;
+            } else {
+                td.textContent = day++;
+            }
+            row.appendChild(td);
+        }
+        calendarBody.appendChild(row);
+    }
+
+    // 填入事件
+    renderCalendarEvents();
+}
+
+
+function renderCalendarEvents() {
+    // 新增：點擊事件讓點擊有事件的td滾動到詳細卡片
+    setTimeout(function() {
+        const calendarBody = document.getElementById('calendarBody');
+        if (!calendarBody) return;
+        calendarBody.querySelectorAll('td').forEach(td => {
+            td.removeEventListener('click', td.__scrollToDetailHandler);
+            td.__scrollToDetailHandler = function(e) {
+                // 只對本月且有 .event 的 td 作用
+                if (td.classList.contains('other-month')) return;
+                if (!td.querySelector('.event')) return;
+                const detailCard = document.querySelector('.detail-card');
+                if (detailCard) {
+                    detailCard.style.display = '';
+                    detailCard.scrollIntoView({behavior: 'smooth'});
+                }
+            };
+            td.addEventListener('click', td.__scrollToDetailHandler);
+        });
+    }, 0);
+
+    // 只顯示當月事件
+    const calendarBody = document.getElementById('calendarBody');
+    if (!calendarBody) return;
+    const tds = calendarBody.querySelectorAll('td');
+    tds.forEach(td => {
+        // 移除舊事件
+        td.querySelectorAll('.event').forEach(ev => ev.remove());
+        // 只處理本月
+        if (td.classList.contains('other-month')) return;
+        const day = parseInt(td.childNodes[0]?.nodeValue?.trim());
+        if (!day) return;
+        const events = todoEvents.filter(ev => ev.year === calendarYear && ev.month === calendarMonth && ev.day === day);
+        events.forEach(ev => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event';
+            eventDiv.textContent = ev.text;
+            // 勾選完成的任務加 event-completed
+            const todoCheckbox = Array.from(document.querySelectorAll('.todo-list label')).find(label => label.textContent === ev.text)?.previousElementSibling;
+            if (todoCheckbox && todoCheckbox.checked) {
+                eventDiv.classList.add('event-completed');
+            }
+            td.appendChild(eventDiv);
+        });
+    });
+}
+
+function setCalendarMonth(year, month) {
+    calendarYear = year;
+    calendarMonth = month;
+    updateCurrentMonth();
+    renderCalendar(year, month);
+    updateTaskDatePickerMonth(year, month);
+}
+
+function updateTaskDatePickerMonth(year, month) {
+    const monthDisplay = document.getElementById('taskDateMonth');
+    if (monthDisplay) {
+        monthDisplay.textContent = getMonthYearText(year, month);
+    }
+    // 設定 input[type=date] min/max
+    const min = `${year}-${pad2(month)}-01`;
+    const max = `${year}-${pad2(month)}-${pad2(new Date(year, month, 0).getDate())}`;
+    const dateInput = document.getElementById('taskDate');
+    if (dateInput) {
+        dateInput.setAttribute('min', min);
+        dateInput.setAttribute('max', max);
+        // 若目前日期不在範圍，重設
+        if (dateInput.value < min || dateInput.value > max) dateInput.value = '';
+    }
+}
+
+// 初始化月份狀態
+(function() {
+    const now = getCurrentMonthYearObj();
+    calendarYear = now.year;
+    calendarMonth = now.month;
+})();
+
+// 初始化頁面
+let selectedDay = null;
+function initCalendarPage() {
+    updateCurrentMonth();
+    renderCalendar(calendarYear, calendarMonth);
+
+    // 日曆左右切換
+    const prevMonthBtn = document.getElementById('prevMonth');
+    const nextMonthBtn = document.getElementById('nextMonth');
+    
+    if (prevMonthBtn) {
+        prevMonthBtn.onclick = () => {
+            if (calendarMonth === 1) {
+                calendarYear--;
+                calendarMonth = 12;
+            } else {
+                calendarMonth--;
+            }
+            setCalendarMonth(calendarYear, calendarMonth);
+            selectedDay = null;
+            updateSelectedDateDisplay();
+            bindCalendarDayClick();
+        };
+    }
+    
+    if (nextMonthBtn) {
+        nextMonthBtn.onclick = () => {
+            if (calendarMonth === 12) {
+                calendarYear++;
+                calendarMonth = 1;
+            } else {
+                calendarMonth++;
+            }
+            setCalendarMonth(calendarYear, calendarMonth);
+            selectedDay = null;
+            updateSelectedDateDisplay();
+            bindCalendarDayClick();
+        };
+    }
+    
+    bindCalendarDayClick();
+}
+
+function bindCalendarDayClick() {
+    // 只給本月的 td 綁定點擊
+    document.querySelectorAll('#calendarBody td').forEach(td => {
+        if (!td.classList.contains('other-month')) {
+            td.style.cursor = 'pointer';
+            td.onclick = function() {
+                selectedDay = parseInt(td.childNodes[0]?.nodeValue?.trim());
+                updateSelectedDateDisplay();
+                // 高亮顯示
+                document.querySelectorAll('#calendarBody td').forEach(t => t.classList.remove('selected-calendar-day'));
+                td.classList.add('selected-calendar-day');
+                showDetailCard();
+                // 動畫：確保卡片顯示後再滾動
+                setTimeout(function() {
+                    const detailCard = document.querySelector('.detail-card');
+                    if (detailCard) {
+                        detailCard.scrollIntoView({behavior: 'smooth'});
+                    }
+                }, 100);
+            };
+        } else {
+            td.onclick = null;
+            td.style.cursor = '';
+        }
+    });
+}
+
+
+
+// 顯示詳細資訊卡片，隱藏待辦事項卡片，並載入該天事項
+function showDetailCard() {
+    const todoCard = document.querySelector('.todo-card');
+    const detailCard = document.querySelector('.detail-card');
+
+    if (todoCard) todoCard.style.display = 'none';
+    if (detailCard) detailCard.style.display = 'block';
+
+    const titleElement = document.getElementById('detailCardTitle');
+    const dateElement = document.getElementById('detailCardDate');
+
+    if (titleElement) titleElement.textContent = '詳細資訊';
+    if (dateElement) dateElement.textContent = `${calendarYear}.${calendarMonth}.${selectedDay}`;
+
+    const ul = document.querySelector('.detail-todo-list');
+    if (ul) {
+        ul.innerHTML = '';
+        const events = todoEvents.filter(ev => ev.year === calendarYear && ev.month === calendarMonth && ev.day === selectedDay);
+        if (events.length === 0) {
+            ul.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">尚無事項</li>';
+        } else {
+            events.forEach((ev, idx) => {
+            const taskId = `detail-task-${idx}`;
+
+            // 建立 li 待辦項目
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            li.innerHTML = `
+                <input type="checkbox" id="${taskId}">
+                <label for="${taskId}">${ev.title || ev.text}</label>
+                <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
+                <button class="delete-task-btn" title="刪除事項">×</button>
+            `;
+            ul.appendChild(li);
+
+            // 建立說明容器（分開 append）
+            let detailDiv = null;
+            if (ev.description) {
+                detailDiv = document.createElement('div');
+                detailDiv.className = 'todo-detail-container';
+                detailDiv.innerHTML = `
+                    <div class="todo-detail-label">詳細說明</div>
+                    <div class="todo-detail-box">${ev.description}</div>
+                `;
+                ul.appendChild(detailDiv);
+
+                // 是否預設收起（若已完成）
+                if (ev.completed) {
+                    detailDiv.classList.add('collapsed');
+                }
+
+                // 點擊 todo-item 時 toggle 展開/收起
+                li.addEventListener('click', function (e) {
+                    // 避免點到 checkbox、刪除鍵時也觸發 toggle
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+                    detailDiv.classList.toggle('collapsed');
+                });
+            }
+
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const statusSpan = li.querySelector('.todo-status');
+            const deleteBtn = li.querySelector('.delete-task-btn');
+
+            deleteBtn.addEventListener('click', function () {
+                if (confirm('確定要刪除此待辦事項嗎？')) {
+                    todoEvents = todoEvents.filter(item => item !== ev);
+                    showDetailCard();
+                    updateTodoList();
+                    renderCalendarEvents();
+                }
+            });
+
+            if (ev.completed) {
+                li.classList.add('completed');
+                checkbox.checked = true;
+                statusSpan.textContent = '已完成';
+            }
+
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    li.classList.add('completed');
+                    statusSpan.textContent = '已完成';
+                    markCalendarEventCompleted(ev.text, true);
+                    updateTaskCompletion(ev.text, true);
+
+                    // 自動收起詳細說明（如存在）
+                    if (detailDiv) {
+                        detailDiv.classList.add('collapsed');
+                    }
+
+                } else {
+                    li.classList.remove('completed');
+                    statusSpan.textContent = statusSpan.getAttribute('data-original');
+                    markCalendarEventCompleted(ev.text, false);
+                    updateTaskCompletion(ev.text, false);
+                }
+            });
+        });
+
+        }
+    }
+
+    updateTodoList();
+}
+
+
+
+
+
+// 重新渲染主待辦事項卡片的列表
+function updateTodoList() {
+    const todoUl = document.querySelector('.todo-list');
+    if (!todoUl) return;
+    todoUl.innerHTML = '';
+    if (todoEvents.length === 0) {
+        todoUl.innerHTML = '<li class="todo-item" style="padding: 20px; text-align: center; color: #999;">尚無待辦事項</li>';
+    } else {
+        todoEvents.forEach((ev, idx) => {
+            const taskId = 'task' + (idx + 1);
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            li.innerHTML = `
+                <input type="checkbox" id="${taskId}">
+                <label for="${taskId}">${ev.text}</label>
+                <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
+                 <button class="delete-task-btn" title="刪除事項">×</button>
+            `;
+            todoUl.appendChild(li);
+
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const statusSpan = li.querySelector('.todo-status');
+            const deleteBtn = li.querySelector('.delete-task-btn');
+
+            deleteBtn.addEventListener('click', function () {
+                if (confirm('確定要刪除此待辦事項嗎？')) {
+                    // 從陣列中移除
+                    todoEvents = todoEvents.filter(item => item !== ev);
+                    updateTodoList();
+                    renderCalendarEvents();
+                }
+            });
+
+            if (ev.completed) {
+                li.classList.add('completed');
+                checkbox.checked = true;
+                statusSpan.textContent = '已完成';
+            }
+
+            checkbox.addEventListener('change', function () {
+                if (checkbox.checked) {
+                    li.classList.add('completed');
+                    statusSpan.textContent = '已完成';
+                    markCalendarEventCompleted(ev.text, true);
+                    updateTaskCompletion(ev.text, true);
+                } else {
+                    li.classList.remove('completed');
+                    statusSpan.textContent = statusSpan.getAttribute('data-original');
+                    markCalendarEventCompleted(ev.text, false);
+                    updateTaskCompletion(ev.text, false);
+                }
+                renderCalendarEvents();
+            });
+        });
+    }
+}
+
+
+// 標記行事曆事件完成/取消
+function markCalendarEventCompleted(eventText, completed) {
+    const calendarBody = document.getElementById('calendarBody');
+    if (!calendarBody) return;
+    const tds = calendarBody.querySelectorAll('td');
+    tds.forEach(td => {
+        td.querySelectorAll('.event').forEach(ev => {
+            if (ev.textContent === eventText) {
+                if (completed) {
+                    ev.classList.add('event-completed');
+                } else {
+                    ev.classList.remove('event-completed');
+                }
+            }
+        });
+    });
+}
+function updateTaskCompletion(taskText, completed) {
+    for (let ev of todoEvents) {
+        if (ev.text === taskText) {
+            ev.completed = completed;
+            break;
+        }
+    }
+}
+
+function updateSelectedDateDisplay() {
+    const display = document.getElementById('selectedDateDisplay');
+    const newTaskInput = document.getElementById('newTask');
+    if (selectedDay) {
+        if (display) {
+            display.style.display = 'block';
+            display.textContent = `${calendarYear}.${calendarMonth}.${selectedDay}`;
+        }
+        if (newTaskInput) newTaskInput.placeholder = '添加新的待辦事項...';
+    } else {
+        if (display) display.style.display = 'none';
+        if (newTaskInput) newTaskInput.placeholder = '請點選左方日期';
+    }
+    if (newTaskInput) newTaskInput.value = '';
+}
+
+
+// 待辦事項相關函數
+function addNewTask() {
+    const newTaskInput = document.getElementById('newTask');
+    if (!newTaskInput) return;
+
+    const taskText = newTaskInput.value.trim();
+    if (!selectedDay) {
+        alert('請先點選左側日曆日期');
+        return;
+    }
+    if (taskText === '') return;
+
+    let dueDateStr = `${calendarMonth}/${selectedDay}`;
+
+    todoEvents.push({
+        year: calendarYear,
+        month: calendarMonth,
+        day: selectedDay,
+        text: taskText,
+        completed: false
+    });
+
+    newTaskInput.value = '';
+    renderCalendarEvents();
+    updateTodoList();
+
+
+    // 添加任務完成事件監聽
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    const statusSpan = li.querySelector('.todo-status');
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            li.classList.add('completed');
+            statusSpan.textContent = '已完成';
+            updateTaskCompletion(ev.text, true);
+            // 行事曆該事件變灰底
+            markCalendarEventCompleted(taskText, true);
+        } else {
+            li.classList.remove('completed');
+            statusSpan.textContent = statusSpan.getAttribute('data-original') || dueDateStr;
+            updateTaskCompletion(ev.text, false);
+            markCalendarEventCompleted(taskText, false);
+        }
+    });
+}
+
+// 新增詳細資訊卡片的待辦事項
+// 確保 DOMContentLoaded 後再綁定事件
+window.addEventListener('DOMContentLoaded', function () {
+    const addDetailBtn = document.getElementById('addDetailTask');
+    if (addDetailBtn) {
+        addDetailBtn.addEventListener('click', function () {
+            // 新增：點擊新增事項後滾動回行事曆
+            setTimeout(function() {
+                const calendarCard = document.querySelector('.calendar-card');
+                if (calendarCard) {
+                    calendarCard.scrollIntoView({behavior: 'smooth'});
+                }
+            }, 350); // 稍微延遲，讓新增動畫/渲染完成
+
+            const titleInput = document.getElementById('newDetailTaskTitle');
+            const descriptionInput = document.getElementById('newDetailTaskDescription');
+
+            if (!titleInput) {
+                console.error('找不到標題輸入框');
+                return;
+            }
+
+            const title = titleInput.value.trim();
+            const description = descriptionInput ? descriptionInput.value.trim() : '';
+
+            if (!selectedDay) {
+                alert('請先點選左側日曆日期');
+                return;
+            }
+            if (!title) {
+                alert('請輸入待辦事項標題');
+                return;
+            }
+
+            let taskText = title;
+
+            todoEvents.push({
+                year: calendarYear,
+                month: calendarMonth,
+                day: selectedDay,
+                text: taskText,
+                title: title,
+                description: description,
+                completed: false
+            });
+
+            titleInput.value = '';
+            if (descriptionInput) descriptionInput.value = '';
+
+            showDetailCard();
+            renderCalendarEvents();
+        });
+    }
+
+    const backBtn = document.getElementById('backToTodo');
+    if (backBtn) {
+        backBtn.addEventListener('click', function () {
+            const detailCard = document.querySelector('.detail-card');
+            const todoCard = document.querySelector('.todo-card');
+            if (detailCard) detailCard.style.display = 'none';
+            if (todoCard) todoCard.style.display = 'block';
+
+            updateTodoList();
+        });
+    }
+
+    const clearBtn = document.getElementById('clearDetailForm');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            const titleInput = document.getElementById('newDetailTaskTitle');
+            const descriptionInput = document.getElementById('newDetailTaskDescription');
+            if (titleInput) titleInput.value = '';
+            if (descriptionInput) descriptionInput.value = '';
+            if (titleInput) titleInput.focus();
+        });
+    }
+
+    const titleInput = document.getElementById('newDetailTaskTitle');
+    if (titleInput) {
+        titleInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const descriptionInput = document.getElementById('newDetailTaskDescription');
+                if (descriptionInput) {
+                    descriptionInput.focus();
+                }
+            }
+        });
+    }
+
+    const descriptionInput = document.getElementById('newDetailTaskDescription');
+    if (descriptionInput) {
+        descriptionInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                const addBtn = document.getElementById('addDetailTask');
+                if (addBtn) {
+                    addBtn.click();
+                }
+            }
+        });
+    }
+
+    initCalendarPage();
+
+// User name edit logic (no HTML change, pure JS)
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const userNameDiv = document.querySelector('.profile-image .user-name');
+        const editBtn = document.querySelector('.profile-image .btn-secondary');
+        let editing = false;
+        let inputEl = null;
+        if (userNameDiv && editBtn) {
+            editBtn.addEventListener('click', function () {
+                if (!editing) {
+                    // Create input
+                    inputEl = document.createElement('input');
+                    inputEl.type = 'text';
+                    inputEl.className = 'user-name-input';
+                    inputEl.value = userNameDiv.textContent.trim();
+                    inputEl.style.width = '100%';
+                    inputEl.style.marginTop = '8px';
+                    inputEl.maxLength = 20;
+                    userNameDiv.style.display = 'none';
+                    userNameDiv.parentNode.insertBefore(inputEl, editBtn);
+                    inputEl.focus();
+                    editBtn.textContent = '儲存';
+                    editing = true;
+
+                    // Save on blur or enter
+                    function saveName() {
+                        userNameDiv.textContent = inputEl.value.trim() || userNameDiv.textContent;
+                        userNameDiv.style.display = '';
+                        inputEl.remove();
+                        editBtn.textContent = '編輯資料';
+                        editing = false;
+                    }
+                    inputEl.addEventListener('blur', saveName);
+                    inputEl.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            saveName();
+                        }
+                    });
+                }
+            });
+        }
+    });
+})();
+});
+
+
+function updateTaskCompletion(taskText, completed) {
+    for (let ev of todoEvents) {
+        if (ev.text === taskText) {
+            ev.completed = completed;
+            break;
+        }
+    }
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\welcome_mo.js
+document.addEventListener('DOMContentLoaded', function () {
+  const viewer = document.querySelector('spline-viewer');
+  const REDIRECT_DELAY = 800; // 毫秒延遲
+  const FALLBACK_DELAY = 2000; // 如果未載入 spline-viewer，5 秒後跳轉
+  const redirect = () => window.location.replace('/index/');
+  let redirected = false;
+
+  const tryRedirect = () => {
+    if (!redirected) {
+      redirected = true;
+      console.log('Redirecting to /index/');
+      redirect();
+    }
+  };
+
+  if (viewer) {
+    // 設定保險機制：載入後不管如何都要跳轉
+    viewer.addEventListener('load', () => {
+      console.log('Spline viewer loaded.');
+      setTimeout(tryRedirect, REDIRECT_DELAY);
+    });
+
+    // 確保即使 load 事件未觸發，也能在 10 秒後跳轉（保險計時器）
+    setTimeout(() => {
+      console.warn('Fallback timeout reached, forcing redirect.');
+      tryRedirect();
+    }, 7000);
+
+    // 點擊立即跳轉
+    viewer.addEventListener('click', () => {
+      console.log('User clicked, skipping animation.');
+      tryRedirect();
+    });
+  } else {
+    console.error('spline-viewer not found, fallback redirect in 5s.');
+    setTimeout(tryRedirect, FALLBACK_DELAY);
+  }
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\welcome.js
+const MOBILE_MAX = 768;
+function maybeRedirectToMobile() {
+  if (window.innerWidth <= MOBILE_MAX && !window.location.pathname.includes('welcome_mo')) {
+    window.location.replace('/welcome_mo/');
+  }
+}
+maybeRedirectToMobile();
+window.addEventListener('resize', () => {
+  maybeRedirectToMobile();
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const viewer = document.querySelector('spline-viewer');
+  const REDIRECT_DELAY = 800; // 毫秒延遲
+  const FALLBACK_DELAY = 2000; // 如果未載入 spline-viewer，5 秒後跳轉
+  const redirect = () => window.location.replace('/index/');
+  let redirected = false;
+
+  const tryRedirect = () => {
+    if (!redirected) {
+      redirected = true;
+      console.log('Redirecting to /index/');
+      redirect();
+    }
+  };
+
+  if (viewer) {
+    // 設定保險機制：載入後不管如何都要跳轉
+    viewer.addEventListener('load', () => {
+      console.log('Spline viewer loaded.');
+      setTimeout(tryRedirect, REDIRECT_DELAY);
+    });
+
+    // 確保即使 load 事件未觸發，也能在 10 秒後跳轉（保險計時器）
+    setTimeout(() => {
+      console.warn('Fallback timeout reached, forcing redirect.');
+      tryRedirect();
+    }, 7000);
+
+    // 點擊立即跳轉
+    viewer.addEventListener('click', () => {
+      console.log('User clicked, skipping animation.');
+      tryRedirect();
+    });
+  } else {
+    console.error('spline-viewer not found, fallback redirect in 5s.');
+    setTimeout(tryRedirect, FALLBACK_DELAY);
+  }
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\pop_window\comment_pop.html
+<div id="rating-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>評分選項</h2>
+        <div class="modal-course-info">
+            <h3 class="modal-course-name"></h3>
+            <p class="modal-course-teacher"></p>
+        </div>
+        <div class="modal-options">
+            <div class="modal-rating-option">
+                <h4>快速五星評分</h4>
+                <div class="modal-rating">
+                    <div class="modal-stars">
+                        <i class="far fa-star" data-value="1"></i>
+                        <i class="far fa-star" data-value="2"></i>
+                        <i class="far fa-star" data-value="3"></i>
+                        <i class="far fa-star" data-value="4"></i>
+                        <i class="far fa-star" data-value="5"></i>
+                    </div>
+                    <div class="rating-display">0.0</div>
+                    <input type="hidden" id="modal-rating-value" value="0">
+                </div>
+                <button class="submit-rating-btn">提交評分</button>
+            </div>
+            <div class="modal-divider"></div>
+            <div class="modal-full-option">
+                <h4>撰寫完整評論</h4>
+                <p>前往評論頁面撰寫詳細的課程評價</p>
+                <a id="full-comment-btn" href="/add_comment/" class="full-comment-btn">前往評論頁面</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+

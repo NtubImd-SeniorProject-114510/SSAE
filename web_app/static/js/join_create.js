@@ -1,3 +1,5 @@
+//web_app\static\js\join_create.js
+
 // 即時預覽功能
 const activityTitle = document.getElementById('activity-title');
 const activityType = document.getElementById('activity-type');

@@ -1,4 +1,4 @@
-//index
+//web_app\static\js\join.js
 window.addEventListener('DOMContentLoaded', () => {
   const popupId = sessionStorage.getItem('openPopup');
   if (popupId) {

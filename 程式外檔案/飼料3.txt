@@ -1,0 +1,3188 @@
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\css\reset.css
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+ 	margin: 0;
+ 	padding: 0;
+ 	border: 0;
+ 	font-size: 100%;
+ 	font: inherit;
+ 	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+ 	display: block;
+}
+body {
+ 	line-height: 1;
+}
+ol, ul {
+ 	list-style: none;
+}
+blockquote, q {
+ 	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+ 	content: '';
+ 	content: none;
+}
+table {
+ 	border-collapse: collapse;
+ 	border-spacing: 0;
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\css\welcome_mo.css
+body {
+  margin: 0;
+  background-color: #F8F6F4;
+  font-family: sans-serif;
+  overflow: hidden;
+  width: 40vw;
+  height: 40vh;
+}
+
+.transition-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 容器大小限制 + 裁切內容 */
+.spline-mask {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* Spline 實際內容超出時會被容器擋住 */
+.spline-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 110vh; /* 比容器高，底下30px會被裁掉 */
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\css\welcome.css
+body {
+  margin: 0;
+  background-color: #F8F6F4;
+  font-family: sans-serif;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+.transition-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 容器大小限制 + 裁切內容 */
+.spline-mask {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Spline 實際內容超出時會被容器擋住 */
+.spline-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 110vh; /* 比容器高，底下30px會被裁掉 */
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\pop_window\comment_pop.js
+// comment_pop.js - 評論彈跳視窗功能
+
+// 設置評分模態框
+function setupRatingModal() {
+    console.log('初始化評分模態框');
+ 
+    // 綁定新增評論按鈕點擊事件
+    const createBtns = document.querySelectorAll('.create-btn');
+    createBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+ 
+            // 獲取課程信息
+            const courseItem = this.closest('.course-item');
+            const courseName = courseItem.querySelector('.course-name').textContent;
+            const courseTeacher = courseItem.querySelector('.course-teacher').textContent.replace('教授', '').trim();
+ 
+            // 顯示模態框並填充課程信息
+            const modal = document.getElementById('rating-modal');
+            if (!modal) {
+                console.error('找不到評分模態框');
+                return;
+            }
+ 
+            modal.querySelector('.modal-course-name').textContent = courseName;
+            modal.querySelector('.modal-course-teacher').textContent = courseTeacher + ' 教授';
+ 
+            // 重置星級評分
+            const modalStars = modal.querySelectorAll('.modal-stars i');
+            modalStars.forEach(star => {
+                star.className = 'far fa-star';
+            });
+            modal.querySelector('#modal-rating-value').value = '0';
+            modal.querySelector('.rating-display').textContent = '0.0';
+ 
+            // 顯示模態框
+            modal.classList.add('show');
+            // 防止背景滾動
+            document.body.classList.add('modal-open');
+ 
+            // 保存課程 ID 到模態框
+            const courseId = courseItem.getAttribute('data-course-id') || '1';
+            modal.setAttribute('data-course-id', courseId);
+        });
+    });
+
+    // 綁定右下角加號按鈕
+    const commentBtn = document.getElementById('commentBtn');
+    if (commentBtn) {
+        console.log('找到 #commentBtn，準備綁定點擊事件');
+        commentBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('按下右下角加號，嘗試開啟 #rating-modal');
+            const modal = document.getElementById('rating-modal');
+            if (!modal) {
+                console.error('找不到評分模態框');
+                return;
+            }
+            // 清空課程資訊，顯示預設文字
+            modal.querySelector('.modal-course-name').textContent = '自訂評論';
+            modal.querySelector('.modal-course-teacher').textContent = '';
+            const modalStars = modal.querySelectorAll('.modal-stars i');
+            modalStars.forEach(star => {
+                star.className = 'far fa-star';
+            });
+            modal.querySelector('#modal-rating-value').value = '0';
+            modal.querySelector('.rating-display').textContent = '0.0';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            modal.removeAttribute('data-course-id');
+        });
+    } else {
+        console.warn('找不到 #commentBtn，無法綁定點擊事件');
+    }
+
+ 
+    // 初始化模態框事件處理
+    initializeModalEvents();
+}
+
+// 初始化模態框事件處理
+function initializeModalEvents() {
+    const modal = document.getElementById('rating-modal');
+    if (!modal) {
+        console.error('找不到評分模態框');
+        return;
+    }
+ 
+    const closeBtn = modal.querySelector('.modal-close');
+    const stars = modal.querySelectorAll('.modal-stars i');
+    const ratingValue = modal.querySelector('#modal-rating-value');
+    const ratingDisplay = modal.querySelector('.rating-display');
+    const submitBtn = modal.querySelector('.submit-rating-btn');
+    const fullCommentBtn = modal.querySelector('#full-comment-btn');
+ 
+    // 關閉模態框
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            modal.classList.remove('show');
+            // 恢復背景滾動
+            document.body.classList.remove('modal-open');
+        });
+    }
+ 
+    // 點擊模態框外部關閉
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.classList.remove('show');
+            // 恢復背景滾動
+            document.body.classList.remove('modal-open');
+        }
+    });
+ 
+    // 星級評分點擊
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const value = parseInt(this.getAttribute('data-value'));
+            if (ratingValue) ratingValue.value = value;
+            if (ratingDisplay) ratingDisplay.textContent = value + '.0';
+ 
+            // 更新星星顯示
+            stars.forEach(s => {
+                const starValue = parseInt(s.getAttribute('data-value'));
+                s.className = starValue <= value ? 'fas fa-star' : 'far fa-star';
+            });
+        });
+ 
+        // 懸停效果
+        star.addEventListener('mouseover', function() {
+            const value = parseInt(this.getAttribute('data-value'));
+ 
+            stars.forEach(s => {
+                const starValue = parseInt(s.getAttribute('data-value'));
+                if (starValue <= value) {
+                    s.className = 'fas fa-star';
+                } else {
+                    s.className = 'far fa-star';
+                }
+            });
+        });
+ 
+        star.addEventListener('mouseout', function() {
+            const currentValue = parseInt(ratingValue?.value || '0');
+ 
+            stars.forEach(s => {
+                const starValue = parseInt(s.getAttribute('data-value'));
+                s.className = starValue <= currentValue ? 'fas fa-star' : 'far fa-star';
+            });
+        });
+    });
+ 
+    // 提交評分
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
+            const value = parseInt(ratingValue?.value || '0');
+            const courseId = modal.getAttribute('data-course-id') || '1';
+ 
+            if (value > 0) {
+                console.log(`提交評分：課程ID=${courseId}, 評分=${value}`);
+                submitRating(courseId, value);
+            } else {
+                alert('請選擇評分！');
+            }
+        });
+    }
+ 
+    // 修改前往完整評論頁面的 URL
+    if (fullCommentBtn) {
+        fullCommentBtn.addEventListener('click', function(e) {
+            const courseId = modal.getAttribute('data-course-id');
+            fullCommentBtn.href = `/add\_comment/?course=${courseId}`;
+        });
+    }
+}
+
+// 提交評分 (模擬)
+function submitRating(courseId, rating) {
+    console.log(`提交評分: 課程ID=${courseId}, 評分=${rating}`);
+ 
+    // 模擬 AJAX 請求
+    setTimeout(() => {
+        // 顯示成功消息
+        const modal = document.getElementById('rating-modal');
+        if (!modal) return;
+ 
+        const modalContent = modal.querySelector('.modal-content');
+ 
+        modalContent.innerHTML = `
+        <div class="success-message">
+            <i class="fas fa-check-circle">
+            <h2>評分成功！</h2>
+            <p>感謝您的評分，您給出了 ${rating} 星評價。</p>
+            <button class="close-modal-btn">關閉</button>
+        </div>`;
+ 
+        // 關閉按鈕事件
+        const closeBtn = modalContent.querySelector('.close-modal-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                modal.classList.remove('show');
+                // 恢復背景滾動
+                document.body.classList.remove('modal-open');
+ 
+                // 重新載入頁面或更新評分顯示
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            });
+        }
+    }, 800); // 模擬網路延遲
+}
+
+// 確保在頁面載入完成後初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('評分模態框 JS 已載入');
+    // 延遲一點初始化，確保 DOM 元素都已載入
+    setTimeout(() => {
+        console.log('執行 setupRatingModal');
+        setupRatingModal();
+    }, 300);
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\pop_window\join_pop.js
+// join_pop.js - 發起揪團彈跳視窗功能
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化發起揪團功能
+    initializeCreateActivity();
+ 
+    // 初始化預覽功能
+    initializePreview();
+});
+
+// 初始化發起揪團彈跳視窗
+function initializeCreateActivity() {
+    console.log('初始化發起揪團功能');
+ 
+    // 獲取元素
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const closeUploadBtn = document.getElementById('closeUploadBtn');
+    const cancelCreateBtn = document.getElementById('cancel-create-btn');
+    const createGroupForm = document.getElementById('create-group-form');
+    const imageUploadArea = document.getElementById('image-upload-area');
+ 
+    // 打開發起揪團表單
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            console.log('打開發起揪團表單');
+            if (uploadForm) {
+                uploadForm.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // 防止背景滾動
+            }
+        });
+    }
+ 
+    // 關閉發起揪團表單
+    function closeForm() {
+        if (uploadForm) {
+            uploadForm.style.display = 'none';
+            document.body.style.overflow = 'auto'; // 恢復背景滾動
+            // 重置表單
+            if (createGroupForm) {
+                createGroupForm.reset();
+                resetPreview();
+            }
+        }
+    }
+ 
+    // X 按鈕關閉表單
+    if (closeUploadBtn) {
+        closeUploadBtn.addEventListener('click', closeForm);
+    }
+ 
+    // 取消按鈕關閉表單
+    if (cancelCreateBtn) {
+        cancelCreateBtn.addEventListener('click', closeForm);
+    }
+ 
+    // 點擊背景關閉表單
+    if (uploadForm) {
+        uploadForm.addEventListener('click', function(e) {
+            if (e.target === uploadForm) {
+                closeForm();
+            }
+        });
+    }
+ 
+    // 圖片上傳區域點擊
+    if (imageUploadArea) {
+        imageUploadArea.addEventListener('click', function() {
+            // 創建隱藏的文件輸入元素
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.addEventListener('change', handleImageUpload);
+            fileInput.click();
+        });
+ 
+        // 拖拽上傳功能
+        imageUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#3d7e88';
+            this.style.backgroundColor = '#f0f8fa';
+        });
+ 
+        imageUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.backgroundColor = '#fafafa';
+        });
+ 
+        imageUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.backgroundColor = '#fafafa';
+ 
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleImageUpload({ target: { files: files } });
+            }
+        });
+    }
+ 
+    // 表單提交處理
+    if (createGroupForm) {
+        createGroupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+ 
+            // 驗證表單
+            if (validateForm()) {
+                // 處理表單提交邏輯
+                console.log('表單提交成功');
+ 
+                // 模擬提交成功
+                showSuccessMessage();
+ 
+                // 關閉表單
+                setTimeout(() => {
+                    closeForm();
+                }, 2000);
+            }
+        });
+    }
+}
+
+// 處理圖片上傳
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // 檢查文件大小 (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('圖片檔案大小不能超過 2MB');
+            return;
+        }
+ 
+        // 檢查文件類型
+        if (!file.type.startsWith('image/')) {
+            alert('請選擇圖片檔案');
+            return;
+        }
+ 
+        // 預覽圖片
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageUploadArea = document.getElementById('image-upload-area');
+            const previewImage = document.querySelector('.preview-image');
+ 
+            if (imageUploadArea) {
+                imageUploadArea.innerHTML = `
+                    <img src="${e.target.result}" style="max-width: 100%; max-height: 150px; border-radius: 5px;">
+                    <div style="margin-top: 10px; font-size: 14px; color: #666;">點擊更換圖片</div>
+                `;
+            }
+ 
+            if (previewImage) {
+                previewImage.style.backgroundImage = `url(${e.target.result})`;
+                previewImage.style.backgroundSize = 'cover';
+                previewImage.style.backgroundPosition = 'center';
+                previewImage.innerHTML = `<div class="preview-tag" id="preview-tag">活動類型</div>`;
+            }
+        };
+        reader.readAsDataURL(file);
+ 
+        console.log('圖片上傳成功:', file.name);
+    }
+}
+
+// 初始化預覽功能
+function initializePreview() {
+    // 活動標題預覽
+    const activityTitle = document.getElementById('activity-title');
+    const previewTitle = document.getElementById('preview-title');
+ 
+    if (activityTitle && previewTitle) {
+        activityTitle.addEventListener('input', function() {
+            previewTitle.textContent = this.value || '活動標題';
+        });
+    }
+ 
+    // 活動類型預覽
+    const activityType = document.getElementById('activity-type');
+    const previewTag = document.getElementById('preview-tag');
+ 
+    if (activityType && previewTag) {
+        activityType.addEventListener('change', function() {
+            const typeMap = {
+                'food': '美食',
+                'sport': '運動',
+                'study': '讀書',
+                'travel': '旅遊',
+                'movie': '電影',
+                'other': '其他'
+            };
+            previewTag.textContent = typeMap[this.value] || '活動類型';
+        });
+    }
+ 
+    // 活動地點預覽
+    const activityLocation = document.getElementById('activity-location');
+    const previewLocation = document.getElementById('preview-location');
+ 
+    if (activityLocation && previewLocation) {
+        activityLocation.addEventListener('input', function() {
+            previewLocation.textContent = this.value || '活動地點';
+        });
+    }
+ 
+    // 活動時間預覽
+    const activityDate = document.getElementById('activity-date');
+    const activityTime = document.getElementById('activity-time');
+    const previewTime = document.getElementById('preview-time');
+ 
+    function updateTimePreview() {
+        const date = activityDate?.value || '';
+        const time = activityTime?.value || '';
+        let timeText = '活動時間';
+ 
+        if (date && time) {
+            const dateObj = new Date(date);
+            const month = dateObj.getMonth() + 1;
+            const day = dateObj.getDate();
+            const timeFormatted = time.substring(0, 5);
+            timeText = `${month}/${day} ${timeFormatted}`;
+        } else if (date) {
+            const dateObj = new Date(date);
+            const month = dateObj.getMonth() + 1;
+            const day = dateObj.getDate();
+            timeText = `${month}/${day}`;
+        }
+ 
+        if (previewTime) {
+            previewTime.textContent = timeText;
+        }
+    }
+ 
+    if (activityDate) {
+        activityDate.addEventListener('change', updateTimePreview);
+    }
+ 
+    if (activityTime) {
+        activityTime.addEventListener('change', updateTimePreview);
+    }
+ 
+    // 活動說明預覽
+    const activityDescription = document.getElementById('activity-description');
+    const previewDescription = document.getElementById('preview-description');
+ 
+    if (activityDescription && previewDescription) {
+        activityDescription.addEventListener('input', function() {
+            previewDescription.textContent = this.value || '活動說明將顯示在這裡...';
+        });
+    }
+}
+
+// 重置預覽
+function resetPreview() {
+    const previewTitle = document.getElementById('preview-title');
+    const previewTag = document.getElementById('preview-tag');
+    const previewLocation = document.getElementById('preview-location');
+    const previewTime = document.getElementById('preview-time');
+    const previewDescription = document.getElementById('preview-description');
+    const previewImage = document.querySelector('.preview-image');
+    const imageUploadArea = document.getElementById('image-upload-area');
+ 
+    if (previewTitle) previewTitle.textContent = '活動標題';
+    if (previewTag) previewTag.textContent = '活動類型';
+    if (previewLocation) previewLocation.textContent = '活動地點';
+    if (previewTime) previewTime.textContent = '活動時間';
+    if (previewDescription) previewDescription.textContent = '活動說明將顯示在這裡...';
+ 
+    if (previewImage) {
+        previewImage.style.backgroundImage = '';
+        previewImage.innerHTML = '圖片預覽區域<div class="preview-tag" id="preview-tag">活動類型</div>';
+    }
+ 
+    if (imageUploadArea) {
+        imageUploadArea.innerHTML = `
+            <div class="image-upload-icon">📷</div>
+            <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+        `;
+    }
+}
+
+// 驗證表單
+function validateForm() {
+    const requiredFields = [
+        'activity-title',
+        'activity-type',
+        'activity-location',
+        'activity-date',
+        'activity-time',
+        'activity-description',
+        'activity-deadline'
+    ];
+ 
+    let isValid = true;
+ 
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && !field.value.trim()) {
+            field.style.borderColor = '#e74c3c';
+            isValid = false;
+ 
+            // 3秒後恢復邊框顏色
+            setTimeout(() => {
+                field.style.borderColor = '#e0e0e0';
+            }, 3000);
+        }
+    });
+ 
+    // 驗證人數邏輯
+    const minParticipants = document.getElementById('min-participants');
+    const maxParticipants = document.getElementById('max-participants');
+ 
+    if (minParticipants && maxParticipants) {
+        const minValue = parseInt(minParticipants.value);
+        const maxValue = parseInt(maxParticipants.value);
+ 
+        if (minValue >= maxValue) {
+            alert('最多參加人數必須大於最少參加人數');
+            maxParticipants.style.borderColor = '#e74c3c';
+            isValid = false;
+ 
+            setTimeout(() => {
+                maxParticipants.style.borderColor = '#e0e0e0';
+            }, 3000);
+        }
+    }
+ 
+    // 驗證截止日期
+    const activityDate = document.getElementById('activity-date');
+    const deadline = document.getElementById('activity-deadline');
+ 
+    if (activityDate && deadline && activityDate.value && deadline.value) {
+        const activityDateObj = new Date(activityDate.value);
+        const deadlineObj = new Date(deadline.value);
+ 
+        if (deadlineObj >= activityDateObj) {
+            alert('報名截止日期必須早於活動日期');
+            deadline.style.borderColor = '#e74c3c';
+            isValid = false;
+ 
+            setTimeout(() => {
+                deadline.style.borderColor = '#e0e0e0';
+            }, 3000);
+        }
+    }
+ 
+    if (!isValid) {
+        alert('請填寫所有必填欄位並檢查輸入內容');
+    }
+ 
+    return isValid;
+}
+
+// 顯示成功訊息
+function showSuccessMessage() {
+    // 創建成功訊息元素
+    const successMessage = document.createElement('div');
+    successMessage.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #4CAF50;
+        color: white;
+        padding: 20px 40px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 600;
+        z-index: 300;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);`;
+ 
+    // 添加成功訊息到body
+    document.body.appendChild(successMessage);
+ 
+    // 3秒後移除成功訊息
+    setTimeout(() => {
+        successMessage.remove();
+    }, 3000);
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\pop_window\login_pop.js
+// login_pop.js - 登入彈跳視窗功能
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('login_pop.js 已載入');
+ 
+    // 初始化登入模態視窗功能
+    initializeLoginModal();
+});
+
+// 初始化登入模態視窗
+function initializeLoginModal() {
+    // 獲取元素
+    const loginButton = document.getElementById('loginButton');
+    const loginModal = document.getElementById('loginModal');
+    const closeModalButton = document.querySelector('.close-modal');
+    const cancelLoginButton = document.getElementById('cancelLogin');
+ 
+    // 檢查必要元素是否存在
+    if (!loginModal) {
+        console.error('找不到登入模態視窗元素');
+        return;
+    }
+ 
+    // 顯示登入模態視窗
+    if (loginButton) {
+        loginButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('顯示登入模態視窗');
+ 
+            // 隱藏用戶下拉菜單（如果存在）
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) {
+                userDropdown.classList.remove('show');
+            }
+ 
+            // 顯示登入模態視窗
+            loginModal.classList.add('show');
+ 
+            // 防止背景滾動
+            document.body.style.overflow = 'hidden';
+        });
+    }
+ 
+    // 關閉模態視窗的函數
+    function closeLoginModal() {
+        if (loginModal) {
+            loginModal.classList.remove('show');
+            // 恢復背景滾動
+            document.body.style.overflow = 'auto';
+            console.log('關閉登入模態視窗');
+        }
+    }
+ 
+    // 點擊 X 按鈕關閉模態視窗
+    if (closeModalButton) {
+        closeModalButton.addEventListener('click', closeLoginModal);
+    }
+ 
+    // 點擊取消按鈕關閉模態視窗（如果存在）
+    if (cancelLoginButton) {
+        cancelLoginButton.addEventListener('click', closeLoginModal);
+    }
+ 
+    // 點擊模態視窗外部關閉模態視窗
+    if (loginModal) {
+        loginModal.addEventListener('click', function(e) {
+            if (e.target === loginModal) {
+                closeLoginModal();
+            }
+        });
+    }
+ 
+    // ESC 鍵關閉模態視窗
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && loginModal.classList.contains('show')) {
+            closeLoginModal();
+        }
+    });
+ 
+    // 處理表單提交（如果需要額外邏輯）
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            // 這裡可以添加表單提交前的驗證邏輯
+            console.log('登入表單提交');
+        });
+    }
+ 
+    // 處理登出按鈕點擊（添加確認對話框）
+    const logoutButton = document.querySelector('.btn-logout');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            // 添加確認對話框
+            if (!confirm('確定要登出嗎？')) {
+                e.preventDefault();
+            }
+        });
+    }
+}
+
+// 全域函數：手動顯示登入模態視窗
+function showLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// 全域函數：手動關閉登入模態視窗
+function hideLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\add_comment.js
+// add_comment.js - 整合版本
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('add_comment.js 已載入');
+ 
+    // 初始化所有功能
+    initializeUserInterface();
+    initializeRatingSystem();
+    initializeTextConversion();
+    initializeFormValidation();
+});
+
+// 初始化用戶界面功能
+function initializeUserInterface() {
+    // 注意：根據HTML，anonymous_yes對應匿名，anonymous_no對應實名
+    const anonymousRadio = document.getElementById('anonymous_yes');  // 匿名選項
+    const realNameRadio = document.getElementById('anonymous_no');    // 實名選項
+    const usernameElement = document.querySelector('.username');
+    const avatarElement = document.querySelector('.avatar');
+ 
+    // 檢查元素是否存在
+    if (!anonymousRadio || !realNameRadio || !usernameElement || !avatarElement) {
+        console.error('找不到必要的用戶界面元素');
+        console.log('anonymousRadio:', anonymousRadio);
+        console.log('realNameRadio:', realNameRadio);
+        console.log('usernameElement:', usernameElement);
+        console.log('avatarElement:', avatarElement);
+        return;
+    }
+ 
+    // 設定固定的用戶名和頭像路徑
+    const realName = '實名用戶';  // 您可以根據需要修改這個名稱
+    const anonymousName = '匿名';
+    const realNameAvatarPath = '/static/image/lay.png';
+    const anonymousAvatarPath = '/static/image/anonymous.png';
+ 
+    console.log('實名用戶名:', realName);
+    console.log('實名頭像路徑:', realNameAvatarPath);
+    console.log('匿名頭像路徑:', anonymousAvatarPath);
+ 
+    // Handle anonymous selection (anonymous_yes = 匿名)
+    anonymousRadio.addEventListener('change', function() {
+        console.log('選擇匿名:', this.checked);
+        if (this.checked) {
+            usernameElement.textContent = anonymousName;
+            avatarElement.src = anonymousAvatarPath;
+            console.log('已切換到匿名模式');
+            console.log('當前頭像路徑:', avatarElement.src);
+        }
+    });
+ 
+    // Handle real name selection (anonymous_no = 實名)
+    realNameRadio.addEventListener('change', function() {
+        console.log('選擇實名:', this.checked);
+        if (this.checked) {
+            usernameElement.textContent = realName;
+            avatarElement.src = realNameAvatarPath;
+            console.log('已切換到實名模式');
+            console.log('當前頭像路徑:', avatarElement.src);
+        }
+    });
+ 
+    // 設置初始狀態 - 根據HTML，默認選中匿名 (anonymous_yes checked)
+    if (anonymousRadio.checked) {
+        usernameElement.textContent = anonymousName;
+        avatarElement.src = anonymousAvatarPath;
+        console.log('初始化為匿名模式');
+        console.log('初始頭像路徑:', avatarElement.src);
+    } else if (realNameRadio.checked) {
+        usernameElement.textContent = realName;
+        avatarElement.src = realNameAvatarPath;
+        console.log('初始化為實名模式');
+        console.log('初始頭像路徑:', avatarElement.src);
+    }
+}
+
+// 初始化星級評分系統
+function initializeRatingSystem() {
+    const starsContainer = document.getElementById('rating-stars');
+    if (!starsContainer) return;
+ 
+    const stars = Array.from(starsContainer.querySelectorAll('i'));
+    const ratingInput = document.getElementById('rating-input');
+    const ratingText = starsContainer.querySelector('.rating-text');
+ 
+    // Set initial rating to 1 by default
+    let currentRating = 1;
+    if (ratingInput) ratingInput.value = '1';
+    updateStars(currentRating);
+ 
+    // Click to set rating
+    starsContainer.addEventListener('click', (e) => {
+        if (e.target.matches('i')) {
+            const star = e.target;
+            const newRating = parseInt(star.getAttribute('data-rating'));
+ 
+            // 設置為新的評分值
+            currentRating = Math.min(5, Math.max(1, newRating)); // 確保最小評分為1
+ 
+            updateStars(currentRating);
+            if (ratingInput) ratingInput.value = currentRating;
+            if (ratingText) ratingText.textContent = `${currentRating}/5.0`;
+        }
+    });
+ 
+    // Hover effect for better user experience
+    stars.forEach(star => {
+        star.addEventListener('mouseenter', function() {
+            const hoverRating = parseInt(this.getAttribute('data-rating'));
+            updateStars(hoverRating, false); // Don't update input on hover
+        });
+    });
+ 
+    // Reset to current rating when mouse leaves
+    starsContainer.addEventListener('mouseleave', function() {
+        updateStars(currentRating);
+    });
+ 
+    function updateStars(rating, updateText = true) {
+        // Ensure rating is at least 1
+        if (rating < 1) rating = 1;
+ 
+        stars.forEach((star, index) => {
+            const starRating = index + 1; // 1, 2, 3, 4, 5
+ 
+            if (rating >= starRating) {
+                // Full star
+                star.className = 'fa-solid fa-star';
+            } else {
+                // Empty star
+                star.className = 'fa-regular fa-star';
+            }
+        });
+ 
+        // Update rating text
+        if (updateText && ratingText) {
+            ratingText.textContent = `${rating}/5.0`;
+        }
+    }
+}
+
+// 初始化文字轉換功能
+function initializeTextConversion() {
+    const commentTextarea = document.getElementById('comment_text');
+    const previewTextarea = document.getElementById('preview_text');
+    const convertBtn = document.getElementById('convert_btn');
+ 
+    // Make sure preview is initially empty
+    previewTextarea.value = '';
+ 
+    // Handle convert button click - transfer content from left to right with filtering
+    convertBtn.addEventListener('click', function() {
+        const originalText = commentTextarea.value;
+ 
+        if (!originalText.trim()) {
+            alert('請先輸入評論內容再進行轉換');
+            return;
+        }
+ 
+        // 示例轉換：將原文轉換為更正面的評論
+        let convertedText = '';
+ 
+        // 檢查是否包含負面詞彙並轉換
+        const negativeWords = {
+            // '很爛': '有改進空間',
+            // '超爛': '需要加強',
+            // '難死了': '具有挑戰性',
+            // '無聊': '比較平淡',
+            // '垃圾': '不太適合',
+            // '糟糕': '需要改善',
+            // '討厭': '不太喜歡',
+            // '幹': '真是',
+            // '靠': '哎呀',
+            // '爛': '需要改善',
+            // '廢': '有些不足',
+            '這門課超爛，老師根本不會教，完全是照著投影片念，講話有夠無聊，根本是在整學生，每週都要熬夜寫報告，完全沒有人性，奉勸大家不要踩雷，能避就避！':'這門課的教學方式以照著投影片講解為主，整體互動較少，對於習慣討論式學習或需要更多說明的同學來說，可能較難投入。老師授課節奏較快，說明部分內容時較為簡略，可能會影響理解。課程作業安排較密集，每週需要花費相當多時間準備報告，對時間管理能力是很大的挑戰。若沒有充足準備，可能會感受到學習壓力較大。整體來說，這門課對於具備自學能力與良好時間規劃的學生會比較適合。',
+        };
+ 
+        convertedText = originalText;
+ 
+        // 替換負面詞彙
+        Object.keys(negativeWords).forEach(word => {
+            const regex = new RegExp(word, 'g');
+            convertedText = convertedText.replace(regex, negativeWords[word]);
+        });
+ 
+        // 如果沒有需要轉換的內容，添加一些正面的修飾
+        if (convertedText === originalText) {
+            convertedText = '總體來說，' + originalText + ' 希望能持續改進，讓課程更好。';
+         }
+        // else {
+        //     convertedText = '經過思考後，我認為' + convertedText + ' 以上是我的客觀評價。';
+        // }
+ 
+        // Update preview with converted text
+        previewTextarea.value = convertedText;
+ 
+        // 顯示轉換完成提示
+        const originalBtnText = convertBtn.innerHTML;
+        const originalBgColor = convertBtn.style.backgroundColor;
+ 
+        convertBtn.innerHTML = '已轉換';
+        convertBtn.style.backgroundColor = '#e0d3e0';
+        convertBtn.style.color = '#635c63';
+        convertBtn.disabled = true;
+ 
+        setTimeout(() => {
+            convertBtn.innerHTML = originalBtnText;
+            convertBtn.style.backgroundColor = originalBgColor;
+            convertBtn.style.color = '#fff';
+            convertBtn.disabled = false;
+        }, 1500);
+    });
+}
+
+// 初始化表單驗證和提交
+function initializeFormValidation() {
+    const commentForm = document.querySelector('.comment-form');
+    const commentTextarea = document.getElementById('comment_text');
+    const previewTextarea = document.getElementById('preview_text');
+ 
+    if (!commentForm) return;
+ 
+    // Remove the onsubmit attribute from HTML to prevent conflicts
+    commentForm.removeAttribute('onsubmit');
+ 
+    // Form submission handling with validation
+    commentForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // 防止默認提交
+ 
+        // 獲取所有必填欄位
+        const schoolYear = document.getElementById('school_year')?.value || '';
+        const category = document.getElementById('category')?.value || '';
+        const classInfo = document.getElementById('class_info')?.value || '';
+        const course = document.getElementById('course')?.value || '';
+        const rating = document.getElementById('rating-input')?.value || '';
+        const commentText = commentTextarea?.value.trim() || '';
+        const previewText = previewTextarea?.value.trim() || '';
+        const realNameRadio = document.getElementById('anonymous_no'); // 實名選項
+ 
+        // 驗證必填欄位
+        let missingFields = [];
+ 
+        if (!schoolYear) missingFields.push('學年度');
+        if (!category) missingFields.push('學制');
+        if (!classInfo) missingFields.push('班級');
+        if (!course) missingFields.push('課程');
+        if (!rating || rating < 1 || rating > 5) missingFields.push('課程評分');
+        if (!commentText && !previewText) missingFields.push('評論內容');
+ 
+        if (missingFields.length > 0) {
+            alert('請填寫以下必填欄位：\n' + missingFields.join('、'));
+            return;
+        }
+ 
+        // 確認提交
+        const isAnonymous = realNameRadio?.checked ? '實名' : '匿名';
+        const finalText = previewText || commentText; // 優先使用轉換後的文字
+ 
+        const confirmMessage = `送出後將無法修改，確定要送出嗎？`;
+ 
+        if (confirm(confirmMessage)) {
+            // 如果有轉換後的文字，將其設為主要提交內容
+            if (previewText && commentTextarea) {
+                commentTextarea.value = previewText;
+            }
+ 
+            // 顯示提交中狀態
+            const submitBtn = this.querySelector('.btn-submit');
+            if (submitBtn) {
+                const originalText = submitBtn.innerHTML;
+ 
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"> 送出中...';
+                submitBtn.disabled = true;
+ 
+                // 模擬提交過程
+                setTimeout(() => {
+                    alert('評論送出成功！');
+                    window.location.href = '/comment/';
+                }, 1500);
+            }
+        }
+    });
+}
+
+// 全域函數用於確認提交（向後兼容，並整合原本HTML中的驗證邏輯）
+function confirmSubmission() {
+    const form = document.getElementById('commentForm');
+    if (!form) return false;
+ 
+    const comment = form.querySelector('textarea[name="comment_text"]')?.value.trim() || '';
+    const rating = parseFloat(document.getElementById('rating-input')?.value || 0);
+    const courseSelect = form.querySelector('select[name="course"]');
+    const classSelect = form.querySelector('select[name="class_info"]');
+    const schoolYearSelect = form.querySelector('select[name="school_year"]');
+    const categorySelect = form.querySelector('select[name="category"]');
+ 
+    // 驗證必填欄位
+    if (!courseSelect?.value) {
+        alert('請選擇課程');
+        return false;
+    }
+ 
+    if (!classSelect?.value) {
+        alert('請選擇班級');
+        return false;
+    }
+ 
+    if (!schoolYearSelect?.value) {
+        alert('請選擇學年度');
+        return false;
+    }
+ 
+    if (!categorySelect?.value) {
+        alert('請選擇學制');
+        return false;
+    }
+ 
+    if (!comment) {
+        alert('請輸入評論內容');
+        return false;
+    }
+ 
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+        alert('請給出有效的評分 (1-5分)');
+        return false;
+    }
+ 
+    // 顯示確認對話框
+    const confirmation = confirm('評論將公開顯示，送出後無法修改。');
+ 
+    if (confirmation) {
+        // 顯示載入中或禁用按鈕等處理
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"> 提交中...';
+ 
+            // 模擬提交完成後跳轉
+            setTimeout(() => {
+                alert('評論送出成功！');
+                window.location.href = '/comment/';
+            }, 1500);
+        }
+    }
+ 
+    return confirmation;
+}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\book_detail.js
+// 購買按鈕功能
+const ctaButtons = document.querySelectorAll('.fixed-cta');
+ctaButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        alert('已加入購物車！請前往個人儀表板完成付款流程。');
+    });
+});
+
+// 聯絡賣家模態視窗功能
+const contactSellerModal = document.getElementById('contactSellerModal');
+const contactSellerBtn = document.querySelector('.contact-seller-btn');
+const closeModalBtn = document.querySelector('.close-modal');
+const cancelBtn = document.querySelector('.cancel-btn');
+const sendBtn = document.querySelector('.send-btn');
+
+// 打開模態視窗
+if (contactSellerBtn) {
+    contactSellerBtn.addEventListener('click', function() {
+        contactSellerModal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // 防止背景捲動
+    });
+}
+
+// 關閉模態視窗
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', function() {
+        contactSellerModal.classList.remove('show');
+        document.body.style.overflow = ''; // 恢復背景捲動
+    });
+}
+
+// 取消按鈕關閉模態視窗
+if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+        contactSellerModal.classList.remove('show');
+        document.body.style.overflow = '';
+    });
+}
+
+// 聯絡方式選擇功能
+const contactMethods = document.querySelectorAll('.method-header');
+if (contactMethods) {
+    contactMethods.forEach(header => {
+        header.addEventListener('click', function() {
+            // 找到被點擊的選項的內容區域
+            const methodDetails = this.nextElementSibling;
+            const radio = this.querySelector('input[type="radio"]');
+ 
+            // 選中該選項
+            radio.checked = true;
+ 
+            // 顯示選中的選項內容，隱藏其他選項內容
+            document.querySelectorAll('.method-details').forEach(detail => {
+                detail.style.display = 'none';
+            });
+            methodDetails.style.display = 'block';
+        });
+    });
+}
+
+// 加入LINE好友按鈕功能
+const addLineBtn = document.querySelector('.add-line-btn');
+if (addLineBtn) {
+    addLineBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        alert('已將您導向至LINE加入好友頁面！');
+        // 實際應用中可以導向到LINE加好友頁面
+        // window.open('https://line.me/ti/p/~wang_ntub', '_blank');
+    });
+}
+
+// 發送按鈕功能
+if (sendBtn) {
+    sendBtn.addEventListener('click', function() {
+        const subject = document.getElementById('messageSubject').value;
+        const content = document.getElementById('messageContent').value;
+        const selectedMethod = document.querySelector('input[name="contactMethod"]:checked').id;
+ 
+        if (!content.trim()) {
+            alert('請輸入訊息內容！');
+            return;
+        }
+ 
+        // 顯示發送中的動畫效果
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"> 發送中...';
+        sendBtn.disabled = true;
+ 
+        // 模擬發送電子郵件的過程
+        setTimeout(function() {
+            // 根據選擇的聯絡方式進行不同的處理
+            let message = '';
+            let contactData = {};
+ 
+            if (selectedMethod === 'contactLine') {
+                // LINE聯絡方式
+                contactData = {
+                    type: 'line',
+                    lineId: 'wang_ntub',
+                    message: content,
+                    subject: subject,
+                    timestamp: new Date().toLocaleString('zh-TW')
+                };
+                localStorage.setItem('lastContactLine', JSON.stringify(contactData));
+                message = '已將您的訊息發送至賣家LINE！建議您加入賣家LINE好友以獲得更快的回覆。';
+ 
+                // 如果在真實應用中，這裡可以打開 LINE 加好友頁面
+                // window.open('https://line.me/ti/p/~wang_ntub', '_blank');
+ 
+            } else if (selectedMethod === 'contactEmail') {
+                // 電子郵件聯絡方式
+                contactData = {
+                    type: 'email',
+                    to: 'wang_ntub@example.com',
+                    subject: subject,
+                    body: content,
+                    from: '北商二手書平台用戶',
+                    timestamp: new Date().toLocaleString('zh-TW')
+                };
+                localStorage.setItem('lastContactEmail', JSON.stringify(contactData));
+                message = '已將您的訊息發送至賣家信箱！賣家將會在 24 小時內回覆您。';
+ 
+                // 如果在真實應用中，這裡可以打開郵件客戶端
+                // window.open('mailto:wang_ntub@example.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(content), '_blank');
+ 
+            } else if (selectedMethod === 'contactPhone') {
+                // 手機聯絡方式
+                contactData = {
+                    type: 'phone',
+                    phoneNumber: '0912-345-678',
+                    callTime: '周一至周五 10:00-18:00',
+                    message: content,
+                    subject: subject,
+                    timestamp: new Date().toLocaleString('zh-TW')
+                };
+                localStorage.setItem('lastContactPhone', JSON.stringify(contactData));
+                message = '已記錄您的詢問訊息！建議您在適合的時間直接撥打賣家電話進行詢問。';
+ 
+                // 如果在真實應用中，這裡可以打開撥號頁面
+                // window.open('tel:0912345678', '_blank');
+            }
+ 
+            // 顯示成功訊息
+            showSuccessMessage(message);
+ 
+            // 關閉模態視窗
+            contactSellerModal.classList.remove('show');
+            document.body.style.overflow = '';
+ 
+            // 清空輸入內容並重設按鈕
+            document.getElementById('messageContent').value = '';
+            sendBtn.innerHTML = '發送訊息';
+            sendBtn.disabled = false;
+        }, 1500); // 模擬發送延遲
+    });
+}
+
+// 顯示成功訊息的功能
+function showSuccessMessage(message) {
+    // 創建成功訊息元素
+    const successMessage = document.createElement('div');
+    successMessage.className = 'success-message';
+    successMessage.innerHTML = `
+        <div class="success-icon">
+            <i class="fas fa-check-circle">
+        </div>
+        <div class="success-text">${message}</div>
+    `;
+ 
+    // 添加到頁面
+    document.body.appendChild(successMessage);
+ 
+    // 添加顯示效果
+    setTimeout(() => {
+        successMessage.classList.add('show');
+    }, 10);
+ 
+    // 設定自動關閉
+    setTimeout(() => {
+        successMessage.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(successMessage);
+        }, 300);
+    }, 3000);
+}
+
+// 點擊模態視窗外部關閉
+window.addEventListener('click', function(event) {
+    if (event.target === contactSellerModal) {
+        contactSellerModal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 修復任何布局問題
+    fixLayoutIssues();
+ 
+    // 初始化星級評分顯示
+    initializeRatings();
+ 
+    // 按讚按鈕功能
+    initializeLikeButtons();
+ 
+    // 回覆功能
+    initializeReplyButtons();
+ 
+    // 圖片放大功能
+    initializeImageZoom();
+ 
+    // Initialize star ratings with Font Awesome icons
+    function initializeRatings() {
+        document.querySelectorAll('.stars').forEach(starsContainer => {
+            const rating = parseFloat(starsContainer.getAttribute('data-rating'));
+            const stars = Array.from(starsContainer.querySelectorAll('i'));
+ 
+            // Set initial rating display
+            updateStarIcons(stars, rating);
+ 
+            // Make stars clickable for rating input (if needed)
+            if (starsContainer.closest('.editable-rating')) {
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', () => {
+                        const newRating = index + 1;
+                        starsContainer.setAttribute('data-rating', newRating);
+                        updateStarIcons(stars, newRating);
+                    });
+                });
+            }
+        });
+    }
+ 
+    function updateStarIcons(stars, rating) {
+        stars.forEach((star, index) => {
+            const starValue = index + 1;
+ 
+            if (rating >= starValue) {
+                // Full star
+                star.className = 'fa-solid fa-star';
+            } else if (rating > starValue - 1 && rating < starValue) {
+                // Half star (for decimal values like 4.5, 3.5, etc.)
+                star.className = 'fa-solid fa-star-half-stroke';
+            } else {
+                // Empty star
+                star.className = 'fa-regular fa-star';
+            }
+        });
+    }
+ 
+    // Like button functionality
+    function initializeLikeButtons() {
+        const likeButtons = document.querySelectorAll('.like-btn');
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const likeCount = this.querySelector('.like-count');
+                if (!likeCount) return;
+ 
+                const currentCount = parseInt(likeCount.textContent);
+                const isLiked = this.classList.contains('liked');
+                const likeIcon = this.querySelector('.like-icon');
+ 
+                if (isLiked) {
+                    likeCount.textContent = currentCount - 1;
+                    this.classList.remove('liked');
+                    if (likeIcon) {
+                        likeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up">';
+                    }
+                } else {
+                    likeCount.textContent = currentCount + 1;
+                    this.classList.add('liked');
+                    if (likeIcon) {
+                        likeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up">';
+ 
+                        // Add animation
+                        const icon = likeIcon.querySelector('i');
+                        if (icon) {
+                            icon.style.transform = 'scale(1.3)';
+                            setTimeout(() => {
+                                icon.style.transform = 'scale(1)';
+                            }, 200);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // Reply functionality
+    function initializeReplyButtons() {
+        // Handle main reply buttons
+        document.addEventListener('click', function(e) {
+            // Reply button click
+            if (e.target.closest('.reply-btn')) {
+                const button = e.target.closest('.reply-btn');
+                const commentCard = button.closest('.comment-card');
+                const replyForm = commentCard.querySelector('.reply-form');
+ 
+                if (!replyForm) return;
+ 
+                // Hide all other reply forms
+                document.querySelectorAll('.reply-form').forEach(form => {
+                    if (form !== replyForm) {
+                        form.style.display = 'none';
+                    }
+                });
+ 
+                // Toggle current reply form
+                if (replyForm.style.display === 'block') {
+                    replyForm.style.display = 'none';
+                } else {
+                    replyForm.style.display = 'block';
+                    replyForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+ 
+            // Reply to reply button click
+            if (e.target.closest('.reply-to-reply')) {
+                const replyBtn = e.target.closest('.reply-to-reply');
+                const replyContainer = replyBtn.closest('.replies-container');
+                if (!replyContainer) return;
+ 
+                const replyForm = replyContainer.querySelector('.reply-form');
+ 
+                if (replyForm) {
+                    replyForm.style.display = replyForm.style.display === 'block' ? 'none' : 'block';
+                    if (replyForm.style.display === 'block') {
+                        replyForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            }
+ 
+            // Cancel reply button click
+            if (e.target.closest('.cancel-reply-btn')) {
+                const cancelBtn = e.target.closest('.cancel-reply-btn');
+                const form = cancelBtn.closest('.reply-form');
+                if (form) {
+                    form.style.display = 'none';
+                }
+            }
+ 
+            // Submit reply button click
+            if (e.target.closest('.submit-reply-btn')) {
+                const submitBtn = e.target.closest('.submit-reply-btn');
+                const form = submitBtn.closest('.reply-form');
+                if (!form) return;
+ 
+                const textarea = form.querySelector('textarea');
+                if (!textarea) return;
+ 
+                const replyText = textarea.value.trim();
+ 
+                if (replyText) {
+                    let repliesContainer = form.closest('.replies-container');
+ 
+                    // If not inside a replies-container, look for one in the parent comment-card
+                    if (!repliesContainer) {
+                        const commentCard = form.closest('.comment-card');
+                        if (commentCard) {
+                            repliesContainer = commentCard.querySelector('.replies-container');
+ 
+                            // Create a replies-container if it doesn't exist
+                            if (!repliesContainer) {
+                                repliesContainer = document.createElement('div');
+                                repliesContainer.className = 'replies-container';
+                                commentCard.appendChild(repliesContainer);
+                            }
+                        }
+                    }
+ 
+                    if (repliesContainer) {
+                        // Create new reply element
+                        const newReply = document.createElement('div');
+                        newReply.className = 'reply';
+                        newReply.innerHTML = `
+                            <div class="user-avatar small">
+                                <img src="/static/images/default-avatar.png" alt="使用者頭像">
+                            </div>
+                            <div class="reply-content">
+                                <div class="reply-header">
+                                    <span class="user-name">匿名用戶</span>
+                                    <span class="reply-date">剛剛</span>
+                                </div>
+                                <p>${replyText}</p>
+                                <div class="reply-actions">
+                                    <button class="reply-to-reply">回覆</button>
+                                </div>
+                            </div>
+                        `;
+ 
+                        // Insert new reply
+                        repliesContainer.appendChild(newReply);
+ 
+                        // Clear and hide form
+                        textarea.value = '';
+                        form.style.display = 'none';
+ 
+                        // Show success message
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'success-message';
+                        successMsg.textContent = '回覆已送出！';
+                        successMsg.style.textAlign = 'center';
+                        successMsg.style.padding = '10px';
+                        successMsg.style.color = '#4CAF50';
+                        successMsg.style.margin = '10px 0';
+ 
+                        form.parentNode.insertBefore(successMsg, form.nextSibling);
+ 
+                        // Remove success message after 3 seconds
+                        setTimeout(() => {
+                            successMsg.remove();
+                        }, 3000);
+                    }
+                }
+            }
+        });
+    }
+ 
+    // 圖片放大功能
+    function initializeImageZoom() {
+        const bookImage = document.querySelector('.book-image');
+        if (bookImage) {
+            bookImage.addEventListener('click', function() {
+                // 創建模態框
+                const modal = document.createElement('div');
+                modal.className = 'image-modal';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                modal.style.display = 'flex';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                modal.style.zIndex = '9999';
+ 
+                // 創建放大的圖片
+                const zoomedImage = document.createElement('img');
+                zoomedImage.src = this.src;
+                zoomedImage.style.maxWidth = '90%';
+                zoomedImage.style.maxHeight = '90%';
+                zoomedImage.style.objectFit = 'contain';
+                zoomedImage.style.border = '5px solid white';
+                zoomedImage.style.borderRadius = '5px';
+ 
+                // 創建關閉按鈕
+                const closeButton = document.createElement('button');
+                closeButton.textContent = '×';
+                closeButton.style.position = 'absolute';
+                closeButton.style.top = '20px';
+                closeButton.style.right = '20px';
+                closeButton.style.fontSize = '30px';
+                closeButton.style.color = 'white';
+                closeButton.style.background = 'none';
+                closeButton.style.border = 'none';
+                closeButton.style.cursor = 'pointer';
+ 
+                // 添加到文檔
+                modal.appendChild(zoomedImage);
+                modal.appendChild(closeButton);
+                document.body.appendChild(modal);
+ 
+                // 點擊模態框或關閉按鈕時關閉
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal || e.target === closeButton) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            });
+        }
+    }
+ 
+    // Function to fix layout issues
+    function fixLayoutIssues() {
+        // Ensure proper spacing between sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.clear = 'both';
+            section.style.overflow = 'hidden';
+        });
+ 
+        // Fix any overlapping elements in the comments section
+        const commentsSection = document.querySelector('.comments-section');
+        if (commentsSection) {
+            commentsSection.style.clear = 'both';
+            commentsSection.style.overflow = 'hidden';
+        }
+ 
+        // Fix book image and details layout
+        const bookImageContainer = document.querySelector('.book-image-container');
+        const bookDetailsText = document.querySelector('.book-details-text');
+ 
+        if (bookImageContainer && bookDetailsText) {
+            if (window.innerWidth <= 768) {
+                bookImageContainer.style.float = 'none';
+                bookImageContainer.style.width = '100%';
+                bookDetailsText.style.float = 'none';
+                bookDetailsText.style.width = '100%';
+            } else {
+                bookImageContainer.style.float = 'left';
+                bookImageContainer.style.width = '30%';
+                bookDetailsText.style.float = 'left';
+                bookDetailsText.style.width = '65%';
+            }
+        }
+ 
+        // Ensure related grid has proper layout
+        const relatedGrid = document.querySelector('.related-grid');
+        if (relatedGrid) {
+            relatedGrid.style.clear = 'both';
+        }
+    }
+ 
+    // 監聽視窗大小變化，重新調整布局
+    window.addEventListener('resize', fixLayoutIssues);
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\book.js
+//index
+window.addEventListener('DOMContentLoaded', () => {
+    const popupId = sessionStorage.getItem('openPopup');
+    if (popupId) {
+        const popup = document.getElementById(popupId);
+        if (popup) {
+            popup.classList.add('show-popup');
+            console.log(`開啟彈窗: ${popupId}`);
+        } else {
+            console.warn(`找不到彈窗 ID: ${popupId}`);
+        }
+        sessionStorage.removeItem('openPopup');
+    }
+});
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 確俞SVG路徑和上傳按鈕中心點對齊
+    alignSvgPathWithUploadButton();
+ 
+    // 背景文字隨滾動移動
+    const bgText = document.querySelector('.bg-text');
+    if (bgText) {
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.scrollY;
+            const moveX = scrollPosition * 0.3; // 控制移動速度
+            bgText.style.transform = `translateX(-${moveX}px)`;
+        });
+    }
+ 
+    // 鎖定背景滾動功能
+    function lockBodyScroll() {
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100%';
+    }
+ 
+    function unlockBodyScroll() {
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+    }
+ 
+    // 中心上傳按鈕點擊事件
+    const centerUploadBtn = document.getElementById('centerUploadBtn');
+    if (centerUploadBtn) {
+        centerUploadBtn.addEventListener('click', function() {
+            const uploadForm = document.getElementById('uploadForm');
+            if (uploadForm) {
+                uploadForm.style.display = 'flex';
+                // 鎖定背景滾動
+                lockBodyScroll();
+                // 初始化表單驗證
+                validateRequiredFields();
+            }
+        });
+    }
+ 
+    // 初始化表單驗證
+    validateRequiredFields();
+ 
+    // 篩選標籤點擊效果
+    const filterItems = document.querySelectorAll('.filter-item');
+ 
+    filterItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // 移除所有active類
+            filterItems.forEach(i => i.classList.remove('active'));
+            // 添加當前點擊項目的active類
+            this.classList.add('active');
+ 
+            // 這裡可以添加實際篩選功能
+            const filterType = this.textContent;
+            console.log('篩選類型:', filterType);
+ 
+            // 模擬篩選效果
+            const bookCards = document.querySelectorAll('.book-card');
+            bookCards.forEach(card => {
+                card.style.opacity = '0.6';
+                card.style.transform = 'scale(0.98)';
+ 
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, 300);
+            });
+        });
+    });
+ 
+    // 書籍卡片點擊效果
+    const bookCards = document.querySelectorAll('.book-card');
+    bookCards.forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = '';
+                // 這裡可以添加點擊後的導航邏輯
+                console.log('查看書籍:', this.querySelector('.book-title').textContent);
+            }, 150);
+        });
+    });
+ 
+    // 上傳功能相關
+    const uploadForm = document.getElementById('uploadForm');
+    const closeFormBtn = document.getElementById('closeFormBtn');
+    const imagePreview = document.getElementById('imagePreview');
+    const imageUpload = document.getElementById('imageUpload');
+    const previewImage = document.getElementById('previewImage');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const submitBtn = document.getElementById('submitBtn');
+ 
+    // 關閉上傳表單
+    closeFormBtn.addEventListener('click', function() {
+        uploadForm.style.display = 'none';
+        // 解鎖背景滾動
+        unlockBodyScroll();
+    });
+ 
+    // 點擊預覽區域觸發文件選擇
+    imagePreview.addEventListener('click', function() {
+        imageUpload.click();
+    });
+ 
+    // 圖片上傳預覽
+    imageUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+ 
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
+            }
+ 
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+ 
+    // 拖放功能
+    const previewContainer = document.querySelector('.preview-container');
+ 
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        previewContainer.addEventListener(eventName, preventDefaults, false);
+    });
+ 
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+ 
+    ['dragenter', 'dragover'].forEach(eventName => {
+        previewContainer.addEventListener(eventName, highlight, false);
+    });
+ 
+    ['dragleave', 'drop'].forEach(eventName => {
+        previewContainer.addEventListener(eventName, unhighlight, false);
+    });
+ 
+    function highlight() {
+        previewContainer.classList.add('highlight');
+    }
+ 
+    function unhighlight() {
+        previewContainer.classList.remove('highlight');
+    }
+ 
+    previewContainer.addEventListener('drop', handleDrop, false);
+ 
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+ 
+        if (files && files.length) {
+            imageUpload.files = files;
+            const event = new Event('change');
+            imageUpload.dispatchEvent(event);
+        }
+    }
+ 
+    // 驗證必填欄位
+    function validateRequiredFields() {
+        const bookTitleInput = document.getElementById('bookTitle');
+        const priceInput = document.getElementById('price');
+        const faceToFaceCheckbox = document.getElementById('faceToFace');
+        const shippingCheckbox = document.getElementById('shipping');
+        const submitBtn = document.getElementById('submitBtn');
+        const bookTitleError = document.getElementById('bookTitleError');
+        const priceError = document.getElementById('priceError');
+        const transactionMethodError = document.getElementById('transactionMethodError');
+ 
+        // 初始化時隱藏所有錯誤訊息
+        bookTitleError.style.display = 'none';
+        priceError.style.display = 'none';
+        transactionMethodError.style.display = 'none';
+ 
+        // 檢查必填欄位是否填寫
+        function checkRequiredFields() {
+            const bookTitleValid = bookTitleInput.value.trim() !== '';
+            const priceValid = priceInput.value.trim() !== '';
+            const transactionMethodValid = faceToFaceCheckbox.checked || shippingCheckbox.checked;
+ 
+            // 只在表單驗證時才顯示錯誤訊息，不在實時顯示
+            return bookTitleValid && priceValid && transactionMethodValid;
+        }
+ 
+        // 監聽輸入欄位變化但不顯示錯誤訊息
+        bookTitleInput.addEventListener('input', function() {
+            // 如果有值則隱藏錯誤訊息
+            if (bookTitleInput.value.trim() !== '') {
+                bookTitleError.style.display = 'none';
+            }
+        });
+ 
+        priceInput.addEventListener('input', function() {
+            if (priceInput.value.trim() !== '') {
+                priceError.style.display = 'none';
+            }
+        });
+ 
+        function checkTransactionMethod() {
+            if (faceToFaceCheckbox.checked || shippingCheckbox.checked) {
+                transactionMethodError.style.display = 'none';
+            }
+        }
+ 
+        faceToFaceCheckbox.addEventListener('change', checkTransactionMethod);
+        shippingCheckbox.addEventListener('change', checkTransactionMethod);
+ 
+        return checkRequiredFields;
+    }
+ 
+    // 初始化驗證函數
+    const checkRequiredFields = validateRequiredFields();
+ 
+    // 提交按鈕點擊事件
+    submitBtn.addEventListener('click', function() {
+        // 獲取所有表單值
+        const bookTitle = document.getElementById('bookTitle').value;
+        const department = document.getElementById('department').value;
+        const grade = document.getElementById('grade').value;
+        const bookType = document.getElementById('bookType').value;
+        const price = document.getElementById('price').value;
+        const condition = document.getElementById('condition').value;
+        const bookDescription = document.getElementById('bookDescription').value;
+        const transactionMethods = document.querySelectorAll('input[name="transactionMethod"]:checked');
+ 
+        // 驗證必填欄位
+        const bookTitleError = document.getElementById('bookTitleError');
+        const priceError = document.getElementById('priceError');
+        const transactionMethodError = document.getElementById('transactionMethodError');
+ 
+        // 顯示錯誤訊息，只在點擊上傳按鈕後顯示
+        if (bookTitle.trim() === '') {
+            bookTitleError.style.display = 'block';
+        }
+ 
+        if (price.trim() === '') {
+            priceError.style.display = 'block';
+        }
+ 
+        if (transactionMethods.length === 0) {
+            transactionMethodError.style.display = 'block';
+        }
+ 
+        // 如果有錯誤，不繼續提交
+        if (bookTitle.trim() === '' || price.trim() === '' || transactionMethods.length === 0) {
+            return;
+        }
+ 
+        // 其他表單驗證
+        if (!validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods)) {
+            return;
+        }
+ 
+        // 顯示加載狀態
+        submitBtn.textContent = '上傳中...';
+        submitBtn.disabled = true;
+ 
+        // 收集交易方式
+        const selectedMethods = [];
+        transactionMethods.forEach(method => {
+            selectedMethods.push(method.value);
+        });
+ 
+        // 準備表單數據
+        const formData = new FormData();
+        formData.append('bookTitle', bookTitle);
+        formData.append('department', department);
+        formData.append('grade', grade);
+        formData.append('bookType', bookType);
+        formData.append('price', price);
+        formData.append('condition', condition);
+        formData.append('bookDescription', bookDescription);
+ 
+        // 添加交易方式
+        selectedMethods.forEach(method => {
+            formData.append('transactionMethod', method);
+        });
+ 
+        // 添加圖片
+        if (imageUpload.files[0]) {
+            formData.append('bookImage', imageUpload.files[0]);
+        }
+ 
+        // 添加CSRF令牌
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+ 
+        // 發送AJAX請求
+        fetch('/upload_book/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                uploadForm.style.display = 'none';
+ 
+                // 重置表單
+                resetForm();
+ 
+                // 刷新頁面以顯示新上傳的書籍
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert(data.message || '上傳失敗，請稍後再試');
+                submitBtn.textContent = '上傳書籍';
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('上傳錯誤:', error);
+            alert('上傳失敗，請稍後再試');
+            submitBtn.textContent = '上傳書籍';
+            submitBtn.disabled = false;
+        });
+    });
+ 
+    // 表單驗證函數
+    function validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods) {
+        // 必填欄位已在提交按鈕點擊事件中驗證
+ 
+        if (!imageUpload.files[0]) {
+            alert('請上傳書籍圖片！');
+            return false;
+        }
+ 
+        if (!department) {
+            alert('請選擇系所！');
+            return false;
+        }
+ 
+        if (!grade) {
+            alert('請選擇年級！');
+            return false;
+        }
+ 
+        if (!bookType) {
+            alert('請選擇書籍類型！');
+            return false;
+        }
+ 
+        if (!condition) {
+            alert('請選擇書籍狀況！');
+            return false;
+        }
+ 
+        return true;
+    }
+ 
+    // 重置表單函數
+    function resetForm() {
+        document.getElementById('bookTitle').value = '';
+        document.getElementById('department').selectedIndex = 0;
+        document.getElementById('grade').selectedIndex = 0;
+        document.getElementById('bookType').selectedIndex = 0;
+        document.getElementById('price').value = '';
+        document.getElementById('condition').selectedIndex = 0;
+        document.getElementById('bookDescription').value = '';
+ 
+        // 重置交易方式
+        document.querySelectorAll('input[name="transactionMethod"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+ 
+        // 重置圖片
+        imageUpload.value = '';
+        previewImage.src = '';
+        previewImage.style.display = 'none';
+        previewPlaceholder.style.display = 'block';
+    }
+ 
+    // 模擬添加新卡片的函數 (未使用)
+    function addNewBookCard(bookTitle, bookDescription, bookType) {
+        const booksGrid = document.querySelector('.books-grid');
+        const newCard = document.createElement('div');
+        newCard.classList.add('book-card');
+        newCard.innerHTML = `
+            <div class="book-image">
+                <img src="/api/placeholder/400/320" alt="${bookTitle}" class="book-cover">
+            </div>
+            <h3 class="book-title">${bookTitle}</h3>
+            <p class="book-description">${bookDescription}</p>
+            <div class="tag-container">
+                <span class="tag">#${bookType}</span>
+            </div>
+        `;
+        booksGrid.prepend(newCard);
+    }
+ 
+    // 上傳按鈕點擊事件
+    uploadBtn.addEventListener('click', function() {
+        uploadForm.style.display = 'flex';
+    });
+ 
+    // 添加SVG路徑和上傳按鈕中心點對齊的功能
+    function alignSvgPathWithUploadButton() {
+        const svgPath = document.getElementById('curve');
+        const uploadBtn = document.getElementById('uploadBtn');
+ 
+        if (!svgPath || !uploadBtn) return;
+ 
+        // 獲取SVG元素
+        const svg = svgPath.closest('svg');
+        if (!svg) return;
+ 
+        // 創建一個新的圓形元素作為參考點
+        const centerPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        centerPoint.setAttribute('cx', '50');
+        centerPoint.setAttribute('cy', '50');
+        centerPoint.setAttribute('r', '2');
+        centerPoint.setAttribute('fill', 'transparent');
+        centerPoint.setAttribute('id', 'centerPoint');
+        svg.appendChild(centerPoint);
+ 
+        // 監聽窗口大小變化，確保對齊
+        window.addEventListener('resize', updateAlignment);
+ 
+        // 初始對齊
+        updateAlignment();
+ 
+        function updateAlignment() {
+            // 獲取SVG中心點的位置
+            const svgRect = svg.getBoundingClientRect();
+            const svgCenterX = svgRect.left + svgRect.width / 2;
+            const svgCenterY = svgRect.top + svgRect.height / 2;
+ 
+            // 獲取上傳按鈕的位置
+            const btnRect = uploadBtn.getBoundingClientRect();
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
+ 
+            // 計算SVG路徑需要的調整
+            const pathD = svgPath.getAttribute('d');
+            const newPathD = `M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0`;
+            svgPath.setAttribute('d', newPathD);
+ 
+            // 更新文字路徑的長度，確保文字正確顯示
+            const textPath = document.querySelector('textPath');
+            if (textPath) {
+                textPath.setAttribute('textLength', '250');
+            }
+        }
+    }
+});
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\static\js\chat.js
+// 隨機數產生器（可重現）
+function randomNumber(min, max, seed) {
+    const x = Math.sin(seed) * 10000;
+    const raw = x - Math.floor(x);
+    return raw * (max - min) + min;
+}
+
+// 初始化背景動畫 blobs
+function initBlobs() {
+    const blobs = document.querySelectorAll('.blob');
+
+    blobs.forEach((blob, index) => {
+        const seed = index + 100;
+
+        // 設定初始位置
+        const initialXPercent = randomNumber(10, 90, seed + 10);
+        const initialYPercent = randomNumber(10, 90, seed + 11);
+        blob.style.left = `${initialXPercent}%`;
+        blob.style.top = `${initialYPercent}%`;
+
+        // 建立動畫 keyframes
+        const keyframes = [
+            { transform: `translate(${randomNumber(-25, 25, seed + 20)}%, ${randomNumber(-25, 25, seed + 21)}%)` },
+            { transform: `translate(${randomNumber(-25, 25, seed + 22)}%, ${randomNumber(-25, 25, seed + 23)}%)` },
+            { transform: `translate(${randomNumber(-25, 25, seed + 24)}%, ${randomNumber(-25, 25, seed + 25)}%)` },
+            { transform: `translate(${randomNumber(-25, 25, seed + 26)}%, ${randomNumber(-25, 25, seed + 27)}%)` }
+        ];
+
+        // 啟用動畫
+        blob.animate(keyframes, {
+            duration: 8000 + index * 1000,
+            iterations: Infinity,
+            direction: 'alternate',
+            easing: 'ease-in-out'
+        });
+    });
+}
+
+
+
+// 當前對話ID
+let currentId = null;
+let conversations = [];
+let nextSeq = 1;
+
+// DOM元素
+const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menuBtn');
+const mainContent = document.getElementById('mainContent');
+const currentChatTitle = document.getElementById('currentChatTitle');
+const newChatBtn = document.getElementById('newChatBtn');
+const chatHistoryEl = document.getElementById('chatHistory');
+const chatContainer = document.getElementById('chatContainer');
+const noMessagesEl = document.getElementById('noMessages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+
+// 建立統一檔案上傳按鈕
+const headerArea = currentChatTitle.parentElement;
+const uploadContainer = document.createElement('div');
+uploadContainer.className = 'upload-container';
+uploadContainer.innerHTML = `
+    <label for="fileUpload" class="upload-btn">
+        <i class="fa-solid fa-upload">
+        <span>上傳檔案</span>
+    </label>
+    <input type="file" id="fileUpload" accept=".pdf,.zip" style="display:none" />
+ 
+    <div id="floating-progress" style="display:none; position:absolute; top:120%; left:80%; margin-left:10px; background:white; border:1px solid #ccc; padding:15px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:1000; width:280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+        <div id="progressText" style="font-size:14px; color:#333; margin-bottom:8px;">準備上傳...</div>
+        <div style="background:#f0f0f0; height:8px; border-radius:4px; overflow:hidden;">
+            <div id="progressBar" style="background:linear-gradient(90deg, #4CAF50, #45a049); height:100%; width:0%; border-radius:4px; transition:width 0.3s ease;"></div>
+        </div>
+        <div id="fileInfo" style="font-size:12px; color:#666; margin-top:5px;"></div>
+    </div>
+`;
+
+// 插入到標題區域的右側
+headerArea.style.display = 'flex';
+headerArea.style.justifyContent = 'space-between';
+headerArea.style.alignItems = 'center';
+headerArea.appendChild(uploadContainer);
+
+// 綁定檔案選擇事件
+document.getElementById('fileUpload').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        uploadFile(file);
+    }
+});
+
+// 統一檔案上傳函數
+function uploadFile(file) {
+    // 檢查檔案類型
+    const fileName = file.name.toLowerCase();
+    const validTypes = ['.pdf', '.zip'];
+    const isValidType = validTypes.some(type => fileName.endsWith(type));
+ 
+    if (!isValidType) {
+        alert("請選擇 PDF 或 ZIP 檔案！");
+        return;
+    }
+ 
+    const formData = new FormData();
+    formData.append("file", file);
+ 
+    const progressBox = document.getElementById("floating-progress");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const fileInfo = document.getElementById("fileInfo");
+ 
+    // 顯示進度框
+    progressBox.style.display = "block";
+    progressBar.style.width = "0%";
+    progressText.innerText = "正在上傳...";
+    fileInfo.innerText = `檔案: ${file.name} (${formatFileSize(file.size)})`;
+ 
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/upload_files/", true);
+ 
+    // 上傳進度
+    xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+            const percentage = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percentage + "%";
+            progressText.innerText = `上傳中... ${percentage}%`;
+        }
+    };
+ 
+    // 上傳完成
+    xhr.onload = () => {
+        try {
+            const res = JSON.parse(xhr.responseText);
+ 
+            if (res.status === 'success' || res.message) {
+                progressBar.style.width = "100%";
+                progressText.innerHTML = "" + (res.message || "上傳成功");
+ 
+                // 顯示檔案處理結果
+                if (fileName.endsWith('.pdf')) {
+                    fileInfo.innerText = "PDF 檔案已成功上傳並加入知識庫";
+                } else if (fileName.endsWith('.zip')) {
+                    fileInfo.innerText = "ZIP 檔案已解壓縮，PDF 檔案已加入知識庫";
+                }
+ 
+                // 3秒後自動隱藏
+                setTimeout(() => {
+                    progressBox.style.display = "none";
+                    // 重置檔案輸入
+                    document.getElementById('fileUpload').value = '';
+                }, 3000);
+ 
+            } else {
+                progressText.innerHTML = `❌ 錯誤：${res.error}`;
+                fileInfo.innerText = "上傳失敗，請重試";
+                setTimeout(() => progressBox.style.display = "none", 5000);
+            }
+        } catch (error) {
+            progressText.innerHTML = "❌ 回應解析錯誤";
+            fileInfo.innerText = "伺服器回應格式錯誤";
+            setTimeout(() => progressBox.style.display = "none", 5000);
+        }
+    };
+ 
+    // 上傳錯誤
+    xhr.onerror = () => {
+        progressText.innerHTML = "❌ 網路錯誤";
+        fileInfo.innerText = "請檢查網路連線並重試";
+        setTimeout(() => progressBox.style.display = "none", 5000);
+    };
+ 
+    // 上傳超時
+    xhr.ontimeout = () => {
+        progressText.innerHTML = "❌ 上傳超時";
+        fileInfo.innerText = "檔案可能過大，請重試";
+        setTimeout(() => progressBox.style.display = "none", 5000);
+    };
+ 
+    // 設置30秒超時
+    xhr.timeout = 30000;
+ 
+    xhr.send(formData);
+}
+
+// 格式化檔案大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 拖拽上傳功能（可選）
+function initDragAndDrop() {
+    const uploadBtn = document.querySelector('.upload-btn');
+ 
+    // 防止頁面默認拖拽行為
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, preventDefaults, false);
+    });
+ 
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+ 
+    // 拖拽進入上傳按鈕區域
+    uploadBtn.addEventListener('dragenter', () => {
+        uploadBtn.style.backgroundColor = '#0056b3';
+        uploadBtn.style.transform = 'scale(1.05)';
+    });
+ 
+    uploadBtn.addEventListener('dragleave', () => {
+        uploadBtn.style.backgroundColor = '';
+        uploadBtn.style.transform = '';
+    });
+ 
+    // 拖拽放下
+    uploadBtn.addEventListener('drop', (e) => {
+        uploadBtn.style.backgroundColor = '';
+        uploadBtn.style.transform = '';
+ 
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            uploadFile(files[0]);
+        }
+    });
+}
+
+// 側邊欄切換
+let sidebarOpen = false;
+menuBtn.addEventListener('click', () => {
+    sidebarOpen = !sidebarOpen;
+    if (sidebarOpen) {
+        sidebar.classList.remove('collapsed');
+        menuBtn.classList.add('open');
+        document.body.classList.remove('sidebar-collapsed');
+    } else {
+        sidebar.classList.add('collapsed');
+        menuBtn.classList.remove('open');
+        document.body.classList.add('sidebar-collapsed');
+    }
+});
+
+// 從API載入對話列表
+async function loadConvos() {
+    try {
+        const res = await fetch('/api/conversations/');
+        conversations = (await res.json()).conversations;
+        nextSeq = conversations.length + 1;
+        renderConvos();
+    } catch (error) {
+        console.error('載入對話失敗:', error);
+    }
+}
+
+// 渲染對話列表
+function renderConvos() {
+    chatHistoryEl.innerHTML = '';
+    conversations.forEach(c => {
+        const chatItem = document.createElement('div');
+        chatItem.className = 'chat-item';
+        if (c.id === currentId) chatItem.classList.add('active');
+ 
+        chatItem.innerHTML = `
+            <div class="chat-title">${c.title}</div>
+            <div class="chat-actions">
+                <button class="action-btn download-btn" data-id="${c.id}">
+                    <i class="fa-solid fa-download">
+                    <span class="tooltip">匯出對話</span>
+                </button>
+                <button class="action-btn delete-btn" data-id="${c.id}">
+                    <i class="fa-solid fa-trash">
+                    <span class="tooltip">刪除對話</span>
+                </button>
+            </div>
+        `;
+
+        chatItem.addEventListener('click', (e) => {
+            // 如果點擊的是操作按鈕，不要切換對話
+            if (!e.target.closest('.action-btn')) {
+                selectConvo(c.id);
+            }
+        });
+ 
+        chatHistoryEl.appendChild(chatItem);
+    });
+
+    // 綁定匯出按鈕事件
+    document.querySelectorAll('.download-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            window.location.assign(`/api/export/${id}/`);
+        });
+    });
+
+    // 綁定刪除按鈕事件
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            if (!confirm('確定刪除此對話？')) return;
+ 
+            try {
+                await fetch(`/api/conversations/${id}/`, { method: 'DELETE' });
+                conversations = conversations.filter(x => x.id !== id);
+                if (currentId === id) {
+                    currentId = null;
+                    chatContainer.innerHTML = '';
+                    noMessagesEl.style.display = 'block';
+                    currentChatTitle.innerText = '對話';
+                }
+                renderConvos();
+            } catch (error) {
+                console.error('刪除對話失敗:', error);
+            }
+        });
+    });
+}
+
+// 選擇對話
+async function selectConvo(id) {
+    try {
+        currentId = id;
+        document.querySelectorAll(".chat-item").forEach(item => item.classList.remove("active"));
+        document.querySelector(`.chat-item:has(\[data-id="${id}"])`)?.classList.add("active");
+ 
+        const res = await fetch(`/api/messages/${id}/`);
+        const data = await res.json();
+        renderMessages(data.messages);
+ 
+        // 更新標題
+        const convo = conversations.find(c => c.id === id);
+        if (convo) {
+            currentChatTitle.innerText = convo.title;
+        }
+ 
+        // 手機版自動關閉側邊欄
+        if (window.innerWidth <= 768) {
+            sidebar.classList.add('collapsed');
+            menuBtn.classList.remove('open');
+            document.body.classList.add('sidebar-collapsed');
+            sidebarOpen = false;
+        }
+    } catch (error) {
+        console.error('載入對話內容失敗:', error);
+    }
+}
+
+// 渲染對話訊息
+function renderMessages(messages) {
+    chatContainer.innerHTML = '';
+    noMessagesEl.style.display = messages.length ? 'none' : 'block';
+
+    messages.forEach(msg => {
+        // 顯示使用者提問
+        const userMsg = document.createElement('div');
+        userMsg.className = 'message-container user-container';
+        userMsg.innerHTML = `
+            <div class="message-content user-content">${msg.question}</div>
+            <div class="avatar user-avatar">你</div>
+        `;
+        chatContainer.appendChild(userMsg);
+
+        // 顯示 AI 回答（含來源）
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message-container bot-container';
+
+        // 主體內容
+        let botContent = `<div class="message-content bot-content">${msg.answer}`;
+
+        // 加入 PDF 資料來源按鈕（如果有）
+        const sources = msg.sources || [];
+        if (sources.length > 0) {
+            botContent += `<div class="source-indicator"><button class="source-btn" onclick="showSources(${JSON.stringify(sources).replace(/"/g, '\&quot;')})">📑</button></div>`;
+        }
+
+        botContent += `</div>`;
+
+        botMsg.innerHTML = `
+            <div class="avatar bot-avatar">AI</div>
+            ${botContent}
+        `;
+
+        chatContainer.appendChild(botMsg);
+    });
+
+    // 滾動到最底部
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+// 建立新對話
+newChatBtn.addEventListener('click', async () => {
+    try {
+        const title = `新對話${nextSeq++}`;
+        const res = await fetch("/api/conversations/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({title})
+        });
+ 
+        const newConvo = await res.json();
+        currentId = newConvo.id;
+        await loadConvos();
+        selectConvo(newConvo.id);
+    } catch (error) {
+        console.error('建立新對話失敗:', error);
+    }
+});
+
+// 發送訊息
+// 發送訊息
+async function sendQuestion() {
+    const questionEl = document.getElementById('messageInput');
+    const question = questionEl.value.trim();
+ 
+    if (!question || !currentId) return;
+ 
+    // 清空輸入框並調整高度
+    questionEl.value = '';
+    adjustTextareaHeight();
+ 
+    try {
+        // 在聊天區域加入用戶訊息
+        const userMsg = document.createElement('div');
+        userMsg.className = 'message-container user-container';
+        userMsg.innerHTML = `
+            <div class="message-content user-content">${question}</div>
+            <div class="avatar user-avatar">你</div>
+        `;
+        chatContainer.appendChild(userMsg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+ 
+        // 在聊天區域加入機器人正在輸入的指示
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'message-container bot-container';
+        loadingMsg.innerHTML = `
+            <div class="avatar bot-avatar">AI</div>
+            <div class="message-content bot-content loading-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        `;
+        chatContainer.appendChild(loadingMsg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+ 
+        // 發送到後端
+        const res = await fetch("/api/ask/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({conversation_id: currentId, question: question})
+        });
+ 
+        const data = await res.json();
+ 
+        // 移除載入指示器
+        chatContainer.removeChild(loadingMsg);
+ 
+        // 建立機器人回覆內容
+        let botContent = `<div class="message-content bot-content">${data.answer || data.error}`;
+ 
+        // 如果有來源文檔，添加查看按鈕
+        if (data.has_sources && data.sources && data.sources.length > 0) {
+            botContent += `<div class="source-indicator"><button class="source-btn" onclick="showSources(${JSON.stringify(data.sources).replace(/"/g, '\&quot;')})">📑</button></div>`;
+        }
+
+        botContent += `</div>`;
+
+        // 在聊天區域加入機器人回覆
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message-container bot-container';
+        botMsg.innerHTML = `
+            <div class="avatar bot-avatar">AI</div>
+            ${botContent}
+        `;
+        chatContainer.appendChild(botMsg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+ 
+        // 更新對話標題（如果是第一條訊息）
+        const convo = conversations.find(c => c.id === currentId);
+        if (convo && (!convo.title || convo.title.startsWith('新對話'))) {
+            const title = question.length > 25 ? question.substring(0, 25) + '...' : question;
+            await fetch(`/api/conversations/${currentId}/`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title: title})
+            });
+            currentChatTitle.innerText = title;
+            await loadConvos();
+        }
+    } catch (error) {
+        console.error('發送問題失敗:', error);
+    }
+}
+
+// 修正後的 showSources 函數
+function showSources(sources) {
+    const modal = document.createElement('div');
+    modal.className = 'source-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        backdrop-filter: blur(1px);
+        animation: fadeIn 0.3s ease;
+    `;
+ 
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80%;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease;
+    `;
+ 
+    let sourcesHtml = '<h3 style="margin-top:0; color:#333; font-size:18px; font-weight:600;">📚 資料來源</h3>';
+ 
+    sources.forEach(source => {
+        sourcesHtml += `
+            <div style="margin: 12px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #9187b2ff;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="viewPDF('${source}')" style="
+                        background: linear-gradient(135deg, #dbcfdfff, #dbcfdfff);
+                        color: #615a5aff;
+                        border: none;
+                        padding: 10px 16px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.27);
+                        flex: 1;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(24, 24, 24, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(49, 49, 49, 0.2)'">
+                        📝 ${source}
+                    </button>
+                    <button onclick="window.open('/api/pdf/${encodeURIComponent(source)}/', '_blank')" style="
+                        background: #eacb315c;
+                        color: black;
+                        border: none;
+                        padding: 10px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 4px rgba(183, 183, 183, 0.2);
+                    " title="新分頁開啟">
+                        🔗
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+ 
+    sourcesHtml += `
+        <div style="margin-top: 24px; text-align: right; border-top: 1px solid #eee; padding-top: 16px;">
+            <button onclick="this.closest('.source-modal').remove()" style="
+                background: #6c757d;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background 0.2s ease;
+            " onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+                關閉
+            </button>
+        </div>
+    `;
+ 
+    modalContent.innerHTML = sourcesHtml;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+ 
+    // 點擊背景關閉
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+ 
+    // ESC 鍵關閉
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
+}
+
+// 修正後的 viewPDF 函數
+function viewPDF(filename) {
+    console.log('開啟 PDF:', filename);
+ 
+    // 檢查檔案名稱
+    if (!filename || !filename.trim()) {
+        alert('無效的檔案名稱');
+        return;
+    }
+ 
+    // 建立 PDF URL
+    const pdfUrl = `/api/pdf/${encodeURIComponent(filename)}/`;
+    console.log('PDF URL:', pdfUrl);
+ 
+    // 直接顯示 PDF 模態框，不進行 HEAD 請求測試
+    showPDFModal(pdfUrl, filename);
+}
+
+function showPDFModal(pdfUrl, filename) {
+    // 創建模態框
+    const modal = document.createElement('div');
+    modal.className = 'pdf-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(2px);
+    `;
+ 
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.cssText = `
+        position: relative;
+        width: 90%;
+        height: 90%;
+        max-width: 1200px;
+        max-height: 800px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    `;
+ 
+    // 標題欄
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        flex-shrink: 0;
+    `;
+ 
+    const title = document.createElement('h3');
+    title.textContent = filename;
+    title.style.cssText = `
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 15px;
+    `;
+ 
+    // 操作按鈕組
+    const buttonGroup = document.createElement('div');
+    buttonGroup.style.cssText = `
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    `;
+ 
+    // 新分頁開啟按鈕
+    const newTabBtn = document.createElement('button');
+    newTabBtn.innerHTML = '🔗 新分頁開啟';
+    newTabBtn.style.cssText = `
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    `;
+    newTabBtn.onclick = () => {
+        window.open(pdfUrl, '_blank');
+    };
+ 
+    // 下載按鈕
+    const downloadBtn = document.createElement('button');
+    downloadBtn.innerHTML = '📥 下載';
+    downloadBtn.style.cssText = `
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    `;
+    downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = filename;
+        a.click();
+    };
+ 
+    // 關閉按鈕
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #666;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: color 0.2s ease;
+    `;
+    closeBtn.onmouseover = () => closeBtn.style.color = '#333';
+    closeBtn.onmouseout = () => closeBtn.style.color = '#666';
+ 
+    // 內容區域
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = `
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+    `;
+ 
+    // 載入指示器
+    const loader = document.createElement('div');
+    loader.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #666;
+        z-index: 1;
+    `;
+    loader.innerHTML = `
+        <div class="spinner" style="
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        "></div>
+        正在載入 PDF...
+    `;
+ 
+    // 錯誤提示
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #dc3545;
+        display: none;
+        z-index: 1;
+    `;
+    errorDiv.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">PDF 載入失敗</div>
+        <div style="font-size: 14px; color: #666;">
+            請嘗試點擊「新分頁開啟」或「下載」按鈕
+        </div>
+    `;
+ 
+    // 嘗試多種方式載入 PDF
+    function tryLoadPDF() {
+        // 方法1: 直接使用 iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = pdfUrl;
+        iframe.style.cssText = `
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        `;
+ 
+        let loadTimeout;
+        let hasLoaded = false;
+ 
+        iframe.onload = () => {
+            if (!hasLoaded) {
+                hasLoaded = true;
+                clearTimeout(loadTimeout);
+                loader.style.display = 'none';
+                console.log('PDF iframe 載入成功');
+            }
+        };
+ 
+        iframe.onerror = () => {
+            if (!hasLoaded) {
+                hasLoaded = true;
+                clearTimeout(loadTimeout);
+                loader.style.display = 'none';
+                errorDiv.style.display = 'block';
+                console.error('PDF iframe 載入失敗');
+            }
+        };
+ 
+        // 設置超時
+        loadTimeout = setTimeout(() => {
+            if (!hasLoaded) {
+                hasLoaded = true;
+ 
+                // 移除 iframe 並嘗試方法2
+                if (iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
+ 
+                // 方法2: 使用 embed 標籤
+                const embed = document.createElement('embed');
+                embed.src = pdfUrl;
+                embed.type = 'application/pdf';
+                embed.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                `;
+ 
+                contentArea.appendChild(embed);
+                loader.style.display = 'none';
+                console.log('使用 embed 標籤載入 PDF');
+ 
+                // 如果 embed 也失敗，顯示錯誤
+                setTimeout(() => {
+                    errorDiv.style.display = 'block';
+                }, 3000);
+            }
+        }, 5000);
+ 
+        contentArea.appendChild(iframe);
+    }
+ 
+    // 組裝
+    buttonGroup.appendChild(newTabBtn);
+    buttonGroup.appendChild(downloadBtn);
+    buttonGroup.appendChild(closeBtn);
+    titleBar.appendChild(title);
+    titleBar.appendChild(buttonGroup);
+    contentArea.appendChild(loader);
+    contentArea.appendChild(errorDiv);
+    pdfContainer.appendChild(titleBar);
+    pdfContainer.appendChild(contentArea);
+    modal.appendChild(pdfContainer);
+ 
+    // 關閉功能
+    function closeModal() {
+        if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+        }
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleEscape);
+    }
+ 
+    // ESC 鍵關閉
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    };
+ 
+    closeBtn.onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+ 
+    // 添加動畫樣式
+    const style = document.createElement('style');
+    if (!document.head.querySelector('#pdf-modal-styles')) {
+        style.id = 'pdf-modal-styles';
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+ 
+            .pdf-modal {
+                animation: fadeIn 0.3s ease;
+            }
+ 
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+ 
+            .pdf-modal > div {
+                animation: slideIn 0.3s ease;
+            }
+ 
+            @keyframes slideIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+ 
+    // 顯示模態框
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleEscape);
+ 
+    // 開始載入 PDF
+    tryLoadPDF();
+}
+
+// 發送按鈕點擊事件
+sendBtn.addEventListener('click', sendQuestion);
+
+// Enter鍵發送(Shift+Enter換行)
+messageInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendQuestion();
+    }
+});
+
+// 自適應文本輸入框高度
+function adjustTextareaHeight() {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = (messageInput.scrollHeight) + 'px';
+}
+
+messageInput.addEventListener('input', adjustTextareaHeight);
+
+// 初始化
+(async () => {
+    await loadConvos();
+ 
+    // 初始化拖拽上傳功能
+    initDragAndDrop();
+    initBlobs();
+ 
+    // 初始對話選擇
+    if (conversations.length) {
+        selectConvo(conversations[0].id);
+    } else {
+        newChatBtn.click();
+    }
+ 
+    // 默認收起側邊欄，無論窗口大小
+    sidebar.classList.add('collapsed');
+    menuBtn.classList.remove('open');
+    document.body.classList.add('sidebar-collapsed');
+    sidebarOpen = false;
+})();
+
+// 窗口大小調整時的行為
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed')) {
+        sidebar.classList.add('collapsed');
+        menuBtn.classList.remove('open');
+        document.body.classList.add('sidebar-collapsed');
+        sidebarOpen = false;
+    }
+});
+
