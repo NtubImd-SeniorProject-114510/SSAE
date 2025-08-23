@@ -75,7 +75,7 @@ h1, h2, h3 {
 .page-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 18px;
     margin-bottom: 40px;;
 }
 
@@ -301,6 +301,7 @@ h1, h2, h3 {
 .course-schedule {
     flex: 2;
 }
+
 
 .schedule-table {
     overflow-x: auto;
@@ -1100,7 +1101,7 @@ h1, h2, h3 {
     }
 @media (max-width: 495px) {
   .activities-card {
-    padding: 10px;
+    padding: 20px;
   }
 
   .card.course-schedule {
@@ -1113,7 +1114,7 @@ h1, h2, h3 {
     right: 0;
     margin: 0 auto 24px auto;
     z-index: 1;
-    padding: 10px;
+    padding: 20px;
   }
   /* 外層容器允許橫向捲動，避免被裁切 */
   .page-container {

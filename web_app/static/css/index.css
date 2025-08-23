@@ -1,5 +1,22 @@
 @charset "UTF-8";
 
+/*
+[...document.querySelectorAll('*')].forEach(el => {
+  if (el.scrollWidth > document.documentElement.clientWidth) {
+    el.style.outline = '2px solid red';
+  }
+});
+
+
+[...document.querySelectorAll('*')].forEach(el => {
+  if (el.scrollWidth > document.documentElement.clientWidth) {
+    console.log('⚠️ Too wide:', el, el.scrollWidth);
+  }
+});
+*/
+
+
+
 * {
     margin: 0;
     padding: 0;
@@ -19,8 +36,8 @@ body {
 
 html,
 body {
-font-family: 'Poppins', sans-serif;
-height: 100%;
+  font-family: 'Poppins', sans-serif;
+  height: 100%;
 }
 
 
@@ -105,32 +122,37 @@ background: var(--cr-2);
 
 
 
-/* 外層容器限制顯示寬度 */
 .marquee-container {
-position: absolute;
-top: 48%;
-left: 5px;
-width: 400px; /* 控制你想要的寬度，例如 300px */
-height: 32px;  /* 可依照字體大小調整 */
-overflow: hidden; /* 超出文字隱藏，製造滾動效果 */
-z-index: 100;
-pointer-events: none;
+  position: absolute;
+  top: 48%;
+  left: 5px;
+  width: 100%;
+  max-width: 400px;       /* 限制最大寬度，防止超出 */
+  height: 32px;
+  overflow: hidden;       /* ✅ 關鍵：限制視口 */
+  z-index: 100;
+  pointer-events: none;
 }
 
-/* 跑馬燈文字動畫 */
+.marquee-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: scrollMarquee 10s linear infinite;
+  will-change: transform;
+}
+
 .floating-marquee {
-display: inline-block;
-font-size: clamp(24px, 6vw, 16px);
-font-weight: bold;
-text-transform: uppercase;
-opacity: 0.7;
-mix-blend-mode: overlay;
-white-space: nowrap;
-animation: scrollMarquee 10s linear infinite;
-animation-delay: 0s;
-color: black;
-
+  display: inline-block;
+  font-size: clamp(16px, 6vw, 24px); /* 修正語法錯誤：小的是 fallback */
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+  white-space: nowrap;
+  color: black;
+  padding-left: 100%; /* 讓它從右側開始進場 */
 }
+
 
 /* 動畫使用 translateX 滑動 */
 @keyframes scrollMarquee {
@@ -1406,9 +1428,11 @@ to {
   }
 } */
 
+
 .svg-mobile {
   display: none;
 }
+
 
 .sectionl {
   display: block;
@@ -1420,7 +1444,17 @@ to {
   }
 
   .svg-mobile {
-    display: block;
+    width: 100vw;
+    max-width: 100vw;  /* 不允許超出父容器 */
+    height: auto;
+    display: block;   /* 清除多餘空隙 */
+  }
+  
+  .lsection{
+    width: 100vw;
+    max-width: 100vw;  /* 不允許超出父容器 */
+    height: auto;
+    display: block;   /* 清除多餘空隙 */
   }
 }
 
