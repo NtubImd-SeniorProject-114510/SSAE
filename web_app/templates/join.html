@@ -62,8 +62,8 @@
                     <div class="activity-header">{{ a.title }}</div>
 
                     <div class="activity-image">
-                        {% if a.image %}
-                            <img src="{{ a.image.url }}" alt="{{ a.title }}">
+                        {% if a.cover_image %}
+                            <img src="{{ a.cover_image.url }}" alt="{{ a.title }}">
                         {% else %}
                             <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}">
                         {% endif %}

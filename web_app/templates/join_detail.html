@@ -48,8 +48,8 @@
         </div>
       </div>
       <div class="event-visual">
-        {% if a.image_url %}
-          <img src="{{ a.image_url }}" alt="{{ a.title }}">
+        {% if a.cover_image %}
+          <img src="{{ a.cover_image.url }}" alt="{{ a.title }}">
         {% else %}
           <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}">
         {% endif %}
