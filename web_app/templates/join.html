@@ -16,16 +16,13 @@
 
 {% block content %}
 <div class="page-container">
-    <!-- 背景的ACTIVITY GROUP ACTIVITY GROUP -->
     <div class="bg-text">ACTIVITY GROUP ACTIVITY GROUP</div>
 
-    <!-- 標題 -->
     <header class="page-header">
         <h1 class="page-title">活動召集</h1>
         <p class="page-subtitle">（尋找同好・共享樂趣）</p>
     </header>
     
-    <!-- 頂部搜尋與過濾區 -->
     <div class="filter-section">
         <select class="filter-item">
             <option>全部活動類型</option>
@@ -53,156 +50,87 @@
         <input type="text" class="search-box" placeholder="搜尋活動...">
     </div>
         
-    <!-- 活動列表和分頁 -->
     <section class="activities-container">
         <div class="activity-grid">
-            <!-- 活動 到時候改迴圈 -->
-            <div class="activity-card" onclick="window.location.href='/join_detail/?id=1'">
-                <div class="activity-header">週末烤肉趴</div>
-                <div class="activity-image">
-                    <img src="{% static 'image/bbq.jpeg' %}" alt="烤肉聚會">
-                    <div class="activity-tag food">美食</div>
-                </div>
-                <div class="activity-content">
-                    <h3 class="activity-title">一起來同樂！</h3>
-                    <p class="activity-description">週末一起來烤肉放鬆！我們會準備各種食材，飲料自備。歡迎大家參加，認識新朋友！</p>
+            {% for a in activities %}
+                {% if a.pk %}
+                    {% url 'join_detail' a.pk as detail_url %}
+                {% endif %}
+                <div class="activity-card" 
+                     {% if a.pk %} onclick="window.location.href='{{ detail_url }}'" {% else %} style="cursor: default;" {% endif %}>
                     
-                    <div class="activity-info">
-                        <div class="activity-location">
-                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                            <span>大安森林公園</span>
-                        </div>
-                        <div class="activity-time">
-                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                            <span>4/6 下午2:00</span>
-                        </div>
+                    <div class="activity-header">{{ a.title }}</div>
+
+                    <div class="activity-image">
+                        {% if a.image %}
+                            <img src="{{ a.image.url }}" alt="{{ a.title }}">
+                        {% else %}
+                            <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}">
+                        {% endif %}
+                        <div class="activity-tag {{ a.tag_css }}">{{ a.type }}</div>
                     </div>
-                    
-                    <div class="activity-footer">
-                        <div class="participants">
-                            <div class="participant-avatars">
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
+
+                    <div class="activity-content">
+                        <h3 class="activity-title">{{ a.title }}</h3>
+                        <p class="activity-description">{{ a.description }}</p>
+
+                        <div class="activity-info">
+                            <div class="activity-location">
+                                <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
+                                <span>{{ a.location }}</span>
                             </div>
-                            <div class="participant-count">8/15人</div>
-                        </div>
-                        <a href="/join_detail/?id=1" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Activity Card 2 -->
-            <div class="activity-card" onclick="window.location.href='/join_detail/?id=2'">
-                <div class="activity-header">會計學讀書會</div>
-                <div class="activity-image">
-                    <img src="{% static 'image/test/a2.jpeg' %}" alt="期中考讀書會">
-                    <div class="activity-tag study">讀書</div>
-                </div>
-                <div class="activity-content">
-                    <h3 class="activity-title">期中考準備</h3>
-                    <p class="activity-description">期中考快到了，一起來複習會計學！我有整理好的重點筆記，可以一起討論難題。人數限制避免太吵雜，請有準備的同學參加。</p>
-                    
-                    <div class="activity-info">
-                        <div class="activity-location">
-                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                            <span>圖書館3樓讀書室</span>
-                        </div>
-                        <div class="activity-time">
-                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                            <span>4/5 晚上7:00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="activity-footer">
-                        <div class="participants">
-                            <div class="participant-avatars">
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
+                            <div class="activity-time">
+                                <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
+                                <span>{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</span>
                             </div>
-                            <div class="participant-count">5/8人</div>
                         </div>
-                        <a href="/join_detail/?id=2" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Activity Card 3 -->
-            <div class="activity-card" onclick="window.location.href='/join_detail/?id=3'">
-                <div class="activity-header">籃球練習</div>
-                <div class="activity-image">
-                    <img src="{% static 'image/test/a3.jpeg' %}" alt="籃球練習">
-                    <div class="activity-tag sports">運動</div>
-                </div>
-                <div class="activity-content">
-                    <h3 class="activity-title">週三球場見</h3>
-                    <p class="activity-description">固定每週三晚上的籃球練習，歡迎對籃球有興趣的同學參加！不限男女，有經驗或新手都可以，一起來動一動。</p>
-                    
-                    <div class="activity-info">
-                        <div class="activity-location">
-                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                            <span>校內籃球場</span>
-                        </div>
-                        <div class="activity-time">
-                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                            <span>每週三晚上6:00</span>
-                        </div>
-                    </div>
-                    
-                    <div class="activity-footer">
-                        <div class="participants">
-                            <div class="participant-avatars">
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
+
+                        <div class="activity-footer">
+                            <div class="participants">
+                                <div class="participant-avatars">
+                                    {% for user in a.participants.all|slice:":3" %}
+                                        {% if user.profile.avatar %}
+                                            <div class="participant-avatar">
+                                                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                                            </div>
+                                        {% else %}
+                                            <div class="participant-avatar default-avatar"></div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if a.participants.count > 3 %}
+                                        <div class="participant-avatar more">+{{ a.participants.count|add:"-3" }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="participant-count">{{ a.participants_count }}/{{ a.max_participants }}人</div>
                             </div>
-                            <div class="participant-count">9/10人</div>
-                        </div>
-                        <a href="/join_detail/?id=3" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Activity Card 4 -->
-            <div class="activity-card" onclick="window.location.href='/join_detail/?id=4'">
-                <div class="activity-header">漫威馬拉松</div>
-                <div class="activity-image">
-                    <img src="{% static 'image/activity_test.jpg' %}" alt="電影之夜">
-                    <div class="activity-tag movie">電影</div>
-                </div>
-                <div class="activity-content">
-                    <h3 class="activity-title">超級英雄電影夜</h3>
-                    <p class="activity-description">一起來看漫威電影馬拉松！連續播放三部復仇者系列電影，提供爆米花和飲料。喜歡漫威的朋友不要錯過！</p>
-                    
-                    <div class="activity-info">
-                        <div class="activity-location">
-                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                            <span>市民大道電影院</span>
-                        </div>
-                        <div class="activity-time">
-                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                            <span>4/10 下午1:00</span>
+                            {% if a.is_full or a.is_deadline_passed %}
+                                <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">已額滿/截止</a>
+                            {% elif request.user.is_authenticated and a.pk and a.id in joined_ids %}
+                                <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
+                                    {% csrf_token %}
+                                    <button class="join-btn" type="submit">取消參加</button>
+                                </form>
+                            {% elif a.pk %}
+                                <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
+                                    {% csrf_token %}
+                                    <button class="join-btn" type="submit">我要參加</button>
+                                </form>
+                            {% else %}
+                                <button class="join-btn disabled" onclick="event.stopPropagation();return false;">無法參加</button>
+                            {% endif %}
+
                         </div>
                     </div>
-                    
-                    <div class="activity-footer">
-                        <div class="participants">
-                            <div class="participant-avatars">
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
-                                <div class="participant-avatar"></div>
-                            </div>
-                            <div class="participant-count">12/20人</div>
-                        </div>
-                        <a href="/join_detail/?id=4" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
-                    </div>
                 </div>
-            </div>
+            {% empty %}
+                <p>
+                    目前沒有活動。
+                    <button type="button" id="uploadBtn">新增活動</button>
+                </p>
+            {% endfor %}
         </div>
     </section>
 
-    <!-- 右下角的圓形logo和上傳按鈕 -->
     <div class="floating-action-button">
         <div class="circular-logo">
             <div class="circular-text">
@@ -224,9 +152,7 @@
     <div class="deco-line"></div>
 </div>
 
-<!-- 載入發起揪團彈跳視窗 -->
 {% include 'pop_window/join_pop.html' %}
-
 {% endblock %}
 
 {% block body_js %}

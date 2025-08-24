@@ -1,4 +1,4 @@
-//index
+//web_app\static\js\join.js
 window.addEventListener('DOMContentLoaded', () => {
   const popupId = sessionStorage.getItem('openPopup');
   if (popupId) {
@@ -162,3 +162,43 @@ function getActivityData(card) {
 
 // 初始化過濾功能（如果需要的話）
 // initializeFilters();
+
+// static/js/join.js 末尾或合適位置新增：
+document.addEventListener('click', async (e)=>{
+  const form = e.target.closest('form.inline-form');
+  if (!form) return;
+  e.preventDefault();
+  const url = form.action;
+  const btn = form.querySelector('button.join-btn');
+  try {
+    const res = await fetch(url, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken': getCookie('csrftoken')}});
+    const data = await res.json();
+    if (data.ok) {
+      // 根據 action 切換文案
+      if (url.includes('/join/')) {
+        btn.textContent = '取消參加';
+        form.action = form.action.replace('/join/','/cancel/');
+      } else {
+        btn.textContent = '我要參加';
+        form.action = form.action.replace('/cancel/','/join/');
+      }
+      // 更新人數（選到同卡片內的 .participant-count）
+      const card = form.closest('.activity-card');
+      const countEl = card?.querySelector('.participant-count');
+      if (countEl && Number.isInteger(data.participants)) {
+        // 右側顯示格式：current/max人
+        const max = countEl.textContent.split('/')[1];
+        countEl.textContent = `${data.participants}/${max}`;
+      }
+    } else {
+      alert('操作失敗');
+    }
+  } catch(err){
+    console.error(err);
+    form.submit(); // 退路：改用傳統提交
+  }
+});
+function getCookie(name) {
+  const value = document.cookie.split('; ').find(row=>row.startsWith(name+'='));
+  return value ? decodeURIComponent(value.split('=')[1]) : '';
+}

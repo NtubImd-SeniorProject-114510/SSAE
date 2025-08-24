@@ -1,3 +1,5 @@
+//web_app\static\js\join_detail.js
+
 document.addEventListener('DOMContentLoaded', function() {
     const discussionSection = document.querySelector('.discussion-section');
     if (discussionSection) {

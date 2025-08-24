@@ -1,3 +1,5 @@
+#web_app\views.py
+
 import os
 import json
 import zipfile
@@ -467,3 +469,131 @@ def pdf_options(request, filename):
         return response
     else:
         return view_pdf(request, filename)
+    # web_app/views.py（活動相關部分）
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Count, Q
+from django.utils import timezone
+from django.http import JsonResponse
+from django import forms
+from datetime import datetime
+
+from .models import GroupActivity, ActivityParticipant
+
+# -----------------------
+# 列出活動
+# -----------------------
+from django.db.models import Count, Q
+
+def activity_list(request):
+    activities = (GroupActivity.objects
+        .annotate(participants_count=Count('participants', filter=Q(participants__status='joined')))
+        .order_by('date', 'time', 'deadline')
+    )
+
+    joined_ids = []
+    if request.user.is_authenticated:
+        joined_ids = list(ActivityParticipant.objects.filter(
+            user_id=request.user.id, status='joined'
+        ).values_list('activity_id', flat=True))
+
+    return render(request, 'join.html', {
+        'activities': activities,  # 確保這裡傳的是 queryset
+        'joined_ids': joined_ids,
+    })
+
+# -----------------------
+# 活動詳情
+# -----------------------
+def activity_detail(request, pk):
+    a = get_object_or_404(GroupActivity, pk=pk)
+    joined = False
+    if request.user.is_authenticated:
+        joined = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id, status='joined').exists()
+    return render(request, 'join_detail.html', {'a': a, 'joined': joined})
+
+# -----------------------
+# 加入活動
+# -----------------------
+@login_required
+def join_activity(request, pk):
+    if request.method != 'POST':
+        return redirect('join_detail', pk=pk)
+    a = get_object_or_404(GroupActivity, pk=pk)
+
+    if a.is_deadline_passed:
+        messages.error(request, '已超過報名截止時間')
+        return redirect('join_detail', pk=pk)
+    if a.joined_count >= a.max_participants:
+        messages.error(request, '本活動已額滿')
+        return redirect('join_detail', pk=pk)
+
+    ActivityParticipant.objects.update_or_create(
+        activity_id=a.id, user_id=request.user.id,
+        defaults={'status':'joined', 'joined_at': timezone.now(), 'updated_at': timezone.now()}
+    )
+
+    # 重新計算已報名人數
+    joined_count = ActivityParticipant.objects.filter(
+        activity_id=a.id, status='joined'
+    ).count()
+
+    messages.success(request, '報名成功！')
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'participants': joined_count})
+    return redirect('join_detail', pk=pk)
+
+# -----------------------
+# 取消活動
+# -----------------------
+@login_required
+def cancel_activity(request, pk):
+    if request.method != 'POST':
+        return redirect('join_detail', pk=pk)
+    a = get_object_or_404(GroupActivity, pk=pk)
+    ActivityParticipant.objects.filter(
+        activity_id=a.id, user_id=request.user.id, status='joined'
+    ).update(status='cancelled', updated_at=timezone.now())
+
+    # 重新計算已報名人數
+    joined_count = ActivityParticipant.objects.filter(
+        activity_id=a.id, status='joined'
+    ).count()
+
+    messages.info(request, '已取消參加')
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'participants': joined_count})
+    return redirect('join_detail', pk=pk)
+
+# -----------------------
+# ModelForm
+# -----------------------
+class GroupActivityForm(forms.ModelForm):
+    class Meta:
+        model = GroupActivity
+        fields = ['title','description','type','location','date','time','deadline',
+                  'min_participants','max_participants','cover_image']
+
+# -----------------------
+# 建立活動（Ajax POST）
+# -----------------------
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .forms import ActivityForm
+
+@csrf_exempt
+def create_activity(request):
+    if request.method == 'POST':
+        form = ActivityForm(request.POST, request.FILES)
+        if form.is_valid():
+            activity = form.save(commit=False)
+            activity.user = request.user
+            activity.save()
+            return JsonResponse({'ok': True})
+        else:
+            return JsonResponse({'ok': False, 'errors': form.errors})
+    return JsonResponse({'ok': False, 'errors': '僅接受 POST'})

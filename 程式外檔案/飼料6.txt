@@ -1,0 +1,2474 @@
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\join_create.html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能校事專家 - 發起揪團</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/join_create.css' %}">
+    {% block head_js %}{% endblock %}
+</head>
+<body>
+    <!-- {% block header %}
+    <header>
+        <a href="index.html" class="logo-container">
+            <div class="logo-image"></div>
+            <div class="logo-text">北商Rule</div>
+        </a>
+        <nav class="nav-menu">
+            <a href="index.html">首頁</a>
+            <a href="school-rules.html">校規查詢</a>
+            <a href="group-activities.html" class="active">揾團區</a>
+            <a href="discussion-forum.html">討論區</a>
+            <a href="dashboard.html">個人儀表板</a>
+        </nav>
+    </header>
+    {% endblock %} -->
+    
+    {% block content %}
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-icon">✏️</div>
+            <h1 class="page-title">發起揪團</h1>
+        </div>
+        
+        <div class="form-container">
+            <form id="create-group-form">
+                <div class="form-group">
+                    <label for="activity-title" class="form-label">活動標題</label>
+                    <input type="text" id="activity-title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="activity-type" class="form-label">活動類型</label>
+                            <select id="activity-type" class="form-select" required>
+                                <option value="" disabled selected>請選擇活動類型</option>
+                                <option value="food">美食</option>
+                                <option value="sport">運動</option>
+                                <option value="study">讀書</option>
+                                <option value="travel">旅遊</option>
+                                <option value="movie">電影</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="activity-location" class="form-label">活動地點</label>
+                            <input type="text" id="activity-location" class="form-input" placeholder="請輸入活動地點" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="activity-date" class="form-label">活動日期</label>
+                            <input type="date" id="activity-date" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="activity-time" class="form-label">活動時間</label>
+                            <input type="time" id="activity-time" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="min-participants" class="form-label">最少參加人數</label>
+                            <input type="number" id="min-participants" class="form-input" min="2" value="2" required>
+                            <div class="help-text">若未達最少人數，活動將被取消</div>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="max-participants" class="form-label">最多參加人數</label>
+                            <input type="number" id="max-participants" class="form-input" min="2" value="10" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="activity-description" class="form-label">活動說明</label>
+                    <textarea id="activity-description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">活動封面圖片</label>
+                    <div class="image-upload-container" id="image-upload-area">
+                        <div class="image-upload-icon">📷</div>
+                        <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+                    </div>
+                    <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="activity-deadline" class="form-label">報名截止日期</label>
+                    <input type="date" id="activity-deadline" class="form-input" required>
+                    <div class="help-text">報名截止日期必須早於活動日期</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-info" class="form-label">聯絡方式（選填）</label>
+                    <input type="text" id="contact-info" class="form-input" placeholder="LINE ID、IG、電話等，方便參加者聯繫">
+                </div>
+                
+                <div class="preview-section">
+                    <div class="preview-title">
+                        <span class="preview-icon">👁️</span>
+                        活動預覽
+                    </div>
+                    <div class="preview-card">
+                        <div class="preview-image">
+                            圖片預覽區域
+                            <div class="preview-tag" id="preview-tag">活動類型</div>
+                        </div>
+                        <div class="preview-content">
+                            <h3 class="preview-activity-title" id="preview-title">活動標題</h3>
+                            <div class="preview-info">
+                                <div class="preview-location">
+                                    <span class="location-icon">📍</span>
+                                    <span id="preview-location">活動地點</span>
+                                </div>
+                                <div class="preview-time">
+                                    <span class="time-icon">🕒</span>
+                                    <span id="preview-time">活動時間</span>
+                                </div>
+                            </div>
+                            <p class="preview-description" id="preview-description">活動說明將顯示在這裡...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="buttons-container">
+                    <a href="group-activities.html" class="cancel-btn">取消</a>
+                    <button type="submit" class="submit-btn">發布活動</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endblock %}
+    
+    {% block footer %}{% endblock %}
+    
+    {% block body_js %}
+    <script src="{% static 'js/join_create.js' %}"></script>
+    {% endblock %}
+</body>
+</html>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\join_detail.html
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block title %}智能校事專家 - 登入{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/join_detail.css' %}">
+{% endblock %}
+
+
+{% block content %}
+    <body>
+
+        <button class="fixed-cta">立即報名</button>
+        
+        <div class="container">    
+            <div class="back-button" onclick="history.back()">
+                <a href="#">返回</a>
+            </div>    
+            <div class="hero">            
+                <div class="event-details">                
+                    <div class="event-info-cards">
+                        <div class="info-card">
+                            <div class="info-icon-circle">
+                                <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
+                            </div>
+                            <div class="info-content">
+                                <h3 class="info-title">活動地點</h3>
+                                <p class="info-value">大安森林公園</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon-circle">
+                                <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
+                            </div>
+                            <div class="info-content">
+                                <h3 class="info-title">活動時間</h3>
+                                <p class="info-value">8/6（週六）下午2:00-6:00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon-circle">
+                                <span class="info-icon"><i class="fa-solid fa-person"></i></span>
+                            </div>
+                            <div class="info-content">
+                                <h3 class="info-title">參加人數</h3>
+                                <p class="info-value">8/15人</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon-circle">
+                                <span class="info-icon"><i class="fa-solid fa-coins"></i></span>
+                            </div>
+                            <div class="info-content">
+                                <h3 class="info-title">活動費用</h3>
+                                <p class="info-value">每人250元（含食材）</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">活動介紹</h2>
+                <div class="section-content">
+                    <p>週末一起來烤肉放鬆！我們會準備各種食材，飲料自備。歡迎大家參加，認識新朋友！</p>
+                    <p>這次烤肉活動地點選在大安森林公園，交通便利，附近有捷運站。我們會準備豐富的食材，包括：牛肉、豬肉、雞肉、香腸、蔬菜、玉米、海鮮等。現場有烤肉設備和桌椅，大家只需帶上好心情來參加！</p>
+                    <p>希望透過這次活動，讓大家能在忙碌的學校生活中，找到放鬆的機會，也能認識更多志同道合的朋友。</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">注意事項</h2>
+                <div class="section-content">
+                    <ul>
+                        <li>請於8/5前繳交活動費用250元</li>
+                        <li>飲料請自行攜帶</li>
+                        <li>請自備餐具及碗筷</li>
+                        <li>請穿著方便活動的服裝</li>
+                        <li>活動當天若遇雨天，將改至室內場地，另行通知</li>
+                        <li>取消參加請至少提前兩天告知，可退還80%費用</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">活動地點</h2>
+                <div class="map-container">
+                    <div style="width: 100%; height: 100%;">
+                        <iframe
+                          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3614.769413429175!2d121.52297827445207!3d25.041898237975207!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3442a97a0a4329a3%3A0x4c025e30ffa0d88f!2zMTAw5Y-w5YyX5biC5Lit5q2j5Y2A5r-f5Y2X6Lev5LiA5q61MzIx6Jmf!5e0!3m2!1szh-TW!2stw!4v1693825814320!5m2!1szh-TW!2stw"
+                          width="100%"
+                          height="100%"
+                          style="border:0;"
+                          allowfullscreen=""
+                          loading="lazy"
+                          referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+                <div class="address">
+                    <span class="address-icon">📍</span>
+                    <span>台北市大安區新生南路二段1號（大安森林公園烤肉區）</span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">參加者</h2>
+                <div class="participants">
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">烤肉達人</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">小明</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">阿華</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">小芳</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">大雄</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">靜香</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">胖虎</div>
+                    </div>
+                    <div class="participant">
+                        <div class="avatar"></div>
+                        <div class="name">小夫</div>
+                    </div>
+                </div>
+                
+                <div class="status">
+                    <div class="status-text">還有7個名額，趕快加入我們吧！</div>
+                </div>
+            </div>
+            
+            <div class="section">
+
+                    <h2 class="section-title">活動討論區 <span class="comment-count" id="commentCount">(3則評論)</span></h2>
+                    
+                    <div class="comments-section" id="commentsSection">
+                        <!-- 評論 1 -->
+                        <article class="comment-card">
+                            <div class="comment-header">
+                                <div class="user-info-container">
+                                    <div class="user-avatar">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">阿華</span>
+                                        <div class="comment-meta">
+                                            <div class="stars" data-rating="4.5">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                            </div>
+                                            <span class="comment-date">2024/04/10</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="like-btn" data-comment-id="1">
+                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                                    <span class="like-count">12</span>
+                                </button>
+                            </div>
+                            <div class="comment-content">
+                                <p>請問可以帶朋友一起參加嗎？我有一位朋友也很想來，但他不是北商的學生。</p>
+                            </div>
+                            <div class="comment-actions">
+                                <button class="reply-btn" data-comment-id="1">回覆</button>
+                            </div>
+                            
+                            <!-- 回覆表單 (預設隱藏) -->
+                            <div class="reply-form" id="replyForm1" style="display: none;">
+                                <div class="form-group">
+                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="cancel-reply-btn" data-comment-id="1">取消</button>
+                                    <button class="submit-reply-btn" data-comment-id="1">發送</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 回覆區塊 -->
+                            <div class="replies-container" id="replies1">
+                                <div class="reply">
+                                    <div class="user-avatar small">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="reply-content">
+                                        <div class="reply-header">
+                                            <span class="user-name">烤肉達人</span>
+                                            <span class="reply-date">2024/04/11</span>
+                                        </div>
+                                        <p>可以的！這次活動其實不限北商學生，只要是你的朋友都歡迎參加，記得幫他報名和繳費就行了。</p>
+                                        <div class="reply-actions">
+                                            <button class="reply-to-reply" data-reply-to="烤肉達人">回覆</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- 評論 2 -->
+                        <article class="comment-card">
+                            <div class="comment-header">
+                                <div class="user-info-container">
+                                    <div class="user-avatar">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">小明</span>
+                                        <div class="comment-meta">
+                                            <div class="stars" data-rating="5">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <span class="comment-date">2024/04/12</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="like-btn" data-comment-id="2">
+                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                                    <span class="like-count">8</span>
+                                </button>
+                            </div>
+                            <div class="comment-content">
+                                <p>看起來很有趣！我已經報名了，期待週六的烤肉活動～</p>
+                            </div>
+                            <div class="comment-actions">
+                                <button class="reply-btn" data-comment-id="2">回覆</button>
+                            </div>
+                            
+                            <div class="reply-form" id="replyForm2" style="display: none;">
+                                <div class="form-group">
+                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="cancel-reply-btn" data-comment-id="2">取消</button>
+                                    <button class="submit-reply-btn" data-comment-id="2">發送</button>
+                                </div>
+                            </div>
+                            
+                            <div class="replies-container" id="replies2"></div>
+                        </article>
+
+                        <!-- 評論 3 -->
+                        <article class="comment-card">
+                            <div class="comment-header">
+                                <div class="user-info-container">
+                                    <div class="user-avatar">
+                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
+                                    </div>
+                                    <div class="user-info">
+                                        <span class="user-name">小芳</span>
+                                        <div class="comment-meta">
+                                            <div class="stars" data-rating="4">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                            </div>
+                                            <span class="comment-date">2024/04/13</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="like-btn" data-comment-id="3">
+                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                                    <span class="like-count">5</span>
+                                </button>
+                            </div>
+                            <div class="comment-content">
+                                <p>請問會提供素食選項嗎？我是吃素的，想知道有沒有適合的食材。</p>
+                            </div>
+                            <div class="comment-actions">
+                                <button class="reply-btn" data-comment-id="3">回覆</button>
+                            </div>
+                            
+                            <div class="reply-form" id="replyForm3" style="display: none;">
+                                <div class="form-group">
+                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="cancel-reply-btn" data-comment-id="3">取消</button>
+                                    <button class="submit-reply-btn" data-comment-id="3">發送</button>
+                                </div>
+                            </div>
+                            
+                            <div class="replies-container" id="replies3"></div>
+                        </article>
+                    </div>
+                    
+                    <!-- 新增留言表單 -->
+                    <div class="add-comment-form">
+                        <h3>發表留言</h3>
+                        <div class="form-group">
+                            <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
+                        </div>
+                        <button id="submitComment" class="submit-comment-btn">發表留言</button>
+                    </div>
+
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">相關活動推薦</h2>
+                <div class="related-grid">
+                <a href="#" class="related-card">
+                    <div class="related-image">
+                        <div class="related-date">4/13 上午11:00</div>
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">春季戶外野餐日</h3>
+                        <div class="related-info">
+                            <span>大安森林公園</span>
+                            <span>12/20人</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="#" class="related-card">
+                    <div class="related-image">
+                        <div class="related-date">4/20 下午1:00</div>
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">校園美食節</h3>
+                        <div class="related-info">
+                            <span>北商大校園</span>
+                            <span>25/50人</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="#" class="related-card">
+                    <div class="related-image">
+                        <div class="related-date">4/15 晚上6:00</div>
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">士林夜市美食團</h3>
+                        <div class="related-info">
+                            <span>士林夜市</span>
+                            <span>8/15人</span>
+                        </div>
+                    </div>
+                </a>
+                </div>
+            </div>
+        </div>
+    </body>
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/join_detail.js' %}"></script>
+{% endblock %}
+    
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\join.html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}智能校事專家 - 活動召集{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block extra_css %}
+<script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/join.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/join_pop.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- 背景的ACTIVITY GROUP ACTIVITY GROUP -->
+    <div class="bg-text">ACTIVITY GROUP ACTIVITY GROUP</div>
+
+    <!-- 標題 -->
+    <header class="page-header">
+        <h1 class="page-title">活動召集</h1>
+        <p class="page-subtitle">（尋找同好・共享樂趣）</p>
+    </header>
+    
+    <!-- 頂部搜尋與過濾區 -->
+    <div class="filter-section">
+        <select class="filter-item">
+            <option>全部活動類型</option>
+            <option>美食</option>
+            <option>運動</option>
+            <option>讀書</option>
+            <option>旅遊</option>
+            <option>電影</option>
+            <option>其他</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部地點</option>
+            <option>校內</option>
+            <option>校外</option>
+        </select>
+        
+        <select class="filter-item">
+            <option>全部時間</option>
+            <option>今天</option>
+            <option>本週</option>
+            <option>本月</option>
+        </select>
+        
+        <input type="text" class="search-box" placeholder="搜尋活動...">
+    </div>
+        
+    <!-- 活動列表和分頁 -->
+    <section class="activities-container">
+        <div class="activity-grid">
+            <!-- 活動 到時候改迴圈 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=1'">
+                <div class="activity-header">週末烤肉趴</div>
+                <div class="activity-image">
+                    <img src="{% static 'image/bbq.jpeg' %}" alt="烤肉聚會">
+                    <div class="activity-tag food">美食</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">一起來同樂！</h3>
+                    <p class="activity-description">週末一起來烤肉放鬆！我們會準備各種食材，飲料自備。歡迎大家參加，認識新朋友！</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
+                            <span>大安森林公園</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
+                            <span>4/6 下午2:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">8/15人</div>
+                        </div>
+                        <a href="/join_detail/?id=1" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Card 2 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=2'">
+                <div class="activity-header">會計學讀書會</div>
+                <div class="activity-image">
+                    <img src="{% static 'image/test/a2.jpeg' %}" alt="期中考讀書會">
+                    <div class="activity-tag study">讀書</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">期中考準備</h3>
+                    <p class="activity-description">期中考快到了，一起來複習會計學！我有整理好的重點筆記，可以一起討論難題。人數限制避免太吵雜，請有準備的同學參加。</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
+                            <span>圖書館3樓讀書室</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
+                            <span>4/5 晚上7:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">5/8人</div>
+                        </div>
+                        <a href="/join_detail/?id=2" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Card 3 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=3'">
+                <div class="activity-header">籃球練習</div>
+                <div class="activity-image">
+                    <img src="{% static 'image/test/a3.jpeg' %}" alt="籃球練習">
+                    <div class="activity-tag sports">運動</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">週三球場見</h3>
+                    <p class="activity-description">固定每週三晚上的籃球練習，歡迎對籃球有興趣的同學參加！不限男女，有經驗或新手都可以，一起來動一動。</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
+                            <span>校內籃球場</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
+                            <span>每週三晚上6:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">9/10人</div>
+                        </div>
+                        <a href="/join_detail/?id=3" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Card 4 -->
+            <div class="activity-card" onclick="window.location.href='/join_detail/?id=4'">
+                <div class="activity-header">漫威馬拉松</div>
+                <div class="activity-image">
+                    <img src="{% static 'image/activity_test.jpg' %}" alt="電影之夜">
+                    <div class="activity-tag movie">電影</div>
+                </div>
+                <div class="activity-content">
+                    <h3 class="activity-title">超級英雄電影夜</h3>
+                    <p class="activity-description">一起來看漫威電影馬拉松！連續播放三部復仇者系列電影，提供爆米花和飲料。喜歡漫威的朋友不要錯過！</p>
+                    
+                    <div class="activity-info">
+                        <div class="activity-location">
+                            <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
+                            <span>市民大道電影院</span>
+                        </div>
+                        <div class="activity-time">
+                            <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
+                            <span>4/10 下午1:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-footer">
+                        <div class="participants">
+                            <div class="participant-avatars">
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                                <div class="participant-avatar"></div>
+                            </div>
+                            <div class="participant-count">12/20人</div>
+                        </div>
+                        <a href="/join_detail/?id=4" class="join-btn" onclick="event.stopPropagation();">我要參加</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 右下角的圓形logo和上傳按鈕 -->
+    <div class="floating-action-button">
+        <div class="circular-logo">
+            <div class="circular-text">
+                <svg viewBox="0 0 100 100">
+                    <path id="curve" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" fill="transparent"/>
+                    <text>
+                        <textPath href="#curve" textLength="250">
+                            join activity together • 
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="upload-btn-center" id="uploadBtn">
+                <span>＋</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="deco-line"></div>
+</div>
+
+<!-- 載入發起揪團彈跳視窗 -->
+{% include 'pop_window/join_pop.html' %}
+
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/pop_window/join_pop.js' %}"></script>
+<script src="{% static 'js/join.js' %}"></script>
+{% endblock %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\login.html
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block title %}智能校事專家 - 登入{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/reset.css' %}">
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="background">
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+</div>
+
+<main>
+    <div class="login-container">
+        <div class="frame"></div>
+        <div class="login-sidebar">
+            <h2>登入</h2>
+            <div class="sidebar-text">
+                請使用學校帳號進行登入
+            </div>
+        </div>
+        <div class="login-form">
+            
+            <form id="loginForm">
+                    <a class="other-login-btn" href="{% url 'social:begin' 'google-oauth2' %}?prompt=select_account">
+                        <img class="login-img" src="{% static 'image/login.png' %}" alt="Google 登入">
+                    </a>
+            </form>
+
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit">登出</button>
+                <div class="form-actions" onclick="history.back()">
+                    <button type="button" class="btn-cancel">取消</button>
+                </div> 
+              </form>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% comment %} {% block body_js %}
+<script src="{% static 'js/login.js' %}"></script>
+{% endblock %} {% endcomment %}
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\navbar.html
+<!DOCTYPE html> 
+<html lang="{% block lang %}en{% endblock %}"> 
+<head>     
+    <meta charset="UTF-8">     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">     
+    <title>{% block title %}智能校事專家{% endblock %}</title>     
+    {% load static %}     
+    {% block css %}{% endblock %}     
+    {% block head_js %}{% endblock %}     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">     
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pop_window/login_pop.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>  
+
+<body>     
+    {% block header %}     
+    <nav class="navbar navbar-initial" id="navbar">         
+        <a href="/index/" class="logo">
+            <img class="Logo"  src="{% static 'image/logo.png' %}">
+            智能校事專家
+        </a>
+        <ul class="nav-links">             
+            <li><a href="/chat/">校規查詢</a></li>             
+            <li><a href="/comment/">課程評論區</a></li>             
+            <li><a href="/join/">活動召集</a></li>             
+            <li><a href="/book/">二手書專區</a></li>
+        </ul>         
+        <div class="user-menu">
+            <div class="user-circle" id="userMenuButton">             
+                <i class="fa-solid fa-user"></i>         
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+              {% if user.is_authenticated %}
+                <a href="/personal/" class="dropdown-item" id="personalButton">個人中心</a>
+                <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
+                    {% csrf_token %}
+                    <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item" id="logoutButton">登出</a>
+                </form>
+              {% else %}
+                <a href="{% url 'social:begin' 'google-oauth2' %}" class="dropdown-item" id="loginButton">登入</a>
+              {% endif %}
+            </div>
+        </div>
+        <div class="phone-menu">
+            <div class="phone-circle" id="phoneMenuButton">             
+                <i class="fa-solid fa-bars iconMenu"></i>     
+            </div>
+        </div>
+      </nav>
+  
+      <!-- 手機菜單覆蓋層和面板 -->
+      <div class="phone-menu-overlay" id="phoneMenuOverlay"></div>
+      <div class="phone-dropdown" id="phoneDropdown">
+          <button class="close-btn" id="phoneMenuClose">
+              <i class="fa-solid fa-times"></i>
+          </button>
+          
+          <div class="user-section">
+            {% if user.is_authenticated %}
+              <a class="user-icon" href="/personal/">
+                  <i class="fa-solid fa-user iconPhoneMenu"></i>
+                  <span>個人中心</span>
+              </a>
+            {% else %}
+              <a href="{% url 'social:begin' 'google-oauth2' %}" class="user-icon dropdown-item" id="loginButton">
+                <i class="fa-solid fa-user iconPhoneMenu"></i>
+                <span>請先登入學校帳號</span>
+              </a>
+            {% endif %}
+          </div>
+          
+          <div class="nav-section">
+              <a href="/chat/">校規查詢</a> 
+              <a href="/comment/">課程評論區</a>
+              <a href="/join/">活動召集</a>
+              <a href="/book/">二手書專區</a>
+              
+          </div>
+
+          <div class="footer-section">
+            <a href="#">北商官網</a> 
+            <a href="#">北商blackboard平台</a> 
+            <a href="#">北商Timetable平台</a>
+            <a href="#">北商學生資訊系統</a>
+            
+          </div>
+  
+          <div class="logout-section">
+              {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" id="logoutForm" style="margin: 0;">
+                  {% csrf_token %}
+                  <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="dropdown-item" id="logoutButton">登出</a>
+                </form>
+              {% else %}
+              {% endif %}
+          </div>
+      </div>
+    </nav>
+    {% endblock %}      
+
+    {% block content %}{% endblock %}        
+    
+    {% block footer %}{% endblock %}          
+    
+    <!-- 載入登入彈跳視窗 -->
+    {% include 'pop_window/login_pop.html' %}
+    
+    {% block body_js %}{% endblock %}          
+    
+    <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
+    <script src="{% static 'js/navbar.js' %}"></script> 
+</body> 
+</html>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\personal.html
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}智能校事專家 - 個人中心{% endblock %}
+
+{% block lang %}zh-Hant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/personal.css' %}">
+{% endblock %}
+
+{% block content %}
+    
+
+    <div class="page-container">
+        <div class="bg-text">USER INFORMATION</div>
+
+        <header>
+            <div class="title">
+                <i class="fas fa-chart-bar"></i>
+                <h1>個人中心</h1>
+            </div>
+        </header>
+
+        <div class="row">
+            <!-- 左側課表區塊 -->
+            <div class="card course-schedule">
+                <h2>課表</h2>
+                <div class="schedule-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>時間</th>
+                                <th>星期一</th>
+                                <th>星期二</th>
+                                <th>星期三</th>
+                                <th>星期四</th>
+                                <th>星期五</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="time">08:10<br>09:00</td>
+                                <td></td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">統計學</div>
+                                        <div class="class-room">電703</div>
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">會計學</div>
+                                        <div class="class-room">藝406</div>
+                                    </div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="time">09:10<br>10:00</td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">經濟學</div>
+                                        <div class="class-room">藝405</div>
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">行銷管理</div>
+                                        <div class="class-room">藝405</div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="time">10:10<br>11:00</td>
+                                <td></td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">管理學</div>
+                                        <div class="class-room">藝405</div>
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="time">11:10<br>12:00</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="time">13:10<br>14:00</td>
+                                <td></td>
+                                <td></td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">商用英文</div>
+                                        <div class="class-room">中正館</div>
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">體育</div>
+                                        <div class="class-room">體育館</div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="time">14:10<br>15:00</td>
+                                <td class="has-class">
+                                    <div class="class-item">
+                                        <div class="class-name">企業實務</div>
+                                        <div class="class-room">育803</div>
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="time">15:10<br>16:00</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="time">16:15<br>17:10</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="time">17:15<br>18:10</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 右側資料與活動區塊 -->
+            <div class="right-column">
+                <!-- 個人資料卡片 -->
+                <div class="card profile-card">
+                    <h2>我的資料</h2>
+                    <div class="profile-content">
+                        <div class="profile-image">
+                            <img src="{% static 'image/me1.png' %}" alt="{{ user.last_name }}{{ user.first_name }}">
+                            <div class="user-name">{{ user.last_name }}{{ user.first_name }}</div>
+                            <button class="btn-secondary">編輯資料</button>
+                        </div>
+                        <div class="profile-details">
+                            <div class="profile-item">
+                                <div class="label">姓名</div>
+                                <div class="value">{{ user.last_name }}{{ user.first_name }}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="label">學號</div>
+                                <div class="value">{{ user.username }}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="label">系所</div>
+                                <div class="value">資訊管理科</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="label">年級</div>
+                                <div class="value">五專四年級</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="label">學分</div>
+                                <div class="value-with-progress">
+                                    <div class="value">已修196 /220</div>
+                                    <div class="progress-bar" id="progressBar">
+                                        <div class="progress-segment required animate" 
+                                            style="--target-width: 37.73%;" 
+                                            data-tooltip="必修：83學分"></div>
+                                        <div class="progress-segment elective animate" 
+                                            style="--target-width: 0%;" 
+                                            data-tooltip="選修：0學分"></div>
+                                        <div class="progress-segment major animate" 
+                                            style="--target-width: 12.27%;" 
+                                            data-tooltip="專選：27 /37學分"></div>
+                                        <div class="progress-segment general animate" 
+                                            style="--target-width: 30%;" 
+                                            data-tooltip="通識：66學分"></div>
+                                    </div>
+                                    <div class="tooltip" id="tooltip"></div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 活動卡片 -->
+                <div class="card activities-card">
+                    <div class="card-header">
+                        <h2>我的活動</h2>
+                    </div>
+                    <div class="activities-list">
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-running"></i></div>
+                            <div class="activity-content">
+                                <div class="activity-title">週末慢跑團，一起來同樂！</div>
+                                <div class="activity-details">
+                                    <span><i class="fas fa-map-marker-alt"></i> 大安森林公園</span>
+                                    <span><i class="far fa-clock"></i> 4/6 下午2:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-utensils"></i></div>
+                            <div class="activity-content">
+                                <div class="activity-title">會計學期中考讀書會</div>
+                                <div class="activity-details">
+                                    <span><i class="fas fa-map-marker-alt"></i> 圖書館3樓讀書室</span>
+                                    <span><i class="far fa-clock"></i> 4/5 晚上7:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-film"></i></div>
+                            <div class="activity-content">
+                                <div class="activity-title">漫威電影馬拉松</div>
+                                <div class="activity-details">
+                                    <span><i class="fas fa-map-marker-alt"></i> 多媒體教室</span>
+                                    <span><i class="far fa-clock"></i> 4/8 上午10:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 行事曆卡片 -->
+            <div class="card calendar-card">
+                <h2>行事曆</h2>
+                <div class="calendar-header">
+                    <button id="prevMonth" class="calendar-nav"><i class="fas fa-chevron-left"></i></button>
+                    <h3 id="currentMonth">2025年4月</h3>
+                    <button id="nextMonth" class="calendar-nav"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar">
+                    <table>
+                        <thead>
+                            <tr class="calendar-header-full">
+                            <th>星期日</th>
+                            <th>星期一</th>
+                            <th>星期二</th>
+                            <th>星期三</th>
+                            <th>星期四</th>
+                            <th>星期五</th>
+                            <th>星期六</th>
+                        </tr>
+                        <tr class="calendar-header-short" style="display:none;">
+                            <th>日</th>
+                            <th>一</th>
+                            <th>二</th>
+                            <th>三</th>
+                            <th>四</th>
+                            <th>五</th>
+                            <th>六</th>
+                        </tr>
+                        </thead>
+                        <tbody id="calendarBody">
+                            <tr>
+                                <td class="other-month">30</td>
+                                <td class="other-month">31</td>
+                                <td>1</td>
+                                <td>2
+                                    <div class="event">統計學測驗</div>
+                                </td>
+                                <td>3</td>
+                                <td class="current-day">4
+                                    <div class="event">展交所期貨日</div>
+                                    <div class="event">讀書會</div>
+                                </td>
+                                <td>5</td>
+                            </tr>
+                            <tr>
+                                <td>6
+                                    <div class="event">慢跑趣</div>
+                                </td>
+                                <td>7</td>
+                                <td>8
+                                    <div class="event">電影馬拉松</div>
+                                </td>
+                                <td>9</td>
+                                <td>10</td>
+                                <td>11</td>
+                                <td>12</td>
+                            </tr>
+                            <tr>
+                                <td>13</td>
+                                <td>14</td>
+                                <td>15
+                                    <div class="event">會計期中考</div>
+                                </td>
+                                <td>16</td>
+                                <td>17</td>
+                                <td>18
+                                    <div class="event">經濟期中考</div>
+                                </td>
+                                <td>19</td>
+                            </tr>
+                            <tr>
+                                <td>20</td>
+                                <td>21
+                                    <div class="event">統計期中考</div>
+                                </td>
+                                <td>22</td>
+                                <td>23</td>
+                                <td>24
+                                    <div class="event">行銷期中考</div>
+                                </td>
+                                <td>25</td>
+                                <td>26</td>
+                            </tr>
+                            <tr>
+                                <td>27</td>
+                                <td>28</td>
+                                <td>29</td>
+                                <td>30</td>
+                                <td class="other-month">1</td>
+                                <td class="other-month">2</td>
+                                <td class="other-month">3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 待辦事項卡片 -->
+            <div class="card todo-card">
+                <div class="card-header">
+                    <h2>代辦事項</h2>
+                </div>
+                <div class="todo-content">
+                    <ul class="todo-list">
+                        <li class="todo-item completed">
+                            <input type="checkbox" id="task1" checked>
+                            <label for="task1">完成統計學作業</label>
+                            <span class="todo-status">已完成</span>
+                        </li>
+                        <li class="todo-item">
+                            <input type="checkbox" id="task2">
+                            <label for="task2">準備行銷管理報告</label>
+                            <span class="todo-status">今天</span>
+                        </li>
+                        <li class="todo-item">
+                            <input type="checkbox" id="task3">
+                            <label for="task3">預約圖書館讀書室</label>
+                            <span class="todo-status">今天</span>
+                        </li>
+                        <li class="todo-item">
+                            <input type="checkbox" id="task4">
+                            <label for="task4">整理會計學筆記</label>
+                            <span class="todo-status">明天</span>
+                        </li>
+                        <li class="todo-item">
+                            <input type="checkbox" id="task5">
+                            <label for="task5">複習經濟學第四章</label>
+                            <span class="todo-status">4/6</span>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+
+                
+                <!-- 詳細資訊卡片（預設隱藏） -->
+                <div class="card detail-card" style="display:none;">
+                    <div class="card-header" style="display:flex;align-items:center;">
+                        <button id="backToTodo" style="margin-right:12px; background:none; border:none; font-size:20px; cursor:pointer; color:#8a7788;">
+                            <i class="fas fa-arrow-left"></i> 返回
+                        </button>
+                    <h2 id="detailCardTitle" style="margin:0;">詳細資訊</h2>
+                    <span id="detailCardDate" style="font-size:20px;font-weight:bold;color:#8a7788;margin-left:12px;"></span>
+                </div>
+        
+                <div class="detail-content">
+                    <ul class="detail-todo-list">
+                        <!-- 這裡會由 JS 動態插入該天的事項 -->
+                    </ul>
+                    
+                    <div class="add-todo-detail">
+                        <div class="todo-input-group">
+                        <!-- 標題輸入框：單行 -->
+                        <input 
+                            type="text" 
+                            id="newDetailTaskTitle" 
+                            class="todo-title-input"
+                            placeholder="輸入待辦事項標題..."
+                            maxlength="50"
+                            autocomplete="off"
+                        >
+                        <!-- 詳細說明輸入框：多行 -->
+                        <textarea 
+                            id="newDetailTaskDescription" 
+                            class="todo-detail-input"
+                            placeholder="輸入詳細說明或備註... (選填)&#10;例如：地點、時間、重要提醒等"
+                            rows="5"
+                        ></textarea>
+                        <div class="todo-actions">
+                            <button id="clearDetailForm" class="btn-secondary-detail">清除</button>
+                            <button id="addDetailTask" class="btn-primary-detail">新增事項</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_js %}
+<script src="{% static 'js/personal.js' %}"></script>
+{% endblock %}
+
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\welcome_mo.html
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>歡迎頁面 (Mobile)</title>
+
+  <link rel="stylesheet" type="text/css" href="{% static 'css/welcome_mo.css' %}" />
+</head>
+<body>
+    <div class="transition-page">
+      <div class="spline-mask">
+        <spline-viewer class="spline-box" url="https://prod.spline.design/NqIZdwsMRcqAJ2cW/scene.splinecode"></spline-viewer>
+      </div>
+    </div>
+
+
+
+      <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.93/build/spline-viewer.js"></script>
+   
+    
+  </body>
+  <script src="{% static 'js/welcome_mo.js' %}"></script>
+  </html>
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\templates\welcome.html
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>歡迎頁面</title>
+
+  <link
+      rel="stylesheet"
+      type="text/css"
+      href="{% static 'css/welcome.css' %}"
+    />
+
+</head>
+<body>
+    <div class="transition-page">
+      <div class="spline-mask">
+        <spline-viewer class="spline-box" url="https://prod.spline.design/GkbjjSNh32-DZhZJ/scene.splinecode"></spline-viewer>
+      </div>
+    </div>
+
+
+
+      <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.93/build/spline-viewer.js"></script>
+   
+    
+  </body>
+  <script src="{% static 'js/welcome.js' %}"></script>
+  </html>
+
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\admin.py
+from django.contrib import admin
+
+# Register your models here.
+
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\apps.py
+from django.apps import AppConfig
+
+
+class WebAppConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'web_app'
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\auth_views.py
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from social_core.pipeline.user import get_username
+import requests
+
+def create_user(strategy, details, backend, user=None, *args, **kwargs):
+    """Create user if it doesn't exist."""
+    if user:
+        # 如果使用者存在，更新所有相關資訊
+        user.first_name = details.get('first_name', '')
+        user.last_name = details.get('last_name', '')
+        user.email = details.get('email')
+        user.username = details.get('username') or details.get('email').split('@')[0]
+        
+        user.save()
+        return {'is_new': False, 'user': user}
+
+    # 取得使用者詳細資料
+    email = details.get('email')
+    first_name = details.get('first_name', '')
+    last_name = details.get('last_name', '')
+    username = details.get('username') or email.split('@')[0]
+
+    # 檢查是否已有使用者
+    try:
+        # 先嘗試用電子郵件查找
+        existing_user = User.objects.get(email=email)
+        # 更新現有使用者的資訊
+        existing_user.first_name = first_name
+        existing_user.last_name = last_name
+        existing_user.username = username
+        existing_user.save()
+        return {'is_new': False, 'user': existing_user}
+    except User.DoesNotExist:
+        pass
+
+    # 創建新使用者（不給予後台權限）
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        password=generate_random_password(),
+        is_active=True,
+        is_staff=False,  # 確保沒有後台訪問權限
+        is_superuser=False  # 確保沒有超級用戶權限
+    )
+    
+    # 獲取 Google 帳號照片
+    if backend.name == 'google-oauth2':
+        social = kwargs.get('social')
+        if social:
+            try:
+                # Google OAuth2 的照片 URL
+                photo_url = social.extra_data.get('picture')
+                if photo_url:
+                    # 創建或更新 Profile
+                    profile, created = Profile.objects.get_or_create(user=user)
+                    profile.profile_photo = photo_url
+                    profile.save()
+            except Exception as e:
+                print(f"Error getting Google photo: {str(e)}")
+    return {'is_new': True, 'user': user}
+
+import string
+import random
+
+def generate_random_password(length=12):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choices(characters, k=length))
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\models.py
+from django.db import models
+
+# Create your models here.
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\mongo.py
+# web_app/mongo.py
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+from datetime import datetime
+import os
+
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+db = client["chatbot_db"]
+col = db["conversations"]
+
+def create_conversation(user_id, title="新對話"):
+    doc = {
+        "user_id": user_id,
+        "title": title,
+        "messages": [],
+        "created_at": datetime.utcnow()
+    }
+    result = col.insert_one(doc)
+    return str(result.inserted_id)
+
+def add_message(conversation_id, question, answer, sources=None):
+    message_data = {
+        "question": question,
+        "answer": answer,
+        "timestamp": datetime.utcnow(),
+    }
+    if sources:
+        message_data["sources"] = sources
+
+    col.update_one(
+        {"_id": ObjectId(conversation_id)},
+        {"$push": {"messages": message_data}}
+    )
+
+
+
+def get_conversations(user_id):
+    docs = col.find({"user_id": user_id}).sort("created_at", -1)
+    return [
+        {"id": str(d["_id"]), "title": d["title"]}
+        for d in docs
+    ]
+
+def get_messages(conversation_id):
+    doc = col.find_one({"_id": ObjectId(conversation_id)})
+    if not doc: return []
+    # sort by timestamp in ascending
+    return sorted(doc["messages"], key=lambda m: m["timestamp"])
+
+def update_conversation_title(conversation_id, new_title):
+    col.update_one(
+        {"_id": ObjectId(conversation_id)},
+        {"$set": {"title": new_title}}
+    )
+
+def delete_conversation(conversation_id):
+    col.delete_one({"_id": ObjectId(conversation_id)})
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\tests.py
+from django.test import TestCase
+
+# Create your tests here.
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\views_chat_history.py
+from pymongo import MongoClient
+from datetime import datetime
+
+client = MongoClient(MONGO_URI)
+db = client.get_database()
+
+def save_chat(user_id, question, answer):
+    chat_collection = db.chat_history
+
+    chat_data = {
+        "user_id": user_id,
+        "question": question,
+        "answer": answer,
+        "timestamp": datetime.utcnow()
+    }
+
+    # 儲存對話到 MongoDB
+    chat_collection.insert_one(chat_data)
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\views_rag.py
+
+import os
+import re
+import markdown
+from dotenv import load_dotenv
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain_openai import AzureOpenAIEmbeddings
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chat_models import AzureChatOpenAI
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
+
+# 載入 .env
+load_dotenv()
+
+def test_mongo_connection():
+    MONGO_URI = os.getenv("MONGO_URI")
+    if not MONGO_URI:
+        print("❌ 找不到 MONGODB_URI 環境變數")
+        return
+    try:
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
+        client.admin.command('ping')
+        print("✅ MongoDB 連線成功。")
+    except ConnectionFailure:
+        print("❌ MongoDB 連線失敗")
+    except Exception as e:
+        print(f"❌ MongoDB 連線錯誤: {e}")
+
+# 初始化 LLM
+llm = AzureChatOpenAI(
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+)
+
+# 初始化 Embedding 模型
+embeddings = AzureOpenAIEmbeddings(
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    azure_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
+)
+
+# 讀取 PDF 文件
+def load_pdf_documents():
+    current_dir = os.path.dirname(__file__)
+    parent_dir = os.path.dirname(current_dir)
+    pdf_dir = os.path.join(parent_dir, "uploaded_files")
+    all_docs = []
+    if not os.path.exists(pdf_dir):
+        print(f"⚠️ 找不到資料夾：{pdf_dir}")
+        return []
+    for filename in os.listdir(pdf_dir):
+        if filename.endswith(".pdf"):
+            full_path = os.path.join(pdf_dir, filename)
+            print(f"📄 載入：{filename}")
+            loader = PyPDFLoader(full_path)
+            docs = loader.load()
+            all_docs.extend(docs)
+    return all_docs
+
+# 分割文件
+def split_documents(documents):
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100, add_start_index=True)
+    return splitter.split_documents(documents)
+
+# 建立向量資料庫
+def create_vector_store(splits):
+    return Chroma.from_documents(documents=splits, embedding=embeddings)
+
+# 建立進階 RAG 鏈
+def create_advanced_rag_chain(retriever):
+    system_prompt = (
+        "You are a helpful assistant for answering questions about National Taipei University of Business (NTUB). "
+        "Use the following retrieved context to answer the question. "
+        "If you don't know the answer, just say you don't know, and do not make up anything. "
+        "You must answer **only in Traditional Chinese**, never use Simplified Chinese. "
+        "Your tone should be friendly and professional (like a knowledgeable NTUB student helper), "
+        "but your information must be accurate and based on the context. "
+        "Always clearly mention that the information is from NTUB regulations, by saying things like '根據國立臺北商業大學的校規顯示'. "
+        "Use bold (** **) or headers (like # or ##) to highlight key points and make the answer easier to read. "
+        "When listing items, use proper numbering (1. 2. 3.) or bullet points (•) with consistent spacing. "
+        "Organize your response with clear structure and consistent formatting.\n\n{context}"
+    )
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{input}"),
+    ])
+    qa_chain = create_stuff_documents_chain(llm, prompt)
+    return create_retrieval_chain(retriever, qa_chain)
+
+def format_text_with_proper_alignment(text):
+    """改進的文字格式化，保持原本緊湊但讓編號對齊"""
+    if not text:
+        return ""
+    
+    # 統一換行符
+    text = re.sub(r'\r\n|\r', '\n', text)
+    
+    # 處理粗體
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    
+    # 處理編號列表，確保對齊
+    def replace_numbered_item(match):
+        num = match.group(1)
+        content = match.group(2).strip()
+        return f'<div style="display:flex;margin:4px 0;"><span style="min-width:24px;font-weight:bold;color:#2563eb;">{num}.</span><span style="flex:1;">{content}</span></div>'
+    
+    text = re.sub(r'^(\d+)\.\s*(.+)$', replace_numbered_item, text, flags=re.MULTILINE)
+    
+    # 簡單的段落處理
+    lines = text.split('\n')
+    result = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # 如果是HTML標籤，直接加入
+        if line.startswith('<div') or line.startswith('<strong'):
+            result.append(line)
+        else:
+            result.append(f'<p style="margin:4px 0;line-height:1.5;">{line}</p>')
+    
+    return ''.join(result)
+
+# 先測試 MongoDB 連線
+print("🚀 測試 MongoDB 連線...")
+test_mongo_connection()
+
+# 初始化 RAG 系統
+print("🚀 初始化進階 RAG 系統...")
+docs = load_pdf_documents()
+splits = split_documents(docs)
+vectorstore = create_vector_store(splits)
+retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 2})
+advanced_rag_chain = create_advanced_rag_chain(retriever)
+print("✅ 進階 RAG 系統初始化完成。")
+
+# 修正後的查詢函式
+# 只需要替換您原本的 ask_question 函式即可：
+def ask_question(question: str, conversation_history: list = None) -> str:
+    try:
+        # 🔥 如果有歷史對話，就加入到當前問題中
+        if conversation_history:
+            # 只取最近幾輪對話，避免太長
+            recent_history = conversation_history[-8:] if len(conversation_history) > 8 else conversation_history
+            
+            history_context = "之前的對話內容：\n"
+            for msg in recent_history:
+                history_context += f"Q: {msg['question']}\nA: {msg['answer']}\n\n"
+            
+            # 將歷史對話和新問題結合
+            full_question = f"{history_context}現在的新問題：{question}"
+        else:
+            full_question = question
+            
+        response = advanced_rag_chain.invoke({"input": full_question})
+        raw_answer = response["answer"].strip()
+        
+        # 獲取使用的文檔來源
+        source_documents = response.get("context", [])
+        pdf_sources = []
+        
+        for doc in source_documents:
+            if hasattr(doc, 'metadata') and 'source' in doc.metadata:
+                pdf_path = doc.metadata['source']
+                pdf_name = os.path.basename(pdf_path)
+                if pdf_name not in pdf_sources:
+                    pdf_sources.append(pdf_name)
+                    
+        # 先處理所有粗體標記，避免後續處理時被破壞
+        raw_answer = re.sub(r'\*\*([^*\n]+?)\*\*', r'<strong style="color:#4A5B73; font-weight:700;">\1</strong>', raw_answer)
+        
+        # 逐行處理
+        lines = raw_answer.split('\n')
+        formatted_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            
+            # 跳過空行
+            if not line:
+                continue
+            
+            # 處理 ### 標題
+            if line.startswith('###'):
+                title = line.replace('###', '').strip()
+                formatted_line = f'<h3 style="color:#5B7296; margin:12px 0 6px 0; font-weight:650; font-size:1.2em;">{title}</h3>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理 ## 標題
+            elif line.startswith('##'):
+                title = line.replace('##', '').strip()
+                formatted_line = f'<h2 style="color:#4A668A; margin:15px 0 8px 0; font-weight:650; font-size:1.4em;">{title}</h2>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理 # 標題
+            elif line.startswith('#'):
+                title = line.replace('#', '').strip()
+                formatted_line = f'<h1 style="color:#365073; margin:18px 0 10px 0; font-weight:650; font-size:1.6em;">{title}</h1>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理編號列表
+            numbered_match = re.match(r'^(\d+)\.\s*(.+)$', line)
+            if numbered_match:
+                num = numbered_match.group(1)
+                content = numbered_match.group(2)
+                formatted_line = f'<div style="display:flex; margin:6px 0; align-items:flex-start;"><span style="min-width:28px; font-weight:650; color:#6B5B8A; flex-shrink:0;">{num}.</span><span style="flex:1; line-height:1.5;">{content}</span></div>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理以破折號或點開頭的列表項
+            elif line.startswith('- ') or line.startswith('• '):
+                content = line[2:].strip()
+                formatted_line = f'<div style="margin:4px 0 4px 20px; line-height:1.5;">• {content}</div>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理普通段落
+            else:
+                formatted_lines.append(f'<p style="margin:6px 0; line-height:1.6; color:#334455;">{line}</p>')
+        
+        # 合併所有格式化的行
+        result = ''.join(formatted_lines)
+        
+        return {
+            "answer": result,
+            "has_sources": len(pdf_sources) > 0,
+            "sources": pdf_sources
+        }
+        
+    except Exception as e:
+        error_msg = f"處理問題時發生錯誤: {str(e)}"
+        print(f"❌ RAG 錯誤: {error_msg}")
+        return {
+            "answer": f"<p style='color:#8B6B6B;'>抱歉，我在處理您的問題時遇到了一些困難。請稍後再試或換個方式提問。</p>",
+            "has_sources": False,
+            "sources": []
+        }
+
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\web_app\views.py
+import os
+import json
+import zipfile
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .views_rag import ask_question, create_vector_store, load_pdf_documents, split_documents
+from django.contrib.auth.decorators import login_required
+
+def base(request):
+    return render(request, 'base.html')
+
+def welcome(request):
+    return render(request, 'welcome.html')
+
+def welcome_mo(request):
+    return render(request, 'welcome_mo.html')
+
+def index(request):
+    return render(request, 'index.html')
+
+# def mobile(request):
+#     return render(request, 'mobile.html')
+
+def login(request):
+    return render(request, 'login.html')
+
+def personal(request):
+    return render(request, 'personal.html')
+
+def chat(request):
+    return render(request, 'chat.html')
+
+def navbar2(request):
+    return render(request, 'navbar(2).html')
+
+def join(request):
+    return render(request, 'join.html')
+
+def join_create(request):
+    return render(request, 'join_create.html')
+
+def join_detail(request):
+    return render(request, 'join_detail.html')
+
+def book(request):
+    return render(request, 'book.html')
+
+def book_detail(request):
+    return render(request, 'book_detail.html')
+
+def upload_book(request):
+    if request.method == 'POST':
+        # 處理表單提交
+        try:
+            book_title = request.POST.get('bookTitle')
+            department = request.POST.get('department')
+            grade = request.POST.get('grade')
+            book_type = request.POST.get('bookType')
+            price = request.POST.get('price')
+            condition = request.POST.get('condition')
+            description = request.POST.get('bookDescription')
+            transaction_methods = request.POST.getlist('transactionMethod')
+            book_image = request.FILES.get('bookImage')
+            
+            # 這裡可以添加保存到數據庫的邏輯
+            # ...
+            
+            # 返回成功響應
+            return JsonResponse({'status': 'success', 'message': '書籍上傳成功！'})
+        except Exception as e:
+            # 返回錯誤響應
+            return JsonResponse({'status': 'error', 'message': f'上傳失敗: {str(e)}'})
+    else:
+        # GET 請求，顯示表單頁面
+        return render(request, 'book.html')
+
+def ask_page(request):
+    return render(request, "ask.html")
+
+def comment(request):
+    return render(request, "comment.html")
+
+def comment_detail(request):
+    return render(request, "comment_detail.html")
+
+def add_comment(request):
+    return render(request, "add_comment.html")
+
+def personal(request):
+    return render(request, "personal.html")
+
+# web_app/views.py
+import json
+from django.shortcuts import render
+from django.http import JsonResponse, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
+from .mongo import (
+    create_conversation,
+    add_message,
+    get_conversations,
+    get_messages
+)
+from .views_rag import ask_question
+
+USER_ID = "guest"  # 可改為 session 或 request.user.id
+
+def chat_page(request):
+    # 首次載入時不帶任何對話，前端會自動建立
+    return render(request, "ask.html")
+
+@csrf_exempt
+def api_conversations(request):
+    if request.method == "GET":
+        convos = get_conversations(USER_ID)
+        return JsonResponse({"conversations": convos})
+    if request.method == "POST":
+        data = json.loads(request.body)
+        title = data.get("title", "新對話")
+        convo_id = create_conversation(USER_ID, title)
+        return JsonResponse({"id": convo_id, "title": title})
+    return HttpResponseNotAllowed(["GET", "POST"])
+
+@csrf_exempt
+def api_messages(request, convo_id):
+    if request.method == "GET":
+        msgs = get_messages(convo_id)
+        # format timestamp
+        out = []
+        for m in msgs:
+            out.append({
+                "question": m["question"],
+                "answer": m["answer"],
+                "timestamp": m["timestamp"].strftime("%Y-%m-%d %H:%M:%S"),
+                "sources": m.get("sources", [])
+            })
+        return JsonResponse({"messages": out})
+    return HttpResponseNotAllowed(["GET"])
+
+@csrf_exempt
+def api_ask(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    data = json.loads(request.body)
+    question = data.get("question", "").strip()
+    convo_id = data.get("conversation_id")
+    if not question or not convo_id:
+        return JsonResponse({"error": "缺少 question 或 conversation_id"}, status=400)
+
+    # 🔥 關鍵：獲取「這個對話」的歷史記錄
+    conversation_history = get_messages(convo_id)
+    
+    # 🔥 關鍵：將歷史記錄傳給 RAG 系統
+    result = ask_question(question, conversation_history)
+    answer = result["answer"]
+    
+    # 存入 MongoDB
+    add_message(convo_id, question, answer, result.get("sources", []))
+
+    return JsonResponse({
+        "answer": answer,
+        "has_sources": result["has_sources"],
+        "sources": result["sources"]
+    })
+
+@csrf_exempt
+def upload_files(request):
+    """統一處理 PDF 和 ZIP 檔案上傳"""
+    if request.method == "POST":
+        uploaded_file = request.FILES.get("file")
+        if not uploaded_file:
+            return JsonResponse({"error": "請選擇檔案"}, status=400)
+
+        # 檢查檔案類型
+        file_name = uploaded_file.name.lower()
+        if not (file_name.endswith(".pdf") or file_name.endswith(".zip")):
+            return JsonResponse({"error": "只支援 PDF 和 ZIP 檔案"}, status=400)
+
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            upload_dir = os.path.abspath(os.path.join(current_dir, "..", "uploaded_files"))
+            os.makedirs(upload_dir, exist_ok=True)
+
+            if file_name.endswith(".pdf"):
+                # 處理 PDF 檔案
+                pdf_path = os.path.join(upload_dir, uploaded_file.name)
+                with open(pdf_path, "wb") as f:
+                    for chunk in uploaded_file.chunks():
+                        f.write(chunk)
+                message = f"✅ PDF 檔案 '{uploaded_file.name}' 上傳成功"
+                
+            elif file_name.endswith(".zip"):
+                # 處理 ZIP 檔案
+                temp_zip_path = os.path.join(upload_dir, "temp_upload.zip")
+                
+                # 保存上傳的 ZIP 檔案
+                with open(temp_zip_path, "wb") as f:
+                    for chunk in uploaded_file.chunks():
+                        f.write(chunk)
+
+                # 解壓縮 ZIP 檔案中的 PDF 檔案
+                extracted_count = 0
+                with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
+                    for member in zip_ref.infolist():
+                        if member.filename.lower().endswith(".pdf") and not member.is_dir():
+                            filename = os.path.basename(member.filename)
+                            if filename:  # 確保檔名不為空
+                                data = zip_ref.read(member.filename)
+                                pdf_path = os.path.join(upload_dir, filename)
+                                with open(pdf_path, "wb") as out_file:
+                                    out_file.write(data)
+                                extracted_count += 1
+
+                # 刪除臨時 ZIP 檔案
+                os.remove(temp_zip_path)
+                
+                if extracted_count == 0:
+                    return JsonResponse({"error": "ZIP 檔案中沒有找到 PDF 檔案"}, status=400)
+                
+                message = f"✅ ZIP 檔案解壓縮完成，提取了 {extracted_count} 個 PDF 檔案"
+
+        except zipfile.BadZipFile:
+            return JsonResponse({"error": "ZIP 檔案格式錯誤或損壞"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": f"檔案處理失敗：{str(e)}"}, status=500)
+
+        # 重新建立向量資料庫
+        try:
+            docs = load_pdf_documents()
+            if not docs:
+                return JsonResponse({"error": "未找到可處理的 PDF 檔案"}, status=400)
+            
+            splits = split_documents(docs)
+            create_vector_store(splits)
+            
+            return JsonResponse({
+                "message": message + "，向量資料庫已更新",
+                "status": "success"
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                "error": f"建立向量資料庫失敗：{str(e)}",
+                "status": "error"
+            }, status=500)
+
+    return JsonResponse({"error": "僅支援 POST 請求"}, status=405)
+
+# 保留原來的 upload_zip 函數以向後相容（可選）
+@csrf_exempt
+def upload_zip(request):
+    """向後相容的 ZIP 上傳函數，重導向到新的統一上傳函數"""
+    if request.method == "POST":
+        # 將 zip_file 重新命名為 file 以符合新函數的參數名稱
+        if 'zip_file' in request.FILES:
+            request.FILES['file'] = request.FILES['zip_file']
+        return upload_files(request)
+    return JsonResponse({"error": "僅支援 POST 請求"}, status=405)
+
+# web_app/views.py
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponseNotAllowed
+from .mongo import delete_conversation, update_conversation_title
+
+@csrf_exempt
+def api_conversation_detail(request, convo_id):
+    if request.method == "PATCH":
+        data = json.loads(request.body)
+        new_title = data.get("title")
+        if not new_title:
+            return JsonResponse({"error": "缺少 title"}, status=400)
+        update_conversation_title(convo_id, new_title)
+        return JsonResponse({"message": "更新成功"})
+    elif request.method == "DELETE":
+        delete_conversation(convo_id)
+        return JsonResponse({"message": "刪除成功"})
+    else:
+        return HttpResponseNotAllowed(["PATCH", "DELETE"])
+    
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+import openpyxl
+from io import BytesIO
+from .mongo import get_messages
+
+@csrf_exempt
+def api_export_conversation(request, convo_id):
+    if request.method != "GET":
+        return HttpResponse(status=405)
+    msgs = get_messages(convo_id)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "對話紀錄"
+    ws.append(["問題", "回答"])
+    for m in msgs:
+        ws.append([m["question"], m["answer"]])
+    out = BytesIO()
+    wb.save(out)
+    out.seek(0)
+    resp = HttpResponse(
+        out.read(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    resp["Content-Disposition"] = f'attachment; filename="conversation_{convo_id}.xlsx"'
+    return resp
+
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+import mimetypes
+
+def view_pdf(request, filename):
+    """顯示 PDF 檔案"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    pdf_dir = os.path.join(current_dir, "..", "uploaded_files")
+    pdf_path = os.path.join(pdf_dir, filename)
+    
+    if not os.path.exists(pdf_path) or not filename.endswith('.pdf'):
+        return JsonResponse({"error": "檔案不存在"}, status=404)
+    
+    return FileResponse(
+        open(pdf_path, 'rb'),
+        content_type='application/pdf',
+        filename=filename
+    )
+
+import os
+import mimetypes
+from django.http import FileResponse, JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils.encoding import smart_str
+from urllib.parse import unquote
+import logging
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+@xframe_options_exempt  # 允許在 iframe 中顯示
+def view_pdf(request, filename):
+    """顯示 PDF 檔案"""
+    try:
+        # URL 解碼檔案名稱
+        filename = unquote(filename)
+        
+        # 取得當前檔案的目錄
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        pdf_dir = os.path.abspath(os.path.join(current_dir, "..", "uploaded_files"))
+        
+        # 安全檢查：防止路徑遍歷攻擊
+        filename = os.path.basename(filename)
+        pdf_path = os.path.join(pdf_dir, filename)
+        
+        logger.info(f"📁 PDF 目錄: {pdf_dir}")
+        logger.info(f"📄 請求檔案: {filename}")
+        logger.info(f"🔍 完整路徑: {pdf_path}")
+        logger.info(f"✅ 檔案存在: {os.path.exists(pdf_path)}")
+        
+        # 檢查檔案是否存在
+        if not os.path.exists(pdf_path):
+            logger.error(f"❌ 檔案不存在: {pdf_path}")
+            return JsonResponse({"error": "檔案不存在"}, status=404)
+        
+        # 檢查是否為 PDF 檔案
+        if not filename.lower().endswith('.pdf'):
+            logger.error(f"❌ 非 PDF 檔案: {filename}")
+            return JsonResponse({"error": "不是有效的 PDF 檔案"}, status=400)
+        
+        # 檢查檔案是否可讀
+        if not os.access(pdf_path, os.R_OK):
+            logger.error(f"❌ 檔案無法讀取: {pdf_path}")
+            return JsonResponse({"error": "檔案無法讀取"}, status=403)
+        
+        # 取得檔案大小
+        file_size = os.path.getsize(pdf_path)
+        logger.info(f"📊 檔案大小: {file_size} bytes")
+        
+        try:
+            # 開啟檔案並創建回應
+            response = FileResponse(
+                open(pdf_path, 'rb'),
+                content_type='application/pdf',
+                as_attachment=False,  # 在瀏覽器中直接顯示
+                filename=smart_str(filename)
+            )
+            
+            # 設定重要的 HTTP 標頭
+            response['Content-Length'] = str(file_size)
+            response['Content-Disposition'] = f'inline; filename="{smart_str(filename)}"'
+            
+            # 設定 CORS 標頭（如果需要）
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            
+            # 設定快取標頭
+            response['Cache-Control'] = 'public, max-age=3600'  # 快取1小時
+            
+            # 設定 X-Frame-Options 允許在 iframe 中顯示
+            response['X-Frame-Options'] = 'SAMEORIGIN'
+            
+            # 設定 Content-Security-Policy
+            response['Content-Security-Policy'] = "frame-ancestors 'self'"
+            
+            logger.info(f"✅ PDF 檔案成功返回: {filename}")
+            return response
+            
+        except Exception as e:
+            logger.error(f"❌ 開啟檔案失敗: {e}")
+            return JsonResponse({"error": f"開啟檔案失敗: {str(e)}"}, status=500)
+            
+    except Exception as e:
+        logger.error(f"❌ view_pdf 函數發生錯誤: {e}")
+        return JsonResponse({"error": f"伺服器錯誤: {str(e)}"}, status=500)
+
+@csrf_exempt
+@xframe_options_exempt
+def view_pdf_streaming(request, filename):
+    """使用 streaming 方式顯示 PDF 檔案"""
+    try:
+        # URL 解碼檔案名稱
+        filename = unquote(filename)
+        
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        pdf_dir = os.path.abspath(os.path.join(current_dir, "..", "uploaded_files"))
+        filename = os.path.basename(filename)
+        pdf_path = os.path.join(pdf_dir, filename)
+        
+        if not os.path.exists(pdf_path) or not filename.lower().endswith('.pdf'):
+            return JsonResponse({"error": "檔案不存在或不是PDF檔案"}, status=404)
+        
+        def file_iterator(file_path, chunk_size=8192):
+            with open(file_path, 'rb') as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+        
+        response = HttpResponse(
+            file_iterator(pdf_path),
+            content_type='application/pdf'
+        )
+        
+        # 設定標頭
+        response['Content-Disposition'] = f'inline; filename="{smart_str(filename)}"'
+        response['Content-Length'] = str(os.path.getsize(pdf_path))
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        response['Content-Security-Policy'] = "frame-ancestors 'self'"
+        response['Cache-Control'] = 'public, max-age=3600'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"❌ streaming PDF 錯誤: {e}")
+        return JsonResponse({"error": f"伺服器錯誤: {str(e)}"}, status=500)
+
+# 如果需要處理 OPTIONS 請求（CORS 預檢）
+@csrf_exempt
+def pdf_options(request, filename):
+    """處理 PDF 檔案的 OPTIONS 請求"""
+    if request.method == 'OPTIONS':
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response['Access-Control-Max-Age'] = '86400'  # 24小時
+        return response
+    else:
+        return view_pdf(request, filename)
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\.env
+#.env
+AZURE_OPENAI_API_KEY=E0ckDUhdn30BTJoqBL85AqlZCDxJ4kiU6gXD9PLFwDRKaUoQVuWMJQQJ99BBACHYHv6XJ3w3AAABACOGC8W6
+AZURE_OPENAI_ENDPOINT=https://apis.openai.azure.com/
+AZURE_OPENAI_API_VERSION=2023-10-01-preview
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4-turbo-0409
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-ada-002
+
+MONGO_URI=mongodb+srv://11056030:114510ntubimd114510@cluster0.uubkpqj.mongodb.net/NTUB_114510?retryWrites=true&w=majority
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\.gitattributes
+法規/法規.zip filter=lfs diff=lfs merge=lfs -text
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\.gitignore
+*.pyc
+__pycache__/
+.env
+db.sqlite3
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\manage.py
+#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
+import sys
+
+
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_system.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+
+if __name__ == '__main__':
+    main()
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\requirements.txt
+asgiref==3.8.1
+Django==5.2
+mysqlclient==2.2.7
+PyMySQL==1.1.1
+sqlparse==0.5.3
+tzdata==2025.2
+
+
+#C:\Users\gaoxu\OneDrive\桌面\11056030_SSAE\server.py
+import http.server
+import socketserver
+import os
+import urllib.parse
+
+PORT = 8080
+
+class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        # Parse the URL path
+        parsed_path = urllib.parse.urlparse(self.path)
+        path = parsed_path.path
+        
+        # Serve static files
+        if path.startswith('/static/'):
+            self.path = path
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
+        
+        # Default to serving chat.html
+        elif path == '/' or path == '/chat':
+            self.path = '/web_app/templates/chat.html'
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
+        
+        # Serve other template files
+        elif path.endswith('.html'):
+            self.path = f'/web_app/templates{path}'
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
+        
+        # Handle other paths
+        else:
+            return http.server.SimpleHTTPRequestHandler.do_GET(self)
+
+handler = MyHttpRequestHandler
+handler.extensions_map.update({
+    '.css': 'text/css',
+    '.js': 'application/javascript',
+})
+
+with socketserver.TCPServer(("", PORT), handler) as httpd:
+    print(f"Serving at http://localhost:{PORT}")
+    httpd.serve_forever()
