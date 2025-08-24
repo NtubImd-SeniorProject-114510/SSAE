@@ -72,7 +72,6 @@ body {
   position: relative;
 }
 
-/* Header and Title Section */
 .page-header {
   text-align: center;
   position: relative;
@@ -98,7 +97,6 @@ body {
   margin-bottom: 40px;
 }
 
-/* Filter Section */
 .filter-section {
     display: flex;
     flex-wrap: wrap;
@@ -168,7 +166,6 @@ body {
   box-shadow: 0 6px 15px rgba(61, 126, 136, 0.3);
 }
 
-/* Activity Card Grid */
 .activities-container {
   margin-bottom: 90px;
 }
@@ -180,7 +177,6 @@ body {
   margin-bottom: 80px;
 }
 
-/* Activity Card */
 .activity-card {
   background-color: white;
   border-radius: 15px;
