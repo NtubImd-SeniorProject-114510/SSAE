@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     likeCount.textContent = currentCount - 1;
                     this.classList.remove('liked');
                     if (likeIcon) {
-                        likeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
+                        likeIcon.innerHTML = '<i class="fa-regular fa-thumbs-up"></i>';
                     }
                 } else {
                     likeCount.textContent = currentCount + 1;
