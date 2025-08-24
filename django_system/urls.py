@@ -35,7 +35,6 @@ urlpatterns = [
     path('chat/' , views.chat),
     path('join/' , views.join),
     path('join_create/' , views.join_create),
-    path('join_detail/' , views.join_detail),
     path('book/' , views.book, name='book'),
     path('book_detail/' , views.book_detail, name='book_detail'),
     path('upload_book/' , views.upload_book, name='upload_book'),
@@ -57,4 +56,19 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('api/pdf/<str:filename>/', views.view_pdf, name='view_pdf'),
+    path('activities/', views.activity_list, name='activity_list'),
+    path('activities/<int:pk>/', views.activity_detail, name='join_detail'),
+    path('activities/<int:pk>/join/', views.join_activity, name='join_activity'),
+    path('activities/<int:pk>/cancel/', views.cancel_activity, name='cancel_activity'),
+    path('activities/create/', views.create_activity, name='create_activity'),
+    path('create/', views.create_activity, name='create_activity'),
 ]
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+# 媒體檔案 (圖片上傳) 設定
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

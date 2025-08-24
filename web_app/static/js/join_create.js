@@ -1,6 +1,4 @@
-//web_app\static\js\join_create.js
-
-// 即時預覽功能
+// 即時預覽元素
 const activityTitle = document.getElementById('activity-title');
 const activityType = document.getElementById('activity-type');
 const activityLocation = document.getElementById('activity-location');
@@ -13,6 +11,7 @@ const previewTag = document.getElementById('preview-tag');
 const previewLocation = document.getElementById('preview-location');
 const previewTime = document.getElementById('preview-time');
 const previewDescription = document.getElementById('preview-description');
+const previewImageArea = document.querySelector('.preview-image');
 
 // 標題預覽
 activityTitle.addEventListener('input', () => {
@@ -43,13 +42,12 @@ function updateTimePreview() {
         const date = new Date(activityDate.value);
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        const formattedTime = activityTime.value.substring(0, 5);
+        const formattedTime = activityTime.value.substring(0,5);
         previewTime.textContent = `${month}/${day} ${formattedTime}`;
     } else {
         previewTime.textContent = '活動時間';
     }
 }
-
 activityDate.addEventListener('input', updateTimePreview);
 activityTime.addEventListener('input', updateTimePreview);
 
@@ -58,118 +56,85 @@ activityDescription.addEventListener('input', () => {
     previewDescription.textContent = activityDescription.value || '活動說明將顯示在這裡...';
 });
 
-// 表單提交處理
-document.getElementById('create-group-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // 確認截止日期在活動日期之前
-    const deadlineDate = new Date(document.getElementById('activity-deadline').value);
-    const eventDate = new Date(activityDate.value);
-    
-    if (deadlineDate >= eventDate) {
-        alert('報名截止日期必須早於活動日期！');
-        return false;
-    }
-    
-    // 確認最少人數小於最多人數
-    const minParticipants = parseInt(document.getElementById('min-participants').value);
-    const maxParticipants = parseInt(document.getElementById('max-participants').value);
-    
-    if (minParticipants > maxParticipants) {
-        alert('最少參加人數不能大於最多參加人數！');
-        return false;
-    }
-    
-    // 這裡可以加入表單提交的AJAX請求
-    alert('活動發布成功！');
-    window.location.href = 'group-activities.html';
-});
-
-// 圖片上傳預覽
+// 圖片上傳預覽（點擊 + 拖曳）
 const imageUploadArea = document.getElementById('image-upload-area');
+const coverInput = document.createElement('input');
+coverInput.type = 'file';
+coverInput.accept = 'image/*';
+coverInput.style.display = 'none';
+document.body.appendChild(coverInput);
 
-imageUploadArea.addEventListener('click', () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.click();
-    
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            
-            reader.onload = function(event) {
-                const previewImage = document.querySelector('.preview-image');
-                previewImage.innerHTML = '';
-                previewImage.style.backgroundImage = `url(${event.target.result})`;
-                previewImage.style.backgroundSize = 'cover';
-                previewImage.style.backgroundPosition = 'center';
-                
-                // 保留標籤
-                const tag = document.createElement('div');
-                tag.className = 'preview-tag';
-                tag.id = 'preview-tag';
-                tag.textContent = previewTag.textContent;
-                previewImage.appendChild(tag);
-            }
-            
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    });
+imageUploadArea.addEventListener('click', () => coverInput.click());
+coverInput.addEventListener('change', handleFile);
+
+['dragenter','dragover','dragleave','drop'].forEach(e => {
+    imageUploadArea.addEventListener(e, preventDefaults, false);
 });
-
-// 拖曳上傳功能
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    imageUploadArea.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-['dragenter', 'dragover'].forEach(eventName => {
-    imageUploadArea.addEventListener(eventName, highlight, false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    imageUploadArea.addEventListener(eventName, unhighlight, false);
-});
-
-function highlight() {
-    imageUploadArea.style.borderColor = '#34495e';
-    imageUploadArea.style.backgroundColor = '#f0f7ff';
-}
-
-function unhighlight() {
-    imageUploadArea.style.borderColor = '#ddd';
-    imageUploadArea.style.backgroundColor = 'transparent';
-}
-
+['dragenter','dragover'].forEach(e => imageUploadArea.addEventListener(e, highlight, false));
+['dragleave','drop'].forEach(e => imageUploadArea.addEventListener(e, unhighlight, false));
 imageUploadArea.addEventListener('drop', handleDrop, false);
 
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    
-    if (files && files[0]) {
+function preventDefaults(e){ e.preventDefault(); e.stopPropagation(); }
+function highlight(){ imageUploadArea.style.borderColor = '#34495e'; imageUploadArea.style.backgroundColor = '#f0f7ff'; }
+function unhighlight(){ imageUploadArea.style.borderColor = '#ddd'; imageUploadArea.style.backgroundColor = 'transparent'; }
+
+function handleFile(e){
+    const file = e.target.files[0];
+    if(file && file.type.startsWith('image/')){
         const reader = new FileReader();
-        
-        reader.onload = function(event) {
-            const previewImage = document.querySelector('.preview-image');
-            previewImage.innerHTML = '';
-            previewImage.style.backgroundImage = `url(${event.target.result})`;
-            previewImage.style.backgroundSize = 'cover';
-            previewImage.style.backgroundPosition = 'center';
-            
-            // 保留標籤
-            const tag = document.createElement('div');
-            tag.className = 'preview-tag';
-            tag.id = 'preview-tag';
-            tag.textContent = previewTag.textContent;
-            previewImage.appendChild(tag);
-        }
-        
-        reader.readAsDataURL(files[0]);
+        reader.onload = event => setPreviewImage(event.target.result);
+        reader.readAsDataURL(file);
     }
+}
+function handleDrop(e){
+    const dt = e.dataTransfer;
+    const file = dt.files[0];
+    if(file && file.type.startsWith('image/')){
+        const reader = new FileReader();
+        reader.onload = event => setPreviewImage(event.target.result);
+        reader.readAsDataURL(file);
+    }
+}
+function setPreviewImage(src){
+    previewImageArea.innerHTML = '';
+    previewImageArea.style.backgroundImage = `url(${src})`;
+    previewImageArea.style.backgroundSize = 'cover';
+    previewImageArea.style.backgroundPosition = 'center';
+    // 保留標籤
+    const tag = document.createElement('div');
+    tag.className = 'preview-tag';
+    tag.id = 'preview-tag';
+    tag.textContent = previewTag.textContent;
+    previewImageArea.appendChild(tag);
+}
+
+// 表單提交
+document.getElementById('create-group-form').addEventListener('submit', async function(e){
+    e.preventDefault();
+
+    const deadlineDate = new Date(document.getElementById('activity-deadline').value);
+    const eventDate = new Date(activityDate.value);
+    const minParticipants = parseInt(document.getElementById('min-participants').value);
+    const maxParticipants = parseInt(document.getElementById('max-participants').value);
+
+    if(deadlineDate >= eventDate){ alert('報名截止日期必須早於活動日期！'); return false; }
+    if(minParticipants > maxParticipants){ alert('最少參加人數不能大於最多參加人數！'); return false; }
+
+    const formData = new FormData(this);
+    // Ajax 發送
+    try{
+        const res = await fetch("{% url 'activity_create' %}", {
+            method:'POST',
+            headers:{ 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        });
+        const data = await res.json();
+        if(data.ok){ alert('活動建立成功！'); window.location.href="{% url 'activities_list' %}"; }
+        else{ alert('建立失敗：'+JSON.stringify(data.errors)); }
+    }catch(err){ console.error(err); alert('建立失敗'); }
+});
+
+function getCookie(name){
+    const value = document.cookie.split('; ').find(row=>row.startsWith(name+'='));
+    return value ? decodeURIComponent(value.split('=')[1]) : '';
 }

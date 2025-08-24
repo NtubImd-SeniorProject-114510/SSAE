@@ -1,167 +1,132 @@
 // join_pop.js - 發起揪團彈跳視窗功能
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化發起揪團功能
     initializeCreateActivity();
-    
-    // 初始化預覽功能
     initializePreview();
 });
 
-// 初始化發起揪團彈跳視窗
 function initializeCreateActivity() {
-    console.log('初始化發起揪團功能');
-    
-    // 獲取元素
     const uploadBtn = document.getElementById('uploadBtn');
     const uploadForm = document.getElementById('uploadForm');
     const closeUploadBtn = document.getElementById('closeUploadBtn');
     const cancelCreateBtn = document.getElementById('cancel-create-btn');
     const createGroupForm = document.getElementById('create-group-form');
     const imageUploadArea = document.getElementById('image-upload-area');
-    
-    // 打開發起揪團表單
-    if (uploadBtn) {
-        uploadBtn.addEventListener('click', function() {
-            console.log('打開發起揪團表單');
-            if (uploadForm) {
-                uploadForm.style.display = 'flex';
-                document.body.style.overflow = 'hidden'; // 防止背景滾動
-            }
-        });
-    }
-    
-    // 關閉發起揪團表單
-    function closeForm() {
-        if (uploadForm) {
-            uploadForm.style.display = 'none';
-            document.body.style.overflow = 'auto'; // 恢復背景滾動
-            // 重置表單
-            if (createGroupForm) {
-                createGroupForm.reset();
-                resetPreview();
-            }
-        }
-    }
-    
-    // X 按鈕關閉表單
-    if (closeUploadBtn) {
-        closeUploadBtn.addEventListener('click', closeForm);
-    }
-    
-    // 取消按鈕關閉表單
-    if (cancelCreateBtn) {
-        cancelCreateBtn.addEventListener('click', closeForm);
-    }
-    
-    // 點擊背景關閉表單
-    if (uploadForm) {
-        uploadForm.addEventListener('click', function(e) {
-            if (e.target === uploadForm) {
-                closeForm();
-            }
-        });
-    }
-    
-    // 圖片上傳區域點擊
+
+    if (uploadBtn) uploadBtn.addEventListener('click', () => {
+        uploadForm.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+
+    const closeForm = () => {
+        uploadForm.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        createGroupForm.reset();
+        resetPreview();
+    };
+
+    if (closeUploadBtn) closeUploadBtn.addEventListener('click', closeForm);
+    if (cancelCreateBtn) cancelCreateBtn.addEventListener('click', closeForm);
+    if (uploadForm) uploadForm.addEventListener('click', e => {
+        if (e.target === uploadForm) closeForm();
+    });
+
     if (imageUploadArea) {
-        imageUploadArea.addEventListener('click', function() {
-            // 創建隱藏的文件輸入元素
+        imageUploadArea.addEventListener('click', () => {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.accept = 'image/*';
             fileInput.addEventListener('change', handleImageUpload);
             fileInput.click();
         });
-        
-        // 拖拽上傳功能
-        imageUploadArea.addEventListener('dragover', function(e) {
+
+        imageUploadArea.addEventListener('dragover', e => {
             e.preventDefault();
-            this.style.borderColor = '#3d7e88';
-            this.style.backgroundColor = '#f0f8fa';
+            imageUploadArea.style.borderColor = '#3d7e88';
+            imageUploadArea.style.backgroundColor = '#f0f8fa';
         });
-        
-        imageUploadArea.addEventListener('dragleave', function(e) {
+
+        imageUploadArea.addEventListener('dragleave', e => {
             e.preventDefault();
-            this.style.borderColor = '#ddd';
-            this.style.backgroundColor = '#fafafa';
+            imageUploadArea.style.borderColor = '#ddd';
+            imageUploadArea.style.backgroundColor = '#fafafa';
         });
-        
-        imageUploadArea.addEventListener('drop', function(e) {
+
+        imageUploadArea.addEventListener('drop', e => {
             e.preventDefault();
-            this.style.borderColor = '#ddd';
-            this.style.backgroundColor = '#fafafa';
-            
+            imageUploadArea.style.borderColor = '#ddd';
+            imageUploadArea.style.backgroundColor = '#fafafa';
             const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleImageUpload({ target: { files: files } });
+            if (files.length > 0) handleImageUpload({ target: { files } });
+        });
+    }
+
+    if (createGroupForm) {
+        createGroupForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            const formData = new FormData(createGroupForm);
+
+            try {
+                const res = await fetch('/activities/create/', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With':'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+                const data = await res.json();
+                console.log('後端回傳:', data);
+
+                if (data.ok) {
+                    showSuccessMessage();
+                    setTimeout(()=> window.location.href = '/activities/', 1200);
+                } else {
+                    alert('建立失敗：' + JSON.stringify(data.errors));
+                }
+            } catch(err) {
+                console.error(err);
+                alert('建立失敗，請稍後再試');
             }
         });
     }
-    
-    // 表單提交處理
-    if (createGroupForm) {
-        createGroupForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // 驗證表單
-            if (validateForm()) {
-                // 處理表單提交邏輯
-                console.log('表單提交成功');
-                
-                // 模擬提交成功
-                showSuccessMessage();
-                
-                // 關閉表單
-                setTimeout(() => {
-                    closeForm();
-                }, 2000);
-            }
-        });
+
+    function getCookie(name) {
+        const value = document.cookie.split('; ').find(row=>row.startsWith(name+'='));
+        return value ? decodeURIComponent(value.split('=')[1]) : '';
     }
 }
 
-// 處理圖片上傳
+// 圖片上傳
 function handleImageUpload(event) {
     const file = event.target.files[0];
-    if (file) {
-        // 檢查文件大小 (2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert('圖片檔案大小不能超過 2MB');
-            return;
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { alert('圖片檔案大小不能超過 2MB'); return; }
+    if (!file.type.startsWith('image/')) { alert('請選擇圖片檔案'); return; }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        const imageUploadArea = document.getElementById('image-upload-area');
+        const previewImage = document.querySelector('.preview-image');
+
+        if (imageUploadArea) {
+            imageUploadArea.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:150px;border-radius:5px;"><div style="margin-top:10px;font-size:14px;color:#666;">點擊更換圖片</div>`;
         }
-        
-        // 檢查文件類型
-        if (!file.type.startsWith('image/')) {
-            alert('請選擇圖片檔案');
-            return;
+        if (previewImage) {
+            previewImage.style.backgroundImage = `url(${e.target.result})`;
+            previewImage.style.backgroundSize = 'cover';
+            previewImage.style.backgroundPosition = 'center';
+            previewImage.innerHTML = `<div class="preview-tag" id="preview-tag">活動類型</div>`;
         }
-        
-        // 預覽圖片
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const imageUploadArea = document.getElementById('image-upload-area');
-            const previewImage = document.querySelector('.preview-image');
-            
-            if (imageUploadArea) {
-                imageUploadArea.innerHTML = `
-                    <img src="${e.target.result}" style="max-width: 100%; max-height: 150px; border-radius: 5px;">
-                    <div style="margin-top: 10px; font-size: 14px; color: #666;">點擊更換圖片</div>
-                `;
-            }
-            
-            if (previewImage) {
-                previewImage.style.backgroundImage = `url(${e.target.result})`;
-                previewImage.style.backgroundSize = 'cover';
-                previewImage.style.backgroundPosition = 'center';
-                previewImage.innerHTML = `<div class="preview-tag" id="preview-tag">活動類型</div>`;
-            }
-        };
-        reader.readAsDataURL(file);
-        
-        console.log('圖片上傳成功:', file.name);
-    }
+    };
+    reader.readAsDataURL(file);
 }
+
+// 其餘 initializePreview(), resetPreview(), validateForm(), showSuccessMessage() 可沿用原本版本
+
 
 // 初始化預覽功能
 function initializePreview() {

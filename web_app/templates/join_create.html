@@ -1,5 +1,3 @@
-<!--web_app\templates\join_create.html-->
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -9,25 +7,8 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/join_create.css' %}">
-    {% block head_js %}{% endblock %}
 </head>
 <body>
-    <!-- {% block header %}
-    <header>
-        <a href="index.html" class="logo-container">
-            <div class="logo-image"></div>
-            <div class="logo-text">北商Rule</div>
-        </a>
-        <nav class="nav-menu">
-            <a href="index.html">首頁</a>
-            <a href="school-rules.html">校規查詢</a>
-            <a href="group-activities.html" class="active">揾團區</a>
-            <a href="discussion-forum.html">討論區</a>
-            <a href="dashboard.html">個人儀表板</a>
-        </nav>
-    </header>
-    {% endblock %} -->
-    
     {% block content %}
     <div class="page-container">
         <div class="page-header">
@@ -36,129 +17,101 @@
         </div>
         
         <div class="form-container">
-            <form id="create-group-form">
+            <form id="create-group-form" enctype="multipart/form-data">
+                <!-- 活動標題 -->
                 <div class="form-group">
                     <label for="activity-title" class="form-label">活動標題</label>
-                    <input type="text" id="activity-title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
+                    <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
                 </div>
-                
+
+                <!-- 活動類型 / 地點 -->
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
                             <label for="activity-type" class="form-label">活動類型</label>
-                            <select id="activity-type" class="form-select" required>
+                            <select id="activity-type" name="type" class="form-select" required>
                                 <option value="" disabled selected>請選擇活動類型</option>
-                                <option value="food">美食</option>
-                                <option value="sport">運動</option>
-                                <option value="study">讀書</option>
-                                <option value="travel">旅遊</option>
-                                <option value="movie">電影</option>
-                                <option value="other">其他</option>
+                                <option value="美食">美食</option>
+                                <option value="運動">運動</option>
+                                <option value="讀書">讀書</option>
+                                <option value="旅遊">旅遊</option>
+                                <option value="電影">電影</option>
+                                <option value="其他">其他</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
                             <label for="activity-location" class="form-label">活動地點</label>
-                            <input type="text" id="activity-location" class="form-input" placeholder="請輸入活動地點" required>
+                            <input type="text" id="activity-location" name="location" class="form-input" placeholder="請輸入活動地點" required>
                         </div>
                     </div>
                 </div>
-                
+
+                <!-- 活動日期 / 時間 -->
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
                             <label for="activity-date" class="form-label">活動日期</label>
-                            <input type="date" id="activity-date" class="form-input" required>
+                            <input type="date" id="activity-date" name="date" class="form-input" required>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
                             <label for="activity-time" class="form-label">活動時間</label>
-                            <input type="time" id="activity-time" class="form-input" required>
+                            <input type="time" id="activity-time" name="time" class="form-input" required>
                         </div>
                     </div>
                 </div>
-                
+
+                <!-- 最少 / 最多參加人數 -->
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
                             <label for="min-participants" class="form-label">最少參加人數</label>
-                            <input type="number" id="min-participants" class="form-input" min="2" value="2" required>
-                            <div class="help-text">若未達最少人數，活動將被取消</div>
+                            <input type="number" id="min-participants" name="min_participants" class="form-input" min="1" value="2" required>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
                             <label for="max-participants" class="form-label">最多參加人數</label>
-                            <input type="number" id="max-participants" class="form-input" min="2" value="10" required>
+                            <input type="number" id="max-participants" name="max_participants" class="form-input" min="1" value="10" required>
                         </div>
                     </div>
                 </div>
-                
+
+                <!-- 活動說明 -->
                 <div class="form-group">
                     <label for="activity-description" class="form-label">活動說明</label>
-                    <textarea id="activity-description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
+                    <textarea id="activity-description" name="description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
                 </div>
-                
+
+                <!-- 活動封面圖片 -->
                 <div class="form-group">
                     <label class="form-label">活動封面圖片</label>
                     <div class="image-upload-container" id="image-upload-area">
                         <div class="image-upload-icon">📷</div>
                         <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
                     </div>
+                    <input type="file" id="cover-image-input" name="cover_image" style="display:none;">
                     <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
                 </div>
-                
+
+                <!-- 報名截止日期 -->
                 <div class="form-group">
                     <label for="activity-deadline" class="form-label">報名截止日期</label>
-                    <input type="date" id="activity-deadline" class="form-input" required>
-                    <div class="help-text">報名截止日期必須早於活動日期</div>
+                    <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
                 </div>
-                
-                <div class="form-group">
-                    <label for="contact-info" class="form-label">聯絡方式（選填）</label>
-                    <input type="text" id="contact-info" class="form-input" placeholder="LINE ID、IG、電話等，方便參加者聯繫">
-                </div>
-                
-                <div class="preview-section">
-                    <div class="preview-title">
-                        <span class="preview-icon">👁️</span>
-                        活動預覽
-                    </div>
-                    <div class="preview-card">
-                        <div class="preview-image">
-                            圖片預覽區域
-                            <div class="preview-tag" id="preview-tag">活動類型</div>
-                        </div>
-                        <div class="preview-content">
-                            <h3 class="preview-activity-title" id="preview-title">活動標題</h3>
-                            <div class="preview-info">
-                                <div class="preview-location">
-                                    <span class="location-icon">📍</span>
-                                    <span id="preview-location">活動地點</span>
-                                </div>
-                                <div class="preview-time">
-                                    <span class="time-icon">🕒</span>
-                                    <span id="preview-time">活動時間</span>
-                                </div>
-                            </div>
-                            <p class="preview-description" id="preview-description">活動說明將顯示在這裡...</p>
-                        </div>
-                    </div>
-                </div>
-                
+
                 <div class="buttons-container">
-                    <a href="group-activities.html" class="cancel-btn">取消</a>
+                    <a href="{% url 'activities_list' %}" class="cancel-btn">取消</a>
                     <button type="submit" class="submit-btn">發布活動</button>
                 </div>
             </form>
         </div>
     </div>
     {% endblock %}
-    
-    {% block footer %}{% endblock %}
-    
+
     {% block body_js %}
     <script src="{% static 'js/join_create.js' %}"></script>
     {% endblock %}

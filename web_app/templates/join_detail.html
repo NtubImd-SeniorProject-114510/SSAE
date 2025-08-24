@@ -11,369 +11,51 @@
 <link rel="stylesheet" href="{% static 'css/join_detail.css' %}">
 {% endblock %}
 
-
 {% block content %}
-    <body>
+<body>
+  {% if a.is_full or a.is_deadline_passed %}
+    <button class="fixed-cta" disabled>已額滿/截止</button>
+  {% elif joined %}
+    <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form">
+      {% csrf_token %}<button class="fixed-cta" type="submit">取消參加</button>
+    </form>
+  {% else %}
+    <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form">
+      {% csrf_token %}<button class="fixed-cta" type="submit">立即報名</button>
+    </form>
+  {% endif %}
 
-        <button class="fixed-cta">立即報名</button>
-        
-        <div class="container">    
-            <div class="back-button" onclick="history.back()">
-                <a href="#">返回</a>
-            </div>    
-            <div class="hero">            
-                <div class="event-details">                
-                    <div class="event-info-cards">
-                        <div class="info-card">
-                            <div class="info-icon-circle">
-                                <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
-                            </div>
-                            <div class="info-content">
-                                <h3 class="info-title">活動地點</h3>
-                                <p class="info-value">大安森林公園</p>
-                            </div>
-                        </div>
-                        
-                        <div class="info-card">
-                            <div class="info-icon-circle">
-                                <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
-                            </div>
-                            <div class="info-content">
-                                <h3 class="info-title">活動時間</h3>
-                                <p class="info-value">8/6（週六）下午2:00-6:00</p>
-                            </div>
-                        </div>
-                        
-                        <div class="info-card">
-                            <div class="info-icon-circle">
-                                <span class="info-icon"><i class="fa-solid fa-person"></i></span>
-                            </div>
-                            <div class="info-content">
-                                <h3 class="info-title">參加人數</h3>
-                                <p class="info-value">8/15人</p>
-                            </div>
-                        </div>
-                        
-                        <div class="info-card">
-                            <div class="info-icon-circle">
-                                <span class="info-icon"><i class="fa-solid fa-coins"></i></span>
-                            </div>
-                            <div class="info-content">
-                                <h3 class="info-title">活動費用</h3>
-                                <p class="info-value">每人250元（含食材）</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title">活動介紹</h2>
-                <div class="section-content">
-                    <p>週末一起來烤肉放鬆！我們會準備各種食材，飲料自備。歡迎大家參加，認識新朋友！</p>
-                    <p>這次烤肉活動地點選在大安森林公園，交通便利，附近有捷運站。我們會準備豐富的食材，包括：牛肉、豬肉、雞肉、香腸、蔬菜、玉米、海鮮等。現場有烤肉設備和桌椅，大家只需帶上好心情來參加！</p>
-                    <p>希望透過這次活動，讓大家能在忙碌的學校生活中，找到放鬆的機會，也能認識更多志同道合的朋友。</p>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title">注意事項</h2>
-                <div class="section-content">
-                    <ul>
-                        <li>請於8/5前繳交活動費用250元</li>
-                        <li>飲料請自行攜帶</li>
-                        <li>請自備餐具及碗筷</li>
-                        <li>請穿著方便活動的服裝</li>
-                        <li>活動當天若遇雨天，將改至室內場地，另行通知</li>
-                        <li>取消參加請至少提前兩天告知，可退還80%費用</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title">活動地點</h2>
-                <div class="map-container">
-                    <div style="width: 100%; height: 100%;">
-                        <iframe
-                          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3614.769413429175!2d121.52297827445207!3d25.041898237975207!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3442a97a0a4329a3%3A0x4c025e30ffa0d88f!2zMTAw5Y-w5YyX5biC5Lit5q2j5Y2A5r-f5Y2X6Lev5LiA5q61MzIx6Jmf!5e0!3m2!1szh-TW!2stw!4v1693825814320!5m2!1szh-TW!2stw"
-                          width="100%"
-                          height="100%"
-                          style="border:0;"
-                          allowfullscreen=""
-                          loading="lazy"
-                          referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                </div>
-                <div class="address">
-                    <span class="address-icon">📍</span>
-                    <span>台北市大安區新生南路二段1號（大安森林公園烤肉區）</span>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2 class="section-title">參加者</h2>
-                <div class="participants">
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">烤肉達人</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">小明</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">阿華</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">小芳</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">大雄</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">靜香</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">胖虎</div>
-                    </div>
-                    <div class="participant">
-                        <div class="avatar"></div>
-                        <div class="name">小夫</div>
-                    </div>
-                </div>
-                
-                <div class="status">
-                    <div class="status-text">還有7個名額，趕快加入我們吧！</div>
-                </div>
-            </div>
-            
-            <div class="section">
+  <div class="container">
+    <div class="back-button" onclick="history.back()"><a href="#">返回</a></div>
+    <div class="hero">
+      <div class="event-details">
+        <h1 class="event-title">{{ a.title }}</h1>
+        <p class="event-desc">{{ a.description }}</p>
 
-                    <h2 class="section-title">活動討論區 <span class="comment-count" id="commentCount">(3則評論)</span></h2>
-                    
-                    <div class="comments-section" id="commentsSection">
-                        <!-- 評論 1 -->
-                        <article class="comment-card">
-                            <div class="comment-header">
-                                <div class="user-info-container">
-                                    <div class="user-avatar">
-                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                                    </div>
-                                    <div class="user-info">
-                                        <span class="user-name">阿華</span>
-                                        <div class="comment-meta">
-                                            <div class="stars" data-rating="4.5">
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-regular fa-star"></i>
-                                            </div>
-                                            <span class="comment-date">2024/04/10</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button class="like-btn" data-comment-id="1">
-                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
-                                    <span class="like-count">12</span>
-                                </button>
-                            </div>
-                            <div class="comment-content">
-                                <p>請問可以帶朋友一起參加嗎？我有一位朋友也很想來，但他不是北商的學生。</p>
-                            </div>
-                            <div class="comment-actions">
-                                <button class="reply-btn" data-comment-id="1">回覆</button>
-                            </div>
-                            
-                            <!-- 回覆表單 (預設隱藏) -->
-                            <div class="reply-form" id="replyForm1" style="display: none;">
-                                <div class="form-group">
-                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
-                                </div>
-                                <div class="form-actions">
-                                    <button class="cancel-reply-btn" data-comment-id="1">取消</button>
-                                    <button class="submit-reply-btn" data-comment-id="1">發送</button>
-                                </div>
-                            </div>
-                            
-                            <!-- 回覆區塊 -->
-                            <div class="replies-container" id="replies1">
-                                <div class="reply">
-                                    <div class="user-avatar small">
-                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                                    </div>
-                                    <div class="reply-content">
-                                        <div class="reply-header">
-                                            <span class="user-name">烤肉達人</span>
-                                            <span class="reply-date">2024/04/11</span>
-                                        </div>
-                                        <p>可以的！這次活動其實不限北商學生，只要是你的朋友都歡迎參加，記得幫他報名和繳費就行了。</p>
-                                        <div class="reply-actions">
-                                            <button class="reply-to-reply" data-reply-to="烤肉達人">回覆</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-
-                        <!-- 評論 2 -->
-                        <article class="comment-card">
-                            <div class="comment-header">
-                                <div class="user-info-container">
-                                    <div class="user-avatar">
-                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                                    </div>
-                                    <div class="user-info">
-                                        <span class="user-name">小明</span>
-                                        <div class="comment-meta">
-                                            <div class="stars" data-rating="5">
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                            </div>
-                                            <span class="comment-date">2024/04/12</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button class="like-btn" data-comment-id="2">
-                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
-                                    <span class="like-count">8</span>
-                                </button>
-                            </div>
-                            <div class="comment-content">
-                                <p>看起來很有趣！我已經報名了，期待週六的烤肉活動～</p>
-                            </div>
-                            <div class="comment-actions">
-                                <button class="reply-btn" data-comment-id="2">回覆</button>
-                            </div>
-                            
-                            <div class="reply-form" id="replyForm2" style="display: none;">
-                                <div class="form-group">
-                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
-                                </div>
-                                <div class="form-actions">
-                                    <button class="cancel-reply-btn" data-comment-id="2">取消</button>
-                                    <button class="submit-reply-btn" data-comment-id="2">發送</button>
-                                </div>
-                            </div>
-                            
-                            <div class="replies-container" id="replies2"></div>
-                        </article>
-
-                        <!-- 評論 3 -->
-                        <article class="comment-card">
-                            <div class="comment-header">
-                                <div class="user-info-container">
-                                    <div class="user-avatar">
-                                        <img src="{% static 'image/activity_test.jpg' %}" alt="使用者頭像">
-                                    </div>
-                                    <div class="user-info">
-                                        <span class="user-name">小芳</span>
-                                        <div class="comment-meta">
-                                            <div class="stars" data-rating="4">
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-solid fa-star"></i>
-                                                <i class="fa-regular fa-star"></i>
-                                            </div>
-                                            <span class="comment-date">2024/04/13</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button class="like-btn" data-comment-id="3">
-                                    <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
-                                    <span class="like-count">5</span>
-                                </button>
-                            </div>
-                            <div class="comment-content">
-                                <p>請問會提供素食選項嗎？我是吃素的，想知道有沒有適合的食材。</p>
-                            </div>
-                            <div class="comment-actions">
-                                <button class="reply-btn" data-comment-id="3">回覆</button>
-                            </div>
-                            
-                            <div class="reply-form" id="replyForm3" style="display: none;">
-                                <div class="form-group">
-                                    <textarea class="form-control reply-textarea" rows="3" placeholder="撰寫回覆..."></textarea>
-                                </div>
-                                <div class="form-actions">
-                                    <button class="cancel-reply-btn" data-comment-id="3">取消</button>
-                                    <button class="submit-reply-btn" data-comment-id="3">發送</button>
-                                </div>
-                            </div>
-                            
-                            <div class="replies-container" id="replies3"></div>
-                        </article>
-                    </div>
-                    
-                    <!-- 新增留言表單 -->
-                    <div class="add-comment-form">
-                        <h3>發表留言</h3>
-                        <div class="form-group">
-                            <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
-                        </div>
-                        <button id="submitComment" class="submit-comment-btn">發表留言</button>
-                    </div>
-
-            </div>
-
-            <div class="section">
-                <h2 class="section-title">相關活動推薦</h2>
-                <div class="related-grid">
-                <a href="#" class="related-card">
-                    <div class="related-image">
-                        <div class="related-date">4/13 上午11:00</div>
-                    </div>
-                    <div class="related-content">
-                        <h3 class="related-card-title">春季戶外野餐日</h3>
-                        <div class="related-info">
-                            <span>大安森林公園</span>
-                            <span>12/20人</span>
-                        </div>
-                    </div>
-                </a>
-                
-                <a href="#" class="related-card">
-                    <div class="related-image">
-                        <div class="related-date">4/20 下午1:00</div>
-                    </div>
-                    <div class="related-content">
-                        <h3 class="related-card-title">校園美食節</h3>
-                        <div class="related-info">
-                            <span>北商大校園</span>
-                            <span>25/50人</span>
-                        </div>
-                    </div>
-                </a>
-                
-                <a href="#" class="related-card">
-                    <div class="related-image">
-                        <div class="related-date">4/15 晚上6:00</div>
-                    </div>
-                    <div class="related-content">
-                        <h3 class="related-card-title">士林夜市美食團</h3>
-                        <div class="related-info">
-                            <span>士林夜市</span>
-                            <span>8/15人</span>
-                        </div>
-                    </div>
-                </a>
-                </div>
-            </div>
+        <div class="event-info-cards">
+          <div class="info-card">
+            <div class="info-icon-circle"><span class="info-icon"><i class="fa-solid fa-map-pin"></i></span></div>
+            <div class="info-content"><h3 class="info-title">活動地點</h3><p class="info-value">{{ a.location }}</p></div>
+          </div>
+          <div class="info-card">
+            <div class="info-icon-circle"><span class="info-icon"><i class="fa-solid fa-clock"></i></span></div>
+            <div class="info-content"><h3 class="info-title">活動時間</h3><p class="info-value">{{ a.date|date:"Y/m/d" }} {{ a.time|time:"H:i" }}</p></div>
+          </div>
+          <div class="info-card">
+            <div class="info-icon-circle"><span class="info-icon"><i class="fa-solid fa-user-group"></i></span></div>
+            <div class="info-content"><h3 class="info-title">人數</h3><p class="info-value">{{ a.participants_count }}/{{ a.max_participants }}</p></div>
+          </div>
         </div>
-    </body>
+      </div>
+      <div class="event-visual">
+        {% if a.image_url %}
+          <img src="{{ a.image_url }}" alt="{{ a.title }}">
+        {% else %}
+          <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}">
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
 {% endblock %}
-
-{% block body_js %}
-<script src="{% static 'js/join_detail.js' %}"></script>
-{% endblock %}
-    
+{% block body_js %}<script src="{% static 'js/join_detail.js' %}"></script>{% endblock %}
