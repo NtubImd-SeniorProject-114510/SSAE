@@ -21,8 +21,10 @@ function initializeCreateActivity() {
     const closeForm = () => {
         uploadForm.style.display = 'none';
         document.body.style.overflow = 'auto';
-        createGroupForm.reset();
-        resetPreview();
+        if (createGroupForm) {
+            createGroupForm.reset();
+            resetPreview();
+        }
     };
 
     if (closeUploadBtn) closeUploadBtn.addEventListener('click', closeForm);
@@ -31,13 +33,13 @@ function initializeCreateActivity() {
         if (e.target === uploadForm) closeForm();
     });
 
+    // 圖片上傳區域處理
     if (imageUploadArea) {
         imageUploadArea.addEventListener('click', () => {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.addEventListener('change', handleImageUpload);
-            fileInput.click();
+            const actualFileInput = document.getElementById('activity-cover');
+            if (actualFileInput) {
+                actualFileInput.click();
+            }
         });
 
         imageUploadArea.addEventListener('dragover', e => {
@@ -57,10 +59,24 @@ function initializeCreateActivity() {
             imageUploadArea.style.borderColor = '#ddd';
             imageUploadArea.style.backgroundColor = '#fafafa';
             const files = e.dataTransfer.files;
-            if (files.length > 0) handleImageUpload({ target: { files } });
+            if (files.length > 0) {
+                // 將拖拽的文件同步到實際的 input
+                const actualFileInput = document.getElementById('activity-cover');
+                if (actualFileInput) {
+                    actualFileInput.files = files;
+                }
+                handleImageUpload({ target: { files } });
+            }
         });
     }
 
+    // 監聽實際的 file input 變化
+    const actualFileInput = document.getElementById('activity-cover');
+    if (actualFileInput) {
+        actualFileInput.addEventListener('change', handleImageUpload);
+    }
+
+    // 表單提交處理
     if (createGroupForm) {
         createGroupForm.addEventListener('submit', async e => {
             e.preventDefault();
@@ -99,13 +115,28 @@ function initializeCreateActivity() {
     }
 }
 
-// 圖片上傳
+// 處理圖片上傳
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) { alert('圖片檔案大小不能超過 2MB'); return; }
-    if (!file.type.startsWith('image/')) { alert('請選擇圖片檔案'); return; }
+    if (file.size > 2 * 1024 * 1024) { 
+        alert('圖片檔案大小不能超過 2MB'); 
+        return; 
+    }
+    if (!file.type.startsWith('image/')) { 
+        alert('請選擇圖片檔案'); 
+        return; 
+    }
+
+    // 將文件同步到實際的表單 input 中
+    const actualFileInput = document.getElementById('activity-cover');
+    if (actualFileInput && event.target !== actualFileInput) {
+        // 創建新的 FileList 並賦值給實際的 input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        actualFileInput.files = dataTransfer.files;
+    }
 
     const reader = new FileReader();
     reader.onload = e => {
@@ -123,10 +154,8 @@ function handleImageUpload(event) {
         }
     };
     reader.readAsDataURL(file);
+    console.log('圖片上傳成功:', file.name);
 }
-
-// 其餘 initializePreview(), resetPreview(), validateForm(), showSuccessMessage() 可沿用原本版本
-
 
 // 初始化預覽功能
 function initializePreview() {
@@ -320,6 +349,7 @@ function validateForm() {
 function showSuccessMessage() {
     // 創建成功訊息元素
     const successMessage = document.createElement('div');
+    successMessage.textContent = '活動建立成功！';
     successMessage.style.cssText = `
         position: fixed;
         top: 50%;

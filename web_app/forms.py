@@ -14,7 +14,13 @@ class ActivityForm(forms.ModelForm):
             'date': forms.DateInput(attrs={'type': 'date'}),
             'time': forms.TimeInput(attrs={'type': 'time'}),
             'deadline': forms.DateInput(attrs={'type': 'date'}),
+            'cover_image': forms.FileInput(attrs={'required': False}), # 讓圖片變成非必填
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 確保圖片欄位不是必填
+        self.fields['cover_image'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
@@ -28,3 +34,5 @@ class ActivityForm(forms.ModelForm):
 
         if date and deadline and deadline >= date:
             self.add_error('deadline', '報名截止日期必須早於活動日期')
+
+        return cleaned_data

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 class GroupActivity(models.Model):
-    activity_id = models.AutoField(primary_key=True)
+    # 直接用 Django 預設的 id，不需要自己定義 activity_id
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # 發起者
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -33,13 +33,14 @@ class GroupActivity(models.Model):
             return timezone.localdate() > self.deadline
         return False
 
+
 class ActivityParticipant(models.Model):
     STATUS_CHOICES = [
         ("joined", "已加入"),
         ("cancelled", "已取消"),
     ]
 
-    id = models.AutoField(primary_key=True)
+    # 這裡可以不用特別指定 id，Django 會自動生成
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="joined")
     joined_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

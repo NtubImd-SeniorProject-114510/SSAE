@@ -7,6 +7,34 @@
         </div>
         
         <form id="create-group-form" enctype="multipart/form-data">
+            <!-- 預覽區域 -->
+            <div class="preview-section">
+                <div class="preview-title">
+                    <span class="preview-icon">👁</span>
+                    預覽效果
+                </div>
+                <div class="preview-card">
+                    <div class="preview-image">
+                        圖片預覽區域
+                        <div class="preview-tag" id="preview-tag">活動類型</div>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-activity-title" id="preview-title">活動標題</div>
+                        <div class="preview-info">
+                            <div class="preview-location">
+                                <span class="location-icon">📍</span>
+                                <span id="preview-location">活動地點</span>
+                            </div>
+                            <div class="preview-time">
+                                <span class="time-icon">🕐</span>
+                                <span id="preview-time">活動時間</span>
+                            </div>
+                        </div>
+                        <div class="preview-description" id="preview-description">活動說明將顯示在這裡...</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="activity-title" class="form-label">活動標題</label>
                 <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
@@ -71,8 +99,12 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label">活動封面圖片</label>
-                <input type="file" id="activity-cover" name="cover_image" accept="image/*" required>
+                <label class="form-label">活動封面圖片（選填）</label>
+                <div class="image-upload-container" id="image-upload-area">
+                    <div class="image-upload-icon">📷</div>
+                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+                </div>
+                <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
                 <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
             </div>
             
@@ -93,99 +125,3 @@
         </form>
     </div>
 </div>
-<script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    // 表單元素
-    const titleInput = document.getElementById("activity-title");
-    const typeSelect = document.getElementById("activity-type");
-    const locationInput = document.getElementById("activity-location");
-    const dateInput = document.getElementById("activity-date");
-    const timeInput = document.getElementById("activity-time");
-    const descriptionInput = document.getElementById("activity-description");
-    const coverInput = document.getElementById("activity-cover");
-    const imageUploadArea = document.getElementById("image-upload-area");
-
-    // 預覽區元素
-    const previewTitle = document.getElementById("preview-title");
-    const previewTag = document.getElementById("preview-tag");
-    const previewLocation = document.getElementById("preview-location");
-    const previewTime = document.getElementById("preview-time");
-    const previewDescription = document.getElementById("preview-description");
-    const previewImage = document.querySelector(".preview-image");
-
-    // 文字預覽更新
-    titleInput.addEventListener("input", () => {
-        previewTitle.textContent = titleInput.value || "活動標題";
-    });
-
-    typeSelect.addEventListener("change", () => {
-        const typeText = typeSelect.options[typeSelect.selectedIndex].text;
-        previewTag.textContent = typeText || "活動類型";
-    });
-
-    locationInput.addEventListener("input", () => {
-        previewLocation.textContent = locationInput.value || "活動地點";
-    });
-
-    function updateTimePreview() {
-        if (dateInput.value && timeInput.value) {
-            previewTime.textContent = `${dateInput.value} ${timeInput.value}`;
-        } else {
-            previewTime.textContent = "活動時間";
-        }
-    }
-    dateInput.addEventListener("change", updateTimePreview);
-    timeInput.addEventListener("change", updateTimePreview);
-
-    descriptionInput.addEventListener("input", () => {
-        previewDescription.textContent = descriptionInput.value || "活動說明將顯示在這裡...";
-    });
-
-    // 圖片預覽更新函式
-    function previewFile(file) {
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.style.backgroundImage = `url(${e.target.result})`;
-                previewImage.style.backgroundSize = "cover";
-                previewImage.style.backgroundPosition = "center";
-                previewImage.textContent = "";
-            };
-            reader.readAsDataURL(file);
-        } else {
-            previewImage.style.backgroundImage = "";
-            previewImage.textContent = "圖片預覽區域";
-        }
-    }
-
-    // input file 選擇圖片
-    coverInput.addEventListener("change", () => {
-        previewFile(coverInput.files[0]);
-    });
-
-    // 拖曳上傳圖片
-    imageUploadArea.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        imageUploadArea.classList.add("dragover");
-    });
-
-    imageUploadArea.addEventListener("dragleave", (e) => {
-        e.preventDefault();
-        imageUploadArea.classList.remove("dragover");
-    });
-
-    imageUploadArea.addEventListener("drop", (e) => {
-        e.preventDefault();
-        imageUploadArea.classList.remove("dragover");
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith("image/")) {
-            coverInput.files = e.dataTransfer.files; // 同步給 input
-            previewFile(file);
-        } else {
-            alert("請拖入圖片檔案");
-        }
-    });
-
-});
-</script>
