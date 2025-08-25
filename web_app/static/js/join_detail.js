@@ -1,6 +1,41 @@
 //web_app\static\js\join_detail.js
 
 document.addEventListener('DOMContentLoaded', function() {
+    initializeActivityMap();
+    initializeComments();
+    initializeCTAButtons();
+});
+
+// 初始化活動地圖
+function initializeActivityMap() {
+    const mapElement = document.getElementById('activity-map');
+    if (!mapElement) return;
+
+    const lat = parseFloat(mapElement.dataset.lat);
+    const lng = parseFloat(mapElement.dataset.lng);
+    const location = mapElement.dataset.location;
+    const address = mapElement.dataset.address;
+
+    if (lat && lng) {
+        const map = L.map('activity-map').setView([lat, lng], 15);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([lat, lng]).addTo(map);
+        
+        marker.bindPopup(`
+            <div style="padding: 10px;">
+                <h4 style="margin: 0 0 5px 0;">${location}</h4>
+                <p style="margin: 0; color: #666;">${address}</p>
+            </div>
+        `);
+    }
+}
+
+// 初始化評論功能
+function initializeComments() {
     const discussionSection = document.querySelector('.discussion-section');
     if (discussionSection) {
         let commentCountElement = document.getElementById('commentCount');
@@ -148,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const replyElement = document.createElement('div');
             replyElement.className = 'reply';
             const dateStr = new Date().toLocaleDateString('zh-TW');
-            const staticAvatarPath = '/static/image/activity_test.jpg'; // Consistent avatar path
+            const staticAvatarPath = '/static/image/activity_test.jpg';
 
             replyElement.innerHTML = `
                 <div class="user-avatar small"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
@@ -164,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const commentElement = document.createElement('article');
             commentElement.className = 'comment-card';
             const dateStr = new Date().toLocaleDateString('zh-TW');
-            const staticAvatarPath = '/static/image/activity_test.jpg'; // Consistent avatar path
+            const staticAvatarPath = '/static/image/activity_test.jpg';
 
             commentElement.innerHTML = `
                 <div class="comment-header">
@@ -210,7 +245,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+}
 
+// 初始化CTA按鈕
+function initializeCTAButtons() {
     const ctaButtons = document.querySelectorAll('.fixed-cta');
     ctaButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -223,4 +261,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
+}

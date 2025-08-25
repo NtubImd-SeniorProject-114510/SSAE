@@ -1,61 +1,174 @@
-<!--web_app\templates\join_detail.html-->
-
 {% extends 'navbar.html' %}
 {% load static %}
 
 {% block lang %}zh-Hant{% endblock %}
 
-{% block title %}智能校事專家 - 登入{% endblock %}
+{% block title %}智能校事專家 - {{ a.title }}{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/join_detail.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 {% endblock %}
 
 {% block content %}
 <body>
-  {% if a.is_full or a.is_deadline_passed %}
-    <button class="fixed-cta" disabled>已額滿/截止</button>
-  {% elif joined %}
-    <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form">
-      {% csrf_token %}<button class="fixed-cta" type="submit">取消參加</button>
-    </form>
-  {% else %}
-    <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form">
-      {% csrf_token %}<button class="fixed-cta" type="submit">立即報名</button>
-    </form>
-  {% endif %}
-
-  <div class="container">
-    <div class="back-button" onclick="history.back()"><a href="#">返回</a></div>
-    <div class="hero">
-      <div class="event-details">
-        <h1 class="event-title">{{ a.title }}</h1>
-        <p class="event-desc">{{ a.description }}</p>
-
-        <div class="event-info-cards">
-          <div class="info-card">
-            <div class="info-icon-circle"><span class="info-icon"><i class="fa-solid fa-map-pin"></i></span></div>
-            <div class="info-content"><h3 class="info-title">活動地點</h3><p class="info-value">{{ a.location }}</p></div>
-          </div>
-          <div class="info-card">
-            <div class="info-icon-circle"><span class="info-icon"><i class="fa-solid fa-clock"></i></span></div>
-            <div class="info-content"><h3 class="info-title">活動時間</h3><p class="info-value">{{ a.date|date:"Y/m/d" }} {{ a.time|time:"H:i" }}</p></div>
-          </div>
-          <div class="info-card">
-            <div class="info-icon-circle"><span class="info-icon"><i class="fa-solid fa-user-group"></i></span></div>
-            <div class="info-content"><h3 class="info-title">人數</h3><p class="info-value">{{ a.participants_count }}/{{ a.max_participants }}</p></div>
-          </div>
+    {% if a.is_full or a.is_deadline_passed %}
+        <button class="fixed-cta" disabled>已額滿/截止</button>
+    {% elif joined %}
+        <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form">
+            {% csrf_token %}
+            <button class="fixed-cta" type="submit">取消參加</button>
+        </form>
+    {% else %}
+        <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form">
+            {% csrf_token %}
+            <button class="fixed-cta" type="submit">立即報名</button>
+        </form>
+    {% endif %}
+    
+    <div class="container">    
+        <div class="back-button" onclick="history.back()">
+            <a href="#">返回</a>
+        </div>    
+        <div class="hero">            
+            <div class="event-details">                
+                <div class="event-info-cards">
+                    <div class="info-card">
+                        <div class="info-icon-circle">
+                            <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="info-title">活動地點</h3>
+                            <p class="info-value">{{ a.location }}</p>
+                            {% if a.address %}
+                                <p class="info-address">{{ a.address }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-icon-circle">
+                            <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="info-title">活動時間</h3>
+                            <p class="info-value">
+                                {{ a.date|date:"m/d" }}（{{ a.date|date:"D" }}）{{ a.time|time:"H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-icon-circle">
+                            <span class="info-icon"><i class="fa-solid fa-person"></i></span>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="info-title">參加人數</h3>
+                            <p class="info-value">{{ a.participants_count }}/{{ a.max_participants }}人</p>
+                        </div>
+                    </div>
+                    
+                    {% if a.contact_info %}
+                    <div class="info-card">
+                        <div class="info-icon-circle">
+                            <span class="info-icon"><i class="fa-solid fa-phone"></i></span>
+                        </div>
+                        <div class="info-content">
+                            <h3 class="info-title">聯絡方式</h3>
+                            <p class="info-value">{{ a.contact_info }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="event-visual">
-        {% if a.image_url %}
-          <img src="{{ a.image_url }}" alt="{{ a.title }}">
-        {% else %}
-          <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}">
+        
+        <div class="section">
+            <h2 class="section-title">活動介紹</h2>
+            <div class="section-content">
+                <p>{{ a.description|linebreaks }}</p>
+            </div>
+        </div>
+        
+        {% if a.has_location_data %}
+        <div class="section">
+            <h2 class="section-title">活動地點</h2>
+            <div class="map-container">
+                <div style="width: 100%; height: 100%;">
+                    <div id="activity-map" 
+                         style="width: 100%; height: 300px;"
+                         data-lat="{{ a.latitude }}"
+                         data-lng="{{ a.longitude }}"
+                         data-location="{{ a.location }}"
+                         data-address="{{ a.address|default:a.location }}">
+                    </div>
+                </div>
+            </div>
+            <div class="address">
+                <span class="address-icon">📍</span>
+                <span>{{ a.address|default:a.location }}</span>
+            </div>
+        </div>
         {% endif %}
-      </div>
+        
+        <div class="section">
+            <h2 class="section-title">參加者</h2>
+            <div class="participants">
+                <div class="participant">
+                    <div class="avatar"></div>
+                    <div class="name">發起人</div>
+                </div>
+            </div>
+            
+            <div class="status">
+                {% if a.is_full %}
+                    <div class="status-text">活動已額滿</div>
+                {% elif a.is_deadline_passed %}
+                    <div class="status-text">報名已截止</div>
+                {% else %}
+                    <div class="status-text">還有{{ a.max_participants|add:"-1"|add:a.participants_count|default:"N" }}個名額，趕快加入我們吧！</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="section discussion-section">
+            <h2 class="section-title">活動討論區 <span class="comment-count" id="commentCount">(0則評論)</span></h2>
+            
+            <div class="comments-section" id="commentsSection">
+                <!-- 動態評論內容 -->
+            </div>
+            
+            <!-- 新增留言表單 -->
+            <div class="add-comment-form">
+                <h3>發表留言</h3>
+                <div class="form-group">
+                    <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
+                </div>
+                <button id="submitComment" class="submit-comment-btn">發表留言</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">相關活動推薦</h2>
+            <div class="related-grid">
+                <a href="#" class="related-card">
+                    <div class="related-image">
+                        <div class="related-date">推薦活動</div>
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">其他精彩活動</h3>
+                        <div class="related-info">
+                            <span>敬請期待</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
 </body>
 {% endblock %}
-{% block body_js %}<script src="{% static 'js/join_detail.js' %}"></script>{% endblock %}
+
+{% block body_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/join_detail.js' %}"></script>
+{% endblock %}

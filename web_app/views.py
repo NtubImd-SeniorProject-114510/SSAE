@@ -500,7 +500,7 @@ def activity_list(request):
         ).values_list('activity_id', flat=True))
 
     return render(request, 'join.html', {
-        'activities': activities,  # 確保這裡傳的是 queryset
+        'activities': activities,
         'joined_ids': joined_ids,
     })
 
@@ -509,11 +509,22 @@ def activity_list(request):
 # -----------------------
 def activity_detail(request, pk):
     a = get_object_or_404(GroupActivity, pk=pk)
+    # 計算參加人數
+    participants_count = ActivityParticipant.objects.filter(
+        activity_id=a.id, status='joined'
+    ).count()
+    a.participants_count = participants_count
+    
     joined = False
     if request.user.is_authenticated:
-        joined = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id, status='joined').exists()
-    return render(request, 'join_detail.html', {'a': a, 'joined': joined})
-
+        joined = ActivityParticipant.objects.filter(
+            activity_id=a.id, user_id=request.user.id, status='joined'
+        ).exists()
+    
+    return render(request, 'join_detail.html', {
+        'a': a, 
+        'joined': joined
+    })
 # -----------------------
 # 加入活動
 # -----------------------
