@@ -60,8 +60,10 @@ urlpatterns = [
     path('activities/<int:pk>/', views.activity_detail, name='join_detail'),
     path('activities/<int:pk>/join/', views.join_activity, name='join_activity'),
     path('activities/<int:pk>/cancel/', views.cancel_activity, name='cancel_activity'),
+    path('activities/<int:pk>/participants/', views.activity_participants, name='activity_participants'),
     path('activities/create/', views.create_activity, name='create_activity'),
     path('create/', views.create_activity, name='create_activity'),
+    path('my-activities/', views.my_activities, name='my_activities'),
 ]
 
 from django.conf import settings
