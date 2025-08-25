@@ -1,14 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'css/footer.css' %}">
-</head>
-<body>
-  {% block footer %}
+{% load static %}
+
+{% block footer %}
   <footer>
     <div class="fowl"></div>
     <div class="waves">
@@ -22,7 +14,6 @@
       <div class="footer-title">
           <div class="footer-logo">智能校事專家</div>
       </div>
-      <div class="space"></div>
       <div class="footer-links">
         <div class="name">簡介</div>
         <div class="aaa">
@@ -54,7 +45,8 @@
       <p>&copy; 智能校事專家114510</p>
     </div>
   </footer>
-  {% endblock %}
-  <script src="{% static 'js/footer.js' %}"></script>
-</body>
-</html>
+{% endblock %}
+
+{% block body_js %}
+    <script src="{% static 'js/footer.js' %}"></script>
+{% endblock %}

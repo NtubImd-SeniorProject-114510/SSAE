@@ -106,50 +106,7 @@
     
     <!-- 頁腳 -->
     {% block footer %}
-      <footer>
-        <div class="fowl"></div>
-        <div class="waves">
-          <div class="wave" id="wave1"></div>
-          <div class="wave" id="wave2"></div>
-          <div class="wave" id="wave3"></div>
-          <div class="wave" id="wave4"></div>
-        </div>
-        
-        <div class="footer-info">
-          <div class="footer-title">
-              <div class="footer-logo">智能校事專家</div>
-          </div>
-          <div class="footer-links">
-            <div class="name">簡介</div>
-            <div class="aaa">
-              <p>北商blackboard平台</p>
-              <p>北商Timetable平台</p>
-              <p>北商學生資訊系統</p>
-            </div>
-          </div>
-          <div class="footer-contact">
-            <div class="name">聯絡資訊</div>
-            <div class="details">
-              <p>02 - 5392 - 7084</p>
-              <p>ntubimd114510@gmail.com</p>
-              <p class="social-icons">
-              <i class="fa-brands fa-square-facebook"></i>
-              <i class="fa-brands fa-instagram"></i>
-              </p>
-            </div>
-          </div>
-          <div></div>
-        </div>
-        
-        <div class="footer-backup">
-          <img class="backupowl"  src="{% static 'image/backup.png' %}" alt="backup"  onclick="scrollToTop()">
-        </div>
-
-        <!-- 手機菜單覆蓋層和面板 -->
-        <div class="phone-footer-copyright">
-          <p>&copy; 智能校事專家114510</p>
-        </div>
-      </footer>
+      {% include 'footer.html' %}
     {% endblock %}
 
     {% include 'pop_window/login_pop.html' %}
@@ -157,7 +114,6 @@
     <!-- JavaScript 文件 -->
     <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
     <script src="{% static 'js/navbar.js' %}"></script>
-    <script src="{% static 'js/footer.js' %}"></script>
     {% block body_js %}{% endblock %}
 </body>
 </html>
