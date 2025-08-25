@@ -1085,6 +1085,140 @@ h2.section-title:first-of-type::before {
     margin-bottom: 0.5rem;
 }
 
+.info-address {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.map-container {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#activity-map {
+    border-radius: 10px;
+}
+
+/* 地點自動完成建議框樣式 */
+.location-input-container {
+    position: relative;
+}
+
+.location-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-main {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 2px;
+    line-height: 1.4;
+}
+
+.suggestion-type {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+}
+
+/* 當建議框顯示時，調整輸入框樣式 */
+.location-input-container .form-input:focus + .location-suggestions {
+    display: block;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .location-suggestions {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        max-height: 150px;
+    }
+    
+    .suggestion-item {
+        padding: 10px 12px;
+    }
+    
+    .suggestion-main {
+        font-size: 13px;
+    }
+    
+    .suggestion-type {
+        font-size: 11px;
+    }
+}
+
+/* 載入狀態 */
+.location-suggestions.loading {
+    padding: 16px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.location-suggestions.loading::before {
+    content: "搜尋中...";
+}
+
+/* 無結果狀態 */
+.location-suggestions.no-results {
+    padding: 16px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+}
+
+.location-suggestions.no-results::before {
+    content: "找不到相關地點";
+}
+
+/* 滾動條樣式 */
+.location-suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+
+.location-suggestions::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.location-suggestions::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.location-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .main-container {

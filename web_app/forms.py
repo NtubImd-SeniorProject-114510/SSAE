@@ -6,21 +6,30 @@ class ActivityForm(forms.ModelForm):
     class Meta:
         model = GroupActivity
         fields = [
-            'title', 'type', 'location', 'date', 'time',
-            'min_participants', 'max_participants',
-            'description', 'cover_image', 'deadline'
+            'title', 'type', 'location', 'address', 'latitude', 'longitude', 'place_id',
+            'date', 'time', 'min_participants', 'max_participants',
+            'description', 'cover_image', 'deadline', 'contact_info'
         ]
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'time': forms.TimeInput(attrs={'type': 'time'}),
             'deadline': forms.DateInput(attrs={'type': 'date'}),
-            'cover_image': forms.FileInput(attrs={'required': False}), # 讓圖片變成非必填
+            'cover_image': forms.FileInput(attrs={'required': False}),
+            'address': forms.HiddenInput(),
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
+            'place_id': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # 確保圖片欄位不是必填
         self.fields['cover_image'].required = False
+        self.fields['address'].required = False
+        self.fields['latitude'].required = False
+        self.fields['longitude'].required = False
+        self.fields['place_id'].required = False
+        self.fields['contact_info'].required = False
 
     def clean(self):
         cleaned_data = super().clean()

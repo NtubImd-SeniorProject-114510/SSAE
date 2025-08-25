@@ -1,4 +1,6 @@
 <!-- join_pop.html - 發起揪團彈跳視窗 -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <div class="upload-form" id="uploadForm">
     <div class="upload-container">
         <div class="upload-header">
@@ -31,6 +33,7 @@
                             </div>
                         </div>
                         <div class="preview-description" id="preview-description">活動說明將顯示在這裡...</div>
+                        <div id="preview-map" style="width:100%; height:200px; margin-top:10px; border-radius:8px; overflow:hidden;"></div>
                     </div>
                 </div>
             </div>
@@ -58,10 +61,19 @@
                 <div class="form-col">
                     <div class="form-group">
                         <label for="activity-location" class="form-label">活動地點</label>
-                        <input type="text" id="activity-location" name="location" class="form-input" placeholder="請輸入活動地點" required>
+                        <div class="location-input-container">
+                            <input type="text" id="activity-location" name="location" class="form-input" placeholder="搜尋地點（例：好樂迪）" required>
+                            <div id="location-suggestions" class="location-suggestions"></div>
+                        </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- 隱藏欄位存儲地理位置資訊 -->
+            <input type="hidden" name="address" id="selected-address">
+            <input type="hidden" name="latitude" id="selected-latitude">
+            <input type="hidden" name="longitude" id="selected-longitude">
+            <input type="hidden" name="place_id" id="selected-place-id">
             
             <div class="form-row">
                 <div class="form-col">
@@ -125,3 +137,5 @@
         </form>
     </div>
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
