@@ -1,4 +1,3 @@
-# models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -27,8 +26,14 @@ class GroupActivity(models.Model):
     contact_info = models.CharField(max_length=200, blank=True, null=True)
 
     @property
+    def joined_count(self):
+        """返回已加入活動的參與者數量"""
+        return self.participants.filter(status='joined').count()
+
+    @property
     def is_full(self):
-        return False  # 預設 False，視 view 傳入數據更新
+        """檢查活動是否已額滿"""
+        return self.joined_count >= self.max_participants
 
     @property
     def tag_css(self):
@@ -46,6 +51,14 @@ class GroupActivity(models.Model):
         """檢查是否有地理位置資料"""
         return self.latitude is not None and self.longitude is not None
 
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = '團體活動'
+        verbose_name_plural = '團體活動'
+        ordering = ['-created_at']
+
 class ActivityParticipant(models.Model):
     STATUS_CHOICES = [
         ("joined", "已加入"),
@@ -62,3 +75,8 @@ class ActivityParticipant(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['user', 'activity'], name='uniq_user_activity')
         ]
+        verbose_name = '活動參與者'
+        verbose_name_plural = '活動參與者'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.activity.title}"
