@@ -11,11 +11,224 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/book.css' %}">
+<style>
+.filter-box {
+    padding: 40px;
+    margin-bottom: 20px;
+    /* background-color: #f8f9fa; */
+    /* border-radius: 10px; */
+    /* box-shadow: 0 2px 5px rgba(0,0,0,0.05); */
+} 
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    color: #6F557D;
+    font-weight: 500;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.filter-select, .search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.filter-select:focus, .search-input:focus {
+    border-color: #9e8c9d;
+    box-shadow: 0 0 0 2px rgba(111, 85, 125, 0.1);
+}
+
+.search-container {
+    position: relative;
+    grid-column: 1 / -1;
+}
+
+.search-input {
+    padding-left: 40px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6F557D;
+}
+
+/* Items per row selector */
+.items-per-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.items-per-row span {
+    color: #6F557D;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.layout-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.layout-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.layout-btn:hover {
+    background: #f0f0f0;
+    border-color: #9e8c9d;
+}
+
+.layout-btn.active {
+    background: #6F557D;
+    color: white;
+    border-color: #6F557D;
+}
+
+.books-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1rem 0;
+}
+
+.books-grid.grid-1 { 
+    grid-template-columns: repeat(1, minmax(280px, 1fr));
+    max-width: 320px;
+}
+
+.books-grid.grid-2 { 
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    max-width: 800px;
+}
+
+.books-grid.grid-3 { 
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
+    max-width: 1200px;
+}
+
+.books-grid.grid-4 { 
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    max-width: 1400px;
+}
+
+.books-grid.grid-5 { 
+    grid-template-columns: repeat(5, minmax(160px, 1fr));
+    max-width: 1600px;
+}
+
+@media (max-width: 1200px) {
+    .books-grid.grid-4,
+    .books-grid.grid-5 {
+        grid-template-columns: repeat(3, minmax(200px, 1fr));
+        max-width: 1200px;
+    }
+}
+
+.book-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.book-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.book-image-container {
+    width: 100%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background-color: #f3f4f6;
+}
+
+.book-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-image {
+    transform: scale(1.05);
+}
+
+.book-info {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.book-header {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.book-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.book-price {
+    font-weight: bold;
+    color: #6F557D;
+    font-size: 1.1rem;
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="page-container">
-
     <div class="bg-text">SECOND HAND BOOK SECOND HAND BOOK</div>
 
     <header class="page-header">
@@ -23,206 +236,326 @@
         <p class="page-subtitle">（尋找教科書・節省花費）</p>
     </header>
 
-    <div class="filter-section">
-        <select class="filter-item">
-            <option>全部系所</option>
-            <option>資訊工程學系</option>
-            <option>電機工程學系</option>
-            <option>企業管理學系</option>
-            <option>外國語文學系</option>
-            <option>經濟學系</option>
-        </select>
+    <div class="filter-box">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label class="filter-label">系所</label>
+                <select class="filter-select" id="departmentFilter">
+                    <option value="">全部系所</option>
+                    <option>資訊工程學系</option>
+                    <option>電機工程學系</option>
+                    <option>企業管理學系</option>
+                    <option>外國語文學系</option>
+                    <option>經濟學系</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">年級</label>
+                <select class="filter-select" id="gradeFilter">
+                    <option value="">全部年級</option>
+                    <option>專一</option>
+                    <option>專二</option>
+                    <option>專三</option>
+                    <option>專四</option>
+                    <option>大一</option>
+                    <option>大二</option>
+                    <option>大三</option>
+                    <option>大四</option>
+                    <option>研究所</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">狀態</label>
+                <select class="filter-select" id="conditionFilter">
+                    <option value="">全部狀態</option>
+                    <option>全新</option>
+                    <option>九成新</option>
+                    <option>八成新</option>
+                    <option>七成新</option>
+                    <option>五成新以下</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">價格範圍</label>
+                <select class="filter-select" id="priceFilter">
+                    <option value="">全部價格</option>
+                    <option value="0-100">$100以下</option>
+                    <option value="100-300">$100-$300</option>
+                    <option value="300-500">$300-$500</option>
+                    <option value="500-800">$500-$800</option>
+                    <option value="800-99999">$800以上</option>
+                </select>
+            </div>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="搜尋書名或關鍵字...">
+            </div>
+        </div>
         
-        <select class="filter-item">
-            <option>全部年級</option>
-            <option>專一</option>
-            <option>專二</option>
-            <option>專三</option>
-            <option>專四</option>
-            <option>大一</option>
-            <option>大二</option>
-            <option>大三</option>
-            <option>大四</option>
-            <option>研究所</option>
-        </select>
-        
-        <select class="filter-item">
-            <option>全部狀態</option>
-            <option>全新</option>
-            <option>九成新</option>
-            <option>八成新</option>
-            <option>七成新</option>
-            <option>五成新以下</option>
-        </select>
-        
-        <select class="filter-item">
-            <option>全部價格</option>
-            <option>$100以下</option>
-            <option>$100-$300</option>
-            <option>$300-$500</option>
-            <option>$500-$800</option>
-            <option>$800以上</option>
-        </select>
-        
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="搜尋書名或關鍵字...">
-            <button class="search-btn"><i class="fas fa-search"></i></button>
+        <div class="items-per-row">
+            <span>每行顯示：</span>
+            <div class="layout-buttons">
+                <button class="layout-btn" data-cols="1">1</button>
+                <button class="layout-btn" data-cols="2">2</button>
+                <button class="layout-btn active" data-cols="3">3</button>
+                <button class="layout-btn" data-cols="4">4</button>
+                <button class="layout-btn" data-cols="5">5</button>
+            </div>
         </div>
     </div>
 
-    <section class="books-container">
-        <div class="books-grid">
+    <main class="main-content">
+        <div class="content-header">
+            <h4 class="content-title">共 10 本二手書</h4>
+        </div>
+
+        <div class="books-grid" id="booksGrid">
             <!-- 書籍卡片 1 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">Python範例學習書</div>
-                <div class="book-image">
-                    <img src="{% static 'image/test/b1.jpg' %}" alt="Python範例學習書" class="book-cover">
+                <div class="book-image-container">
+                    <img src="{% static 'image/test/b1.jpg' %}" alt="Python範例學習書" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">資訊工程學系</span>
-                        <span class="book-grade">大二</span>
-                        <span class="book-condition">九成新</span>
+                    <div class="book-header">Python範例學習書</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">資訊工程學系</span>
+                            <span class="book-grade">大二</span>
+                            <span class="book-condition">九成新</span>
+                        </div>
+                        <div class="book-price">$100</div>
                     </div>
-                    <div class="book-price">$100</div>
                 </div>
             </a>
             
             <!-- 書籍卡片 2 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">我沒事</div>
-                <div class="book-image">
-                    <img src="{% static 'image/test/b2.jpg' %}" alt="我沒事" class="book-cover">
+                <div class="book-image-container">
+                    <img src="{% static 'image/test/b2.jpg' %}" alt="我沒事" class="book-image">
                     <div class="book-tag literature">文學</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">外國語文學系</span>
-                        <span class="book-grade">大一</span>
-                        <span class="book-condition">八成新</span>
+                    <div class="book-header">我沒事</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">外國語文學系</span>
+                            <span class="book-grade">大一</span>
+                            <span class="book-condition">八成新</span>
+                        </div>
+                        <div class="book-price">$180</div>
                     </div>
-                    <div class="book-price">$180</div>
                 </div>
             </a>
             
             <!-- 書籍卡片 3 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">作業系統精論</div>
-                <div class="book-image">
-                    <img src="{% static 'image/test/b3.webp' %}" alt="作業系統精論" class="book-cover">
+                <div class="book-image-container">
+                    <img src="{% static 'image/test/b3.webp' %}" alt="作業系統精論" class="book-image">
                     <div class="book-tag reference">參考書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">資訊工程學系</span>
-                        <span class="book-grade">大三</span>
-                        <span class="book-condition">全新</span>
+                    <div class="book-header">作業系統精論</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">資訊工程學系</span>
+                            <span class="book-grade">大三</span>
+                            <span class="book-condition">全新</span>
+                        </div>
+                        <div class="book-price">$700</div>
                     </div>
-                    <div class="book-price">$700</div>
                 </div>
             </a>
             
             <!-- 書籍卡片 4 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">微積分與工程數學</div>
-                <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="微積分與工程數學" class="book-cover">
+                <div class="book-image-container">
+                    <img src="/api/placeholder/400/320" alt="微積分與工程數學" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">電機工程學系</span>
-                        <span class="book-grade">大一</span>
-                        <span class="book-condition">七成新</span>
+                    <div class="book-header">微積分與工程數學</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">電機工程學系</span>
+                            <span class="book-grade">大一</span>
+                            <span class="book-condition">七成新</span>
+                        </div>
+                        <div class="book-price">$280</div>
                     </div>
-                    <div class="book-price">$280</div>
                 </div>
             </a>
             
             <!-- 書籍卡片 5 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">行銷管理學</div>
-                <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                <div class="book-image-container">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">企業管理學系</span>
-                        <span class="book-grade">大二</span>
-                        <span class="book-condition">九成新</span>
+                    <div class="book-header">行銷管理學</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">企業管理學系</span>
+                            <span class="book-grade">大二</span>
+                            <span class="book-condition">九成新</span>
+                        </div>
+                        <div class="book-price">$320</div>
                     </div>
-                    <div class="book-price">$320</div>
                 </div>
             </a>
             
             <!-- 書籍卡片 6 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">經濟學原理</div>
-                <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="經濟學原理" class="book-cover">
+                <div class="book-image-container">
+                    <img src="/api/placeholder/400/320" alt="經濟學原理" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">經濟學系</span>
-                        <span class="book-grade">大一</span>
-                        <span class="book-condition">八成新</span>
+                    <div class="book-header">經濟學原理</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">經濟學系</span>
+                            <span class="book-grade">大一</span>
+                            <span class="book-condition">八成新</span>
+                        </div>
+                        <div class="book-price">$250</div>
                     </div>
-                    <div class="book-price">$250</div>
                 </div>
             </a>
             <!-- 書籍卡片 7 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">行銷管理學</div>
-                <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                <div class="book-image-container">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">企業管理學系</span>
-                        <span class="book-grade">大二</span>
-                        <span class="book-condition">九成新</span>
+                    <div class="book-header">行銷管理學</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">企業管理學系</span>
+                            <span class="book-grade">大二</span>
+                            <span class="book-condition">九成新</span>
+                        </div>
+                        <div class="book-price">$320</div>
                     </div>
-                    <div class="book-price">$320</div>
                 </div>
             </a>
             <!-- 書籍卡片 8 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">行銷管理學</div>
-                <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                <div class="book-image-container">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">企業管理學系</span>
-                        <span class="book-grade">大二</span>
-                        <span class="book-condition">九成新</span>
+                    <div class="book-header">行銷管理學</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">企業管理學系</span>
+                            <span class="book-grade">大二</span>
+                            <span class="book-condition">九成新</span>
+                        </div>
+                        <div class="book-price">$320</div>
                     </div>
-                    <div class="book-price">$320</div>
                 </div>
             </a>
             <!-- 書籍卡片 9 -->
             <a href="{% url 'book_detail' %}" class="book-card">
-                <div class="book-header">行銷管理學</div>
-                <div class="book-image">
-                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-cover">
+                <div class="book-image-container">
+                    <img src="/api/placeholder/400/320" alt="行銷管理學" class="book-image">
                     <div class="book-tag textbook">教科書</div>
                 </div>
                 <div class="book-info">
-                    <div class="book-meta">
-                        <span class="book-department">企業管理學系</span>
-                        <span class="book-grade">大二</span>
-                        <span class="book-condition">九成新</span>
+                    <div class="book-header">行銷管理學</div>
+                    <div class="book-footer">
+                        <div class="book-meta">
+                            <span class="book-department">企業管理學系</span>
+                            <span class="book-grade">大二</span>
+                            <span class="book-condition">九成新</span>
+                        </div>
+                        <div class="book-price">$320</div>
                     </div>
-                    <div class="book-price">$320</div>
                 </div>
             </a>
         </div>
     </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const booksGrid = document.getElementById('booksGrid');
+            const searchInput = document.getElementById('searchInput');
+            const departmentFilter = document.getElementById('departmentFilter');
+            const gradeFilter = document.getElementById('gradeFilter');
+            const conditionFilter = document.getElementById('conditionFilter');
+            const priceFilter = document.getElementById('priceFilter');
+            const layoutButtons = document.querySelectorAll('.layout-btn');
+            
+            // Set initial grid layout
+            changeItemsPerRow(3);
+            
+            // Add event listeners for filters
+            searchInput.addEventListener('input', filterBooks);
+            departmentFilter.addEventListener('change', filterBooks);
+            gradeFilter.addEventListener('change', filterBooks);
+            conditionFilter.addEventListener('change', filterBooks);
+            priceFilter.addEventListener('change', filterBooks);
+            
+            // Add event listeners for layout buttons
+            layoutButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const cols = parseInt(this.getAttribute('data-cols'));
+                    changeItemsPerRow(cols);
+                    
+                    // Update active state
+                    layoutButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            function changeItemsPerRow(cols) {
+                booksGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            }
+            
+            function filterBooks() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const department = departmentFilter.value;
+                const grade = gradeFilter.value;
+                const condition = conditionFilter.value;
+                const priceRange = priceFilter.value;
+                
+                const bookCards = document.querySelectorAll('.book-card');
+                
+                bookCards.forEach(card => {
+                    const title = card.querySelector('.book-header').textContent.toLowerCase();
+                    const dept = card.querySelector('.book-department').textContent;
+                    const bookGrade = card.querySelector('.book-grade').textContent;
+                    const bookCondition = card.querySelector('.book-condition').textContent;
+                    const price = parseInt(card.querySelector('.book-price').textContent.replace('$', ''));
+                    
+                    const matchesSearch = title.includes(searchTerm) || searchTerm === '';
+                    const matchesDept = !department || dept === department;
+                    const matchesGrade = !grade || bookGrade === grade;
+                    const matchesCondition = !condition || bookCondition === condition;
+                    
+                    let matchesPrice = true;
+                    if (priceRange) {
+                        const [min, max] = priceRange.split('-').map(Number);
+                        matchesPrice = price >= min && price <= max;
+                    }
+                    
+                    if (matchesSearch && matchesDept && matchesGrade && matchesCondition && matchesPrice) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
     
     <!-- 右下角的圓形logo和上傳按鈕 -->
     <div class="floating-action-button">

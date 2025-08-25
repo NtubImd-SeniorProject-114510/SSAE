@@ -48,6 +48,9 @@ def join_detail(request):
 def book(request):
     return render(request, 'book.html')
 
+def book_2(request):
+    return render(request, 'book_2.html')
+
 def book_detail(request):
     return render(request, 'book_detail.html')
 
