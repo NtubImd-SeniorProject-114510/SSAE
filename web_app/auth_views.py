@@ -2,6 +2,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from social_core.pipeline.user import get_username
 import requests
+from django.shortcuts import redirect
+from django.contrib import messages
+from social_core.exceptions import AuthForbidden
+
 
 def create_user(strategy, details, backend, user=None, *args, **kwargs):
     """Create user if it doesn't exist."""
@@ -69,3 +73,17 @@ def generate_random_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
     return ''.join(random.choices(characters, k=length))
 
+
+def check_school_email(backend, user=None, response=None, *args, **kwargs):
+    print("[DEBUG] 進入 check_school_email 函數")  # 添加調試信息
+    print(f"[DEBUG] response: {response}")  # 打印 response 內容
+    email = response.get("email") if response else None
+    print(f"[DEBUG] 獲取到的 email: {email}")  # 打印 email
+    if email and not email.endswith("@ntub.edu.tw"):
+        error_msg = f"拒絕登入：{email} 非北商大帳號"
+        print(f"[ERROR] {error_msg}")  # 在終端機輸出錯誤
+        if user:  # 刪除不合法帳號
+            user.delete()
+        # 拋出 AuthForbidden 異常，並顯示自定義錯誤訊息
+        raise AuthForbidden(backend, '請使用學校帳號 (@ntub.edu.tw) 登入')
+    return None  # 檢查通過，返回 None 繼續執行下一個 pipeline
