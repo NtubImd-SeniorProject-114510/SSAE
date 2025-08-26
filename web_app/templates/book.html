@@ -315,22 +315,23 @@
 
         <div class="books-grid" id="booksGrid">
             {% for book in books %}
-            <a href="{% url 'book_detail' %}" class="book-card">
+            <a href="{% url 'book_detail' book.pk %}" class="book-card">
                 <div class="book-image-container">
                     {% if book.cover_image %}
                         <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="book-image">
                     {% else %}
                         <img src="{% static 'image/placeholder.png' %}" alt="no image" class="book-image">
                     {% endif %}
-                    <div class="book-tag {{ book.book_type }}">{{ book.get_book_type_display }}</div>
+                    <div class="book-tag">{{ book.category }}</div>
                 </div>
                 <div class="book-info">
                     <div class="book-header">{{ book.title }}</div>
                     <div class="book-footer">
                         <div class="book-meta">
-                            <span class="book-department">{{ book.get_department_display }}</span>
-                            <span class="book-grade">{{ book.get_grade_display }}</span>
+                            <span class="book-department">{{ book.department }}</span>
+                            <span class="book-grade">{{ book.grade }}</span>
                             <span class="book-condition">{{ book.get_condition_display }}</span>
+                            
                         </div>
                         <div class="book-price">${{ book.price }}</div>
                     </div>
@@ -444,98 +445,91 @@
                 <button type="button" class="close-btn" id="closeFormBtn">×</button>
             </div>
             
-            <div class="scrollable-content">
-  <form method="post" enctype="multipart/form-data" action="{% url 'upload_book' %}">
-    {% csrf_token %}
-    <div class="form-group">
-  <label class="form-label">書籍封面圖片</label>
-  <div class="image-upload-container" id="book-image-upload-area">
-    <div class="image-upload-icon">📷</div>
-    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
-  </div>
-  <input type="file" id="book-cover-image-input" name="cover_image" accept="image/*" style="display:none;">
-</div>
-    <div class="upload-form-fields">
-      <div class="form-group">
-        <label for="bookTitle">書名 <span class="required">*</span></label>
-        <input type="text" id="bookTitle" name="title" placeholder="請輸入書名" required>
-        <div class="error-message" id="bookTitleError" style="display: none; color: red; font-size: 12px;">請輸入書名</div>
-      </div>
-      <div class="form-row">
-        <div class="form-group form-group-half">
-          <label for="department">系所</label>
-          <select id="department" name="department" required>
-            <option value="" disabled selected>請選擇系所</option>
-            <option value="CS">資訊系</option>
-            <option value="EE">電機系</option>
-            <option value="ME">機械系</option>
-          </select>
-        </div>
-        <div class="form-group form-group-half">
-          <label for="grade">年級</label>
-          <select id="grade" name="grade" required> 
-            <option value="" disabled selected>請選擇年級</option>
-            <option value="1">大一</option>
-            <option value="2">大二</option>
-            <option value="3">大三</option>
-            <option value="4">大四</option>
-            <option value="5">研究所</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group form-group-half">
-          <label for="bookType">書籍類型</label>
-          <select id="bookType" name="book_type" required>
-            <option value="" disabled selected>請選擇書籍類型</option>
-            <option value="textbook">教科書</option>
-            <option value="reference">參考書</option>
-            <option value="novel">小說</option>
+            <form method="post" enctype="multipart/form-data" action="{% url 'upload_book' %}">
+              <div class="scrollable-content">
+                {% csrf_token %}
+                <div class="form-group">
+                  <label class="form-label">書籍封面圖片</label>
+                  <div class="image-upload-container" id="book-image-upload-area">
+                    <div class="image-upload-icon">📷</div>
+                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+                  </div>
+                  <input type="file" id="book-cover-image-input" name="cover_image" accept="image/*" style="display:none;">
+                </div>
+                <div class="form-group">
+                  <label for="title">書名 <span class="required">*</span></label>
+                  <input type="text" id="title" name="title" placeholder="請輸入書名" required>
+                  <div class="error-message" id="bookTitleError" style="display: none; color: red; font-size: 12px;">請輸入書名</div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group form-group-half">
+                    <label for="academic">學制</label>
+                    <select id="academic" name="academic" required>
+                      <option value="" disabled selected>請選擇學制</option>
+                      {% for a in form.academic.field.queryset %}
+                      <option value="{{ a.pk }}">{{ a }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="form-group form-group-half">
+                    <label for="department">科系</label>
+                    <select id="department" name="department" required>
+                      <option value="" disabled selected>請選擇科系</option>
+                      {% for d in form.department.field.queryset %}
+                      <option value="{{ d.pk }}">{{ d }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group form-group-half">
+                    <label for="grade">年級</label>
+                    <select id="grade" name="grade" required>
+                      <option value="" disabled selected>請選擇年級</option>
+                      <option value="1">大一</option>
+                      <option value="2">大二</option>
+                      <option value="3">大三</option>
+                      <option value="4">大四</option>
+                      <option value="5">研究所</option>
+                    </select>
+                  </div>
+                  <div class="form-group form-group-half">
+                    <label for="category">分類編號</label>
+                    <select id="category" name="category" required>
+                      <option value="" disabled selected>請選擇分類</option>
+                      {% for c in form.category.field.queryset %}
+                      <option value="{{ c.pk }}">{{ c }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group form-group-half">
+                    <label for="condition">書況</label>
+                    <select id="condition" name="condition" required>
+                      <option value="" disabled selected>請選擇書況</option>
+                      {% for value, label in form.condition.field.choices %}
+                      {% if value %}<option value="{{ value }}">{{ label }}</option>{% endif %}
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="form-group form-group-half">
+                    <label for="price">價格 (NT$) <span class="required">*</span></label>
+                    <input type="number" id="price" name="price" min="0" placeholder="請輸入價格" required>
+                    <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
+                  </div>
+                </div>
 
-          </select>
-        </div>
-        <div class="form-group form-group-half">
-          <label for="condition">書籍狀況</label>
-          <select id="condition" name="condition" required>
-            <option value="" disabled selected>請選擇書籍狀況</option>
-            <option value="new">全新</option>
-            <option value="good">良好</option>
-            <option value="used">二手</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group form-group-half">
-          <label for="price">價格 (NT$) <span class="required">*</span></label>
-          <input type="number" id="price" name="price" min="0" placeholder="請輸入價格" required>
-          <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
-        </div>
-        <div class="form-group form-group-half">
-          <label>交易方式 <span class="required">*</span></label>
-          <div class="checkbox-group">
-            <div class="checkbox-item">
-              <input type="checkbox" id="faceToFace" name="transaction" value="face" class="required-checkbox">
-              <label for="faceToFace">面交</label>
-            </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="shipping" name="transaction" value="mail" class="required-checkbox">
-              <label for="shipping">郵寄</label>
-            </div>
-          </div>
-          <div class="error-message" id="transactionMethodError" style="display: none; color: red; font-size: 12px;">請選擇至少一種交易方式</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="bookDescription">書籍描述 (選填)</label>
-        <textarea id="bookDescription" name="description" rows="4" placeholder="請輸入書籍描述，例如：使用情況、有無筆記、有無劃線等"></textarea>
-      </div>
-      <div class="button-group">
-        <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
-        <button type="submit" class="submit-btn" id="submitBtn">上架</button>
-      </div>
-    </div>
-  </form>
-</div>
+                <div class="form-group">
+                  <label for="description">補充說明</label>
+                  <textarea id="description" name="description" rows="4" placeholder="請輸入補充說明"></textarea>
+                </div>
+                <div class="button-group">
+                  <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+                  <button type="submit" class="submit-btn" id="submitBtn">上架</button>
+                </div>
+              </div>
+            </form>
             </div>
         </div>
     </div>
@@ -545,32 +539,10 @@
     <div class="deco-line"></div>
 </div>
 
-<!-- 載入上傳二手書彈跳視窗 -->
-<div class="upload-form" id="uploadForm">
-    <div class="upload-container">
-        <div class="form-header">
-            <h2>上傳二手書</h2>
-            <button type="button" class="close-btn" id="closeFormBtn">×</button>
-        </div>
-        <div class="image-upload-rectangle" id="custom-image-upload-area">
-          <div class="image-upload-icon">📷</div>
-          <div class="image-upload-text">點擊或拖曳上傳圖片</div>
-          <input type="file" id="custom-image-input" accept="image/*" style="display:none;">
-          <img id="custom-preview-img" style="display:none;max-width:95%;max-height:280px;margin:10px auto 0;border-radius:12px;box-shadow:0 2px 5px rgba(0,0,0,0.05);object-fit:contain;">
-        </div>
-        <div class="upload-form-fields">
-            <!-- 上傳表單內容 -->
-            <div class="button-group">
-                <button type="button" class="cancel-btn" id="cancelPopupBtn">取消</button>
-                <button type="button" class="submit-btn" id="submitPopupBtn">上傳書籍</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block body_js %}
-<script src="{% static 'js/book.js' %}"></script>
+<script src="{% static 'js/book2.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const uploadFormEl = document.querySelector('#uploadForm form');
@@ -634,6 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 </script>
 
+<script src="{% static 'js/book.js' %}"></script>
 <script src="{% static 'js/book_image_upload.js' %}"></script>
 <script src="{% static 'js/book_image_rectangle.js' %}"></script>
 {% endblock %}

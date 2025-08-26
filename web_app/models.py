@@ -1,6 +1,58 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
+
+class Academic(models.Model):
+    name = models.CharField(max_length=50)
+    def __str__(self):
+        return self.name
+
+class Department(models.Model):
+    name = models.CharField(max_length=100)
+    def __str__(self):
+        return self.name
+
+class Category(models.Model):
+    name = models.CharField(max_length=50)
+    def __str__(self):
+        return self.name
+
+class Status(models.Model):
+    name = models.CharField(max_length=20)
+    def __str__(self):
+        return self.name
+
+class Book2(models.Model):
+    book_id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=255)
+    academic = models.ForeignKey(Academic, on_delete=models.PROTECT)
+    department = models.ForeignKey(Department, on_delete=models.PROTECT)
+    grade = models.IntegerField()
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    CONDITION_CHOICES = [
+        ('new', '全新'),
+        ('good', '良好'),
+        ('used', '尚可'),
+    ]
+    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
+    OTHER_CHOICES = [
+        ('noted', '有筆記'),
+        ('damaged', '破損'),
+        ('yellowed', '泛黃'),
+    ]
+    other = models.CharField(max_length=100, blank=True, help_text='多選，逗號分隔')
+    price = models.IntegerField()
+    contact = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='book2_contact')
+    description = models.TextField(blank=True)
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='book2_seller')
+
+    status = models.ForeignKey(Status, on_delete=models.PROTECT, default=1)
+    cover_image = models.ImageField(upload_to='book2_covers/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 
 class GroupActivity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # 發起者

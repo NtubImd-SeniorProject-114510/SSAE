@@ -33,14 +33,25 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group">
-            <div class="preview-container" id="previewContainer" style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;background:#faf7fb;border-radius:18px;margin-bottom:1rem;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <img id="previewImage" src="{% static 'image/placeholder.png' %}" alt="預覽" style="max-height:200px;max-width:95%;object-fit:contain;transition:box-shadow 0.2s;">
-            </div>
-            <label for="id_cover_image" class="upload-label" style="margin-top:10px;">封面圖片</label>
-            <input type="file" name="cover_image" id="id_cover_image" class="upload-input" accept="image/*">
+            <div class="preview-container" id="previewContainer" style="width:100%;height:350px;display:flex;align-items:center;justify-content:center;background:#faf7fb;border-radius:18px;margin-bottom:1rem;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+    <img id="previewImage" src="{% static 'image/placeholder.png' %}" alt="預覽" style="max-height:320px;max-width:95%;object-fit:contain;transition:box-shadow 0.2s;">
+</div>
+<label for="id_cover_image" class="upload-label" style="margin-top:10px;">封面圖片</label>
+<input type="file" name="cover_image" id="id_cover_image" class="upload-input" accept="image/*">
         </div>
 
-        {{ form.as_p|safe|cut:'<input type="file" name="cover_image" id="id_cover_image">' }}
+        <div class="form-group">{{ form.title.label_tag }}{{ form.title }}</div>
+<div class="form-group">{{ form.academic.label_tag }}{{ form.academic }}</div>
+<div class="form-group">{{ form.department.label_tag }}{{ form.department }}</div>
+<div class="form-group">{{ form.grade.label_tag }}{{ form.grade }}</div>
+<div class="form-group">{{ form.category.label_tag }}{{ form.category }}</div>
+<div class="form-group">{{ form.condition.label_tag }}{{ form.condition }}</div>
+<div class="form-group">{{ form.other.label_tag }}{{ form.other }}</div>
+<div class="form-group">{{ form.price.label_tag }}{{ form.price }}</div>
+<div class="form-group">{{ form.contact.label_tag }}{{ form.contact }}</div>
+<div class="form-group">{{ form.seller.label_tag }}{{ form.seller }}</div>
+<div class="form-group">{{ form.status.label_tag }}{{ form.status }}</div>
+<div class="form-group">{{ form.description.label_tag }}{{ form.description }}</div>
         <button type="submit" class="btn btn-primary">送出</button>
         <a href="{% url 'book' %}" class="btn btn-secondary">取消</a>
     </form>

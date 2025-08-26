@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import GroupActivity, Book
+from .models import GroupActivity, Book, Book2
 
 class ActivityForm(forms.ModelForm):
     class Meta:
@@ -47,15 +47,27 @@ class ActivityForm(forms.ModelForm):
         return cleaned_data
 
 
-class BookForm(forms.ModelForm):
+
+class Book2Form(forms.ModelForm):
+    other = forms.MultipleChoiceField(
+        choices=Book2.OTHER_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="其他"
+    )
+
     class Meta:
-        model = Book
+        model = Book2
         fields = [
-            'title', 'price', 'description', 'department', 'grade', 'book_type', 'condition', 'transaction', 'cover_image'
+            'title', 'academic', 'department', 'grade', 'category',
+            'condition', 'other', 'price', 'description', 'cover_image'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
+
+    def clean_other(self):
+        return ','.join(self.cleaned_data['other'])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

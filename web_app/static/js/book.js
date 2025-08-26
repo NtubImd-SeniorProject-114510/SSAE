@@ -14,10 +14,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // 修正：將＋按鈕事件註冊放在這裡，確保元素都已渲染
     const centerUploadBtn = document.getElementById('centerUploadBtn');
-    const uploadFormEl = document.getElementById('uploadForm');
-    if (centerUploadBtn && uploadFormEl) {
+    const uploadFormModal = document.getElementById('uploadForm');
+    const uploadFormEl = document.querySelector('#uploadForm form');
+    if (centerUploadBtn && uploadFormModal) {
         centerUploadBtn.addEventListener('click', function() {
-            uploadFormEl.style.display = 'flex';
+            uploadFormModal.classList.add('show');
             document.body.style.overflow = 'hidden';
             document.body.style.height = '100%';
         });
@@ -95,11 +96,52 @@ window.addEventListener('DOMContentLoaded', () => {
     const previewImage = document.getElementById('previewImage');
     const previewPlaceholder = document.getElementById('previewPlaceholder');
     const submitBtn = document.getElementById('submitBtn');
-    // const uploadFormEl = document.getElementById('uploadForm');
+    // 上傳表單 submit 攔截
+    if (uploadFormEl) {
+        uploadFormEl.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('submit 攔截成功');
+            const formData = new FormData(uploadFormEl);
+            fetch(uploadFormEl.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json().then(data => ({status: response.status, body: data})))
+            .then(({status, body}) => {
+                if (status === 200 && body.success) {
+                    // 關閉彈窗
+                    document.getElementById('uploadForm').classList.remove('show');
+                    // 清空表單
+                    uploadFormEl.reset();
+                    console.log('上架成功，自動刷新');
+                    location.reload();
+                } else {
+                    let msg = '';
+                    if (body.errors) {
+                        for (const [field, errors] of Object.entries(body.errors)) {
+                            msg += field + ': ' + errors.join(', ') + '\n';
+                        }
+                    } else if (body.message) {
+                        msg = body.message;
+                    } else {
+                        msg = '上傳失敗，請檢查欄位';
+                    }
+                    alert(msg);
+                }
+            })
+            .catch((err) => {
+                alert('上傳失敗，請稍後再試');
+            });
+        });
+    }
     // 關閉上傳表單
     if (closeFormBtn && uploadFormEl) {
         closeFormBtn.addEventListener('click', function() {
-            uploadFormEl.style.display = 'none';
+            uploadFormEl.classList.remove('show');
             unlockBodyScroll();
         });
     }
