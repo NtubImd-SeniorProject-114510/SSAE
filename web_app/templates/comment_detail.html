@@ -1,4 +1,4 @@
-{% extends 'navbar.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block extra_css %}
@@ -227,6 +227,9 @@
 <!-- 載入模態框HTML -->
 {% include 'pop_window/comment_pop.html' %}
 
+{% endblock %}
+
+{% block footer %}
 {% endblock %}
 
 {% block body_js %}

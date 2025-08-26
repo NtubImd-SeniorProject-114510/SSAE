@@ -1,4 +1,4 @@
-{% extends 'navbar.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block lang %}zh-Hant{% endblock %}
@@ -73,6 +73,8 @@
 </div>
 {% endblock %}
 
+{% block footer %}
+{% endblock %}
 
 {% block body_js %}
 <script src="{% static 'js/chat.js' %}"></script>
