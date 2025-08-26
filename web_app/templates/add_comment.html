@@ -1,4 +1,4 @@
-{% extends 'navbar.html' %}
+{% extends 'base.html' %}
 
 {% block title %}新增評論{% endblock %}
 
@@ -152,6 +152,8 @@
 </div>
 {% endblock %}
 
+{% block footer %}
+{% endblock %}
 
 {% block body_js %}
 <script src="{% static 'js/add_comment.js' %}"></script>
