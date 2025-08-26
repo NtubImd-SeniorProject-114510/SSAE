@@ -241,41 +241,31 @@
             <div class="filter-group">
                 <label class="filter-label">系所</label>
                 <select class="filter-select" id="departmentFilter">
-                    <option value="">全部系所</option>
-                    <option>資訊工程學系</option>
-                    <option>電機工程學系</option>
-                    <option>企業管理學系</option>
-                    <option>外國語文學系</option>
-                    <option>經濟學系</option>
-                </select>
+    <option value="">全部系所</option>
+    {% for dept in departments %}
+        <option value="{{ dept.name }}">{{ dept.name }}</option>
+    {% endfor %}
+</select>
             </div>
             
             <div class="filter-group">
                 <label class="filter-label">年級</label>
                 <select class="filter-select" id="gradeFilter">
-                    <option value="">全部年級</option>
-                    <option>專一</option>
-                    <option>專二</option>
-                    <option>專三</option>
-                    <option>專四</option>
-                    <option>大一</option>
-                    <option>大二</option>
-                    <option>大三</option>
-                    <option>大四</option>
-                    <option>研究所</option>
-                </select>
+    <option value="">全部年級</option>
+    {% for value, label in grade_choices %}
+        <option value="{{ label }}">{{ label }}</option>
+    {% endfor %}
+</select>
             </div>
             
             <div class="filter-group">
                 <label class="filter-label">狀態</label>
                 <select class="filter-select" id="conditionFilter">
-                    <option value="">全部狀態</option>
-                    <option>全新</option>
-                    <option>九成新</option>
-                    <option>八成新</option>
-                    <option>七成新</option>
-                    <option>五成新以下</option>
-                </select>
+    <option value="">全部狀態</option>
+    {% for value, label in form.fields.condition.choices %}
+        {% if value %}<option value="{{ label }}">{{ label }}</option>{% endif %}
+    {% endfor %}
+</select>
             </div>
             
             <div class="filter-group">

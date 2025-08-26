@@ -694,7 +694,6 @@ body {
 
 .book-meta {
   display: flex;
-  margin-bottom: 10px;
   font-size: 0.9rem;
   color: #666;
 }

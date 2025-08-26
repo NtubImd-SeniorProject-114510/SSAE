@@ -47,11 +47,29 @@ def join_detail(request):
 
 from .models import Book2
 
+from .models import Department, Category
+
 def book(request):
     books = Book2.objects.all().order_by('-created_at')
     from .forms import Book2Form
     form = Book2Form()
-    return render(request, 'book.html', {'books': books, 'form': form})
+    departments = Department.objects.all()
+    categories = Category.objects.all()
+    # Extract unique grades from Book2, sort, and map to display names
+    grade_map = {
+        1: '專一', 2: '專二', 3: '專三', 4: '專四',
+        5: '大一', 6: '大二', 7: '大三', 8: '大四', 9: '研究所'
+    }
+    grades_qs = Book2.objects.values_list('grade', flat=True).distinct()
+    grades = sorted(set(grades_qs))
+    grade_choices = [(g, grade_map.get(g, str(g))) for g in grades if g in grade_map]
+    return render(request, 'book.html', {
+        'books': books,
+        'form': form,
+        'departments': departments,
+        'categories': categories,
+        'grade_choices': grade_choices,
+    })
 
 def book_2(request):
     return render(request, 'book_2.html')

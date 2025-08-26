@@ -48,7 +48,16 @@
                         </div>
                         <div class="info-card">
                             <div class="info-label">書籍狀況</div>
-                            <div class="info-value">{{ book.get_condition_display }}</div>
+                            <div class="info-value">
+                                {{ book.get_condition_display }}
+    {% if book.condition == 'new' %}
+        <i class="fa-solid fa-face-grin-wide" style="color:#6F557D;margin-left:6px;" title="全新"></i>
+    {% elif book.condition == 'good' %}
+        <i class="fa-solid fa-face-smile" style="color:#6F557D;margin-left:6px;" title="良好"></i>
+    {% elif book.condition == 'used' %}
+        <i class="fa-solid fa-face-meh" style="color:#6F557D;margin-left:6px;" title="尚可"></i>
+    {% endif %}
+                            </div>
                         </div>
                         <div class="info-card">
                             <div class="info-label">狀態</div>
