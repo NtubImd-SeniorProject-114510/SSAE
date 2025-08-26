@@ -1,10 +1,3 @@
-// 購買按鈕功能
-const ctaButtons = document.querySelectorAll('.fixed-cta');
-ctaButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        alert('已加入購物車！請前往個人儀表板完成付款流程。');
-    });
-});
 
 // 聯絡賣家模態視窗功能
 const contactSellerModal = document.getElementById('contactSellerModal');

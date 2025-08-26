@@ -92,6 +92,27 @@ body {
     to { opacity: 1; }
 }
 
+/* 立即購買按鈕 */
+.buy-now-btn {
+    display: inline-block;
+    background: #6F557D;
+    color: #fff;
+    border-radius: 20px;
+    padding: 10px 32px;
+    font-size: 1.13rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(111,85,125,0.07);
+    transition: background 0.18s, transform 0.16s;
+    margin-top: 2px;
+}
+.buy-now-btn:hover {
+    background: #9e8c9d;
+    color: #fff;
+    transform: translateY(-2px) scale(1.03);
+}
+
 /* 書籍標籤 tag 樣式 */
 .book-tag {
     display: inline-block;
@@ -1122,8 +1143,8 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #2C5D73;
-    color: white;
+    background-color: #6F557D;
+    color: #fff;
     border: none;
     padding: 15px 35px;
     border-radius: 50px;
@@ -1133,12 +1154,25 @@ body {
     transition: background-color 0.3s, transform 0.3s;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     z-index: 1000;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
 }
 
+.fixed-cta:focus {
+    box-shadow: 0 0 0 3px rgba(111,85,125,0.25);
+}
+
+
 .fixed-cta:hover {
-    background-color: #4E7D96;
+    background-color: #543464;
     transform: translateX(-50%) translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 20px rgba(111, 85, 125, 0.3);
+    color: #fff;
+    text-decoration: none;
 }
 
 .section {

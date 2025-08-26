@@ -58,7 +58,7 @@
                 </div>
             </div>
         </div>
-        </div>
+
     </div>
     
     <!-- 詳細資訊 -->
@@ -133,7 +133,7 @@
     </div>
     
     <!-- 固定在下方的購買按鈕 -->
-    <button class="fixed-cta">立即購買</button>
+    <a href="mailto:{{ seller_user.email }}?subject=我想購買您的書籍《{{ book.title }}》&body=您好，我想購買您的書籍《{{ book.title }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri }}" class="fixed-cta">立即購買</a>
     
     <!-- 聯絡賣家彈出視窗 -->
     <div id="contactSellerModal" class="modal">
@@ -200,7 +200,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="cancel-btn">取消</button>
+                <button class="cancel-btn">關閉</button>
             </div>
         </div>
     </div>
