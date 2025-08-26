@@ -45,8 +45,11 @@ def join_create(request):
 def join_detail(request):
     return render(request, 'join_detail.html')
 
+from .models import Book
+
 def book(request):
-    return render(request, 'book.html')
+    books = Book.objects.all().order_by('-created_at')
+    return render(request, 'book.html', {'books': books})
 
 def book_2(request):
     return render(request, 'book_2.html')
@@ -54,31 +57,27 @@ def book_2(request):
 def book_detail(request):
     return render(request, 'book_detail.html')
 
+from .forms import BookForm
+from .models import Book
+from django.shortcuts import redirect
+
+from django.http import JsonResponse
+
 def upload_book(request):
     if request.method == 'POST':
-        # 處理表單提交
-        try:
-            book_title = request.POST.get('bookTitle')
-            department = request.POST.get('department')
-            grade = request.POST.get('grade')
-            book_type = request.POST.get('bookType')
-            price = request.POST.get('price')
-            condition = request.POST.get('condition')
-            description = request.POST.get('bookDescription')
-            transaction_methods = request.POST.getlist('transactionMethod')
-            book_image = request.FILES.get('bookImage')
-            
-            # 這裡可以添加保存到數據庫的邏輯
-            # ...
-            
-            # 返回成功響應
-            return JsonResponse({'status': 'success', 'message': '書籍上傳成功！'})
-        except Exception as e:
-            # 返回錯誤響應
-            return JsonResponse({'status': 'error', 'message': f'上傳失敗: {str(e)}'})
+        form = BookForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': '書籍上架成功'})
+            return redirect('book')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+            return render(request, 'book_upload_form.html', {'form': form})
     else:
-        # GET 請求，顯示表單頁面
-        return render(request, 'book.html')
+        form = BookForm()
+        return render(request, 'book_upload_form.html', {'form': form})
 
 def ask_page(request):
     return render(request, "ask.html")

@@ -75,8 +75,54 @@ class ActivityParticipant(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['user', 'activity'], name='uniq_user_activity')
         ]
-        verbose_name = '活動參與者'
-        verbose_name_plural = '活動參與者'
+
+
+
+
+class Book(models.Model):
+    title = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True)
+    
+    DEPARTMENT_CHOICES = [
+        ('CS', '資訊系'),
+        ('EE', '電機系'),
+        ('ME', '機械系'),
+    ]
+    department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES)
+
+    GRADE_CHOICES = [
+        ('1', '一年級'),
+        ('2', '二年級'),
+        ('3', '三年級'),
+        ('4', '四年級'),
+    ]
+    grade = models.CharField(max_length=10, choices=GRADE_CHOICES)
+
+    TYPE_CHOICES = [
+        ('textbook', '教科書'),
+        ('reference', '參考書'),
+        ('novel', '小說'),
+    ]
+    book_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+
+    CONDITION_CHOICES = [
+        ('new', '全新'),
+        ('good', '良好'),
+        ('used', '二手'),
+    ]
+    condition = models.CharField(max_length=50, choices=CONDITION_CHOICES)
+
+    TRANSACTION_CHOICES = [
+        ('face', '面交'),
+        ('mail', '郵寄'),
+    ]
+    transaction = models.CharField(max_length=50, choices=TRANSACTION_CHOICES)
+
+    # 圖片欄位
+    cover_image = models.ImageField(upload_to='book_covers/', blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.activity.title}"
+        return self.title
