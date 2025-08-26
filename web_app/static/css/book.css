@@ -286,6 +286,90 @@ body {
   background-color: #2a5c64;
 }
 
+/* 書籍上傳表單圖片上傳區塊 */
+.image-upload-rectangle {
+  width: 100%;
+  max-width: 400px;
+  height: 320px;
+  border: 2px dashed #ddd;
+  border-radius: 18px;
+  background: #faf7fb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 auto 10px auto;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  position: relative;
+}
+.image-upload-rectangle:hover, .image-upload-rectangle.dragover {
+.image-upload-rectangle .image-upload-icon {
+  font-size: 2.8rem;
+  color: #bbb;
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+.image-upload-rectangle:hover .image-upload-icon {
+  color: #6F557D;
+}
+.image-upload-rectangle .image-upload-text {
+}
+.image-upload-rectangle img {
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  margin-top: 10px;
+  pointer-events: auto;
+  display: block;
+  background: #fff;
+  border: 2px solid #6F557D;
+  padding: 6px;
+}
+
+
+
+  color: #777;
+  font-size: 1rem;
+}
+
+.image-upload-container {
+  border: 2px dashed #ddd;
+  border-radius: 18px;
+  background: #faf7fb;
+  padding: 32px 0 20px 0;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  position: relative;
+}
+.image-upload-container:hover {
+  border-color: #6F557D;
+  background: #f2e9fa;
+  box-shadow: 0 4px 12px rgba(111,85,125,0.08);
+}
+.image-upload-icon {
+  font-size: 2.8rem;
+  color: #bbb;
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+.image-upload-container:hover .image-upload-icon {
+  color: #6F557D;
+}
+.image-upload-text {
+  color: #777;
+  font-size: 1rem;
+  margin-bottom: 0.5em;
+}
+.help-text {
+  font-size: 0.85rem;
+  color: #777;
+  margin-top: 5px;
+}
+
 /* 中心上傳按鈕樣式 */
 .upload-btn-center {
   position: absolute;
@@ -312,6 +396,11 @@ body {
   background-color: #9e8c9d;
   transform: translate(-50%, -50%) scale(1.1);
   box-shadow: 0 6px 15px rgba(111, 85, 125, 0.35);
+}
+
+.upload-form {
+  display: none;
+  /* 彈窗樣式可依需求調整 */
 }
 
 /* 裝飾線 */

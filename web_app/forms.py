@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import GroupActivity
+from .models import GroupActivity, Book
 
 class ActivityForm(forms.ModelForm):
     class Meta:
@@ -45,3 +45,18 @@ class ActivityForm(forms.ModelForm):
             self.add_error('deadline', '報名截止日期必須早於活動日期')
 
         return cleaned_data
+
+
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = [
+            'title', 'price', 'description', 'department', 'grade', 'book_type', 'condition', 'transaction', 'cover_image'
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cover_image'].required = False

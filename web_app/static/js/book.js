@@ -11,16 +11,21 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         sessionStorage.removeItem('openPopup');
     }
-});
 
+    // 修正：將＋按鈕事件註冊放在這裡，確保元素都已渲染
+    const centerUploadBtn = document.getElementById('centerUploadBtn');
+    const uploadFormEl = document.getElementById('uploadForm');
+    if (centerUploadBtn && uploadFormEl) {
+        centerUploadBtn.addEventListener('click', function() {
+            uploadFormEl.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.body.style.height = '100%';
+        });
+    }
 
-
-
-
-document.addEventListener('DOMContentLoaded', function() {
     // 確俞SVG路徑和上傳按鈕中心點對齊
     alignSvgPathWithUploadButton();
-    
+
     // 背景文字隨滾動移動
     const bgText = document.querySelector('.bg-text');
     if (bgText) {
@@ -30,39 +35,21 @@ document.addEventListener('DOMContentLoaded', function() {
             bgText.style.transform = `translateX(-${moveX}px)`;
         });
     }
-    
+
     // 鎖定背景滾動功能
     function lockBodyScroll() {
         document.body.style.overflow = 'hidden';
         document.body.style.height = '100%';
     }
-    
+
     function unlockBodyScroll() {
         document.body.style.overflow = '';
         document.body.style.height = '';
     }
-    
-    // 中心上傳按鈕點擊事件
-    const centerUploadBtn = document.getElementById('centerUploadBtn');
-    if (centerUploadBtn) {
-        centerUploadBtn.addEventListener('click', function() {
-            const uploadForm = document.getElementById('uploadForm');
-            if (uploadForm) {
-                uploadForm.style.display = 'flex';
-                // 鎖定背景滾動
-                lockBodyScroll();
-                // 初始化表單驗證
-                validateRequiredFields();
-            }
-        });
-    }
-    
-    // 初始化表單驗證
-    validateRequiredFields();
-    
+
     // 篩選標籤點擊效果
     const filterItems = document.querySelectorAll('.filter-item');
-    
+
     filterItems.forEach(item => {
         item.addEventListener('click', function() {
             // 移除所有active類
@@ -102,20 +89,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 上傳功能相關
-    const uploadForm = document.getElementById('uploadForm');
     const closeFormBtn = document.getElementById('closeFormBtn');
     const imagePreview = document.getElementById('imagePreview');
     const imageUpload = document.getElementById('imageUpload');
     const previewImage = document.getElementById('previewImage');
     const previewPlaceholder = document.getElementById('previewPlaceholder');
     const submitBtn = document.getElementById('submitBtn');
-    
+    // const uploadFormEl = document.getElementById('uploadForm');
     // 關閉上傳表單
-    closeFormBtn.addEventListener('click', function() {
-        uploadForm.style.display = 'none';
-        // 解鎖背景滾動
-        unlockBodyScroll();
-    });
+    if (closeFormBtn && uploadFormEl) {
+        closeFormBtn.addEventListener('click', function() {
+            uploadFormEl.style.display = 'none';
+            unlockBodyScroll();
+        });
+    }
+
     
     // 點擊預覽區域觸發文件選擇
     imagePreview.addEventListener('click', function() {
@@ -235,6 +223,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 提交按鈕點擊事件
     submitBtn.addEventListener('click', function() {
+        // 其它提交行為（如表單驗證）
+        // ...
+        // 點擊提交時也可呼叫 filterBooks 以確保顯示正確
+        filterBooks();
+    });
+
         // 獲取所有表單值
         const bookTitle = document.getElementById('bookTitle').value;
         const department = document.getElementById('department').value;
@@ -468,4 +462,3 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-});

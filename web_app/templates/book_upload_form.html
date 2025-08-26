@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}上傳二手書{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:500px;margin:40px auto;">
+    <h2 class="mb-4">上傳二手書</h2>
+    <style>
+        .upload-label {
+            display: inline-block;
+            background: #6F557D;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+            font-size: 1rem;
+        }
+        .upload-label:hover {
+            background: #9e8c9d;
+            color: #e7c21b;
+            transform: translateY(-2px);
+        }
+        .upload-input {
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="preview-container" id="previewContainer" style="width:100%;height:220px;display:flex;align-items:center;justify-content:center;background:#faf7fb;border-radius:18px;margin-bottom:1rem;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <img id="previewImage" src="{% static 'image/placeholder.png' %}" alt="預覽" style="max-height:200px;max-width:95%;object-fit:contain;transition:box-shadow 0.2s;">
+            </div>
+            <label for="id_cover_image" class="upload-label" style="margin-top:10px;">封面圖片</label>
+            <input type="file" name="cover_image" id="id_cover_image" class="upload-input" accept="image/*">
+        </div>
+
+        {{ form.as_p|safe|cut:'<input type="file" name="cover_image" id="id_cover_image">' }}
+        <button type="submit" class="btn btn-primary">送出</button>
+        <a href="{% url 'book' %}" class="btn btn-secondary">取消</a>
+    </form>
+    {% if form.errors %}
+        <div class="alert alert-danger mt-3">
+            <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
