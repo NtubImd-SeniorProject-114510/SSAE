@@ -36,6 +36,7 @@ urlpatterns = [
     path('join/' , views.join),
     path('join_create/' , views.join_create),
     path('book/' , views.book, name='book'),
+    path('book_2/' , views.book_2, name='book_2'),
     path('book_detail/' , views.book_detail, name='book_detail'),
     path('upload_book/' , views.upload_book, name='upload_book'),
     path("test/", views.ask_page, name="ask_page"),
