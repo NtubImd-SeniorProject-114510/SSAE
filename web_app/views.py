@@ -45,39 +45,68 @@ def join_create(request):
 def join_detail(request):
     return render(request, 'join_detail.html')
 
-from .models import Book
+from .models import Book2
+
+from .models import Department, Category
 
 def book(request):
-    books = Book.objects.all().order_by('-created_at')
-    return render(request, 'book.html', {'books': books})
+    books = Book2.objects.all().order_by('-created_at')
+    from .forms import Book2Form
+    form = Book2Form()
+    departments = Department.objects.all()
+    categories = Category.objects.all()
+    # Extract unique grades from Book2, sort, and map to display names
+    grade_map = {
+        1: '專一', 2: '專二', 3: '專三', 4: '專四',
+        5: '大一', 6: '大二', 7: '大三', 8: '大四', 9: '研究所'
+    }
+    grades_qs = Book2.objects.values_list('grade', flat=True).distinct()
+    grades = sorted(set(grades_qs))
+    grade_choices = [(g, grade_map.get(g, str(g))) for g in grades if g in grade_map]
+    return render(request, 'book.html', {
+        'books': books,
+        'form': form,
+        'departments': departments,
+        'categories': categories,
+        'grade_choices': grade_choices,
+    })
 
 def book_2(request):
     return render(request, 'book_2.html')
 
-def book_detail(request):
-    return render(request, 'book_detail.html')
+from django.shortcuts import get_object_or_404
 
-from .forms import BookForm
-from .models import Book
+def book_detail(request, pk):
+    book = get_object_or_404(Book2, pk=pk)
+    seller_user = book.seller
+    return render(request, 'book_detail.html', {'book': book, 'seller_user': seller_user})
+
+from .forms import Book2Form
+from .models import Book2
 from django.shortcuts import redirect
 
 from django.http import JsonResponse
 
-def upload_book(request):
+def upload_book2(request):
     if request.method == 'POST':
-        form = BookForm(request.POST, request.FILES)
+        form = Book2Form(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            book = form.save(commit=False)
+            book.contact = request.user
+            book.seller = request.user
+            from .models import Status
+            book.status = Status.objects.get(name='在售')
+            book.save()
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': '書籍上架成功'})
             return redirect('book')
         else:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-            return render(request, 'book_upload_form.html', {'form': form})
+            return render(request, 'book2_upload_form.html', {'form': form})
     else:
-        form = BookForm()
-        return render(request, 'book_upload_form.html', {'form': form})
+        form = Book2Form()
+        return render(request, 'book2_upload_form.html', {'form': form})
 
 def ask_page(request):
     return render(request, "ask.html")

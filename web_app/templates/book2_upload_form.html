@@ -1,0 +1,44 @@
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div>
+        {{ form.title.label_tag }} {{ form.title }}
+    </div>
+    <div>
+        {{ form.academic.label_tag }} {{ form.academic }}
+    </div>
+    <div>
+        {{ form.department.label_tag }} {{ form.department }}
+    </div>
+    <div>
+        {{ form.grade.label_tag }} {{ form.grade }}
+    </div>
+    <div>
+        {{ form.category.label_tag }} {{ form.category }}
+    </div>
+    <div>
+        {{ form.condition.label_tag }} {{ form.condition }}
+    </div>
+    <div>
+        {{ form.other.label_tag }} {{ form.other }}
+    </div>
+    <div>
+        {{ form.price.label_tag }} {{ form.price }}
+    </div>
+    <div>
+        {{ form.contact.label_tag }} {{ form.contact }}
+    </div>
+    <div>
+        {{ form.description.label_tag }} {{ form.description }}
+    </div>
+    <div>
+        {{ form.seller.label_tag }} {{ form.seller }}
+    </div>
+    <div>
+        {{ form.status.label_tag }} {{ form.status }}
+    </div>
+    <div>
+        {{ form.cover_image.label_tag }} {{ form.cover_image }}
+    </div>
+    <button type="submit" class="btn btn-primary">送出</button>
+</form>
