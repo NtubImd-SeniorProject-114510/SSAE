@@ -1,0 +1,258 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/book_upload_form.css' %}">
+
+<div id="uploadFormModal2" class="upload-modal2" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3500;align-items:center;justify-content:center;background:rgba(111,85,125,0.13);">
+  <div class="container">
+    <div class="header">
+        <button class="close-btn" type="button" onclick="closeForm2()">&times;</button>
+        <h1>（到時候換好看的圖）</h1><p>分享你的知識，讓書籍找到新的歸宿</p>
+    </div>
+
+    <div class="form-container">
+        <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book' %}">
+        {% csrf_token %}
+            <div class="upload-area" onclick="document.getElementById('id_cover_image').click()">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">點擊上傳書籍封面圖片</div>
+                <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
+                {{ form.cover_image }}
+                
+            </div>
+            <div class="form-group">
+                <label class="form-label required" for="id_title">書名</label>
+                <input type="text" name="title" maxlength="100" class="form-input" id="id_title" placeholder="請輸入書名" value="{{ form.title.value|default_if_none:'' }}">
+                {% if form.title.errors %}
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label required" for="id_price">價格</label>
+                <div class="price-input">
+                    <input type="number" name="price" class="form-input" id="id_price" placeholder="請輸入價格" value="{{ form.price.value|default_if_none:'' }}">
+            </div>
+            {% if form.price.errors %}
+                <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.price.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="form-row-three">
+            <div class="form-group">
+                <label class="form-label" for="id_academic">學制</label>
+                <select name="academic" class="form-select" id="id_academic">
+                    <option value="">請選擇學制</option>
+                    {% for academic in form.academic.field.queryset %}
+                        <option value="{{ academic.pk }}" {% if form.academic.value|stringformat:'s' == academic.pk|stringformat:'s' %}selected{% endif %}>{{ academic.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.academic.errors %}
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.academic.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="id_department">科系</label>
+                <select name="department" class="form-select" id="id_department">
+                    <option value="">請選擇科系</option>
+                    {% for department in form.department.field.queryset %}
+                        <option value="{{ department.pk }}" {% if form.department.value|stringformat:'s' == department.pk|stringformat:'s' %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.department.errors %}
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.department.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="id_grade">年級</label>
+                <select name="grade" class="form-select" id="id_grade   ">
+                    <option value="">請選擇年級</option>    
+                    {% for i in "12345" %}
+                        <option value="{{ forloop.counter }}" {% if form.grade.value|stringformat:'s' == forloop.counter|stringformat:'s' %}selected{% endif %}>{{ forloop.counter }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.grade.errors %}
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.grade.errors.0 }}</di    v>
+                {% endif %}
+            </div>
+        </div>
+        <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="id_category">分類</label>
+                <select name="category" class="form-select" id="id_category">
+                    <option value="">請選擇分類</option>
+                    {% for category in form.category.field.queryset %}
+                        <option value="{{ category.pk }}" {% if form.category.value|stringformat:'s' == category.pk|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.category.errors %}
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.category.errors.0 }}</div>
+                {% endif %}
+                {% if form.errors %}
+    <div class="form-error" style="color:#b71c1c; font-size:15px; margin-top:8px;">
+        {% for field, errors in form.errors.items %}
+            <div><strong>{{ field|capfirst }}</strong>: {{ errors.0 }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="id_condition">書況</label>
+                <select name="condition" class="form-select" id="id_condition">
+                    <option value="">請選擇書況</option>
+                    {% for val, label in form.condition.field.choices %}
+                        {% if val %}
+                            <option value="{{ val }}" {% if form.condition.value|stringformat:'s' == val|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                {% if form.condition.errors %}
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.condition.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="form-group">
+            描述：
+                <div class="description-label">
+                <button type="button" class="clear-tags-btn" onclick="clearSelectedTags()">清除標籤</button>
+            </div>
+            <div class="quick-tags">
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '有筆記')">📝 有筆記</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '有摺痕')">📄 有摺痕</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '有破損')">💥 有破損</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '有劃線')  ">✏️ 有劃線</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '書況良好')">✨ 書況良好</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '含原包裝')">📦 含原包裝</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '急售')">🔥 急售</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '可議價')">💬 可議價</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '面交佳')">🤝 面交佳</button>
+                <button type="button" class="quick-tag" onclick="toggleTag(this, '已絕版')">⭐ 已絕版</button>
+            </div>
+            <textarea name="description" id="description" class="form-textarea" rows="3">{{ form.description.value|default_if_none:'' }}</textarea>
+            {% if form.description.errors %}
+                <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.description.errors.0 }}</div>
+            {% endif %}
+            </div>
+        </div>
+
+        <div class="submit-container">
+            <button type="button" class="cancel-btn" onclick="cancelForm()">取消</button>
+            <button type="submit" class="submit-btn">上架</button>
+        </div>
+        <script>
+    document.getElementById('bookForm2').addEventListener('submit', function(e) {
+        let valid = true;
+        // 移除舊的錯誤提示
+        document.querySelectorAll('.form-error.js-error').forEach(el => el.remove());
+        const titleInput = document.getElementById('id_title');
+        const priceInput = document.getElementById('id_price');
+        // 書名驗證
+        if (!titleInput.value.trim()) {
+            valid = false;
+            titleInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+            const err = document.createElement('div');
+            err.className = 'form-error js-error';
+            err.style = 'color:#b71c1c; font-size:13px; margin-top:2px;';
+            err.innerText = '請輸入書名';
+            titleInput.parentNode.appendChild(err);
+            titleInput.focus();
+        }
+        // 價格驗證
+        else if (!priceInput.value) {
+            valid = false;
+            priceInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+            const err = document.createElement('div');
+            err.className = 'form-error js-error';
+            err.style = 'color:#b71c1c; font-size:13px; margin-top:2px;';
+            err.innerText = '請輸入價格';
+            priceInput.parentNode.appendChild(err);
+            priceInput.focus();
+        }
+        if (!valid) e.preventDefault();
+    });
+    // 輸入時移除錯誤提示
+    document.getElementById('id_title').addEventListener('input', function() {
+        const err = this.parentNode.querySelector('.js-error');
+        if (err) err.remove();
+    });
+    document.getElementById('id_price').addEventListener('input', function() {
+        const err = this.parentNode.querySelector('.js-error');
+        if (err) err.remove();
+    });
+    </script>
+</form>
+</div>
+
+{% if form.errors %}
+<div class="form-errors" style="color: #b71c1c; background: #fff3f3; border-radius: 8px; padding: 15px; margin-top: 18px; font-size: 15px;">
+    <strong>表單錯誤：</strong>
+    <ul style="margin:0; padding-left: 18px;">
+        {% for field, errors in form.errors.items %}
+            <li><strong>{{ field }}：</strong> {{ errors|striptags }}</li>
+        {% endfor %}
+    </ul>
+        </div>
+        {% endif %}
+    </div>
+
+
+<script src="{% static 'js/book_tag_helper.js' %}"></script>
+<script>
+// 關閉表單功能
+function closeForm() {
+    if (confirm('確定要關閉表單嗎？未儲存的資料將會遺失。')) {
+        document.querySelector('.container').style.animation = 'fadeOutDown 0.5s ease-out forwards';
+        setTimeout(() => {
+            alert('表單已關閉');
+        }, 500);
+    }
+}
+
+// 取消功能
+function cancelForm() {
+    if (confirm('確定要取消嗎？已填寫的資料將會清空。')) {
+        document.getElementById('bookForm2').reset();
+        // 重置圖片上傳區域
+        const uploadArea = document.querySelector('.upload-area');
+        uploadArea.innerHTML = `
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">點擊上傳書籍封面圖片</div>
+            <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
+        `;
+        // 清除所有選中的標籤
+        clearSelectedTags();
+    }
+}
+
+
+// 圖片上傳預覽
+const bookImageInput = document.getElementById('id_cover_image');
+if (bookImageInput) {
+    bookImageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const uploadArea = document.querySelector('.upload-area');
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            uploadArea.innerHTML = `
+                <img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="upload-text">圖片已選擇：${file.name}</div>
+                <div class="upload-subtext">點擊重新選擇圖片</div>
+            `;
+        };
+        
+        reader.readAsDataURL(file);
+    }
+});}
+
+// 添加輸入動畫效果
+const animatedInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+if (animatedInputs && animatedInputs.length > 0) {
+    animatedInputs.forEach(element => {
+        element.addEventListener('focus', function() {
+            this.style.transform = 'translateY(-1px)';
+        });
+        element.addEventListener('blur', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+}
+
+</script>

@@ -61,7 +61,7 @@ def book(request):
         5: '大一', 6: '大二', 7: '大三', 8: '大四', 9: '研究所'
     }
     grades_qs = Book2.objects.values_list('grade', flat=True).distinct()
-    grades = sorted(set(grades_qs))
+    grades = sorted(set(g for g in grades_qs if g is not None))
     grade_choices = [(g, grade_map.get(g, str(g))) for g in grades if g in grade_map]
     return render(request, 'book.html', {
         'books': books,
@@ -95,18 +95,20 @@ def upload_book2(request):
             book.contact = request.user
             book.seller = request.user
             from .models import Status
-            book.status = Status.objects.get(name='在售')
+            if not book.status:
+                book.status = Status.objects.get(name='在售')
             book.save()
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': '書籍上架成功'})
             return redirect('book')
         else:
+            print('Book2Form errors:', form.errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-            return render(request, 'book2_upload_form.html', {'form': form})
+            return render(request, 'book_upload_form2.html', {'form': form})
     else:
         form = Book2Form()
-        return render(request, 'book2_upload_form.html', {'form': form})
+        return render(request, 'book_upload_form2.html', {'form': form})
 
 def ask_page(request):
     return render(request, "ask.html")
