@@ -167,8 +167,18 @@
                     <h2>我的資料</h2>
                     <div class="profile-content">
                         <div class="profile-image">
-                            <img src="{% static 'image/me1.png' %}" alt="{{ user.last_name }}{{ user.first_name }}">
-                            <div class="user-name">{{ user.last_name }}{{ user.first_name }}</div>
+                            {% if google_picture %}
+                                <img src="{{ google_picture }}" alt="{{ user.last_name }}{{ user.first_name }}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
+                            {% else %}
+                                <img src="{% static 'image/me1.png' %}" alt="{{ user.last_name }}{{ user.first_name }}">
+                            {% endif %}
+                            <div class="user-name">
+                                {% if user_data and user_data.name %}
+                                    {{ user_data.name }}
+                                {% else %}
+                                    {{ user.last_name }}{{ user.first_name }}
+                                {% endif %}
+                            </div>
                             <button class="btn-secondary">編輯資料</button>
                         </div>
                         <div class="profile-details">
