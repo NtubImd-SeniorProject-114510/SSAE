@@ -153,11 +153,22 @@ LOGGING = {
 
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '37270199093-k1doq535f74tl3423amrrqv9dincdeb4.apps.googleusercontent.com'
-
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
-
-
 SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = ['ntub.edu.tw']
+
+# 請求用戶的個人資料和電子郵件權限
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'openid'
+]
+
+# 確保獲取用戶的個人資料圖片
+SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = [
+    ('picture', 'picture'),
+    ('email', 'email'),
+    ('name', 'name')
+]
 
 # Social Auth Pipeline
 SOCIAL_AUTH_PIPELINE = (
