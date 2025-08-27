@@ -929,14 +929,15 @@ body {
   border-radius: 10px;
   font-size: 15px;
   transition: all 0.3s;
+  margin-bottom: 1rem;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(68, 55, 48, 0.1);
+  border-color: #510f8e;
+  box-shadow: 0 0 0 2px rgba(158, 70, 206, 0.1);
 }
 
 .form-group textarea {

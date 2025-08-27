@@ -241,7 +241,7 @@
             <div class="filter-group">
                 <label class="filter-label">系所</label>
                 <select class="filter-select" id="departmentFilter">
-    <option value="">全部系所</option>
+        <option value="">全部系所</option>
     {% for dept in departments %}
         <option value="{{ dept.name }}">{{ dept.name }}</option>
     {% endfor %}
@@ -312,15 +312,15 @@
                     {% else %}
                         <img src="{% static 'image/placeholder.png' %}" alt="no image" class="book-image">
                     {% endif %}
-                    <div class="book-tag">{{ book.category }}</div>
+                    {% if book.category %}<div class="book-tag">{{ book.category }}</div>{% endif %}
                 </div>
                 <div class="book-info">
                     <div class="book-header">{{ book.title }}</div>
                     <div class="book-footer">
                         <div class="book-meta">
-                            <span class="book-department">{{ book.department }}</span>
-                            <span class="book-grade">{{ book.grade }}</span>
-                            <span class="book-condition">{{ book.get_condition_display }}</span>
+                            {% if book.department %}<span class="book-department">{{ book.department }}</span>{% endif %}
+                            {% if book.grade %}<span class="book-grade">{{ book.grade }}</span>{% endif %}
+                            {% if book.condition %}<span class="book-condition">{{ book.get_condition_display }}</span>{% endif %}
                             
                         </div>
                         <div class="book-price">${{ book.price }}</div>
@@ -345,23 +345,19 @@
             const priceFilter = document.getElementById('priceFilter');
             const layoutButtons = document.querySelectorAll('.layout-btn');
             
-            // Set initial grid layout
             changeItemsPerRow(4);
             
-            // Add event listeners for filters
             searchInput.addEventListener('input', filterBooks);
             departmentFilter.addEventListener('change', filterBooks);
             gradeFilter.addEventListener('change', filterBooks);
             conditionFilter.addEventListener('change', filterBooks);
             priceFilter.addEventListener('change', filterBooks);
             
-            // Add event listeners for layout buttons
             layoutButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const cols = parseInt(this.getAttribute('data-cols'));
                     changeItemsPerRow(cols);
                     
-                    // Update active state
                     layoutButtons.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
                 });
@@ -409,7 +405,7 @@
     </script>
     
     <!-- 右下角的圓形logo和上傳按鈕 -->
-    <div class="floating-action-button">
+    <div class="floating-action-button" onclick="openBookUploadModal2()">
         <div class="circular-logo">
             <div class="circular-text">
                 <svg viewBox="0 0 100 100">
@@ -427,161 +423,26 @@
         </div>
     </div>
     
-    <!-- 上傳表單 -->
-    <div class="upload-form" id="uploadForm">
-        <div class="upload-container">
-            <div class="form-header">
-                <h2>上傳二手書</h2>
-                <button type="button" class="close-btn" id="closeFormBtn">×</button>
-            </div>
-            
-            <form method="post" enctype="multipart/form-data" action="{% url 'upload_book' %}">
-              <div class="scrollable-content">
-                {% csrf_token %}
-                <div class="form-group">
-                  <label class="form-label">書籍封面圖片</label>
-                  <div class="image-upload-container" id="book-image-upload-area">
-                    <div class="image-upload-icon">📷</div>
-                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
-                  </div>
-                  <input type="file" id="book-cover-image-input" name="cover_image" accept="image/*" style="display:none;">
-                </div>
-                <div class="form-group">
-                  <label for="title">書名 <span class="required">*</span></label>
-                  <input type="text" id="title" name="title" placeholder="請輸入書名" required>
-                  <div class="error-message" id="bookTitleError" style="display: none; color: red; font-size: 12px;">請輸入書名</div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group form-group-half">
-                    <label for="academic">學制</label>
-                    <select id="academic" name="academic" required>
-                      <option value="" disabled selected>請選擇學制</option>
-                      {% for a in form.academic.field.queryset %}
-                      <option value="{{ a.pk }}">{{ a }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group form-group-half">
-                    <label for="department">科系</label>
-                    <select id="department" name="department" required>
-                      <option value="" disabled selected>請選擇科系</option>
-                      {% for d in form.department.field.queryset %}
-                      <option value="{{ d.pk }}">{{ d }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group form-group-half">
-                    <label for="grade">年級</label>
-                    <select id="grade" name="grade" required>
-                      <option value="" disabled selected>請選擇年級</option>
-                      <option value="1">大一</option>
-                      <option value="2">大二</option>
-                      <option value="3">大三</option>
-                      <option value="4">大四</option>
-                      <option value="5">研究所</option>
-                    </select>
-                  </div>
-                  <div class="form-group form-group-half">
-                    <label for="category">分類編號</label>
-                    <select id="category" name="category" required>
-                      <option value="" disabled selected>請選擇分類</option>
-                      {% for c in form.category.field.queryset %}
-                      <option value="{{ c.pk }}">{{ c }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group form-group-half">
-                    <label for="condition">書況</label>
-                    <select id="condition" name="condition" required>
-                      <option value="" disabled selected>請選擇書況</option>
-                      {% for value, label in form.condition.field.choices %}
-                      {% if value %}<option value="{{ value }}">{{ label }}</option>{% endif %}
-                      {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group form-group-half">
-                    <label for="price">價格 (NT$) <span class="required">*</span></label>
-                    <input type="number" id="price" name="price" min="0" placeholder="請輸入價格" required>
-                    <div class="error-message" id="priceError" style="display: none; color: red; font-size: 12px;">請輸入價格</div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="description">補充說明</label>
-                  <textarea id="description" name="description" rows="4" placeholder="請輸入補充說明"></textarea>
-                </div>
-                <div class="button-group">
-                  <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
-                  <button type="submit" class="submit-btn" id="submitBtn">上架</button>
-                </div>
-              </div>
-            </form>
-            </div>
-        </div>
-    </div>
-    </section>
-
-    
     <div class="deco-line"></div>
 </div>
 
+{% include 'book_upload_form2.html' %}
 {% endblock %}
 
 {% block body_js %}
+<script>
+function openBookUploadModal2() {
+  document.getElementById('uploadFormModal2').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeForm2() {
+  document.getElementById('uploadFormModal2').style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
 <script src="{% static 'js/book2.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadFormEl = document.querySelector('#uploadForm form');
-    const uploadModal = document.getElementById('uploadForm');
-    const submitBtn = document.getElementById('submitBtn');
-    if (uploadFormEl) {
-        uploadFormEl.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(uploadFormEl);
-            fetch(uploadFormEl.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-            })
-            .then(response => response.json().then(data => ({status: response.status, body: data})))
-            .then(({status, body}) => {
-                if (status === 200 && body.success) {
-                    // 關閉彈窗
-                    uploadModal.style.display = 'none';
-                    // 清空表單
-                    uploadFormEl.reset();
-                    // 刷新頁面（你也可以改成動態刷新書籍列表）
-                    location.reload();
-                } else {
-                    // 顯示錯誤訊息
-                    let msg = '';
-                    if (body.errors) {
-                        for (const [field, errors] of Object.entries(body.errors)) {
-                            msg += field + ': ' + errors.join(', ') + '\n';
-                        }
-                    } else if (body.message) {
-                        msg = body.message;
-                    } else {
-                        msg = '上傳失敗，請檢查欄位';
-                    }
-                    alert(msg);
-                }
-            })
-            .catch((err) => {
-                alert('上傳失敗，請稍後再試');
-            });
-        });
-    }
-
     // 圖片預覽與點擊觸發 input
-    // 修正 selector 與 input id，並移除多餘空白
     const fileInput = document.getElementById('book-cover-image-input');
     const previewContainer = document.querySelector('.image-upload-container');
     const previewPlaceholder = document.getElementById('previewPlaceholder');
@@ -594,6 +455,52 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+// document.addEventListener('DOMContentLoaded', function() {
+//     const uploadFormEl = document.querySelector('#uploadForm form');
+//     const uploadModal = document.getElementById('uploadForm');
+//     let isSubmitting = false;
+//     if (uploadFormEl) {
+//         uploadFormEl.addEventListener('submit', function(e) {
+//             e.preventDefault();
+//             if (isSubmitting) return;
+//             isSubmitting = true;
+//             const formData = new FormData(uploadFormEl);
+//             fetch(uploadFormEl.action, {
+//                 method: 'POST',
+//                 body: formData,
+//                 headers: {
+//                     'X-Requested-With': 'XMLHttpRequest',
+//                 },
+//                 credentials: 'same-origin',
+//             })
+//             .then(response => response.json().then(data => ({status: response.status, body: data})))
+//             .then(({status, body}) => {
+//                 isSubmitting = false;
+//                 if (status === 200 && body.success) {
+//                     uploadModal.style.display = 'none';
+//                     uploadFormEl.reset();
+//                     location.reload();
+//                 } else {
+//                     let msg = '';
+//                     if (body.errors) {
+//                         for (const [field, errors] of Object.entries(body.errors)) {
+//                             msg += field + ': ' + errors.join(', ') + '\n';
+//                         }
+//                     } else if (body.message) {
+//                         msg = body.message;
+//                     } else {
+//                         msg = '上傳失敗，請檢查欄位';
+//                     }
+//                     alert(msg);
+//                 }
+//             })
+//             .catch(() => { 
+//                 isSubmitting = false;
+//                 alert('上傳失敗，請稍後再試');
+//             });
+//         });
+//     }
+// });
 </script>
 
 <script src="{% static 'js/book.js' %}"></script>

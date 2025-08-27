@@ -16,7 +16,6 @@
 
 {% block content %}
 <div class="container">    
-    <!-- 返回按鈕 -->
     <div class="back-button" onclick="history.back()">
         <a href="#">返回</a>
     </div>
@@ -51,7 +50,7 @@
                             <div class="info-value">
                                 {{ book.get_condition_display }}
     {% if book.condition == 'new' %}
-        <i class="fa-solid fa-face-grin-wide" style="color:#6F557D;margin-left:6px;" title="全新"></i>
+        <i class="fa-solid fa-face-grin-squint" style="color:#6F557D;margin-left:6px;" title="全新"></i>
     {% elif book.condition == 'good' %}
         <i class="fa-solid fa-face-smile" style="color:#6F557D;margin-left:6px;" title="良好"></i>
     {% elif book.condition == 'used' %}
@@ -142,7 +141,9 @@
     </div>
     
     <!-- 固定在下方的購買按鈕 -->
-    <a href="mailto:{{ seller_user.email }}?subject=我想購買您的書籍《{{ book.title }}》&body=您好，我想購買您的書籍《{{ book.title }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri }}" class="fixed-cta">立即購買</a>
+    <a href="mailto:{{ seller_user.email }}?subject=我想購買您的書籍《{{ book.title }}》&body=您好，我想購買您的書籍《{{ book.title }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri }}" class="fixed-cta">
+    立即購買 <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
+</a>
     
     <!-- 聯絡賣家彈出視窗 -->
     <div id="contactSellerModal" class="modal">

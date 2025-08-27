@@ -49,25 +49,27 @@ class ActivityForm(forms.ModelForm):
 
 
 class Book2Form(forms.ModelForm):
-    other = forms.MultipleChoiceField(
-        choices=Book2.OTHER_CHOICES,
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-        label="其他"
-    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        title = cleaned_data.get('title')
+        price = cleaned_data.get('price')
+        if not title or not str(title).strip():
+            self.add_error('title', '書名為必填欄位')
+        if price in [None, '']:
+            self.add_error('price', '價格為必填欄位')
+        return cleaned_data
 
     class Meta:
         model = Book2
         fields = [
             'title', 'academic', 'department', 'grade', 'category',
-            'condition', 'other', 'price', 'description', 'cover_image'
+            'condition', 'price', 'description', 'cover_image'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
 
-    def clean_other(self):
-        return ','.join(self.cleaned_data['other'])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

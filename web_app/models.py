@@ -26,28 +26,23 @@ class Status(models.Model):
 class Book2(models.Model):
     book_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
-    academic = models.ForeignKey(Academic, on_delete=models.PROTECT)
-    department = models.ForeignKey(Department, on_delete=models.PROTECT)
-    grade = models.IntegerField()
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    academic = models.ForeignKey(Academic, on_delete=models.PROTECT, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True)
+    grade = models.IntegerField(blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
     CONDITION_CHOICES = [
         ('new', '全新'),
         ('good', '良好'),
         ('used', '尚可'),
     ]
-    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
-    OTHER_CHOICES = [
-        ('noted', '有筆記'),
-        ('damaged', '破損'),
-        ('yellowed', '泛黃'),
-    ]
-    other = models.CharField(max_length=100, blank=True, help_text='多選，逗號分隔')
+    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, blank=True, null=True)
+
     price = models.IntegerField()
     contact = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='book2_contact')
     description = models.TextField(blank=True)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='book2_seller')
 
-    status = models.ForeignKey(Status, on_delete=models.PROTECT, default=1)
+    status = models.ForeignKey(Status, on_delete=models.PROTECT, blank=True, null=True)
     cover_image = models.ImageField(upload_to='book2_covers/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
