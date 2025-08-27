@@ -28,7 +28,48 @@ def login(request):
     return render(request, 'login.html')
 
 def personal(request):
-    return render(request, 'personal.html')
+    if not request.user.is_authenticated:
+        from django.shortcuts import redirect
+        return redirect('login')
+        
+    # 從自定義 User 表獲取用戶資料
+    from django.db import connection
+    user_data = None
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT name, student_id, mail, course, grade, academic, role 
+                FROM `User` 
+                WHERE mail = %s
+            """, [request.user.email])
+            
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+            
+            if row:
+                user_data = dict(zip(columns, row))
+    except Exception as e:
+        print(f"Error fetching user data: {e}")
+    
+    # 獲取 Google 用戶照片
+    google_picture = None
+    try:
+        print("Checking social auth for user:", request.user.email)  # 調試日誌
+        social = request.user.social_auth.filter(provider='google-oauth2').first()
+        print("Social auth found:", bool(social))  # 調試日誌
+        if social:
+            print("Social extra data:", social.extra_data)  # 調試日誌
+            google_picture = social.extra_data.get('picture')
+            print("Google picture URL:", google_picture)  # 調試日誌
+    except Exception as e:
+        print(f"Error getting social auth data: {e}")  # 調試日誌
+    
+    return render(request, "personal.html", {
+        'user_data': user_data,
+        'user': request.user,  # 保留原始的 user 對象以確保向後兼容
+        'google_picture': google_picture  # 添加 Google 照片 URL
+    })
 
 def chat(request):
     return render(request, 'chat.html')
@@ -119,9 +160,6 @@ def comment_detail(request):
 
 def add_comment(request):
     return render(request, "add_comment.html")
-
-def personal(request):
-    return render(request, "personal.html")
 
 # web_app/views.py
 import json
