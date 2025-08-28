@@ -239,33 +239,52 @@
     <div class="filter-box">
         <div class="filter-grid">
             <div class="filter-group">
+                <label class="filter-label">學制</label>
+                <select class="filter-select" id="academicFilter">
+                    <option value="">全部學制</option>
+                    {% for aca in academics %}
+                        <option value="{{ aca.name }}">{{ aca.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
                 <label class="filter-label">系所</label>
                 <select class="filter-select" id="departmentFilter">
-        <option value="">全部系所</option>
-    {% for dept in departments %}
-        <option value="{{ dept.name }}">{{ dept.name }}</option>
-    {% endfor %}
-</select>
+                    <option value="">全部系所</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.name }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             
             <div class="filter-group">
                 <label class="filter-label">年級</label>
                 <select class="filter-select" id="gradeFilter">
-    <option value="">全部年級</option>
-    {% for value, label in grade_choices %}
-        <option value="{{ label }}">{{ label }}</option>
-    {% endfor %}
-</select>
+                    <option value="">全部年級</option>
+                    {% for grade in academic_grades %}
+                        <option value="{{ grade.id }}">{{ grade.grade_level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">分類</label>
+                <select class="filter-select" id="categoryFilter">
+                    <option value="">全部分類</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             
             <div class="filter-group">
-                <label class="filter-label">狀態</label>
+                <label class="filter-label">書況</label>
                 <select class="filter-select" id="conditionFilter">
-    <option value="">全部狀態</option>
-    {% for value, label in form.fields.condition.choices %}
-        {% if value %}<option value="{{ label }}">{{ label }}</option>{% endif %}
-    {% endfor %}
-</select>
+                        <option value="">全部書況</option>
+                    {% for value, label in form.fields.condition.choices %}
+                        {% if value %}<option value="{{ label }}">{{ label }}</option>{% endif %}
+                    {% endfor %}
+                </select>
             </div>
             
             <div class="filter-group">
@@ -312,16 +331,27 @@
                     {% else %}
                         <img src="{% static 'image/placeholder.png' %}" alt="no image" class="book-image">
                     {% endif %}
-                    {% if book.category %}<div class="book-tag">{{ book.category }}</div>{% endif %}
+                    
                 </div>
+                {% if book.category %}<div class="book-tag">{{ book.category.name }}</div>{% endif %}
                 <div class="book-info">
                     <div class="book-header">{{ book.title }}</div>
                     <div class="book-footer">
                         <div class="book-meta">
-                            {% if book.department %}<span class="book-department">{{ book.department }}</span>{% endif %}
-                            {% if book.grade %}<span class="book-grade">{{ book.grade }}</span>{% endif %}
-                            {% if book.condition %}<span class="book-condition">{{ book.get_condition_display }}</span>{% endif %}
-                            
+                            {% if book.condition %}
+  {% if book.get_condition_display == '全新' %}
+    <span class="book-meta-tag book-condition-new" title="全新">全新</span>
+  {% elif book.get_condition_display == '良好' %}
+    <span class="book-meta-tag book-condition-good" title="良好">良好</span>
+  {% elif book.get_condition_display == '尚可' %}
+    <span class="book-meta-tag book-condition-fair" title="尚可">尚可</span>
+  {% else %}
+    <span class="book-meta-tag book-condition" title="{{ book.get_condition_display }}">{{ book.get_condition_display }}</span>
+  {% endif %}
+{% endif %}
+{% if book.academic %}<span class="book-meta-tag book-academic" title="{{ book.academic.name }}">{{ book.academic.name }}</span>{% endif %}
+{% if book.department %}<span class="book-meta-tag book-department" title="{{ book.department.name }}">{{ book.department.name }}</span>{% endif %}
+{% if book.grade %}<span class="book-meta-tag book-grade" title="{{ book.grade.grade_level }}">{{ book.grade.grade_level }}</span>{% endif %}
                         </div>
                         <div class="book-price">${{ book.price }}</div>
                     </div>
@@ -330,9 +360,30 @@
             {% empty %}
                 <div style="padding:2rem;text-align:center;">目前沒有書籍</div>
             {% endfor %}
-
-            
         </div>
+
+        <!-- 分頁元件 -->
+        {% if books.has_other_pages %}
+        <nav class="pagination" style="display: flex; justify-content: center; align-items: center; margin: 2rem 0;">
+            {% if books.has_previous %}
+              <a href="?page={{ books.previous_page_number }}" class="page-link">上一頁</a>
+            {% else %}
+              <span class="page-link disabled">上一頁</span>
+            {% endif %}
+            {% for num in books.paginator.page_range %}
+              {% if books.number == num %}
+                <span class="page-link active">{{ num }}</span>
+              {% elif num > books.number|add:'-3' and num < books.number|add:'3' %}
+                <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+            {% if books.has_next %}
+              <a href="?page={{ books.next_page_number }}" class="page-link">下一頁</a>
+            {% else %}
+              <span class="page-link disabled">下一頁</span>
+            {% endif %}
+        </nav>
+        {% endif %}
     </main>
     
     <script>

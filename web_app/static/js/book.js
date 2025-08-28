@@ -268,41 +268,48 @@ window.addEventListener('DOMContentLoaded', () => {
         // 其它提交行為（如表單驗證）
         // ...
         // 點擊提交時也可呼叫 filterBooks 以確保顯示正確
+        function filterBooks() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const department = departmentFilter.value;
+            const grade = gradeFilter.value;
+            const condition = conditionFilter.value;
+            const priceRange = priceFilter.value;
+            const academic = document.getElementById('academicFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+
+            const bookCards = document.querySelectorAll('.book-card');
+
+            bookCards.forEach(card => {
+                const title = card.querySelector('.book-header').textContent.toLowerCase();
+                const dept = card.querySelector('.book-department').textContent;
+                const bookGrade = card.querySelector('.book-grade').textContent;
+                const bookCondition = card.querySelector('.book-condition').textContent;
+                const price = parseInt(card.querySelector('.book-price').textContent.replace('$', ''));
+                const bookAcademic = card.querySelector('.book-academic').textContent;
+                const bookCategory = card.querySelector('.book-category') ? card.querySelector('.book-category').getAttribute('data-id') : '';
+
+                const matchesSearch = title.includes(searchTerm) || searchTerm === '';
+                const matchesDept = !department || dept === department;
+                const matchesGrade = !grade || bookGrade === grade;
+                const matchesCondition = !condition || bookCondition === condition;
+                const matchesAcademic = !academic || bookAcademic === academic;
+                const matchesCategory = !category || bookCategory === category;
+
+                let matchesPrice = true;
+                if (priceRange) {
+                    const [min, max] = priceRange.split('-').map(Number);
+                    matchesPrice = price >= min && price <= max;
+                }
+
+                if (matchesSearch && matchesDept && matchesGrade && matchesCondition && matchesPrice && matchesAcademic && matchesCategory) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
         filterBooks();
     });
-
-        // 獲取所有表單值
-        const bookTitle = document.getElementById('bookTitle').value;
-        const department = document.getElementById('department').value;
-        const grade = document.getElementById('grade').value;
-        const bookType = document.getElementById('bookType').value;
-        const price = document.getElementById('price').value;
-        const condition = document.getElementById('condition').value;
-        const bookDescription = document.getElementById('bookDescription').value;
-        const transactionMethods = document.querySelectorAll('input[name="transactionMethod"]:checked');
-        
-        // 驗證必填欄位
-        const bookTitleError = document.getElementById('bookTitleError');
-        const priceError = document.getElementById('priceError');
-        const transactionMethodError = document.getElementById('transactionMethodError');
-        
-        // 顯示錯誤訊息，只在點擊上傳按鈕後顯示
-        if (bookTitle.trim() === '') {
-            bookTitleError.style.display = 'block';
-        }
-        
-        if (price.trim() === '') {
-            priceError.style.display = 'block';
-        }
-        
-        if (transactionMethods.length === 0) {
-            transactionMethodError.style.display = 'block';
-        }
-        
-        // 如果有錯誤，不繼續提交
-        if (bookTitle.trim() === '' || price.trim() === '' || transactionMethods.length === 0) {
-            return;
-        }
         
         // 其他表單驗證
         if (!validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods)) {
@@ -432,7 +439,7 @@ window.addEventListener('DOMContentLoaded', () => {
         previewPlaceholder.style.display = 'block';
     }
     
-    // 模擬添加新卡片的函數 (未使用)
+    // 模擬添加新卡片的函數
     function addNewBookCard(bookTitle, bookDescription, bookType) {
         const booksGrid = document.querySelector('.books-grid');
         const newCard = document.createElement('div');

@@ -3,18 +3,36 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+class AcademicGrade(models.Model):
+    id = models.AutoField(primary_key=True)
+    grade_level = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'academic_grade'
+        managed = False
+    def __str__(self):
+        return self.grade_level
+
 class Academic(models.Model):
+    id = models.CharField(max_length=1, primary_key=True)
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.name
+    class Meta:
+        db_table = 'academic'
+        managed = False
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
+    class Meta:
+        db_table = 'department'
+        managed = False
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'Category'
     def __str__(self):
         return self.name
 
@@ -26,10 +44,10 @@ class Status(models.Model):
 class Book2(models.Model):
     book_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
-    academic = models.ForeignKey(Academic, on_delete=models.PROTECT, blank=True, null=True)
-    department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True)
-    grade = models.IntegerField(blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
+    academic = models.ForeignKey(Academic, to_field='id', db_column='academic_id', on_delete=models.PROTECT, blank=True, null=True)
+    department = models.ForeignKey(Department, to_field='id', db_column='department_id', on_delete=models.PROTECT, blank=True, null=True)
+    grade = models.ForeignKey('AcademicGrade', on_delete=models.PROTECT, blank=True, null=True)
+    category = models.ForeignKey(Category, to_field='id', db_column='category_id', on_delete=models.PROTECT, blank=True, null=True)
     CONDITION_CHOICES = [
         ('new', '全新'),
         ('good', '良好'),
