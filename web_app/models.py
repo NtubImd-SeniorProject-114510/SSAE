@@ -31,8 +31,8 @@ class Departmentd(models.Model):
         return self.name
 
 class AcadeDepart(models.Model):
-    academica = models.ForeignKey(Academica, on_delete=models.CASCADE)
-    departmentd = models.ForeignKey(Departmentd, on_delete=models.CASCADE)
+    academica = models.ForeignKey(Academica, db_column='academic_id', on_delete=models.CASCADE)
+    departmentd = models.ForeignKey(Departmentd, db_column='department_id', on_delete=models.CASCADE)
     class Meta:
         db_table = 'academic_department'
         managed = False
@@ -40,7 +40,7 @@ class AcadeDepart(models.Model):
         return self.name
 
 class AcadeGrade(models.Model):
-    academica = models.ForeignKey(Academica, on_delete=models.CASCADE)
+    academica = models.ForeignKey(Academica, db_column='academic_id', on_delete=models.CASCADE)
     grade_level = models.CharField(max_length=50)
     class Meta:
         db_table = 'academic_grade'

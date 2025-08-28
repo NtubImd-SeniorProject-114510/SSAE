@@ -197,4 +197,40 @@
 {% block body_js %}
     <script src="{% static 'js/comment.js' %}"></script>
     <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const educationSelect = document.getElementById('education-select');
+            const majorSelect = document.getElementById('major-select');
+            const gradeSelect = document.getElementById('grade-select');
+
+            const departmentsData = {{ departments_data|safe }};
+            const gradesData = {{ grades_data|safe }};
+
+            educationSelect.addEventListener('change', function() {
+                const selectedAcademicId = this.value;
+
+                // Update majors
+                majorSelect.innerHTML = '<option value="">所有科系</option>';
+                if (selectedAcademicId && departmentsData[selectedAcademicId]) {
+                    departmentsData[selectedAcademicId].forEach(department => {
+                        const option = document.createElement('option');
+                        option.value = department.id;
+                        option.textContent = department.name;
+                        majorSelect.appendChild(option);
+                    });
+                }
+
+                // Update grades
+                gradeSelect.innerHTML = '<option value="">所有年級</option>';
+                if (selectedAcademicId && gradesData[selectedAcademicId]) {
+                    gradesData[selectedAcademicId].forEach(grade => {
+                        const option = document.createElement('option');
+                        option.value = grade;
+                        option.textContent = grade;
+                        gradeSelect.appendChild(option);
+                    });
+                }
+            });
+        });
+    </script>
 {% endblock %}

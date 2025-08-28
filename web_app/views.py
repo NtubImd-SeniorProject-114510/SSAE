@@ -1,4 +1,4 @@
-#web_app\views.py
+# web_app\views.py
 
 import os
 import json
@@ -90,7 +90,7 @@ from .models import Book2
 
 from .models import Department, Category
 ######
-from .models import Course, Departmentd, Academica
+from .models import Course, Departmentd, Academica, AcadeGrade, AcadeDepart
 
 def book(request):
     books = Book2.objects.all().order_by('-created_at')
@@ -159,13 +159,32 @@ def ask_page(request):
 def comment(request):
     academics = Academica.objects.all()
     departments = Departmentd.objects.all()
-    grades = Course.objects.values_list('grade_level', flat=True).distinct()
+    grades = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
+
+    # Prepare data for dynamic filtering
+    departments_data = {}
+    grades_data = {}
+
+    for academic in academics:
+        # 只處理 academic.id 是數字的情況
+        if not str(academic.id).isdigit():
+            continue
+        departments_data[academic.id] = list(
+            Departmentd.objects.filter(
+                acadedepart__academica=academic.id
+            ).values('id', 'name')
+        )
+        grades_data[academic.id] = list(
+            AcadeGrade.objects.filter(academica=academic.id).values_list('grade_level', flat=True).distinct()
+        )
+
     return render(request, "comment.html", {
         "academics": academics,
         "departments": departments,
         "grades": grades,
+        "departments_data": departments_data,
+        "grades_data": grades_data,
     })
-
 
 def comment_detail(request):
     return render(request, "comment_detail.html")
