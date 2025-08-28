@@ -89,6 +89,8 @@ def join_detail(request):
 from .models import Book2
 
 from .models import Department, Category
+######
+from .models import Course, Departmentd, Academica
 
 def book(request):
     books = Book2.objects.all().order_by('-created_at')
@@ -153,9 +155,17 @@ def upload_book2(request):
 
 def ask_page(request):
     return render(request, "ask.html")
-
+##########
 def comment(request):
-    return render(request, "comment.html")
+    academics = Academica.objects.all()
+    departments = Departmentd.objects.all()
+    grades = Course.objects.values_list('grade_level', flat=True).distinct()
+    return render(request, "comment.html", {
+        "academics": academics,
+        "departments": departments,
+        "grades": grades,
+    })
+
 
 def comment_detail(request):
     return render(request, "comment_detail.html")

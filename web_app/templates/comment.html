@@ -27,30 +27,34 @@
     
     <!-- 頂部搜尋與過濾區 -->
     <div class="filter-section">
-        <select class="filter-item">
-            <option>所有科系</option>
-            <option>資訊管理系</option>
-            <option>企業管理系</option>
-            <option>會計系</option>
-            <option>財務金融系</option>
-            <option>國際商務系</option>
+        <!-- 學制 -->
+        <select class="filter-item" id="education-select">
+            <option value="">所有學制</option>
+            {% for academic in academics %}
+            <option value="{{ academic.id }}">{{ academic.name }}</option>
+            {% endfor %}
         </select>
-        
-        <select class="filter-item">
-            <option>所有學年</option>
-            <option>112學年</option>
-            <option>111學年</option>
-            <option>110學年</option>
+
+        <!-- 單一科系選單，會動態載入不同選項 -->
+        <select class="filter-item" id="major-select">
+            <option value="">所有科系</option>
+            {% for department in departments %}
+            <option value="{{ department.id }}">{{ department.name }}</option>
+            {% endfor %}
         </select>
-        
-        <select class="filter-item">
-            <option>所有學期</option>
-            <option>第1學期</option>
-            <option>第2學期</option>
+
+        <!-- 年級 -->
+        <select class="filter-item" id="grade-select">
+            <option value="">所有年級</option>
+            {% for grade in grades %}
+            <option value="{{ grade }}">{{ grade }}</option>
+            {% endfor %}
         </select>
-        
+
+        <!-- 搜尋框 -->
         <input type="text" class="search-box" placeholder="搜尋課程或教師...">
     </div>
+    
     
     <!-- 課程列表和分頁 -->
     <section class="activities-container">

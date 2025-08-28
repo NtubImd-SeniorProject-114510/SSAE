@@ -13,6 +13,53 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
+#---------
+class Academica(models.Model):
+    name = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'academic'
+        managed = False
+    def __str__(self):
+        return self.name
+
+class Departmentd(models.Model):
+    name = models.CharField(max_length=100)
+    class Meta:
+        db_table = 'department'
+        managed = False
+    def __str__(self):
+        return self.name
+
+class AcadeDepart(models.Model):
+    academica = models.ForeignKey(Academica, on_delete=models.CASCADE)
+    departmentd = models.ForeignKey(Departmentd, on_delete=models.CASCADE)
+    class Meta:
+        db_table = 'academic_department'
+        managed = False
+    def __str__(self):
+        return self.name
+
+class AcadeGrade(models.Model):
+    academica = models.ForeignKey(Academica, on_delete=models.CASCADE)
+    grade_level = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'academic_grade'
+        managed = False
+    def __str__(self):
+        return self.name
+
+class Course(models.Model):
+    academica = models.ForeignKey(Academica, on_delete=models.CASCADE)
+    departmentd = models.ForeignKey(Departmentd, on_delete=models.CASCADE)
+    grade_level = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'web_app_course'
+        managed = False
+
+    def __str__(self):
+        return f"Course related to {self.academic.name} {self.departmentd.name}"
+#-------------
+
 class Category(models.Model):
     name = models.CharField(max_length=50)
     def __str__(self):

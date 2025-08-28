@@ -13,6 +13,62 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+// //
+// document.addEventListener("DOMContentLoaded", function () {
+//     const eduSelect = document.getElementById("education-select");
+//     const majorSelect = document.getElementById("major-select");
+//     const gradeSelect = document.getElementById("grade-select");
+
+//     const majorOptions = {
+//         "five": [
+//             "所有科系", "財政稅務系", "國際貿易系","企業管理系",
+//              "資訊管理系", "財務金融系", "應用外語系", "會計資訊系", "體育"
+//         ],
+//         "two": [
+//             "所有科系", "通識", "會計資訊系", "財務金融系",
+//             "財政稅務系", "國際商務系", "企業管理系", "資訊管理系", "應用外語系",
+//             "商業設計管理系", "創意科技與產品設計系"
+//         ],
+//         "four": [
+//             "所有科系", "通識", "會計資訊系", "財務金融系",
+//             "財政稅務系", "國際商務系", "企業管理系", "資訊管理系", "應用外語系",
+//             "商業設計管理系", "創意科技與產品設計系", "數位多媒體設計系", "體育室", "軍訓室"
+//         ],
+//         "": ["所有科系"] // 預設空白
+//     };
+
+//     const gradeOptions = {
+//         "five": ["所有年級", "一年級", "二年級", "三年級", "四年級", "五年級"],
+//         "two": ["所有年級", "一年級", "二年級"],
+//         "four": ["所有年級", "一年級", "二年級", "三年級", "四年級"],
+//         "": ["所有年級", "一年級", "二年級", "三年級", "四年級", "五年級"]
+//     };
+
+//     eduSelect.addEventListener("change", function () {
+//         const selectedEdu = eduSelect.value;
+
+//         updateSelectOptions(majorSelect, majorOptions[selectedEdu] || majorOptions[""]);
+//         updateSelectOptions(gradeSelect, gradeOptions[selectedEdu] || gradeOptions[""]);
+//     });
+
+//     function updateSelectOptions(selectElement, options) {
+//         selectElement.innerHTML = "";
+//         options.forEach(optionText => {
+//             const option = document.createElement("option");
+//             option.textContent = optionText;
+//             selectElement.appendChild(option);
+//         });
+//     }
+
+//     // 初始化顯示預設選項
+//     updateSelectOptions(majorSelect, majorOptions[""]);
+//     updateSelectOptions(gradeSelect, gradeOptions[""]);
+// });
+
+
+
+
 // comment.js
 
 document.addEventListener('DOMContentLoaded', function() {
