@@ -1,12 +1,10 @@
-//web_app\static\js\join_detail.js
-
 document.addEventListener('DOMContentLoaded', function() {
     initializeActivityMap();
     initializeComments();
     initializeCTAButtons();
 });
 
-// 初始化活動地圖
+// ========================== 活動地圖 ==========================
 function initializeActivityMap() {
     const mapElement = document.getElementById('activity-map');
     if (!mapElement) return;
@@ -34,230 +32,162 @@ function initializeActivityMap() {
     }
 }
 
-// 初始化評論功能
+// ========================== 評論功能 ==========================
 function initializeComments() {
     const discussionSection = document.querySelector('.discussion-section');
-    if (discussionSection) {
-        let commentCountElement = document.getElementById('commentCount');
-        let commentCount = commentCountElement ? parseInt(commentCountElement.textContent.match(/\d+/)[0]) : document.querySelectorAll('.comment-card').length;
-        
-        const existingComments = document.querySelectorAll('.comment-card');
-        let nextCommentId = existingComments.length > 0 ? existingComments.length + 1 : 1;
+    if (!discussionSection) return;
 
-        discussionSection.addEventListener('click', function(e) {
-            const target = e.target;
-
-            const likeBtn = target.closest('.like-btn');
-            if (likeBtn) {
-                e.preventDefault();
-                handleLike(likeBtn);
-                return;
-            }
-
-            const replyBtn = target.closest('.reply-btn, .reply-to-reply');
-            if (replyBtn) {
-                e.preventDefault();
-                handleReply(replyBtn);
-                return;
-            }
-
-            const cancelBtn = target.closest('.cancel-reply-btn');
-            if (cancelBtn) {
-                e.preventDefault();
-                handleCancelReply(cancelBtn);
-                return;
-            }
-
-            const submitBtn = target.closest('.submit-reply-btn');
-            if (submitBtn) {
-                e.preventDefault();
-                handleSubmitReply(submitBtn);
-                return;
-            }
-        });
-
-        const submitCommentBtn = document.getElementById('submitComment');
-        if (submitCommentBtn) {
-            submitCommentBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                handleSubmitNewComment();
-            });
+    // 點擊事件代理
+    discussionSection.addEventListener('click', function(e) {
+        const likeBtn = e.target.closest('.like-btn');
+        if (likeBtn) {
+            e.preventDefault();
+            const commentId = likeBtn.dataset.commentId;
+            toggleLike(commentId, likeBtn);
+            return;
         }
 
-        function handleLike(button) {
-            const likeCountSpan = button.querySelector('.like-count');
-            let count = parseInt(likeCountSpan.textContent);
-            if (button.classList.toggle('liked')) {
-                likeCountSpan.textContent = count + 1;
-            } else {
-                likeCountSpan.textContent = count - 1;
-            }
+        // 只處理主評論的回覆，移除 .reply-to-reply
+        const replyBtn = e.target.closest('.reply-btn');
+        if (replyBtn) {
+            e.preventDefault();
+            handleReply(replyBtn);
+            return;
         }
 
-        function handleReply(button) {
-            const parentCard = button.closest('.comment-card, .reply');
-            if (!parentCard) return;
-
-            const existingForm = discussionSection.querySelector('.reply-form-container');
-            if (existingForm) {
-                existingForm.remove();
-            }
-
-            const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
-            const replyForm = createReplyForm(userName);
-            
-            const actionsDiv = parentCard.querySelector('.comment-actions, .reply-actions');
-            if (actionsDiv) {
-                actionsDiv.insertAdjacentElement('afterend', replyForm);
-            } else {
-                parentCard.appendChild(replyForm);
-            }
-            replyForm.querySelector('.reply-textarea').focus();
+        const cancelBtn = e.target.closest('.cancel-reply-btn');
+        if (cancelBtn) {
+            cancelBtn.closest('.reply-form-container')?.remove();
+            return;
         }
 
-        function handleCancelReply(button) {
-            const form = button.closest('.reply-form-container');
-            if (form) {
-                form.remove();
-            }
-        }
-
-        function handleSubmitReply(button) {
-            const formContainer = button.closest('.reply-form-container');
+        const submitReplyBtn = e.target.closest('.submit-reply-btn');
+        if (submitReplyBtn) {
+            e.preventDefault();
+            const formContainer = submitReplyBtn.closest('.reply-form-container');
             const textarea = formContainer.querySelector('.reply-textarea');
-            const replyText = textarea.value.trim();
-
-            if (replyText) {
-                const parentCard = formContainer.closest('.comment-card, .reply');
-                let repliesContainer = parentCard.querySelector('.replies-container');
-
-                if (!repliesContainer) {
-                    repliesContainer = document.createElement('div');
-                    repliesContainer.className = 'replies-container';
-                    const insertAfter = parentCard.querySelector('.comment-actions, .reply-actions');
-                    insertAfter.insertAdjacentElement('afterend', repliesContainer);
-                }
-                
-                const newReply = createReplyElement(replyText);
-                repliesContainer.appendChild(newReply);
-                formContainer.remove();
+            const content = textarea.value.trim();
+            const parentId = formContainer.dataset.parentId;
+            const activityId = formContainer.dataset.activityId;
+            if (content) {
+                submitComment(activityId, content, textarea, parentId);
             }
         }
-        
-        function handleSubmitNewComment() {
+    });
+
+    // 發表新評論
+    const submitBtn = document.getElementById('submitComment');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
             const textarea = document.getElementById('newCommentText');
-            const commentText = textarea.value.trim();
-
-            if (commentText) {
-                const commentsSection = document.getElementById('commentsSection');
-                const newComment = createCommentElement(commentText, nextCommentId);
-                commentsSection.appendChild(newComment);
-                
-                textarea.value = '';
-                commentCount++;
-                nextCommentId++;
-                if (commentCountElement) {
-                    commentCountElement.textContent = `(${commentCount}則評論)`;
-                }
-                newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const content = textarea.value.trim();
+            const activityId = this.dataset.activityId;
+            if (content) {
+                submitComment(activityId, content, textarea);
             }
-        }
-
-        function createReplyForm(replyTo = '') {
-            const formContainer = document.createElement('div');
-            formContainer.className = 'reply-form-container';
-            formContainer.innerHTML = `
-                <div class="reply-form">
-                    <div class="form-group">
-                        <textarea class="form-control reply-textarea" rows="3" placeholder="回覆 @${replyTo}..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="cancel-reply-btn">取消</button>
-                        <button type="button" class="submit-reply-btn">發送</button>
-                    </div>
-                </div>`;
-            return formContainer;
-        }
-
-        function createReplyElement(text) {
-            const replyElement = document.createElement('div');
-            replyElement.className = 'reply';
-            const dateStr = new Date().toLocaleDateString('zh-TW');
-            const staticAvatarPath = '/static/image/activity_test.jpg';
-
-            replyElement.innerHTML = `
-                <div class="user-avatar small"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
-                <div class="reply-content">
-                    <div class="reply-header"><span class="user-name">你</span><span class="reply-date">${dateStr}</span></div>
-                    <p>${text}</p>
-                    <div class="reply-actions"><button class="reply-to-reply">回覆</button></div>
-                </div>`;
-            return replyElement;
-        }
-
-        function createCommentElement(text, commentId) {
-            const commentElement = document.createElement('article');
-            commentElement.className = 'comment-card';
-            const dateStr = new Date().toLocaleDateString('zh-TW');
-            const staticAvatarPath = '/static/image/activity_test.jpg';
-
-            commentElement.innerHTML = `
-                <div class="comment-header">
-                    <div class="user-info-container">
-                        <div class="user-avatar"><img src="${staticAvatarPath}" alt="使用者頭像"></div>
-                        <div class="user-info">
-                            <span class="user-name">你</span>
-                            <div class="comment-meta">
-                                <div class="stars" data-rating="5"></div>
-                                <span class="comment-date">${dateStr}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="like-btn" data-comment-id="${commentId}"><span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span><span class="like-count">0</span></button>
-                </div>
-                <div class="comment-content"><p>${text}</p></div>
-                <div class="comment-actions"><button class="reply-btn" data-comment-id="${commentId}">回覆</button></div>
-                <div class="replies-container"></div>`;
-            
-            const starsContainer = commentElement.querySelector('.stars');
-            updateStarIcons(starsContainer, 5);
-            return commentElement;
-        }
-        
-        document.querySelectorAll('.stars').forEach(starsContainer => {
-            const rating = parseFloat(starsContainer.getAttribute('data-rating'));
-            updateStarIcons(starsContainer, rating);
         });
-
-        function updateStarIcons(container, rating) {
-            if (!container) return;
-            container.innerHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                const star = document.createElement('i');
-                if (rating >= i) {
-                    star.className = 'fa-solid fa-star';
-                } else if (rating > i - 1 && rating < i) {
-                    star.className = 'fa-solid fa-star-half-stroke';
-                } else {
-                    star.className = 'fa-regular fa-star';
-                }
-                container.appendChild(star);
-            }
-        }
     }
 }
 
-// 初始化CTA按鈕
+// 建立回覆表單
+function handleReply(button) {
+    const parentCard = button.closest('.comment-card, .reply');
+    if (!parentCard) return;
+
+    // 移除舊表單
+    parentCard.querySelector('.reply-form-container')?.remove();
+
+    const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
+    const activityId = document.getElementById('submitComment')?.dataset.activityId;
+
+    const formContainer = document.createElement('div');
+    formContainer.className = 'reply-form-container';
+    formContainer.dataset.parentId = parentCard.dataset.commentId;
+    formContainer.dataset.activityId = activityId;
+
+    formContainer.innerHTML = `
+        <div class="reply-form">
+            <div class="form-group">
+                <textarea class="form-control reply-textarea" rows="3" placeholder="回覆 @${userName}..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="cancel-reply-btn">取消</button>
+                <button type="button" class="submit-reply-btn">發送</button>
+            </div>
+        </div>`;
+    parentCard.appendChild(formContainer);
+    formContainer.querySelector('.reply-textarea').focus();
+}
+
+// ========================== 後端交互 ==========================
+// 點讚
+function toggleLike(commentId, button) {
+    fetch(`/api/comments/${commentId}/toggle-like/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const likeCount = button.querySelector('.like-count');
+            likeCount.textContent = data.likes_count;
+            button.classList.toggle('liked', data.is_liked);
+        }
+    })
+    .catch(err => console.error('Like error:', err));
+}
+
+// 發表評論 / 回覆
+function submitComment(activityId, content, textarea, parentId = null) {
+    fetch(`/api/activities/${activityId}/comments/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            content: content,
+            parent_id: parentId
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            textarea.value = '';
+            // 重新載入或用 AJAX 動態插入
+            location.reload();
+        }
+    })
+    .catch(err => console.error('Comment error:', err));
+}
+
+// 取 CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ========================== CTA 按鈕 ==========================
 function initializeCTAButtons() {
-    const ctaButtons = document.querySelectorAll('.fixed-cta');
-    ctaButtons.forEach(button => {
+    document.querySelectorAll('.fixed-cta').forEach(button => {
         button.addEventListener('click', function() {
             const targetId = this.getAttribute('data-target');
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
+                targetElement.scrollIntoView({ behavior: 'smooth' });
             }
         });
     });

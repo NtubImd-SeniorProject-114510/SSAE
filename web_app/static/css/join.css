@@ -268,12 +268,16 @@ body {
   background-color: var(--pale-blue);
 }
 
-.activity-tag.sports {
+.activity-tag.sport {
   background-color: var(--pale-green);
 }
 
 .activity-tag.movie {
   background-color: var(--pale-purple);
+}
+
+.activity-tag.travel {
+  background-color: #fff2e0;
 }
 
 .activity-content {
@@ -651,4 +655,58 @@ body {
   .filter-item, .search-box {
     width: 100%;
   }
+}
+.participant-avatar img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.activity-status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-deadline {
+    background-color: #888; /* 灰色 */
+}
+
+.status-full {
+    background-color: #e74c3c; /* 紅色 */
+}
+
+.participant-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #fff;
+    margin-left: -10px;
+    background-color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.participant-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.participant-avatar.more {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: #9e8c9d;
+    color: #fff;
 }
