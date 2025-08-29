@@ -73,6 +73,18 @@ class GroupActivity(models.Model):
     contact_info = models.CharField(max_length=200, blank=True, null=True)
 
     @property
+    def location_short(self):
+        """逗號前的部分"""
+        if not self.location:
+            return ""
+        return self.location.split(",")[0]
+
+    @property
+    def location_full(self):
+        """完整地址，優先用 address，沒有就用 location"""
+        return self.address or self.location or ""
+
+    @property
     def joined_count(self):
         """返回已加入活動的參與者數量"""
         return self.participants.filter(status='joined').count()
@@ -173,3 +185,22 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+class ActivityComment(models.Model):
+    activity = models.ForeignKey(GroupActivity, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    @property
+    def likes_count(self):
+        return self.likes.count()
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.content[:50]}'

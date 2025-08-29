@@ -12,13 +12,17 @@
 
 {% block content %}
 <body>
-    {% if a.is_full or a.is_deadline_passed %}
-        <button class="fixed-cta" disabled>已額滿/截止</button>
+    {% if remaining_slots <= 0 %}
+        <button class="fixed-cta" disabled>已額滿</button>
+    {% elif a.is_deadline_passed %}
+        <button class="fixed-cta" disabled>報名截止</button>
     {% elif joined %}
         <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form">
             {% csrf_token %}
             <button class="fixed-cta" type="submit">取消參加</button>
         </form>
+    {% elif is_creator %}
+        <button class="fixed-cta" disabled>您是發起人</button>
     {% else %}
         <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form">
             {% csrf_token %}
@@ -39,8 +43,9 @@
                         </div>
                         <div class="info-content">
                             <h3 class="info-title">活動地點</h3>
-                            <p class="info-value">{{ a.location }}</p>
-                            {% if a.address %}
+                            <p class="info-value">{{ a.location_short }}</p>
+                            
+                            {% if a.address and a.address != a.location %}
                                 <p class="info-address">{{ a.address }}</p>
                             {% endif %}
                         </div>
@@ -64,7 +69,7 @@
                         </div>
                         <div class="info-content">
                             <h3 class="info-title">參加人數</h3>
-                            <p class="info-value">{{ a.participants_count }}/{{ a.max_participants }}人</p>
+                            <p class="info-value">{{ total_participants }}/{{ a.max_participants }}人</p>
                         </div>
                     </div>
                     
@@ -96,17 +101,17 @@
             <div class="map-container">
                 <div style="width: 100%; height: 100%;">
                     <div id="activity-map" 
-                         style="width: 100%; height: 300px;"
-                         data-lat="{{ a.latitude }}"
-                         data-lng="{{ a.longitude }}"
-                         data-location="{{ a.location }}"
-                         data-address="{{ a.address|default:a.location }}">
+                        style="width: 100%; height: 400px;"
+                        data-lat="{{ a.latitude }}"
+                        data-lng="{{ a.longitude }}"
+                        data-location="{{ a.location_full }}"
+                        data-address="{{ a.location_full }}">
                     </div>
                 </div>
             </div>
             <div class="address">
                 <span class="address-icon">📍</span>
-                <span>{{ a.address|default:a.location }}</span>
+                <span>{{ a.location_full }}</span>
             </div>
         </div>
         {% endif %}
@@ -114,10 +119,31 @@
         <div class="section">
             <h2 class="section-title">參加者</h2>
             <div class="participants">
+                <!-- 發起人 -->
                 <div class="participant">
-                    <div class="avatar"></div>
-                    <div class="name">發起人</div>
+                    <div class="avatar">
+                        {% if a.user.social_auth.all.0.extra_data.picture %}
+                            <img src="{{ a.user.social_auth.all.0.extra_data.picture }}" alt="發起人頭像">
+                        {% else %}
+                            <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                        {% endif %}
+                    </div>
+                    <div class="name">{{ a.user.first_name|default:a.user.username }} (發起人)</div>
                 </div>
+                
+                <!-- 其他參加者 -->
+                {% for participant in participants %}
+                <div class="participant">
+                    <div class="avatar">
+                        {% if participant.user.social_auth.all.0.extra_data.picture %}
+                            <img src="{{ participant.user.social_auth.all.0.extra_data.picture }}" alt="參加者頭像">
+                        {% else %}
+                            <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                        {% endif %}
+                    </div>
+                    <div class="name">{{ participant.user.first_name|default:participant.user.username }}</div>
+                </div>
+                {% endfor %}
             </div>
             
             <div class="status">
@@ -126,42 +152,129 @@
                 {% elif a.is_deadline_passed %}
                     <div class="status-text">報名已截止</div>
                 {% else %}
-                    <div class="status-text">還有{{ a.max_participants|add:"-1"|add:a.participants_count|default:"N" }}個名額，趕快加入我們吧！</div>
+                    {% with remaining=a.max_participants|add:"-1"|add:total_participants|default:"0" %}
+                        <div class="status">
+                            {% if remaining_slots <= 0 %}
+                                <div class="status-text">活動已額滿</div>
+                            {% elif a.is_deadline_passed %}
+                                <div class="status-text">報名已截止</div>
+                            {% else %}
+                                <div class="status-text">還有{{ remaining_slots }}個名額，趕快加入我們吧！</div>
+                            {% endif %}
+                            
+                            <!-- 新增報名截止時間顯示 -->
+                            <div class="deadline-info">
+                                <i class="fa-solid fa-clock"></i>
+                                報名截止時間：{{ a.deadline|date:"Y年m月d日" }}
+                            </div>
+                        </div>
+                    {% endwith %}
                 {% endif %}
             </div>
         </div>
         
         <div class="section discussion-section">
-            <h2 class="section-title">活動討論區 <span class="comment-count" id="commentCount">(0則評論)</span></h2>
+            <h2 class="section-title">活動討論區 <span class="comment-count" id="commentCount">({{ comments.count }}則評論)</span></h2>
             
             <div class="comments-section" id="commentsSection">
-                <!-- 動態評論內容 -->
+                {% for comment in comments %}
+                <article class="comment-card" data-comment-id="{{ comment.id }}">
+                    <div class="comment-header">
+                        <div class="user-info-container">
+                            <div class="user-avatar">
+                                {% if comment.user.social_auth.all.0.extra_data.picture %}
+                                    <img src="{{ comment.user.social_auth.all.0.extra_data.picture }}" alt="使用者頭像">
+                                {% else %}
+                                    <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                                {% endif %}
+                            </div>
+                            <div class="user-info">
+                                <span class="user-name">{{ comment.user.first_name|default:comment.user.username }}</span>
+                                <div class="comment-meta">
+                                    <span class="comment-date">{{ comment.created_at|date:"m/d H:i" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="like-btn" data-comment-id="{{ comment.id }}" {% if user in comment.likes.all %}class="liked"{% endif %}>
+                            <span class="like-icon"><i class="fa-solid fa-thumbs-up"></i></span>
+                            <span class="like-count">{{ comment.likes_count }}</span>
+                        </button>
+                    </div>
+                    <div class="comment-content">
+                        <p>{{ comment.content|linebreaks }}</p>
+                    </div>
+                    <div class="comment-actions">
+                        <button class="reply-btn" data-comment-id="{{ comment.id }}">回覆</button>
+                    </div>
+                    
+                    <!-- 回覆 -->
+                    <div class="replies-container">
+                        {% for reply in comment.replies.all %}
+                        <div class="reply" data-reply-id="{{ reply.id }}">
+                            <div class="user-avatar small">
+                                {% if reply.user.social_auth.all.0.extra_data.picture %}
+                                    <img src="{{ reply.user.social_auth.all.0.extra_data.picture }}" alt="使用者頭像">
+                                {% else %}
+                                    <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                                {% endif %}
+                            </div>
+                            <div class="reply-content">
+                                <div class="reply-header">
+                                    <span class="user-name">{{ reply.user.first_name|default:reply.user.username }}</span>
+                                    <span class="reply-date">{{ reply.created_at|date:"m/d H:i" }}</span>
+                                </div>
+                                <p>{{ reply.content|linebreaks }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </article>
+                {% empty %}
+                <p class="no-comments">尚無評論，快來搶沙發吧！</p>
+                {% endfor %}
             </div>
             
-            <!-- 新增留言表單 -->
+            {% if user.is_authenticated %}
             <div class="add-comment-form">
                 <h3>發表留言</h3>
                 <div class="form-group">
                     <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
                 </div>
-                <button id="submitComment" class="submit-comment-btn">發表留言</button>
+                <button id="submitComment" class="submit-comment-btn" data-activity-id="{{ a.id }}">發表留言</button>
             </div>
+            {% else %}
+            <div class="login-prompt">
+                <p>請<a href="{% url 'login' %}">登入</a>後發表評論</p>
+            </div>
+            {% endif %}
         </div>
         
         <div class="section">
             <h2 class="section-title">相關活動推薦</h2>
             <div class="related-grid">
-                <a href="#" class="related-card">
-                    <div class="related-image">
-                        <div class="related-date">推薦活動</div>
-                    </div>
-                    <div class="related-content">
-                        <h3 class="related-card-title">其他精彩活動</h3>
-                        <div class="related-info">
-                            <span>敬請期待</span>
+                {% for activity in related_activities %}
+                    <a href="{% url 'join_detail' activity.id %}" class="related-card">
+                        <div class="related-image">
+                            {% if activity.cover_image %}
+                                <img src="{{ activity.cover_image.url }}" alt="{{ activity.title }}">
+                            {% else %}
+                                <img src="{% static 'image/default_cover.jpg' %}" alt="預設圖片">
+                            {% endif %}
+                            <div class="related-date">{{ activity.date|date:"m/d" }}</div>
                         </div>
-                    </div>
-                </a>
+                        <div class="related-content">
+                            <h3 class="related-card-title">{{ activity.title }}</h3>
+                            <div class="related-info">
+                                <span class="related-location"><i class="fa-solid fa-map-pin"></i> {{ activity.location_location_short }}</span>
+                                <span class="related-participants"><i class="fa-solid fa-person"></i> {{ activity.participants_count|add:1 }}/{{ activity.max_participants }}人</span>
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                <div class="no-related">
+                    <p>暫無相關活動推薦</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
