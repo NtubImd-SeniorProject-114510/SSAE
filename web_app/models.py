@@ -49,15 +49,19 @@ class AcadeGrade(models.Model):
         return self.name
 
 class Course(models.Model):
-    academica = models.ForeignKey(Academica, on_delete=models.CASCADE)
-    departmentd = models.ForeignKey(Departmentd, on_delete=models.CASCADE)
+    academica = models.ForeignKey(Academica, db_column='academic_id', on_delete=models.CASCADE)
+    departmentd = models.ForeignKey(Departmentd, db_column='department_id', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True)
     grade_level = models.CharField(max_length=50)
+    course_id = models.CharField(max_length=50)
+    course_name = models.CharField(max_length=50)
+    course_teacher = models.CharField(max_length=50)
     class Meta:
         db_table = 'web_app_course'
         managed = False
 
     def __str__(self):
-        return f"Course related to {self.academic.name} {self.departmentd.name}"
+        return f"Course related to {self.academica.name} {self.departmentd.name}"
 #-------------
 
 class Category(models.Model):

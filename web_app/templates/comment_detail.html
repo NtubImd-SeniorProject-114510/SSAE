@@ -18,8 +18,8 @@
 <body>
     <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
     <div class="course-item" data-course-id="1" style="display: none;">
-        <div class="course-name">計算機概論</div>
-        <div class="course-teacher">王大明教授</div>
+        <div class="course-name">{{course.course_name}}</div>
+        <div class="course-teacher">{{course.course_teacher}}</div>
         <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
         <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
     </div>
@@ -42,7 +42,7 @@
         <!-- 課程資訊區塊 -->
         <div class="course-info">
             <div class="course-header">
-                <h1 class="course-title">計算機概論</h1>
+                <h1 class="course-title">{{course.course_name}}</h1>
                 <div class="course-rating">
                     <div class="stars" data-rating="4.5">
                         <i class="fa-regular fa-star"></i>
@@ -55,9 +55,9 @@
                 </div>
             </div>
             <div class="course-meta">
-                <span class="course-semester">112 學年度 第 2 學期</span>
-                <span class="course-department">資訊管理系</span>
-                <span class="course-teacher">授課教師：王大明 教授</span>
+                <span class="course-academic">{{academic.name}}</span>
+                <span class="course-department">{{department.name}}</span>
+                <span class="course-teacher">授課教師：{{course.course_teacher}}</span>
             </div>
         </div>
         

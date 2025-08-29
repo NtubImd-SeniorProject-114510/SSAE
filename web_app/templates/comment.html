@@ -15,6 +15,12 @@
 {% endblock %}
 
 {% block content %}
+<script id="departments-data" type="application/json">
+    {{ departments_data|safe }}
+</script>
+<script id="courses-data" type="application/json">
+    {{ courses_json|safe }}
+</script>
 <div class="page-container">
     <!-- 背景的ACTIVITY GROUP ACTIVITY GROUP -->
     <div class="bg-text">COURSE COMMENT COURSE COMMENT</div>
@@ -31,7 +37,7 @@
         <select class="filter-item" id="education-select">
             <option value="">所有學制</option>
             {% for academic in academics %}
-            <option value="{{ academic.id }}">{{ academic.name }}</option>
+            <option value="{{ academic.id }}" data-index="{{ loop.index0 }}">{{ academic.name }}</option>
             {% endfor %}
         </select>
 
@@ -57,115 +63,14 @@
     
     
     <!-- 課程列表和分頁 -->
-    <section class="activities-container">
-        <div class="activity-grid">
-            <!-- 課程項目 -->
-            <div class="course-item" data-department="國際商務系" data-year="111" data-semester="1" data-course-id="1">
-                    <div class="course-top">
-                        <div>
-                            <h3 class="course-name">國際貿易實務</h3>
-                            <div class="course-meta">
-                                <span class="course-teacher"><i class="fas fa-user-tie"></i> 劉世芳 教授</span>
-                                <span class="course-department"><i class="fas fa-building"></i> 國際商務系</span>
-                            </div>
-                        </div>
-                        
-                        <div class="course-rating">
-                            <div class="stars" data-rating="4.6">
-                                <span class="rating-text">4.6</span>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <div class="rating-count">(28則評論)</div>
-                        </div>
-                        
-                    </div>
-                    <div class="course-bottom">
-                        <p class="last-date">最新評論: 2023/01/12</p>
-                        <div class="course-summary">
-                            <div class="user-info">
-                                <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
-                                <span class="username">匿名</span>
-                            </div>
-                            <p>老師有豐富的實務經驗，課程包含許多真實案例分析。期中報告要完成一份國際貿易流程文件，期末有小組模擬談判，非常實用...</p>
-                        </div>
-                        <div class="buttons-container">
-                            <a href="#" class="create-btn">新增評論</a>
-                            <a href="/comment_detail/" class="join-btn">查看所有評論</a>
-                        </div>
-                    </div>
-            </div>
-
-            <div class="course-item" data-department="資訊管理系" data-year="112" data-semester="2" data-course-id="2">
-                <div class="course-top">
-                    <div>
-                        <h3 class="course-name">計算機概論</h3>
-                        <div class="course-meta">
-                            <span class="course-teacher"><i class="fas fa-user-tie"></i> 王大明 教授</span>
-                            <span class="course-department"><i class="fas fa-building"></i> 資訊管理系</span>
-                        </div>
-                    </div>
-                    
-                    <div class="course-rating">
-                        <div class="stars" data-rating="4.5">
-                            <span class="rating-text">4.5</span>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <div class="rating-count">(24則評論)</div>
-                    </div>
-                    
-                </div>
-                <div class="course-bottom">
-                    <p class="last-date">最新評論: 2024/04/10</p>
-                    <div class="course-summary">
-                        <div class="user-info">
-                            <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
-                            <span class="username">匿名</span>
-                        </div>
-                        <p>教材準備充分，會用很多生活化的例子來解釋計算機科學的概念，讓非本科系的學生也能輕鬆理解。作業量適中，但考試難度較高...</p>
-                    </div>
-                    <div class="buttons-container">
-                        <a href="#" class="create-btn">新增評論</a>
-                        <a href="/comment_detail/" class="join-btn">查看所有評論</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="course-item" data-department="企業管理系" data-year="112" data-semester="2" data-course-id="3">
-                <div class="course-top">
-                    <div>
-                        <h3 class="course-name">行銷管理</h3>
-                    <div class="course-meta">
-                        <span class="course-teacher"><i class="fas fa-user-tie"></i> 林美玲 教授</span>
-                        <span class="course-department"><i class="fas fa-building"></i> 企業管理系</span>
-                    </div>
-                </div>
-                
-                <div class="course-rating">
-                    <div class="stars" data-rating="4.8">
-                        <span class="rating-text">4.8</span>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="rating-count">(32則評論)</div>
-                </div>
-                
-                </div>
-                <div class="course-bottom">
-                    <p class="last-date">最新評論: 2024/04/05</p>
-                    <div class="course-summary">
-                        <div class="user-info">
-                            <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
-                            <span class="username">匿名</span>
-                        </div>
-                        <p>課程結合理論與實務，講師擁有豐富業界經驗。小組作業能夠實際應用所學知識，期末專案需設計完整行銷計畫，收穫很多...</p>
-                    </div>
-                    <div class="buttons-container">
-                        <a href="#" class="create-btn">新增評論</a>
-                        <a href="/comment_detail/" class="join-btn">查看所有評論</a>
-                    </div>
-                </div>
+    <section class="activities-container" id="activitiesContainer">
+        <div class="activity-grid" id="coursesContainer">
+            <!-- Courses will be rendered here by JavaScript -->
         </div>
-        
+
     </section>
+
+
         
     <!-- 右下角的圓形logo和上傳按鈕 -->
     <div class="floating-action-button">
@@ -198,7 +103,7 @@
     <script src="{% static 'js/comment.js' %}"></script>
     <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const educationSelect = document.getElementById('education-select');
             const majorSelect = document.getElementById('major-select');
             const gradeSelect = document.getElementById('grade-select');
@@ -206,13 +111,37 @@
             const departmentsData = {{ departments_data|safe }};
             const gradesData = {{ grades_data|safe }};
 
-            educationSelect.addEventListener('change', function() {
+            // === ✅ 排序 education-select 中的 option ===
+            const priorityIndexes = [2, 3, 5]; // 第3、4、6筆（0-based index）
+            const allOptions = Array.from(educationSelect.options).slice(1); // 忽略第一個「所有學制」
+            const priorityOptions = [];
+            const otherOptions = [];
+
+            allOptions.forEach((opt, idx) => {
+                if (priorityIndexes.includes(idx)) {
+                    priorityOptions.push(opt);
+                } else {
+                    otherOptions.push(opt);
+                }
+            });
+
+            // 清空除了第一個選項
+            while (educationSelect.options.length > 1) {
+                educationSelect.remove(1);
+            }
+
+            // 重新加回排序後的選項
+            [...priorityOptions, ...otherOptions].forEach(opt => educationSelect.add(opt));
+
+            // === ✅ 原本的 change 事件綁定 ===
+            educationSelect.addEventListener('change', function () {
                 const selectedAcademicId = this.value;
 
                 // Update majors
                 majorSelect.innerHTML = '<option value="">所有科系</option>';
-                if (selectedAcademicId && departmentsData[selectedAcademicId]) {
-                    departmentsData[selectedAcademicId].forEach(department => {
+                if ((selectedAcademicId && departmentsData[selectedAcademicId]) || (!selectedAcademicId && departmentsData[0])) {
+                    const deptList = selectedAcademicId ? departmentsData[selectedAcademicId] : departmentsData[0];
+                    deptList.forEach(department => {
                         const option = document.createElement('option');
                         option.value = department.id;
                         option.textContent = department.name;
@@ -222,8 +151,9 @@
 
                 // Update grades
                 gradeSelect.innerHTML = '<option value="">所有年級</option>';
-                if (selectedAcademicId && gradesData[selectedAcademicId]) {
-                    gradesData[selectedAcademicId].forEach(grade => {
+                if ((selectedAcademicId && gradesData[selectedAcademicId]) || (!selectedAcademicId && gradesData[0])) {
+                    const gradeList = selectedAcademicId ? gradesData[selectedAcademicId] : gradesData[0];
+                    gradeList.forEach(grade => {
                         const option = document.createElement('option');
                         option.value = grade;
                         option.textContent = grade;
@@ -233,4 +163,5 @@
             });
         });
     </script>
+
 {% endblock %}

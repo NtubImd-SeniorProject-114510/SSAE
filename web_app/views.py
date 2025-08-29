@@ -165,6 +165,10 @@ def comment(request):
     departments_data = {}
     grades_data = {}
 
+    # 所有學制時，顯示所有科系、所有年級
+    departments_data[0] = list(Departmentd.objects.all().values('id', 'name'))
+    grades_data[0] = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
+
     for academic in academics:
         # 只處理 academic.id 是數字的情況
         if not str(academic.id).isdigit():
@@ -178,13 +182,86 @@ def comment(request):
             AcadeGrade.objects.filter(academica=academic.id).values_list('grade_level', flat=True).distinct()
         )
 
+    # Get all courses with related data
+    courses = Course.objects.select_related('departmentd', 'academica').all()
+    
+    # Prepare courses data for the template
+    courses_data = [{
+        'id': course.id,
+        'course_id': course.course_id,
+        'course_name': course.course_name,
+        'course_teacher': course.course_teacher,
+        'academic_id': course.academica_id,
+        'academic_name': course.academica.name if course.academica else '',
+        'department_id': course.departmentd_id,
+        'department_name': course.departmentd.name if course.departmentd else '',
+        'grade_level': course.grade_level,
+    } for course in courses]
+    
+    # Convert data to JSON for the template
+    import json
+    departments_json = json.dumps(departments_data)
+    courses_json = json.dumps(courses_data)
+    
     return render(request, "comment.html", {
         "academics": academics,
         "departments": departments,
         "grades": grades,
-        "departments_data": departments_data,
+        "departments_data": departments_json,
         "grades_data": grades_data,
+        "courses": courses,
+        "courses_json": courses_json,
     })
+
+
+def get_courses(request):
+    academic_id = request.GET.get("academic_id")
+    department_id = request.GET.get("department_id")
+    grade = request.GET.get("grade")
+    search_query = request.GET.get("search", "").strip()
+
+    # Start with all courses and use select_related to optimize database queries
+    courses = Course.objects.select_related('departmentd', 'academica').all()
+
+    # Apply filters if they are provided
+    if academic_id and academic_id.isdigit():
+        courses = courses.filter(academica_id=academic_id)
+    
+    if department_id and department_id.isdigit():
+        courses = courses.filter(departmentd_id=department_id)
+    
+    if grade:
+        courses = courses.filter(grade_level=grade)
+    
+    # Apply search query if provided
+    if search_query:
+        courses = courses.filter(
+            Q(course_name__icontains=search_query) |
+            Q(course_teacher__icontains=search_query) |
+            Q(course_id__icontains=search_query)
+        )
+
+    # Prepare the response data
+    data = []
+    for course in courses:
+        data.append({
+            "id": course.id,
+            "course_id": course.course_id,
+            "course_name": course.course_name,
+            "course_teacher": course.course_teacher,
+            "academic_id": course.academica_id,
+            "academic_name": course.academica.name if course.academica else "",
+            "department_id": course.departmentd_id,
+            "department_name": course.departmentd.name if course.departmentd else "",
+            "grade_level": course.grade_level,
+        })
+
+    return JsonResponse(data, safe=False)
+
+
+#####
+
+
 
 def comment_detail(request):
     return render(request, "comment_detail.html")
