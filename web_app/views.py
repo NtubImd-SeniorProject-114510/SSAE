@@ -90,12 +90,25 @@ from .models import Book2
 
 from .models import Department, Category
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 def book(request):
-    books = Book2.objects.all().order_by('-created_at')
+    books_list = Book2.objects.all().order_by('-created_at')
+    paginator = Paginator(books_list, 10)  # 每頁 10 本書
+    page = request.GET.get('page')
+    try:
+        books = paginator.page(page)
+    except PageNotAnInteger:
+        books = paginator.page(1)
+    except EmptyPage:
+        books = paginator.page(paginator.num_pages)
+
     from .forms import Book2Form
     form = Book2Form()
-    departments = Department.objects.all()
     categories = Category.objects.all()
+    from .models import Academic, AcademicGrade
+    academics = Academic.objects.all()
+    academic_grades = AcademicGrade.objects.all()
     # Extract unique grades from Book2, sort, and map to display names
     grade_map = {
         1: '專一', 2: '專二', 3: '專三', 4: '專四',
@@ -104,12 +117,15 @@ def book(request):
     grades_qs = Book2.objects.values_list('grade', flat=True).distinct()
     grades = sorted(set(g for g in grades_qs if g is not None))
     grade_choices = [(g, grade_map.get(g, str(g))) for g in grades if g in grade_map]
+    departments = Department.objects.all()
     return render(request, 'book.html', {
         'books': books,
         'form': form,
-        'departments': departments,
         'categories': categories,
         'grade_choices': grade_choices,
+        'academics': academics,
+        'academic_grades': academic_grades,
+        'departments': departments,
     })
 
 def book_2(request):
@@ -129,6 +145,8 @@ from django.shortcuts import redirect
 from django.http import JsonResponse
 
 def upload_book2(request):
+    from .models import AcademicGrade
+    academic_grades = AcademicGrade.objects.all()
     if request.method == 'POST':
         form = Book2Form(request.POST, request.FILES)
         if form.is_valid():
@@ -146,10 +164,10 @@ def upload_book2(request):
             print('Book2Form errors:', form.errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-            return render(request, 'book_upload_form2.html', {'form': form})
+            return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
     else:
         form = Book2Form()
-        return render(request, 'book_upload_form2.html', {'form': form})
+        return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
 
 def ask_page(request):
     return render(request, "ask.html")
