@@ -3,15 +3,31 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+class AcademicGrade(models.Model):
+    id = models.AutoField(primary_key=True)
+    grade_level = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'academic_grade'
+        managed = False
+    def __str__(self):
+        return self.grade_level
+
 class Academic(models.Model):
+    id = models.CharField(max_length=1, primary_key=True)
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.name
+    class Meta:
+        db_table = 'academic'
+        managed = False
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
+    class Meta:
+        db_table = 'department'
+        managed = False
 
 #---------
 class Academica(models.Model):
@@ -66,6 +82,8 @@ class Course(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'Category'
     def __str__(self):
         return self.name
 
@@ -77,10 +95,10 @@ class Status(models.Model):
 class Book2(models.Model):
     book_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
-    academic = models.ForeignKey(Academic, on_delete=models.PROTECT, blank=True, null=True)
-    department = models.ForeignKey(Department, on_delete=models.PROTECT, blank=True, null=True)
-    grade = models.IntegerField(blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
+    academic = models.ForeignKey(Academic, to_field='id', db_column='academic_id', on_delete=models.PROTECT, blank=True, null=True)
+    department = models.ForeignKey(Department, to_field='id', db_column='department_id', on_delete=models.PROTECT, blank=True, null=True)
+    grade = models.ForeignKey('AcademicGrade', on_delete=models.PROTECT, blank=True, null=True)
+    category = models.ForeignKey(Category, to_field='id', db_column='category_id', on_delete=models.PROTECT, blank=True, null=True)
     CONDITION_CHOICES = [
         ('new', '全新'),
         ('good', '良好'),
@@ -122,6 +140,18 @@ class GroupActivity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # 新增時自動填入
     # 新增聯絡方式欄位
     contact_info = models.CharField(max_length=200, blank=True, null=True)
+
+    @property
+    def location_short(self):
+        """逗號前的部分"""
+        if not self.location:
+            return ""
+        return self.location.split(",")[0]
+
+    @property
+    def location_full(self):
+        """完整地址，優先用 address，沒有就用 location"""
+        return self.address or self.location or ""
 
     @property
     def joined_count(self):
@@ -224,3 +254,22 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+class ActivityComment(models.Model):
+    activity = models.ForeignKey(GroupActivity, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    @property
+    def likes_count(self):
+        return self.likes.count()
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.content[:50]}'

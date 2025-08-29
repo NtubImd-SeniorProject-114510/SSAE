@@ -63,7 +63,7 @@ class Book2Form(forms.ModelForm):
     class Meta:
         model = Book2
         fields = [
-            'title', 'academic', 'department', 'grade', 'category',
+            'title', 'academic', 'grade', 'category', 'department',
             'condition', 'price', 'description', 'cover_image'
         ]
         widgets = {

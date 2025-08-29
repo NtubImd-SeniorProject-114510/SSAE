@@ -61,14 +61,14 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="id_grade">年級</label>
-                <select name="grade" class="form-select" id="id_grade   ">
-                    <option value="">請選擇年級</option>    
-                    {% for i in "12345" %}
-                        <option value="{{ forloop.counter }}" {% if form.grade.value|stringformat:'s' == forloop.counter|stringformat:'s' %}selected{% endif %}>{{ forloop.counter }}</option>
+                <select name="grade" class="form-select" id="id_grade">
+                    <option value="">請選擇年級</option>
+                    {% for grade in academic_grades %}
+                        <option value="{{ grade.id }}" {% if form.grade.value|stringformat:'s' == grade.id|stringformat:'s' %}selected{% endif %}>{{ grade.grade_level }}</option>
                     {% endfor %}
                 </select>
                 {% if form.grade.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.grade.errors.0 }}</di    v>
+                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.grade.errors.0 }}</div>
                 {% endif %}
             </div>
         </div>
@@ -138,11 +138,9 @@
         <script>
     document.getElementById('bookForm2').addEventListener('submit', function(e) {
         let valid = true;
-        // 移除舊的錯誤提示
         document.querySelectorAll('.form-error.js-error').forEach(el => el.remove());
         const titleInput = document.getElementById('id_title');
         const priceInput = document.getElementById('id_price');
-        // 書名驗證
         if (!titleInput.value.trim()) {
             valid = false;
             titleInput.scrollIntoView({behavior: 'smooth', block: 'center'});
@@ -164,6 +162,7 @@
             priceInput.parentNode.appendChild(err);
             priceInput.focus();
         }
+
         if (!valid) e.preventDefault();
     });
     // 輸入時移除錯誤提示

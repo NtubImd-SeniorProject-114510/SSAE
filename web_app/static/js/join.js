@@ -13,21 +13,62 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
-
-
-
 // join.js - 清理版本，專注於頁面特定功能
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('join.js 已載入');
     
     // 初始化頁面功能
+    sortActivitiesByStatus(); // 首先排序活動
     initializeScrollAnimations();
     initializeParallax();
     initializeRandomClouds();
     initializeActivityCards();
 });
+
+// 新增：按照活動狀態排序功能
+function sortActivitiesByStatus() {
+    const activityGrid = document.querySelector('.activity-grid');
+    if (!activityGrid) return;
+    
+    const activityCards = Array.from(activityGrid.querySelectorAll('.activity-card'));
+    
+    // 按狀態排序：正常活動在前，已截止/額滿的在後
+    const sortedCards = activityCards.sort((a, b) => {
+        const aIsDisabled = isActivityDisabled(a);
+        const bIsDisabled = isActivityDisabled(b);
+        
+        // 如果 a 是禁用的而 b 不是，a 排在後面
+        if (aIsDisabled && !bIsDisabled) return 1;
+        // 如果 b 是禁用的而 a 不是，a 排在前面
+        if (!aIsDisabled && bIsDisabled) return -1;
+        // 如果狀態相同，保持原順序
+        return 0;
+    });
+    
+    // 清空容器並重新添加排序後的卡片
+    activityGrid.innerHTML = '';
+    sortedCards.forEach(card => {
+        activityGrid.appendChild(card);
+    });
+    
+    console.log('活動已按狀態重新排序');
+}
+
+// 檢查活動是否已截止或額滿
+function isActivityDisabled(activityCard) {
+    const joinBtn = activityCard.querySelector('.join-btn');
+    if (!joinBtn) return false;
+    
+    // 檢查按鈕是否有 disabled class 或包含特定文字
+    const isDisabled = joinBtn.classList.contains('disabled');
+    const buttonText = joinBtn.textContent.trim();
+    const isDeadlineOrFull = buttonText.includes('已額滿') || 
+                            buttonText.includes('截止') || 
+                            buttonText.includes('無法參加');
+    
+    return isDisabled || isDeadlineOrFull;
+}
 
 // 滾動動畫
 function initializeScrollAnimations() {
@@ -190,6 +231,12 @@ document.addEventListener('click', async (e)=>{
         const max = countEl.textContent.split('/')[1];
         countEl.textContent = `${data.participants}/${max}`;
       }
+      
+      // 活動狀態可能改變後，重新排序
+      setTimeout(() => {
+        sortActivitiesByStatus();
+      }, 100);
+      
     } else {
       alert('操作失敗');
     }
@@ -198,6 +245,7 @@ document.addEventListener('click', async (e)=>{
     form.submit(); // 退路：改用傳統提交
   }
 });
+
 function getCookie(name) {
   const value = document.cookie.split('; ').find(row=>row.startsWith(name+'='));
   return value ? decodeURIComponent(value.split('=')[1]) : '';

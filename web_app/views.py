@@ -86,18 +86,31 @@ def join_create(request):
 def join_detail(request):
     return render(request, 'join_detail.html')
 
-from .models import Book2
+from .models import ActivityComment, Book2
 
 from .models import Department, Category
 ######
 from .models import Course, Departmentd, Academica, AcadeGrade, AcadeDepart
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 def book(request):
-    books = Book2.objects.all().order_by('-created_at')
+    books_list = Book2.objects.all().order_by('-created_at')
+    paginator = Paginator(books_list, 10)  # 每頁 10 本書
+    page = request.GET.get('page')
+    try:
+        books = paginator.page(page)
+    except PageNotAnInteger:
+        books = paginator.page(1)
+    except EmptyPage:
+        books = paginator.page(paginator.num_pages)
+
     from .forms import Book2Form
     form = Book2Form()
-    departments = Department.objects.all()
     categories = Category.objects.all()
+    from .models import Academic, AcademicGrade
+    academics = Academic.objects.all()
+    academic_grades = AcademicGrade.objects.all()
     # Extract unique grades from Book2, sort, and map to display names
     grade_map = {
         1: '專一', 2: '專二', 3: '專三', 4: '專四',
@@ -106,12 +119,15 @@ def book(request):
     grades_qs = Book2.objects.values_list('grade', flat=True).distinct()
     grades = sorted(set(g for g in grades_qs if g is not None))
     grade_choices = [(g, grade_map.get(g, str(g))) for g in grades if g in grade_map]
+    departments = Department.objects.all()
     return render(request, 'book.html', {
         'books': books,
         'form': form,
-        'departments': departments,
         'categories': categories,
         'grade_choices': grade_choices,
+        'academics': academics,
+        'academic_grades': academic_grades,
+        'departments': departments,
     })
 
 def book_2(request):
@@ -131,6 +147,8 @@ from django.shortcuts import redirect
 from django.http import JsonResponse
 
 def upload_book2(request):
+    from .models import AcademicGrade
+    academic_grades = AcademicGrade.objects.all()
     if request.method == 'POST':
         form = Book2Form(request.POST, request.FILES)
         if form.is_valid():
@@ -148,10 +166,10 @@ def upload_book2(request):
             print('Book2Form errors:', form.errors)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-            return render(request, 'book_upload_form2.html', {'form': form})
+            return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
     else:
         form = Book2Form()
-        return render(request, 'book_upload_form2.html', {'form': form})
+        return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
 
 def ask_page(request):
     return render(request, "ask.html")
@@ -651,7 +669,7 @@ def pdf_options(request, filename):
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, Q, F, Case, When, IntegerField, Prefetch
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -664,44 +682,107 @@ from .forms import ActivityForm
 # 列出活動
 # -----------------------
 def activity_list(request):
-    # 使用 annotate 計算參與者數量，避免 N+1 查詢問題
-    activities = (GroupActivity.objects
-        .annotate(participants_count=Count('participants', filter=Q(participants__status='joined')))
-        .order_by('date', 'time', 'deadline')
+    activities = (
+        GroupActivity.objects
+        .prefetch_related(
+            Prefetch(
+                'participants',
+                queryset=ActivityParticipant.objects.filter(status='joined').select_related('user'),
+                to_attr='joined_participants'
+            )
+        )
+        .annotate(
+            participants_count=Count(
+                'participants',
+                filter=Q(participants__status='joined'),
+                distinct=True
+            )
+        )
+        .annotate(
+            total_count=F('participants_count') + 1  # 加上主辦人
+        )
+        .order_by(
+            Case(When(deadline__lt=timezone.now().date(), then=1), default=0, output_field=IntegerField()),
+            'date', 'time', 'deadline'
+        )
     )
 
-    joined_ids = []
+    # 🚀 過濾掉主辦人，避免重複出現在 joined_participants
+    for a in activities:
+        a.cleaned_participants = [
+            p for p in a.joined_participants if p.user_id != a.user_id
+        ]
+
+    joined_ids, created_ids = [], []
     if request.user.is_authenticated:
-        joined_ids = list(ActivityParticipant.objects.filter(
-            user_id=request.user.id, status='joined'
-        ).values_list('activity_id', flat=True))
+        joined_ids = list(
+            ActivityParticipant.objects.filter(
+                user=request.user, status='joined'
+            ).values_list('activity_id', flat=True)
+        )
+        created_ids = list(
+            GroupActivity.objects.filter(
+                user=request.user
+            ).values_list('id', flat=True)
+        )
 
     return render(request, 'join.html', {
         'activities': activities,
         'joined_ids': joined_ids,
+        'created_ids': created_ids,
     })
+
+
 
 # -----------------------
 # 活動詳情
 # -----------------------
 def activity_detail(request, pk):
     a = get_object_or_404(GroupActivity, pk=pk)
-    
-    # 計算參加人數
-    participants_count = ActivityParticipant.objects.filter(
-        activity_id=a.id, status='joined'
-    ).count()
-    a.participants_count = participants_count
-    
-    joined = False
+
+    # 除了主辦人以外的參加者
+    participants = ActivityParticipant.objects.filter(
+        activity=a, status='joined'
+    ).select_related('user')
+
+    participants_count = participants.count()
+    total_participants = participants_count + 1  # 加上主辦人
+    remaining_slots = max(0, a.max_participants - total_participants)
+
+    joined, is_creator = False, False
     if request.user.is_authenticated:
         joined = ActivityParticipant.objects.filter(
-            activity_id=a.id, user_id=request.user.id, status='joined'
+            activity=a, user=request.user, status='joined'
         ).exists()
-    
+        is_creator = (request.user == a.user)
+
+    comments = ActivityComment.objects.filter(
+        activity=a, parent=None
+    ).select_related('user').prefetch_related('replies__user', 'likes').order_by('-created_at')
+
+    related_activities = list(GroupActivity.objects.filter(
+        type=a.type, deadline__gte=timezone.now().date()
+    ).exclude(id=a.id).annotate(
+        participants_count=Count('participants', filter=Q(participants__status='joined'))
+    ).order_by('-created_at')[:3])
+
+    if len(related_activities) < 3:
+        other_activities = list(GroupActivity.objects.filter(
+            deadline__gte=timezone.now().date()
+        ).exclude(type=a.type).exclude(id=a.id).annotate(
+            participants_count=Count('participants', filter=Q(participants__status='joined'))
+        ).order_by('-created_at')[:3-len(related_activities)])
+        related_activities.extend(other_activities)
+
     return render(request, 'join_detail.html', {
-        'a': a, 
-        'joined': joined
+        'a': a,
+        'participants': participants,   # ❗這裡不含發起人
+        'total_participants': total_participants,
+        'remaining_slots': remaining_slots,
+        'joined': joined,
+        'is_creator': is_creator,
+        'comments': comments,
+        'related_activities': related_activities,
     })
 
 # -----------------------
@@ -912,3 +993,69 @@ def activity_participants(request, pk):
         'activity': activity,
         'participants': participants,
     })
+
+@csrf_exempt
+@login_required
+def add_comment(request, activity_id):
+    if request.method == 'POST':
+        activity = get_object_or_404(GroupActivity, id=activity_id)
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+        parent_id = data.get('parent_id')
+        
+        if not content:
+            return JsonResponse({'error': '評論內容不能為空'}, status=400)
+        
+        parent_comment = None
+        if parent_id:
+            parent_comment = get_object_or_404(ActivityComment, id=parent_id)
+        
+        comment = ActivityComment.objects.create(
+            activity=activity,
+            user=request.user,
+            content=content,
+            parent=parent_comment
+        )
+        
+        # 獲取用戶頭像
+        user_avatar = '/static/image/avatar24-01.jpg'  # 預設頭像
+        if hasattr(request.user, 'social_auth'):
+            social = request.user.social_auth.filter(provider='google-oauth2').first()
+            if social and 'picture' in social.extra_data:
+                user_avatar = social.extra_data['picture']
+        
+        return JsonResponse({
+            'success': True,
+            'comment': {
+                'id': comment.id,
+                'content': comment.content,
+                'user_name': request.user.first_name or request.user.username,
+                'user_avatar': user_avatar,
+                'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
+                'likes_count': 0,
+                'is_liked': False
+            }
+        })
+    
+    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+@csrf_exempt
+@login_required
+def toggle_like(request, comment_id):
+    if request.method == 'POST':
+        comment = get_object_or_404(ActivityComment, id=comment_id)
+        
+        if request.user in comment.likes.all():
+            comment.likes.remove(request.user)
+            is_liked = False
+        else:
+            comment.likes.add(request.user)
+            is_liked = True
+        
+        return JsonResponse({
+            'success': True,
+            'is_liked': is_liked,
+            'likes_count': comment.likes_count
+        })
+    
+    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
