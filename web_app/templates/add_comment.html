@@ -9,9 +9,39 @@
 {% block css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{% static 'css/add_comment.css' %}">
+<style>
+    /* Add loading spinner for dropdowns */
+    .loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+    .loading:after {
+        content: "";
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        margin-top: -8px;
+        border: 2px solid #ccc;
+        border-top-color: #333;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<script id="departments-data" type="application/json">
+    {{ departments_data|safe }}
+</script>
+<script id="grades-data" type="application/json">
+    {{ grades_data|safe }}
+</script>
 <div style="margin-top: 80px;"></div>
 <div class="comment-container">
 
@@ -23,59 +53,60 @@
         {% csrf_token %}
         <div class="form-row">
             <div class="form-col-left">
-                <div class="form-group">
-                    <label for="school_year">學年度</label>
-                    <select id="school_year" name="school_year" class="form-control">
-                        <option value="">選擇學年度</option>
-                        <option value="112">112</option>
-                        <option value="111">111</option>
-                        <option value="110">110</option>
-                        <option value="109">109</option>
-                        <option value="108">108</option>
-                        <option value="107">107</option>
-                        <option value="106">106</option>
-                        <option value="105">105</option>
-                        <option value="104">104</option>
-                        <option value="103">103</option>
-                        <option value="102">102</option>
-                        <option value="101">101</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
                 
                 <div class="form-group">
                     <label for="category">學制</label>
-                    <select id="category" name="category" class="form-control">
-                        <option value="">學制</option>
-                        <option value="進四技">進四技</option>
-                        <option value="五專">五專</option>
-                        <option value="二技">二技</option>
+                    <select id="category" name="academic" class="form-control" required>
+                        <option value="">選擇學制</option>
+                        {% for academic in academics %}
+                        <option value="{{ academic.id }}" 
+                                {% if selected_academic and selected_academic.id == academic.id %}selected{% endif %}>
+                            {{ academic.name }}
+                        </option>
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="class_info">選擇班級</label>
-                    <select id="class_info" name="class_info" class="form-control">
-                        <option value="">選擇班級</option>
-                        <option value="進四技資管一甲班">資管一年甲班</option>
+                    <label for="class_info">科系</label>
+                    <select id="class_info" name="department" class="form-control" required>
+                        <option value="">選擇科系</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}" 
+                                {% if selected_department and selected_department.id == department.id %}selected{% endif %}>
+                            {{ department.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grade">年級</label>
+                    <select id="grade" name="grade" class="form-control" required>
+                        <option value="">選擇年級</option>
+                        {% for grade in grades %}
+                        <option value="{{ grade }}" 
+                                {% if selected_course and selected_grade == grade %}selected{% endif %}>
+                            {{ grade }}
+                        </option>
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="course">課程</label>
-                    <select id="course" name="course" class="form-control">
-                        <option value="">選擇課程</option>
-                        <option value="計算機概論(上)">計算機概論(上)</option>
-                        <option value="程式設計(一)">程式設計(一)</option>
-                        <option value="資料庫管理">資料庫管理</option>
-                        <option value="網頁程式設計">網頁程式設計</option>
-                        <option value="系統分析與設計">系統分析與設計</option>
-                        <option value="專題製作">專題製作</option>
-                        <option value="網路概論">網路概論</option>
-                        <option value="作業系統">作業系統</option>
-                        <option value="資料結構">資料結構</option>
-                        <option value="演算法">演算法</option>
+                    <select id="course" name="course" class="form-control" required>
+                        <option value="">{% if selected_course %}{{ selected_course.course_name }}{% else %}請先選擇學制、科系和年級{% endif %}</option>
+                        {% if selected_course %}
+                            <option value="{{ selected_course.id }}" selected>
+                                {{ selected_course.course_name }}
+                            </option>
+                        {% endif %}
                     </select>
+                    {% if selected_teacher %}
+                    <input type="hidden" id="teacher_name" name="teacher_name" value="{{ selected_teacher }}">
+                    {% elif selected_course and selected_course.course_teacher %}
+                    <input type="hidden" id="teacher_name" name="teacher_name" value="{{ selected_course.course_teacher }}">
+                    {% endif %}
                 </div>
             </div>
             <div class="form-col">
@@ -104,7 +135,7 @@
                             <i class="fa-regular fa-star" data-rating="4"></i>
                             <i class="fa-regular fa-star" data-rating="5"></i>
                             <input type="hidden" name="rating" id="rating-input" value="1">
-                            <span class="rating-text">1.0 / 5.0</span>
+                            <span class="rating-text">{{ avg_rating|floatformat:1 }}/5.0</span>
                         </div>
 
                     </div>
@@ -116,8 +147,8 @@
         <div class="top-row-container">
             <div class="course-info-container">
                 <div class="comment-header">
-                    <h3>112年五專資管系一年甲班計算機概論</h3>
-                    <h3>任課教師:</h3>
+                    <h3>{{course.course_name}}</h3>
+                    <h3>授課教師:{{course.course_teacher}}</h3>
                 </div>
             </div>
         </div>
@@ -155,6 +186,35 @@
 {% block footer %}
 {% endblock %}
 
-{% block body_js %}
+{% block scripts %}
 <script src="{% static 'js/add_comment.js' %}"></script>
+<script>
+// Initialize form validation
+function validateForm() {
+    const form = document.getElementById('commentForm');
+    if (!form.checkValidity()) {
+        // If the form is invalid, show validation messages
+        form.reportValidity();
+        return false;
+    }
+    return true;
+}
+
+// Update form submission to include validation
+const form = document.getElementById('commentForm');
+if (form) {
+    form.onsubmit = function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            return false;
+        }
+        return confirm('確定要提交評論嗎？');
+    };
+}
+
+// Initialize tooltips
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
 {% endblock %}

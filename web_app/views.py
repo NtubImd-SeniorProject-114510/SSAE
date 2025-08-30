@@ -3,9 +3,15 @@
 import os
 import json
 import zipfile
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods, require_GET
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from django.db import models
 from .views_rag import ask_question, create_vector_store, load_pdf_documents, split_documents
 from django.contrib.auth.decorators import login_required
 
@@ -86,11 +92,11 @@ def join_create(request):
 def join_detail(request):
     return render(request, 'join_detail.html')
 
-from .models import ActivityComment, Book2
+from .models import ActivityComment, Book2, Course, CourseReview
 
 from .models import Department, Category
 ######
-from .models import Course, Departmentd, Academica, AcadeGrade, AcadeDepart
+from .models import Course, Departmentd, Academica, AcadeGrade, AcadeDepart,CourseReview, CourseStar
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -173,6 +179,7 @@ def upload_book2(request):
 
 def ask_page(request):
     return render(request, "ask.html")
+    
 ##########
 def comment(request):
     academics = Academica.objects.all()
@@ -237,34 +244,43 @@ def get_courses(request):
     department_id = request.GET.get("department_id")
     grade = request.GET.get("grade")
     search_query = request.GET.get("search", "").strip()
+    course_id = request.GET.get("course_id")  # 新增 course_id 參數
 
     # Start with all courses and use select_related to optimize database queries
     courses = Course.objects.select_related('departmentd', 'academica').all()
 
-    # Apply filters if they are provided
-    if academic_id and academic_id.isdigit():
-        courses = courses.filter(academica_id=academic_id)
-    
-    if department_id and department_id.isdigit():
-        courses = courses.filter(departmentd_id=department_id)
-    
-    if grade:
-        courses = courses.filter(grade_level=grade)
-    
-    # Apply search query if provided
-    if search_query:
-        courses = courses.filter(
-            Q(course_name__icontains=search_query) |
-            Q(course_teacher__icontains=search_query) |
-            Q(course_id__icontains=search_query)
-        )
+    # 如果有提供 course_id，優先使用它來查詢
+    if course_id:
+        if str(course_id).isdigit():
+            courses = courses.filter(id=course_id)
+        else:
+            # 如果不是數字，嘗試通過 course_id 欄位查找
+            courses = courses.filter(course_id=course_id)
+    else:
+        # 否則使用其他過濾條件
+        if academic_id and academic_id.isdigit():
+            courses = courses.filter(academica_id=academic_id)
+        
+        if department_id and department_id.isdigit():
+            courses = courses.filter(departmentd_id=department_id)
+        
+        if grade:
+            courses = courses.filter(grade_level__contains=grade)
+        
+        # Apply search query if provided
+        if search_query:
+            courses = courses.filter(
+                Q(course_name__icontains=search_query) |
+                Q(course_teacher__icontains=search_query) |
+                Q(course_id__icontains=search_query)
+            )
 
     # Prepare the response data
     data = []
     for course in courses:
         data.append({
-            "id": course.id,
-            "course_id": course.course_id,
+            "id": course.id,  # 使用資料庫中的主鍵 id
+            "course_id": course.course_id,  # 保留 course_id 用於顯示
             "course_name": course.course_name,
             "course_teacher": course.course_teacher,
             "academic_id": course.academica_id,
@@ -277,15 +293,414 @@ def get_courses(request):
     return JsonResponse(data, safe=False)
 
 
+@csrf_exempt
+@login_required
+def add_comment(request, course_id):
+    try:
+        # Convert course_id to integer if it's not already
+        course_id = int(course_id)
+        course = get_object_or_404(Course, id=course_id)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': '無效的課程ID'}, status=400)
+        
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+        rating = data.get('rating', 5)  # Default to 5 if not provided
+        
+        if not content:
+            return JsonResponse({'error': '評論內容不能為空'}, status=400)
+        
+        # Validate rating
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError("Rating must be between 1 and 5")
+        except (ValueError, TypeError):
+            return JsonResponse({'error': '評分必須是1-5的數字'}, status=400)
+        
+        # Create or update review
+        review, created = CourseReview.objects.update_or_create(
+            course=course,
+            user=request.user,
+            defaults={
+                'content': content,
+                'rating': rating
+            }
+        )
+        
+        # 獲取用戶頭像
+        user_avatar = '/static/image/avatar24-01.jpg'  # 預設頭像
+        if hasattr(request.user, 'social_auth'):
+            social = request.user.social_auth.filter(provider='google-oauth2').first()
+            if social and 'picture' in social.extra_data:
+                user_avatar = social.extra_data['picture']
+        
+        return JsonResponse({
+            'success': True,
+            'is_new': created,
+            'review': {
+                'id': review.id,
+                'content': review.content,
+                'rating': review.rating,
+                'user_name': request.user.first_name or request.user.username,
+                'user_avatar': user_avatar,
+                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M'),
+                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M') if review.updated_at else None
+            }
+        })
+    
+    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+
+@csrf_exempt
+@login_required
+def delete_review(request, review_id):
+    if request.method == 'POST':
+        review = get_object_or_404(CourseReview, id=review_id, user=request.user)
+        review.delete()
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+
+@csrf_exempt
+@login_required
+def toggle_like(request, comment_id):
+    if request.method == 'POST':
+        comment = get_object_or_404(ActivityComment, id=comment_id)
+        
+        if request.user in comment.likes.all():
+            comment.likes.remove(request.user)
+            is_liked = False
+        else:
+            comment.likes.add(request.user)
+            is_liked = True
+        
+        return JsonResponse({
+            'success': True,
+            'is_liked': is_liked,
+            'likes_count': comment.likes.count()
+        })
+    
+    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+
+def comment_detail(request):
+    """View to display course reviews and comments"""
+    course_id = request.GET.get('course_id')
+    if not course_id:
+        from django.http import HttpResponseBadRequest
+        return HttpResponseBadRequest("Missing course_id parameter")
+        
+    course = get_object_or_404(Course, id=course_id)
+    reviews = CourseReview.objects.filter(course=course).select_related('user').order_by('-created_at')
+    
+    # Get user's review if exists
+    user_review = None
+    if request.user.is_authenticated:
+        try:
+            user_review = CourseReview.objects.get(course=course, user=request.user)
+        except CourseReview.DoesNotExist:
+            pass
+    
+    course = get_object_or_404(Course, id=course_id)
+    reviews = course.reviews.all()
+    
+    # Calculate average rating from reviews
+    avg_rating = reviews.aggregate(
+        avg_rating=Avg('rating')
+    )['avg_rating']
+    
+    # Get star counts for each rating (1-5)
+    star_counts = reviews.exclude(rating__isnull=True).values('rating').annotate(
+        count=Count('rating')
+    ).order_by('rating')
+    
+    star_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for item in star_counts:
+        rating = item['rating']
+        if rating and 1 <= rating <= 5:  # Validate rating value
+            star_distribution[rating] = item['count']
+    
+    context = {
+        'course': course,
+        'reviews': reviews,
+        'user_review': user_review,
+        'avg_rating': round(avg_rating, 1) if avg_rating is not None else '尚無評分',
+        'review_count': reviews.count(),
+        'academic': course.academica,
+        'department': course.departmentd,
+        'star_distribution': star_distribution,
+        'total_ratings': sum(star_distribution.values()),
+    }
+    return render(request, "comment_detail.html", context)
+
+def add_comment(request):
+    from .models import Course, Department, Academica, AcadeDepart, AcadeGrade
+    import json
+    
+    # Get all academics
+    academics = Academica.objects.all()
+    
+    # Prepare departments data by academic
+    departments_data = {}
+    for academic in academics:
+        dept_ids = AcadeDepart.objects.filter(academica=academic).values_list('departmentd_id', flat=True)
+        departments = Department.objects.filter(id__in=dept_ids).values('id', 'name')
+        departments_data[str(academic.id)] = [{'id': d['id'], 'name': d['name']} for d in departments]
+    
+    # Prepare grades data by academic
+    grades_data = {}
+    for academic in academics:
+        grades = AcadeGrade.objects.filter(academica=academic).values_list('grade_level', flat=True).distinct()
+        grades_data[str(academic.id)] = list(grades) if grades.exists() else ['一', '二', '三', '四', '五']
+    
+    # Initialize empty departments and grades for the form
+    departments = Department.objects.none()
+    grades = []
+    
+    context = {
+        'academics': academics,
+        'departments': departments,
+        'grades': grades,
+        'departments_data': json.dumps(departments_data, ensure_ascii=False),
+        'grades_data': json.dumps(grades_data, ensure_ascii=False),
+        'selected_course': None,
+        'selected_teacher': None,
+        'selected_academic': None,
+        'selected_department': None,
+        'selected_grade': None
+    }
+    
+    # 如果有學制ID，獲取對應的科系
+    academic_id = request.GET.get('academic_id')
+    if academic_id:
+        try:
+            context['selected_academic'] = Academica.objects.get(id=academic_id)
+            # 獲取該學制下的科系
+            dept_ids = AcadeDepart.objects.filter(academica_id=academic_id).values_list('departmentd_id', flat=True)
+            departments = Department.objects.filter(id__in=dept_ids)
+            context['departments'] = departments
+        except (Academica.DoesNotExist, ValueError) as e:
+            print(f"Error getting academic data: {e}")
+            pass
+    
+    # 檢查是否有從評論彈窗傳來的課程ID
+    course_id = request.GET.get('course_id')
+    if not course_id:
+        course_id = request.GET.get('course')  # 也檢查是否有 course 參數
+        
+    if course_id:
+        try:
+            # 檢查 course_id 是否是數字
+            if not str(course_id).isdigit():
+                # 如果不是數字，嘗試通過 course_id 欄位查找
+                course = Course.objects.filter(course_id=course_id).first()
+                if not course and '_' in course_id:
+                    # 如果找不到且包含底線，嘗試分割 course_id 獲取數字部分
+                    numeric_part = course_id.split('_')[0]
+                    if numeric_part.isdigit():
+                        course = Course.objects.filter(id=int(numeric_part)).first()
+            else:
+                # 如果是數字，直接通過 id 查找
+                course = Course.objects.filter(id=int(course_id)).first()
+                
+            if not course:
+                raise Course.DoesNotExist(f"找不到 ID 為 {course_id} 的課程")
+                
+            context['selected_course'] = course
+            
+            # 如果有傳入教師名稱，也一併傳給模板
+            teacher_name = request.GET.get('teacher_name')
+            if teacher_name:
+                context['selected_teacher'] = teacher_name
+            
+            # 設置課程對應的學制和科系
+            try:
+                context['selected_academic'] = course.academica
+                context['selected_department'] = course.departmentd
+                
+                # 獲取該學制的年級
+                grades = course.grade_level.split(',') if course.grade_level else []
+                if grades:
+                    context['grades'] = [g.strip() for g in grades]
+                
+                # 如果沒有年級數據，使用默認年級
+                if not context['grades']:
+                    context['grades'] = ['一', '二', '三', '四', '五']
+                
+                # 設置選中的年級
+                if course.grade_level:
+                    context['selected_grade'] = course.grade_level.split(',')[0].strip()
+                
+                # 加載該學制下的所有科系
+                dept_ids = AcadeDepart.objects.filter(academica=course.academica).values_list('departmentd_id', flat=True)
+                context['departments'] = Department.objects.filter(id__in=dept_ids)
+                    
+            except Exception as e:
+                print(f"Error getting course relationships: {e}")
+                
+        except (Course.DoesNotExist, ValueError) as e:
+            print(f"Error getting course: {e}")
+            # 設置預設值，避免模板錯誤
+            context['grades'] = ['一', '二', '三', '四', '五']
+            pass
+    
+    # Add validation for course_id to ensure it's a valid number before querying the database
+    if course_id and not str(course_id).isdigit():
+        return HttpResponseBadRequest("Invalid course ID")
+
+    return render(request, "add_comment.html", context)
+
+# API Endpoints for Dynamic Dropdowns
+@require_GET
+def get_departments(request):
+    """API endpoint to get departments for a given academic system"""
+    academic_id = request.GET.get('academic_id')
+    if not academic_id:
+        return JsonResponse({'error': 'Missing academic_id parameter'}, status=400)
+    
+    try:
+        from .models import AcadeDepart, Department, Academica
+        
+        # Get the academic system
+        academic = Academica.objects.get(id=academic_id)
+        
+        # Get department IDs for the selected academic system
+        dept_ids = AcadeDepart.objects.filter(academica=academic).values_list('departmentd_id', flat=True)
+        departments = Department.objects.filter(id__in=dept_ids).values('id', 'name')
+        
+        return JsonResponse({
+            'success': True,
+            'departments': list(departments)
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def get_grades(request):
+    """API endpoint to get grades for a given academic system"""
+    academic_id = request.GET.get('academic_id')
+    if not academic_id:
+        return JsonResponse({'error': 'Missing academic_id parameter'}, status=400)
+    
+    try:
+        from .models import AcadeGrade, Academica
+        
+        # Get the academic system
+        academic = Academica.objects.get(id=academic_id)
+        
+        # Get all unique grade levels for this academic system
+        grades = AcadeGrade.objects.filter(academica=academic).values_list('grade_level', flat=True).distinct()
+        
+        # If no specific grades found, return default grades
+        if not grades:
+            grades = ['一', '二', '三', '四', '五']
+        else:
+            # Convert to list and remove duplicates
+            grades = list(set(grades))
+            # Sort grades if needed
+            grade_order = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5}
+            grades.sort(key=lambda x: grade_order.get(x, 99))
+        
+        return JsonResponse({
+            'success': True,
+            'grades': list(grades)
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e), 'grades': ['一', '二', '三', '四', '五']}, status=200)
+
+# API Views for Course Reviews
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def create_course_review(request, course_id):
+    try:
+        # 處理不同類型的 course_id
+        if not str(course_id).isdigit():
+            # 如果不是數字，嘗試通過 course_id 欄位查找
+            course = Course.objects.filter(course_id=course_id).first()
+            if not course and '_' in course_id:
+                # 如果找不到且包含底線，嘗試分割 course_id 獲取數字部分
+                numeric_part = course_id.split('_')[0]
+                if numeric_part.isdigit():
+                    course = Course.objects.filter(id=int(numeric_part)).first()
+        else:
+            # 如果是數字，直接通過 id 查找
+            course = Course.objects.filter(id=int(course_id)).first()
+            
+        if not course:
+            return JsonResponse({'error': f'找不到 ID 為 {course_id} 的課程'}, status=404)
+            
+        data = json.loads(request.body)
+        
+        # Create or update review
+        review, created = CourseReview.objects.update_or_create(
+            course=course,
+            user=request.user,
+            defaults={
+                'content': data.get('content'),
+                'rating': int(data.get('rating', 5))
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'is_new': created,
+            'review': {
+                'id': review.id,
+                'content': review.content,
+                'rating': review.rating,
+                'user_name': request.user.first_name or request.user.username,
+                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M'),
+                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M') if review.updated_at else None
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["PUT"])
+def update_course_review(request, course_id, review_id):
+    try:
+        review = get_object_or_404(CourseReview, id=review_id, user=request.user, course_id=course_id)
+        data = json.loads(request.body)
+        
+        if 'content' in data:
+            review.content = data['content']
+        if 'rating' in data:
+            review.rating = int(data['rating'])
+        
+        review.save()
+        
+        return JsonResponse({
+            'success': True,
+            'review': {
+                'id': review.id,
+                'content': review.content,
+                'rating': review.rating,
+                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M')
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["DELETE"])
+def delete_course_review(request, course_id, review_id):
+    try:
+        review = get_object_or_404(CourseReview, id=review_id, user=request.user, course_id=course_id)
+        review.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 #####
 
 
 
-def comment_detail(request):
-    return render(request, "comment_detail.html")
-
-def add_comment(request):
-    return render(request, "add_comment.html")
 
 # web_app/views.py
 import json
@@ -667,9 +1082,10 @@ def pdf_options(request, filename):
     # web_app/views.py（活動相關部分）
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django.db import models
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Q, F, Case, When, IntegerField, Prefetch
+from django.db.models import Count, Q, F, Case, When, IntegerField, Prefetch, Avg
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -993,69 +1409,3 @@ def activity_participants(request, pk):
         'activity': activity,
         'participants': participants,
     })
-
-@csrf_exempt
-@login_required
-def add_comment(request, activity_id):
-    if request.method == 'POST':
-        activity = get_object_or_404(GroupActivity, id=activity_id)
-        data = json.loads(request.body)
-        content = data.get('content', '').strip()
-        parent_id = data.get('parent_id')
-        
-        if not content:
-            return JsonResponse({'error': '評論內容不能為空'}, status=400)
-        
-        parent_comment = None
-        if parent_id:
-            parent_comment = get_object_or_404(ActivityComment, id=parent_id)
-        
-        comment = ActivityComment.objects.create(
-            activity=activity,
-            user=request.user,
-            content=content,
-            parent=parent_comment
-        )
-        
-        # 獲取用戶頭像
-        user_avatar = '/static/image/avatar24-01.jpg'  # 預設頭像
-        if hasattr(request.user, 'social_auth'):
-            social = request.user.social_auth.filter(provider='google-oauth2').first()
-            if social and 'picture' in social.extra_data:
-                user_avatar = social.extra_data['picture']
-        
-        return JsonResponse({
-            'success': True,
-            'comment': {
-                'id': comment.id,
-                'content': comment.content,
-                'user_name': request.user.first_name or request.user.username,
-                'user_avatar': user_avatar,
-                'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
-                'likes_count': 0,
-                'is_liked': False
-            }
-        })
-    
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
-
-@csrf_exempt
-@login_required
-def toggle_like(request, comment_id):
-    if request.method == 'POST':
-        comment = get_object_or_404(ActivityComment, id=comment_id)
-        
-        if request.user in comment.likes.all():
-            comment.likes.remove(request.user)
-            is_liked = False
-        else:
-            comment.likes.add(request.user)
-            is_liked = True
-        
-        return JsonResponse({
-            'success': True,
-            'is_liked': is_liked,
-            'likes_count': comment.likes_count
-        })
-    
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)

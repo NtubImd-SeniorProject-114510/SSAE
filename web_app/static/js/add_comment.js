@@ -1,14 +1,224 @@
 // add_comment.js - 整合版本
 
+// 儲存科系和年級資料
+let departmentsData = {};
+let gradesData = {};
+
+// 初始化頁面
 document.addEventListener('DOMContentLoaded', function() {
     console.log('add_comment.js 已載入');
+    
+    try {
+        // 從頁面載入科系和年級資料
+        const deptDataElement = document.getElementById('departments-data');
+        const gradeDataElement = document.getElementById('grades-data');
+        
+        if (deptDataElement && deptDataElement.textContent) {
+            departmentsData = JSON.parse(deptDataElement.textContent);
+            console.log('已載入科系資料');
+        }
+        
+        if (gradeDataElement && gradeDataElement.textContent) {
+            gradesData = JSON.parse(gradeDataElement.textContent);
+            console.log('已載入年級資料');
+        }
+    } catch (error) {
+        console.error('載入資料時發生錯誤:', error);
+    }
     
     // 初始化所有功能
     initializeUserInterface();
     initializeRatingSystem();
     initializeTextConversion();
     initializeFormValidation();
+    initializeCourseSelection();
+    
+    // 監聽學制變化
+    const academicSelect = document.getElementById('category');
+    if (academicSelect) {
+        academicSelect.addEventListener('change', handleAcademicChange);
+        
+        // 如果已經有選擇學制，觸發更新
+        if (academicSelect.value) {
+            handleAcademicChange.call(academicSelect);
+        }
+    }
 });
+
+// 處理學制變化
+function handleAcademicChange() {
+    const academicId = this.value;
+    const departmentSelect = document.getElementById('class_info');
+    const gradeSelect = document.getElementById('grade');
+    const courseSelect = document.getElementById('course');
+    
+    if (!academicId) {
+        // 重置科系、年級和課程下拉選單
+        departmentSelect.innerHTML = '<option value="">選擇科系</option>';
+        gradeSelect.innerHTML = '<option value="">選擇年級</option>';
+        courseSelect.innerHTML = '<option value="">選擇課程</option>';
+        return;
+    }
+    
+    // 更新科系下拉選單
+    updateDepartmentOptions(academicId);
+    
+    // 更新年級下拉選單
+    updateGradeOptions(academicId);
+    
+    // 清空課程下拉選單
+    courseSelect.innerHTML = '<option value="">請先選擇科系和年級</option>';
+    courseSelect.disabled = true;
+}
+
+// 更新科系選項
+function updateDepartmentOptions(academicId) {
+    const departmentSelect = document.getElementById('class_info');
+    departmentSelect.innerHTML = '<option value="">選擇科系</option>';
+    departmentSelect.disabled = true;
+
+    if (!academicId) return;
+
+    // 從預先載入的資料中獲取科系列表
+    const departments = departmentsData[academicId] || [];
+    
+    if (departments.length > 0) {
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            // 確保 ID 作為字串處理
+            option.value = String(dept.id);
+            option.textContent = dept.name;
+            departmentSelect.appendChild(option);
+        });
+        departmentSelect.disabled = false;
+    } else {
+        departmentSelect.innerHTML = '<option value="">沒有可用的科系</option>';
+    }
+}
+
+// 更新年級選項
+function updateGradeOptions(academicId) {
+    const gradeSelect = document.getElementById('grade');
+    if (!gradeSelect) return;
+    
+    // 清空現有選項，保留「選擇年級」
+    gradeSelect.innerHTML = '<option value="">選擇年級</option>';
+    gradeSelect.disabled = true;
+    
+    // 如果沒有選擇學制，則不顯示任何年級選項
+    if (!academicId) return;
+    
+    // 從預載的資料中獲取年級列表
+    const grades = gradesData[academicId] || [];
+    
+    // 添加年級選項
+    if (grades.length > 0) {
+        // 排序年級（一、二、三、四、五）
+        const gradeOrder = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5};
+        const sortedGrades = [...grades].sort((a, b) => (gradeOrder[a] || 99) - (gradeOrder[b] || 99));
+        
+        sortedGrades.forEach(grade => {
+            const option = document.createElement('option');
+            option.value = grade;
+            option.textContent = grade;
+            gradeSelect.appendChild(option);
+        });
+        
+        gradeSelect.disabled = false;
+    } else {
+        gradeSelect.innerHTML = '<option value="">沒有可用的年級</option>';
+    }
+}
+
+// 處理科系變化
+function handleDepartmentChange() {
+    const academicId = document.getElementById('academic').value;
+    const departmentId = this.value;
+    const gradeId = document.getElementById('grade').value;
+    const courseSelect = document.getElementById('course');
+    
+    if (!academicId || !departmentId || !gradeId) {
+        courseSelect.innerHTML = '<option value="">請先選擇學制、科系和年級</option>';
+        courseSelect.disabled = true;
+        return;
+    }
+    
+    // 觸發載入課程
+    loadCourses();
+}
+
+// 載入課程列表
+function loadCourses() {
+    const academicId = document.getElementById('academic')?.value;
+    const departmentId = document.getElementById('class_info')?.value;
+    const gradeId = document.getElementById('grade')?.value;
+    const courseSelect = document.getElementById('course');
+    
+    // 如果沒有選擇學制、科系或年級，則不進行查詢
+    if (!academicId || !departmentId || !gradeId) {
+        courseSelect.innerHTML = '<option value="">請先選擇學制、科系和年級</option>';
+        return;
+    }
+    
+    // 顯示載入中
+    courseSelect.disabled = true;
+    courseSelect.innerHTML = '<option value="">載入中...</option>';
+    
+    // 構建API URL
+    const params = new URLSearchParams({
+        academic_id: academicId,
+        department_id: departmentId,
+        grade: gradeId  // 修正變數名稱錯誤
+    });
+    
+    // 檢查URL中是否有預選的課程ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedCourseId = urlParams.get('course_id') || urlParams.get('course');
+    
+    // 發送AJAX請求獲取課程列表
+    fetch(`/get_courses/?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('獲取課程列表失敗');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // 清空現有選項
+            courseSelect.innerHTML = '<option value="">選擇課程</option>';
+            
+            if (data.courses && data.courses.length > 0) {
+                // 添加課程選項
+                data.courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.course_name || course.name;
+                    
+                    // 如果這是預選的課程，則選中它
+                    if (selectedCourseId && course.id == selectedCourseId) {
+                        option.selected = true;
+                    }
+                    
+                    courseSelect.appendChild(option);
+                });
+                
+                // 如果URL中有課程ID但沒有找到對應的課程，則顯示錯誤
+                if (selectedCourseId && !Array.from(courseSelect.options).some(opt => opt.selected)) {
+                    console.warn('未找到匹配的課程');
+                    // 不顯示警報，因為用戶可能正在手動選擇
+                }
+            } else {
+                courseSelect.innerHTML = '<option value="">沒有找到相關課程</option>';
+            }
+            
+            // 啟用下拉選單
+            courseSelect.disabled = false;
+        })
+        .catch(error => {
+            console.error('載入課程時出錯:', error);
+            courseSelect.innerHTML = '<option value="">載入失敗，請重試</option>';
+        });
+}
 
 // 初始化用戶界面功能
 function initializeUserInterface() {

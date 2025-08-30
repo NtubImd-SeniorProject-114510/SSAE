@@ -38,6 +38,15 @@ urlpatterns = [
     path('book/', views.book, name='book'),
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
     path('book/upload/', views.upload_book2, name='upload_book'),
+    
+    # Course Reviews
+    path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
+    path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
+    path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
+    
+    # Dynamic Dropdowns API
+    path('api/departments/', views.get_departments, name='get_departments'),
+    path('api/grades/', views.get_grades, name='get_grades'),
     path('book_2/', views.book_2, name='book_2'),
     path("test/", views.ask_page, name="ask_page"),
     path('navbar2/' , views.navbar2),

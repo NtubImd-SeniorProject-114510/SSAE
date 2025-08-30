@@ -217,8 +217,8 @@ function renderCourses(courses) {
                 </div>
                 
                 <div class="course-rating">
-                    <div class="stars" data-rating="4.6">
-                        <span class="rating-text">4.6</span>
+                    <div class="stars" data-rating="${course.avg_rating}">
+                        <span class="rating-text">${course.avg_rating ? course.avg_rating.toFixed(1) : '0.0'}</span>
                         <i class="fas fa-star"></i>
                     </div>
                     <div class="rating-count">(0則評論)</div>

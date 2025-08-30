@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class AcademicGrade(models.Model):
     id = models.AutoField(primary_key=True)
@@ -31,6 +32,7 @@ class Department(models.Model):
 
 #---------
 class Academica(models.Model):
+    id = models.CharField(primary_key=True, max_length=1)  # 明確設定為主鍵
     name = models.CharField(max_length=50)
     class Meta:
         db_table = 'academic'
@@ -78,6 +80,63 @@ class Course(models.Model):
 
     def __str__(self):
         return f"Course related to {self.academica.name} {self.departmentd.name}"
+
+# class CourseStar(models.Model):
+#     """
+#     Model for storing star ratings for courses.
+#     Maps to the existing web_app_CourseStar table.
+#     """
+#     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_stars')
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     star = models.PositiveSmallIntegerField(
+#         validators=[MinValueValidator(1), MaxValueValidator(5)]
+#     )
+#     created_at = models.DateTimeField(auto_now_add=True)
+    
+#     class Meta:
+#         db_table = 'web_app_CourseStar'  # Map to existing table
+#         unique_together = ['course', 'user']  # Each user can only rate a course once
+#         ordering = ['-created_at']
+    
+#     def __str__(self):
+#         return f"{self.star} stars by {self.user.username} for {self.course.course_name}"
+
+class CourseStar(models.Model):
+    """Stores individual star ratings for courses"""
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_stars')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    star = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'web_app_CourseStar'  # Specify the correct table name
+        ordering = ['-created_at']
+        unique_together = ['course_id', 'user_id']  # Each user can only rate a course once
+    
+    def __str__(self):
+        return f"{self.star} stars by {self.user.username} for {self.course.course_name}"
+
+
+class CourseReview(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'web_app_coursereview'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Review by {self.user.username} for {self.course.course_name}"
+
+
 #-------------
 
 class Category(models.Model):
@@ -254,6 +313,8 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+
 
 class ActivityComment(models.Model):
     activity = models.ForeignKey(GroupActivity, on_delete=models.CASCADE, related_name='comments')
