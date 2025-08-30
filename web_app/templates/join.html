@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="{% static 'css/pop_window/join_pop.css' %}">
 {% endblock %}
 
+{% if user.is_authenticated %}
+<div data-user-authenticated="true" data-user-id="{{ user.id }}" style="display: none;"></div>
+{% endif %}
+
 {% block content %}
 <div class="page-container">
     <div class="bg-text">ACTIVITY GROUP ACTIVITY GROUP</div>
@@ -24,30 +28,36 @@
     </header>
     
     <div class="filter-section">
-        <select class="filter-item">
-            <option>全部活動類型</option>
-            <option>美食</option>
-            <option>運動</option>
-            <option>讀書</option>
-            <option>旅遊</option>
-            <option>電影</option>
-            <option>其他</option>
-        </select>
-        
-        <select class="filter-item">
-            <option>全部地點</option>
-            <option>校內</option>
-            <option>校外</option>
-        </select>
-        
-        <select class="filter-item">
-            <option>全部時間</option>
-            <option>今天</option>
-            <option>本週</option>
-            <option>本月</option>
-        </select>
-        
-        <input type="text" class="search-box" placeholder="搜尋活動...">
+        <form method="get" action="{% url 'activity_list' %}" id="filterForm">
+            <select name="type" class="filter-item" onchange="this.form.submit()">
+                <option value="">全部活動類型</option>
+                <option value="food" {% if current_type == 'food' %}selected{% endif %}>美食</option>
+                <option value="sport" {% if current_type == 'sport' %}selected{% endif %}>運動</option>
+                <option value="study" {% if current_type == 'study' %}selected{% endif %}>讀書</option>
+                <option value="travel" {% if current_type == 'travel' %}selected{% endif %}>旅遊</option>
+                <option value="movie" {% if current_type == 'movie' %}selected{% endif %}>電影</option>
+                <option value="other" {% if current_type == 'other' %}selected{% endif %}>其他</option>
+            </select>
+            
+            <select name="location_type" class="filter-item" onchange="this.form.submit()">
+                <option value="">全部地點</option>
+                <option value="on_campus" {% if current_location_type == 'on_campus' %}selected{% endif %}>校內</option>
+                <option value="off_campus" {% if current_location_type == 'off_campus' %}selected{% endif %}>校外</option>
+            </select>
+            
+            <select name="time" class="filter-item" onchange="this.form.submit()">
+                <option value="">全部時間</option>
+                <option value="today" {% if current_time == 'today' %}selected{% endif %}>今天</option>
+                <option value="this_week" {% if current_time == 'this_week' %}selected{% endif %}>本週</option>
+                <option value="this_month" {% if current_time == 'this_month' %}selected{% endif %}>本月</option>
+            </select>
+            
+            <input type="text" name="search" class="search-box" placeholder="搜尋活動..." 
+                value="{{ current_search|default:'' }}" 
+                onkeypress="if(event.key==='Enter') this.form.submit()">
+            
+            <button type="button" onclick="clearFilters()" class="clear-filters-btn">清除篩選</button>
+        </form>
     </div>
         
     <section class="activities-container">
@@ -77,23 +87,36 @@
 
                         {# 分類標籤 #}
                         <div class="activity-tag {{ a.type|lower }}">
-                            {{ a.type }}
+                            {{ a.get_type_display }}  <!-- 這裡會顯示中文 -->
                         </div>
                     </div>
 
-
                     <div class="activity-content">
                         <h3 class="activity-title">{{ a.title }}</h3>
-                        <p class="activity-description">{{ a.description }}</p>
+                        <p class="activity-description">
+                            {{ a.description|truncatechars:60 }}
+                            {% if a.description|length > 60 %}
+                                <a href="{{ detail_url }}" class="read-more">更多</a>
+                            {% endif %}
+                        </p>
 
                         <div class="activity-info">
+                            <!-- 地點 -->
                             <div class="activity-location">
                                 <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                                <p class="info-value">{{ a.location_short }}</p>
+                                <p class="info-value">
+                                    {% if a.location_type == 'on_campus' and a.classroom %}
+                                        {{ a.classroom }}
+                                    {% else %}
+                                        {{ a.location_short }}
+                                    {% endif %}
+                                </p>
                             </div>
+
+                            <!-- 時間 -->
                             <div class="activity-time">
                                 <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                                <span>{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</span>
+                                <p class="info-value">{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</p>
                             </div>
                         </div>
 
@@ -137,9 +160,11 @@
                             <div>
                                 {% if a.is_full or a.is_deadline_passed %}
                                     <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">已額滿/截止</a>
-                                {% elif request.user.is_authenticated and a.pk and a.id in created_ids %}
+                                {% elif not request.user.is_authenticated %}
+                                    <button class="join-btn dropdown-item" onclick="event.stopPropagation(); triggerNavbarLogin();">登入即可參加</button>
+                                {% elif a.pk and a.id in created_ids %}
                                     <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">您是發起人</a>
-                                {% elif request.user.is_authenticated and a.pk and a.id in joined_ids %}
+                                {% elif a.pk and a.id in joined_ids %}
                                     <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
                                         {% csrf_token %}
                                         <button class="join-btn" type="submit">取消參加</button>
@@ -160,7 +185,11 @@
             {% empty %}
                 <p>
                     目前沒有活動。
-                    <button type="button" id="uploadBtn">新增活動</button>
+                    {% if request.user.is_authenticated %}
+                        <button type="button" id="uploadBtn">新增活動</button>
+                    {% else %}
+                        <button type="button" onclick="triggerNavbarLogin();">登入即可建立活動</button>
+                    {% endif %}
                 </p>
             {% endfor %}
         </div>
@@ -178,9 +207,15 @@
                     </text>
                 </svg>
             </div>
-            <div class="upload-btn-center" id="uploadBtn">
-                <span>＋</span>
-            </div>
+            {% if request.user.is_authenticated %}
+                <div class="upload-btn-center" id="uploadBtn">
+                    <span>＋</span>
+                </div>
+            {% else %}
+                <div class="upload-btn-center" onclick="triggerNavbarLogin();">
+                    <span>＋</span>
+                </div>
+            {% endif %}
         </div>
     </div>
     
@@ -188,6 +223,7 @@
 </div>
 
 {% include 'pop_window/join_pop.html' %}
+{% include 'pop_window/login_pop.html' %}
 {% endblock %}
 
 {% block body_js %}

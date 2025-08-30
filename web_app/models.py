@@ -68,11 +68,26 @@ class Book2(models.Model):
         return self.title
 
 class GroupActivity(models.Model):
+    TYPE_CHOICES = [
+        ('food', '美食'),
+        ('sport', '運動'),
+        ('study', '讀書'),
+        ('travel', '旅遊'),
+        ('movie', '電影'),
+        ('other', '其他'),
+    ]
+
+    LOCATION_TYPE_CHOICES = [
+        ('on_campus', '校內'),
+        ('off_campus', '校外'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # 發起者
     title = models.CharField(max_length=200)
     description = models.TextField()
-    type = models.CharField(max_length=50)  # 活動類型
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES) 
     location = models.CharField(max_length=200)  # 地點名稱
+    location_type = models.CharField(max_length=20, choices=LOCATION_TYPE_CHOICES, default='on_campus')
     
     # 新增地理位置相關欄位
     address = models.TextField(blank=True, null=True)  # 完整地址
@@ -89,6 +104,10 @@ class GroupActivity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # 新增時自動填入
     # 新增聯絡方式欄位
     contact_info = models.CharField(max_length=200, blank=True, null=True)
+
+    @property
+    def location_display(self):
+        return self.location_short
 
     @property
     def location_short(self):
@@ -127,6 +146,11 @@ class GroupActivity(models.Model):
     def has_location_data(self):
         """檢查是否有地理位置資料"""
         return self.latitude is not None and self.longitude is not None
+
+    def get_type_display_chinese(self):
+        """獲取中文顯示的活動類型"""
+        type_dict = dict(self.TYPE_CHOICES)
+        return type_dict.get(self.type, self.type)
 
     def __str__(self):
         return self.title

@@ -41,9 +41,28 @@
                         </div>
                     </div>
                     <div class="form-col">
+                        <!-- 在 location 欄位前加入這個選擇器 -->
                         <div class="form-group">
-                            <label for="activity-location" class="form-label">活動地點</label>
-                            <input type="text" id="activity-location" name="location" class="form-input" placeholder="請輸入活動地點" required>
+                            <label for="location-type">活動地點類型：</label>
+                            <div class="radio-group">
+                                <input type="radio" id="on-campus" name="location_type" value="on_campus" checked>
+                                <label for="on-campus">校內</label>
+                                
+                                <input type="radio" id="off-campus" name="location_type" value="off_campus">
+                                <label for="off-campus">校外</label>
+                            </div>
+                        </div>
+
+                        <!-- 校內教室欄位 -->
+                        <div class="form-group" id="classroom-field">
+                            <label for="classroom">教室：</label>
+                            <input type="text" id="classroom" name="classroom" placeholder="例如：承曦樓505">
+                        </div>
+
+                        <!-- 校外地點欄位 (原有的) -->
+                        <div class="form-group" id="location-field" style="display: none;">
+                            <label for="location">地點：</label>
+                            <input type="text" id="location" name="location" placeholder="輸入地點名稱">
                         </div>
                     </div>
                 </div>

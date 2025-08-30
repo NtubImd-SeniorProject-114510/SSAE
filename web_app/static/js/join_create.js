@@ -138,3 +138,23 @@ function getCookie(name){
     const value = document.cookie.split('; ').find(row=>row.startsWith(name+'='));
     return value ? decodeURIComponent(value.split('=')[1]) : '';
 }
+
+// 監聽校內外選項變化
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'location_type') {
+        const classroomField = document.querySelector('[name="classroom"]');
+        const locationField = document.querySelector('[name="location"]');
+        
+        if (e.target.value === 'on_campus') {
+            classroomField.style.display = 'block';
+            classroomField.required = true;
+            locationField.style.display = 'none';
+            locationField.required = false;
+        } else {
+            classroomField.style.display = 'none';
+            classroomField.required = false;
+            locationField.style.display = 'block';
+            locationField.required = true;
+        }
+    }
+});

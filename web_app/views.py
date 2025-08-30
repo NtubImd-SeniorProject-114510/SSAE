@@ -194,7 +194,10 @@ from .mongo import (
 )
 from .views_rag import ask_question
 
-USER_ID = "guest"  # 可改為 session 或 request.user.id
+def get_user_id(request):
+    if request.user.is_authenticated:
+        return str(request.user.id)
+    return "guest"
 
 def chat_page(request):
     # 首次載入時不帶任何對話，前端會自動建立
@@ -202,13 +205,14 @@ def chat_page(request):
 
 @csrf_exempt
 def api_conversations(request):
+    user_id = get_user_id(request)
     if request.method == "GET":
-        convos = get_conversations(USER_ID)
+        convos = get_conversations(user_id)
         return JsonResponse({"conversations": convos})
     if request.method == "POST":
         data = json.loads(request.body)
         title = data.get("title", "新對話")
-        convo_id = create_conversation(USER_ID, title)
+        convo_id = create_conversation(user_id, title)
         return JsonResponse({"id": convo_id, "title": title})
     return HttpResponseNotAllowed(["GET", "POST"])
 
@@ -232,20 +236,24 @@ def api_messages(request, convo_id):
 def api_ask(request):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
+    
+    user_id = get_user_id(request)
     data = json.loads(request.body)
     question = data.get("question", "").strip()
     convo_id = data.get("conversation_id")
+    
     if not question or not convo_id:
         return JsonResponse({"error": "缺少 question 或 conversation_id"}, status=400)
 
-    # 🔥 關鍵：獲取「這個對話」的歷史記錄
+    # 驗證對話是否屬於當前用戶（安全性檢查）
+    from .mongo import get_conversation_by_id
+    conversation = get_conversation_by_id(convo_id)
+    if not conversation or conversation.get("user_id") != user_id:
+        return JsonResponse({"error": "無權限存取此對話"}, status=403)
+
     conversation_history = get_messages(convo_id)
-    
-    # 🔥 關鍵：將歷史記錄傳給 RAG 系統
     result = ask_question(question, conversation_history)
     answer = result["answer"]
-    
-    # 存入 MongoDB
     add_message(convo_id, question, answer, result.get("sources", []))
 
     return JsonResponse({
@@ -378,6 +386,7 @@ from .mongo import get_messages
 def api_export_conversation(request, convo_id):
     if request.method != "GET":
         return HttpResponse(status=405)
+    user_id = get_user_id(request)
     msgs = get_messages(convo_id)
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -567,7 +576,7 @@ from django.db.models import Count, Q, F, Case, When, IntegerField, Prefetch
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from .models import GroupActivity, ActivityParticipant
 from .forms import ActivityForm
@@ -576,101 +585,92 @@ from .forms import ActivityForm
 # 列出活動
 # -----------------------
 def activity_list(request):
-    activities = (
-        GroupActivity.objects
-        .prefetch_related(
-            Prefetch(
-                'participants',
-                queryset=ActivityParticipant.objects.filter(status='joined').select_related('user'),
-                to_attr='joined_participants'
-            )
+    activity_type = request.GET.get('type', '')
+    location_type = request.GET.get('location_type', '')
+    time_filter = request.GET.get('time', '')
+    search_query = request.GET.get('search', '')
+    
+    activities = GroupActivity.objects.prefetch_related(
+        Prefetch(
+            'participants',
+            queryset=ActivityParticipant.objects.filter(status='joined').select_related('user'),
+            to_attr='joined_participants'
         )
-        .annotate(
-            participants_count=Count(
-                'participants',
-                filter=Q(participants__status='joined'),
-                distinct=True
-            )
+    ).annotate(
+        participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True)
+    ).annotate(total_count=F('participants_count') + 1)
+    
+    if activity_type:
+        activities = activities.filter(type=activity_type)
+    if location_type:
+        activities = activities.filter(location_type=location_type)
+        
+    today = date.today()
+    if time_filter == 'today':
+        activities = activities.filter(date=today)
+    elif time_filter == 'this_week':
+        end_week = today + timedelta(days=7-today.weekday())
+        activities = activities.filter(date__range=[today, end_week])
+    elif time_filter == 'this_month':
+        activities = activities.filter(date__year=today.year, date__month=today.month)
+    
+    if search_query:
+        activities = activities.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(location__icontains=search_query)
         )
-        .annotate(
-            total_count=F('participants_count') + 1  # 加上主辦人
-        )
-        .order_by(
-            Case(When(deadline__lt=timezone.now().date(), then=1), default=0, output_field=IntegerField()),
-            'date', 'time', 'deadline'
-        )
+    
+    activities = activities.order_by(
+        Case(When(deadline__lt=timezone.now().date(), then=1), default=0, output_field=IntegerField()),
+        'date', 'time', 'deadline'
     )
-
-    # 🚀 過濾掉主辦人，避免重複出現在 joined_participants
+    
     for a in activities:
-        a.cleaned_participants = [
-            p for p in a.joined_participants if p.user_id != a.user_id
-        ]
+        a.cleaned_participants = [p for p in a.joined_participants if p.user_id != a.user_id]
 
+    # 只有登入用戶才需要取得參與狀態
     joined_ids, created_ids = [], []
     if request.user.is_authenticated:
-        joined_ids = list(
-            ActivityParticipant.objects.filter(
-                user=request.user, status='joined'
-            ).values_list('activity_id', flat=True)
-        )
-        created_ids = list(
-            GroupActivity.objects.filter(
-                user=request.user
-            ).values_list('id', flat=True)
-        )
+        joined_ids = list(ActivityParticipant.objects.filter(user=request.user, status='joined').values_list('activity_id', flat=True))
+        created_ids = list(GroupActivity.objects.filter(user=request.user).values_list('id', flat=True))
 
     return render(request, 'join.html', {
         'activities': activities,
         'joined_ids': joined_ids,
         'created_ids': created_ids,
+        'current_type': activity_type,
+        'current_location_type': location_type,
+        'current_time': time_filter,
+        'current_search': search_query,
     })
-
-
 
 # -----------------------
 # 活動詳情
 # -----------------------
 def activity_detail(request, pk):
     a = get_object_or_404(GroupActivity, pk=pk)
-
-    # 除了主辦人以外的參加者
-    participants = ActivityParticipant.objects.filter(
-        activity=a, status='joined'
-    ).select_related('user')
-
+    participants = ActivityParticipant.objects.filter(activity=a, status='joined').select_related('user')
     participants_count = participants.count()
-    total_participants = participants_count + 1  # 加上主辦人
+    total_participants = participants_count + 1
     remaining_slots = max(0, a.max_participants - total_participants)
 
+    # 只有登入用戶才檢查參與狀態
     joined, is_creator = False, False
     if request.user.is_authenticated:
-        joined = ActivityParticipant.objects.filter(
-            activity=a, user=request.user, status='joined'
-        ).exists()
+        joined = ActivityParticipant.objects.filter(activity=a, user=request.user, status='joined').exists()
         is_creator = (request.user == a.user)
 
-    comments = ActivityComment.objects.filter(
-        activity=a, parent=None
-    ).select_related('user').prefetch_related('replies__user', 'likes').order_by('-created_at')
+    comments = ActivityComment.objects.filter(activity=a, parent=None).select_related('user').prefetch_related('replies__user', 'likes').order_by('-created_at')
 
-    related_activities = list(GroupActivity.objects.filter(
-        type=a.type, deadline__gte=timezone.now().date()
-    ).exclude(id=a.id).annotate(
-        participants_count=Count('participants', filter=Q(participants__status='joined'))
-    ).order_by('-created_at')[:3])
-
+    related_activities = list(GroupActivity.objects.filter(type=a.type, deadline__gte=timezone.now().date()).exclude(id=a.id).annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('-created_at')[:3])
     if len(related_activities) < 3:
-        other_activities = list(GroupActivity.objects.filter(
-            deadline__gte=timezone.now().date()
-        ).exclude(type=a.type).exclude(id=a.id).annotate(
-            participants_count=Count('participants', filter=Q(participants__status='joined'))
-        ).order_by('-created_at')[:3-len(related_activities)])
+        other_activities = list(GroupActivity.objects.filter(deadline__gte=timezone.now().date()).exclude(type=a.type).exclude(id=a.id).annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('-created_at')[:3-len(related_activities)])
         related_activities.extend(other_activities)
 
     return render(request, 'join_detail.html', {
         'a': a,
-        'participants': participants,   # ❗這裡不含發起人
+        'participants': participants,
         'total_participants': total_participants,
         'remaining_slots': remaining_slots,
         'joined': joined,
@@ -685,60 +685,31 @@ def activity_detail(request, pk):
 @login_required
 def join_activity(request, pk):
     if request.method != 'POST':
-        return redirect('join_detail', pk=pk)
+        return redirect('activity_detail', pk=pk)
     
     a = get_object_or_404(GroupActivity, pk=pk)
+    current_joined_count = ActivityParticipant.objects.filter(activity_id=a.id, status='joined').count()
 
-    # 計算當前已加入人數
-    current_joined_count = ActivityParticipant.objects.filter(
-        activity_id=a.id, status='joined'
-    ).count()
-
-    # 檢查是否已超過報名截止時間
     if a.is_deadline_passed:
         messages.error(request, '已超過報名截止時間')
-        return redirect('join_detail', pk=pk)
-    
-    # 檢查是否已額滿
+        return redirect('activity_detail', pk=pk)
     if current_joined_count >= a.max_participants:
         messages.error(request, '本活動已額滿')
-        return redirect('join_detail', pk=pk)
+        return redirect('activity_detail', pk=pk)
 
-    # 檢查用戶是否已經報名
-    existing_participant = ActivityParticipant.objects.filter(
-        activity_id=a.id, user_id=request.user.id
-    ).first()
-    
+    existing_participant = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id).first()
     if existing_participant and existing_participant.status == 'joined':
         messages.info(request, '您已經報名此活動')
-        return redirect('join_detail', pk=pk)
+        return redirect('activity_detail', pk=pk)
 
-    # 創建或更新參與者記錄
-    ActivityParticipant.objects.update_or_create(
-        activity_id=a.id, user_id=request.user.id,
-        defaults={
-            'status': 'joined', 
-            'joined_at': timezone.now(), 
-            'updated_at': timezone.now()
-        }
-    )
-
-    # 重新計算已報名人數
-    updated_joined_count = ActivityParticipant.objects.filter(
-        activity_id=a.id, status='joined'
-    ).count()
-
+    ActivityParticipant.objects.update_or_create(activity_id=a.id, user_id=request.user.id, defaults={'status': 'joined', 'joined_at': timezone.now(), 'updated_at': timezone.now()})
+    updated_joined_count = ActivityParticipant.objects.filter(activity_id=a.id, status='joined').count()
     messages.success(request, '報名成功！')
 
-    # 如果是 AJAX 請求，返回 JSON 響應
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'ok': True, 
-            'participants': updated_joined_count,
-            'message': '報名成功！'
-        })
+        return JsonResponse({'ok': True, 'participants': updated_joined_count, 'message': '報名成功！'})
     
-    return redirect('join_detail', pk=pk)
+    return redirect('activity_detail', pk=pk)
 
 # -----------------------
 # 取消活動
@@ -746,148 +717,86 @@ def join_activity(request, pk):
 @login_required
 def cancel_activity(request, pk):
     if request.method != 'POST':
-        return redirect('join_detail', pk=pk)
+        return redirect('activity_detail', pk=pk)
     
     a = get_object_or_404(GroupActivity, pk=pk)
-    
-    # 查找用戶的參與記錄
-    participant = ActivityParticipant.objects.filter(
-        activity_id=a.id, user_id=request.user.id, status='joined'
-    ).first()
-    
+    participant = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id, status='joined').first()
     if not participant:
         messages.warning(request, '您尚未報名此活動')
-        return redirect('join_detail', pk=pk)
-    
-    # 更新狀態為已取消
+        return redirect('activity_detail', pk=pk)
+
     participant.status = 'cancelled'
     participant.updated_at = timezone.now()
     participant.save()
-
-    # 重新計算已報名人數
-    updated_joined_count = ActivityParticipant.objects.filter(
-        activity_id=a.id, status='joined'
-    ).count()
-
+    updated_joined_count = ActivityParticipant.objects.filter(activity_id=a.id, status='joined').count()
     messages.info(request, '已取消參加')
-    
-    # 如果是 AJAX 請求，返回 JSON 響應
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'ok': True, 
-            'participants': updated_joined_count,
-            'message': '已取消參加'
-        })
+        return JsonResponse({'ok': True, 'participants': updated_joined_count, 'message': '已取消參加'})
     
-    return redirect('join_detail', pk=pk)
+    return redirect('activity_detail', pk=pk)
 
 # -----------------------
-# 建立活動（支持 AJAX 和表單提交）
+# 建立活動
 # -----------------------
 @csrf_exempt
 @login_required
 def create_activity(request):
     if request.method == 'GET':
-        # 如果是 GET 請求，渲染表單頁面
         form = ActivityForm()
         return render(request, 'join_create.html', {'form': form})
     
     elif request.method == 'POST':
         form = ActivityForm(request.POST, request.FILES)
-        
         if form.is_valid():
             try:
-                # 保存活動，設置發起者為當前用戶
                 activity = form.save(commit=False)
                 activity.user = request.user
                 activity.save()
-                
-                # 如果是 AJAX 請求
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'ok': True, 
-                        'message': '活動創建成功！',
-                        'activity_id': activity.id
-                    })
+                    return JsonResponse({'ok': True, 'message': '活動創建成功！', 'activity_id': activity.id})
                 else:
-                    # 普通表單提交
                     messages.success(request, '活動創建成功！')
                     return redirect('activity_list')
-                    
             except Exception as e:
-                # 如果是 AJAX 請求
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'ok': False, 
-                        'errors': {'general': [f'創建活動時發生錯誤: {str(e)}']}
-                    })
+                    return JsonResponse({'ok': False, 'errors': {'general': [f'創建活動時發生錯誤: {str(e)}']}})
                 else:
                     messages.error(request, f'創建活動時發生錯誤: {str(e)}')
-                    
         else:
-            # 表單驗證失敗
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'ok': False, 
-                    'errors': form.errors
-                })
+                return JsonResponse({'ok': False, 'errors': form.errors})
             else:
                 messages.error(request, '表單填寫有誤，請檢查後重試')
-        
-        # 如果是普通表單提交且有錯誤，重新渲染表單
         return render(request, 'join_create.html', {'form': form})
     
-    # 其他 HTTP 方法
     return JsonResponse({'ok': False, 'errors': {'general': ['僅接受 GET 和 POST 請求']}})
 
 # -----------------------
-# 用戶參與的活動列表（可選功能）
+# 用戶參與的活動列表
 # -----------------------
 @login_required
 def my_activities(request):
-    """用戶參與的活動列表"""
-    # 用戶參與的活動
-    joined_activities = GroupActivity.objects.filter(
-        participants__user=request.user,
-        participants__status='joined'
-    ).annotate(
-        participants_count=Count('participants', filter=Q(participants__status='joined'))
-    ).order_by('date', 'time')
-    
-    # 用戶創建的活動
-    created_activities = GroupActivity.objects.filter(
-        user=request.user
-    ).annotate(
-        participants_count=Count('participants', filter=Q(participants__status='joined'))
-    ).order_by('date', 'time')
-    
-    return render(request, 'my_activities.html', {
-        'joined_activities': joined_activities,
-        'created_activities': created_activities,
-    })
+    joined_activities = GroupActivity.objects.filter(participants__user=request.user, participants__status='joined').annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('date', 'time')
+    created_activities = GroupActivity.objects.filter(user=request.user).annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('date', 'time')
+    return render(request, 'my_activities.html', {'joined_activities': joined_activities, 'created_activities': created_activities})
 
 # -----------------------
-# 活動參與者列表（可選功能）
+# 活動參與者列表
 # -----------------------
 @login_required
 def activity_participants(request, pk):
-    """查看活動參與者列表"""
     activity = get_object_or_404(GroupActivity, pk=pk)
-    
-    # 只有活動發起者才能查看參與者詳細信息
     if request.user != activity.user:
         messages.error(request, '您沒有權限查看此活動的參與者信息')
         return redirect('activity_detail', pk=pk)
     
-    participants = ActivityParticipant.objects.filter(
-        activity=activity, status='joined'
-    ).select_related('user').order_by('joined_at')
-    
-    return render(request, 'activity_participants.html', {
-        'activity': activity,
-        'participants': participants,
-    })
+    participants = ActivityParticipant.objects.filter(activity=activity, status='joined').select_related('user').order_by('joined_at')
+    return render(request, 'activity_participants.html', {'activity': activity, 'participants': participants})
 
+# -----------------------
+# 新增評論（保留 @login_required）
+# -----------------------
 @csrf_exempt
 @login_required
 def add_comment(request, activity_id):
@@ -933,6 +842,9 @@ def add_comment(request, activity_id):
     
     return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
 
+# -----------------------
+# 切換按讚（保留 @login_required）
+# -----------------------
 @csrf_exempt
 @login_required
 def toggle_like(request, comment_id):
