@@ -6,7 +6,8 @@ class ActivityForm(forms.ModelForm):
     class Meta:
         model = GroupActivity
         fields = [
-            'title', 'type', 'location', 'address', 'latitude', 'longitude', 'place_id',
+            'title', 'type', 'location_type', 'location', 
+            'address', 'latitude', 'longitude', 'place_id',
             'date', 'time', 'min_participants', 'max_participants',
             'description', 'cover_image', 'deadline', 'contact_info'
         ]
@@ -19,25 +20,32 @@ class ActivityForm(forms.ModelForm):
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
             'place_id': forms.HiddenInput(),
+            'location_type': forms.RadioSelect(),  # 使用單選按鈕
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # 確保圖片欄位不是必填
         self.fields['cover_image'].required = False
         self.fields['address'].required = False
         self.fields['latitude'].required = False
         self.fields['longitude'].required = False
         self.fields['place_id'].required = False
         self.fields['contact_info'].required = False
-
+        
     def clean(self):
         cleaned_data = super().clean()
+        location_type = cleaned_data.get('location_type')
+        location = cleaned_data.get('location')
         min_participants = cleaned_data.get('min_participants')
         max_participants = cleaned_data.get('max_participants')
         date = cleaned_data.get('date')
         deadline = cleaned_data.get('deadline')
 
+        # 校內校外驗證（改成只檢查 location）
+        if location_type == 'off_campus' and (not location or not location.strip()):
+            self.add_error('location', '校外活動必須填寫地點')
+
+        # 原有驗證
         if min_participants and max_participants and min_participants >= max_participants:
             self.add_error('max_participants', '最多參加人數必須大於最少參加人數')
 
@@ -45,7 +53,6 @@ class ActivityForm(forms.ModelForm):
             self.add_error('deadline', '報名截止日期必須早於活動日期')
 
         return cleaned_data
-
 
 
 class Book2Form(forms.ModelForm):
@@ -69,7 +76,6 @@ class Book2Form(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

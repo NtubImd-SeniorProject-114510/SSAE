@@ -10,12 +10,18 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 {% endblock %}
 
+{% if user.is_authenticated %}
+<div data-user-authenticated="true" data-user-id="{{ user.id }}" style="display: none;"></div>
+{% endif %}
+
 {% block content %}
 <body>
     {% if remaining_slots <= 0 %}
         <button class="fixed-cta" disabled>已額滿</button>
     {% elif a.is_deadline_passed %}
         <button class="fixed-cta" disabled>報名截止</button>
+    {% elif not request.user.is_authenticated %}
+        <button class="fixed-cta" onclick="triggerNavbarLogin();">登入即可參加</button>
     {% elif joined %}
         <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form">
             {% csrf_token %}
@@ -29,84 +35,80 @@
             <button class="fixed-cta" type="submit">立即報名</button>
         </form>
     {% endif %}
-    
+
     <div class="container">    
         <div class="back-button" onclick="history.back()">
             <a href="#">返回</a>
         </div>    
-        <div class="hero">            
-            <div class="event-details">                
-                <div class="event-info-cards">
-                    <div class="info-card">
-                        <div class="info-icon-circle">
-                            <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
-                        </div>
-                        <div class="info-content">
-                            <h3 class="info-title">活動地點</h3>
-                            <p class="info-value">{{ a.location_short }}</p>
-                            
-                            {% if a.address and a.address != a.location %}
-                                <p class="info-address">{{ a.address }}</p>
-                            {% endif %}
-                        </div>
+
+        <!-- 活動資訊卡 -->
+        <div class="section">
+            <div class="event-info-cards">
+                <div class="info-card">
+                    <div class="info-icon-circle">
+                        <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
                     </div>
-                    
-                    <div class="info-card">
-                        <div class="info-icon-circle">
-                            <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
-                        </div>
-                        <div class="info-content">
-                            <h3 class="info-title">活動時間</h3>
-                            <p class="info-value">
-                                {{ a.date|date:"m/d" }}（{{ a.date|date:"D" }}）{{ a.time|time:"H:i" }}
-                            </p>
-                        </div>
+                    <div class="info-content">
+                        <h3 class="info-title">活動地點</h3>
+                        <p class="info-value">{{ a.location_short }}</p>
+                        {% if a.address and a.address != a.location %}
+                            <p class="info-address">{{ a.address }}</p>
+                        {% endif %}
                     </div>
-                    
-                    <div class="info-card">
-                        <div class="info-icon-circle">
-                            <span class="info-icon"><i class="fa-solid fa-person"></i></span>
-                        </div>
-                        <div class="info-content">
-                            <h3 class="info-title">參加人數</h3>
-                            <p class="info-value">{{ total_participants }}/{{ a.max_participants }}人</p>
-                        </div>
-                    </div>
-                    
-                    {% if a.contact_info %}
-                    <div class="info-card">
-                        <div class="info-icon-circle">
-                            <span class="info-icon"><i class="fa-solid fa-phone"></i></span>
-                        </div>
-                        <div class="info-content">
-                            <h3 class="info-title">聯絡方式</h3>
-                            <p class="info-value">{{ a.contact_info }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
+
+                <div class="info-card">
+                    <div class="info-icon-circle">
+                        <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
+                    </div>
+                    <div class="info-content">
+                        <h3 class="info-title">活動時間</h3>
+                        <p class="info-value">{{ a.date|date:"m/d" }}（{{ a.date|date:"D" }}）{{ a.time|time:"H:i" }}</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon-circle">
+                        <span class="info-icon"><i class="fa-solid fa-person"></i></span>
+                    </div>
+                    <div class="info-content">
+                        <h3 class="info-title">參加人數</h3>
+                        <p class="info-value">{{ total_participants }}/{{ a.max_participants }}人</p>
+                    </div>
+                </div>
+
+                {% if a.contact_info %}
+                <div class="info-card">
+                    <div class="info-icon-circle">
+                        <span class="info-icon"><i class="fa-solid fa-phone"></i></span>
+                    </div>
+                    <div class="info-content">
+                        <h3 class="info-title">聯絡方式</h3>
+                        <p class="info-value">{{ a.contact_info }}</p>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
-        
+
+        <!-- 活動介紹 -->
         <div class="section">
             <h2 class="section-title">活動介紹</h2>
             <div class="section-content">
                 <p>{{ a.description|linebreaks }}</p>
             </div>
         </div>
-        
-        {% if a.has_location_data %}
+
+        {% if a.has_location_data and a.latitude and a.longitude %}
         <div class="section">
             <h2 class="section-title">活動地點</h2>
             <div class="map-container">
-                <div style="width: 100%; height: 100%;">
-                    <div id="activity-map" 
-                        style="width: 100%; height: 400px;"
-                        data-lat="{{ a.latitude }}"
-                        data-lng="{{ a.longitude }}"
-                        data-location="{{ a.location_full }}"
-                        data-address="{{ a.location_full }}">
-                    </div>
+                <div id="activity-map" 
+                    style="width: 100%; height: 400px;"
+                    data-lat="{{ a.latitude }}"
+                    data-lng="{{ a.longitude }}"
+                    data-location="{{ a.location_full }}"
+                    data-address="{{ a.location_full }}">
                 </div>
             </div>
             <div class="address">
@@ -265,7 +267,7 @@
                         <div class="related-content">
                             <h3 class="related-card-title">{{ activity.title }}</h3>
                             <div class="related-info">
-                                <span class="related-location"><i class="fa-solid fa-map-pin"></i> {{ activity.location_location_short }}</span>
+                                <span class="related-location"><i class="fa-solid fa-map-pin"></i> {{ activity.location_short }}</span>
                                 <span class="related-participants"><i class="fa-solid fa-person"></i> {{ activity.participants_count|add:1 }}/{{ activity.max_participants }}人</span>
                             </div>
                         </div>

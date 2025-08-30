@@ -1,32 +1,17 @@
-//web_app\static\js\join.js
-window.addEventListener('DOMContentLoaded', () => {
-  const popupId = sessionStorage.getItem('openPopup');
-  if (popupId) {
-    const popup = document.getElementById(popupId);
-    if (popup) {
-      popup.classList.add('active');
-      console.log(`自動開啟彈窗: ${popupId}`);
-    } else {
-      console.warn(`找不到彈窗 ID: ${popupId}`);
-    }
-    sessionStorage.removeItem('openPopup');
-  }
-});
-
-// join.js - 清理版本，專注於頁面特定功能
+// join.js - 清理版本，移除所有彈窗相關代碼
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('join.js 已載入');
     
     // 初始化頁面功能
-    sortActivitiesByStatus(); // 首先排序活動
+    sortActivitiesByStatus();
     initializeScrollAnimations();
     initializeParallax();
     initializeRandomClouds();
     initializeActivityCards();
 });
 
-// 新增：按照活動狀態排序功能
+// 按照活動狀態排序功能
 function sortActivitiesByStatus() {
     const activityGrid = document.querySelector('.activity-grid');
     if (!activityGrid) return;
@@ -38,11 +23,8 @@ function sortActivitiesByStatus() {
         const aIsDisabled = isActivityDisabled(a);
         const bIsDisabled = isActivityDisabled(b);
         
-        // 如果 a 是禁用的而 b 不是，a 排在後面
         if (aIsDisabled && !bIsDisabled) return 1;
-        // 如果 b 是禁用的而 a 不是，a 排在前面
         if (!aIsDisabled && bIsDisabled) return -1;
-        // 如果狀態相同，保持原順序
         return 0;
     });
     
@@ -60,7 +42,6 @@ function isActivityDisabled(activityCard) {
     const joinBtn = activityCard.querySelector('.join-btn');
     if (!joinBtn) return false;
     
-    // 檢查按鈕是否有 disabled class 或包含特定文字
     const isDisabled = joinBtn.classList.contains('disabled');
     const buttonText = joinBtn.textContent.trim();
     const isDeadlineOrFull = buttonText.includes('已額滿') || 
@@ -83,15 +64,12 @@ function initializeScrollAnimations() {
             if (cardTop < windowHeight - 100) {
                 setTimeout(() => {
                     card.classList.add('visible');
-                }, index * 100); // 錯開動畫時間
+                }, index * 100);
             }
         });
     }
     
-    // 初始檢查
     checkVisibility();
-    
-    // 滾動事件監聽
     window.addEventListener('scroll', checkVisibility);
 }
 
@@ -111,142 +89,252 @@ function initializeParallax() {
 
 // 初始化活動卡片功能
 function initializeActivityCards() {
-    // 獲取所有活動卡片
     const activityCards = document.querySelectorAll('.activity-card');
     
-    // 為每個活動卡片添加點擊事件監聽器
     activityCards.forEach(function(card) {
-        card.style.cursor = 'pointer'; // 添加手型游標，提示可點擊
+        card.style.cursor = 'pointer';
         
-        // 確保卡片點擊功能正常
         card.addEventListener('click', function(e) {
-            // 如果點擊的是 "我要參加" 按鈕，不執行卡片點擊
-            if (e.target.closest('.join-btn')) {
+            // 如果點擊的是按鈕或連結，不執行卡片點擊
+            if (e.target.closest('.join-btn') || e.target.closest('a')) {
                 return;
             }
             
-            // 獲取跳轉 URL（如果有設定 onclick）
+            // 獲取跳轉 URL
             const clickHandler = this.getAttribute('onclick');
             if (clickHandler) {
-                // 執行原本的 onclick 邏輯
                 eval(clickHandler);
             }
         });
     });
     
-    // 防止"我要參加"按鈕冒泡事件
+    // 防止按鈕冒泡事件
     const joinButtons = document.querySelectorAll('.join-btn');
     joinButtons.forEach(function(button) {
         button.addEventListener('click', function(e) {
-            e.stopPropagation(); // 阻止事件冒泡
-            console.log('參加活動:', this.href);
+            e.stopPropagation();
         });
     });
 }
 
-// 過濾功能
-function initializeFilters() {
-    const filterItems = document.querySelectorAll('.filter-item');
-    const searchBox = document.querySelector('.search-box');
-    const activityCards = document.querySelectorAll('.activity-card');
+// AJAX 表單提交（僅限已登入用戶）
+document.addEventListener('click', async (e) => {
+    const form = e.target.closest('form.inline-form');
+    if (!form) return;
     
-    // 過濾器事件監聽
-    filterItems.forEach(filter => {
-        filter.addEventListener('change', applyFilters);
-    });
+    // 檢查用戶是否已登入
+    const isAuthenticated = document.querySelector('[data-user-authenticated]');
     
-    // 搜尋框事件監聽
-    if (searchBox) {
-        searchBox.addEventListener('input', applyFilters);
+    if (!isAuthenticated) {
+        // 訪客點擊會直接跳轉到登入頁面（由模板中的 a 標籤處理）
+        return;
     }
     
-    function applyFilters() {
-        const searchTerm = searchBox ? searchBox.value.toLowerCase() : '';
-        
-        activityCards.forEach(card => {
-            const title = card.querySelector('.activity-title')?.textContent.toLowerCase() || '';
-            const description = card.querySelector('.activity-description')?.textContent.toLowerCase() || '';
-            const location = card.querySelector('.activity-location')?.textContent.toLowerCase() || '';
-            
-            // 檢查是否符合搜尋條件
-            const matchesSearch = !searchTerm || 
-                title.includes(searchTerm) || 
-                description.includes(searchTerm) || 
-                location.includes(searchTerm);
-            
-            // 顯示或隱藏卡片
-            if (matchesSearch) {
-                card.style.display = 'block';
-                // 重新觸發動畫
-                setTimeout(() => {
-                    card.classList.add('visible');
-                }, 100);
-            } else {
-                card.style.display = 'none';
-                card.classList.remove('visible');
+    e.preventDefault();
+    const url = form.action;
+    const btn = form.querySelector('button.join-btn');
+    
+    try {
+        const res = await fetch(url, {
+            method: 'POST', 
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
             }
         });
+        const data = await res.json();
+        
+        if (data.ok) {
+            // 根據 action 切換文案
+            if (url.includes('/join/')) {
+                btn.textContent = '取消參加';
+                form.action = form.action.replace('/join/','/cancel/');
+            } else {
+                btn.textContent = '我要參加';
+                form.action = form.action.replace('/cancel/','/join/');
+            }
+            
+            // 更新人數
+            const card = form.closest('.activity-card');
+            const countEl = card?.querySelector('.participant-count');
+            if (countEl && Number.isInteger(data.participants)) {
+                const max = countEl.textContent.split('/')[1];
+                countEl.textContent = `${data.participants}/${max}`;
+            }
+            
+            // 重新排序
+            setTimeout(() => {
+                sortActivitiesByStatus();
+            }, 100);
+            
+        } else {
+            alert('操作失敗');
+        }
+    } catch(err) {
+        console.error(err);
+        form.submit();
     }
-}
-
-// 工具函數：獲取活動資料
-function getActivityData(card) {
-    return {
-        title: card.querySelector('.activity-title')?.textContent || '',
-        description: card.querySelector('.activity-description')?.textContent || '',
-        location: card.querySelector('.activity-location span:last-child')?.textContent || '',
-        time: card.querySelector('.activity-time span:last-child')?.textContent || '',
-        participants: card.querySelector('.participant-count')?.textContent || '',
-        type: card.querySelector('.activity-tag')?.textContent || ''
-    };
-}
-
-// 初始化過濾功能（如果需要的話）
-// initializeFilters();
-
-// static/js/join.js 末尾或合適位置新增：
-document.addEventListener('click', async (e)=>{
-  const form = e.target.closest('form.inline-form');
-  if (!form) return;
-  e.preventDefault();
-  const url = form.action;
-  const btn = form.querySelector('button.join-btn');
-  try {
-    const res = await fetch(url, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken': getCookie('csrftoken')}});
-    const data = await res.json();
-    if (data.ok) {
-      // 根據 action 切換文案
-      if (url.includes('/join/')) {
-        btn.textContent = '取消參加';
-        form.action = form.action.replace('/join/','/cancel/');
-      } else {
-        btn.textContent = '我要參加';
-        form.action = form.action.replace('/cancel/','/join/');
-      }
-      // 更新人數（選到同卡片內的 .participant-count）
-      const card = form.closest('.activity-card');
-      const countEl = card?.querySelector('.participant-count');
-      if (countEl && Number.isInteger(data.participants)) {
-        // 右側顯示格式：current/max人
-        const max = countEl.textContent.split('/')[1];
-        countEl.textContent = `${data.participants}/${max}`;
-      }
-      
-      // 活動狀態可能改變後，重新排序
-      setTimeout(() => {
-        sortActivitiesByStatus();
-      }, 100);
-      
-    } else {
-      alert('操作失敗');
-    }
-  } catch(err){
-    console.error(err);
-    form.submit(); // 退路：改用傳統提交
-  }
 });
 
 function getCookie(name) {
-  const value = document.cookie.split('; ').find(row=>row.startsWith(name+'='));
-  return value ? decodeURIComponent(value.split('=')[1]) : '';
+    const value = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+    return value ? decodeURIComponent(value.split('=')[1]) : '';
 }
+
+function clearFilters() {
+    document.querySelectorAll('.filter-item').forEach(select => {
+        select.selectedIndex = 0;
+    });
+    document.querySelector('.search-box').value = '';
+    window.location.href = window.location.pathname;
+}
+
+// 確保表單提交正常工作
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        console.log('篩選表單已初始化');
+        
+        const searchBox = filterForm.querySelector('.search-box');
+        if (searchBox) {
+            searchBox.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    filterForm.submit();
+                }
+            });
+        }
+    }
+});
+
+// 初始化隨機雲朵（保留原有功能）
+function initializeRandomClouds() {
+    // 如果原本有雲朵動畫，保留在這裡
+}
+
+// join.js - 添加觸發導航列登入的函數
+
+// 觸發導航列登入流程的函數
+function triggerNavbarLogin() {
+    console.log('觸發導航列登入流程...');
+    
+    // 方法1：直接點擊導航列的登入按鈕
+    const navLoginButton = document.getElementById('loginButton');
+    if (navLoginButton) {
+        console.log('找到導航列登入按鈕，模擬點擊');
+        
+        // 先顯示用戶下拉菜單
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (userMenuButton && userDropdown) {
+            // 顯示下拉菜單
+            userDropdown.classList.add('show');
+            
+            // 延遲一點再點擊登入按鈕
+            setTimeout(() => {
+                navLoginButton.click();
+            }, 100);
+        } else {
+            // 直接點擊登入按鈕
+            navLoginButton.click();
+        }
+        return;
+    }
+    
+    // 方法2：檢查手機版的登入按鈕
+    const phoneLoginButton = document.querySelector('#phoneDropdown #loginButton');
+    if (phoneLoginButton) {
+        console.log('使用手機版登入按鈕');
+        phoneLoginButton.click();
+        return;
+    }
+    
+    // 方法3：嘗試調用可能存在的登入彈窗函數
+    const possibleLoginFunctions = [
+        'showLoginModal',
+        'openLoginPopup', 
+        'displayAuthModal',
+        'showLoginPop',
+        'openAuthModal',
+        'triggerLoginModal'
+    ];
+    
+    for (const funcName of possibleLoginFunctions) {
+        if (typeof window[funcName] === 'function') {
+            console.log(`找到登入函數: ${funcName}`);
+            window[funcName]();
+            return;
+        }
+    }
+    
+    // 方法4：直接跳轉到 Google OAuth2（與導航列相同）
+    console.log('直接跳轉到 Google 登入');
+    window.location.href = '/auth/login/google-oauth2/';
+}
+
+// 檢查並初始化登入彈窗功能
+function initializeLoginIntegration() {
+    console.log('初始化登入整合功能...');
+    
+    // 檢查導航列登入按鈕是否存在
+    const navLoginButton = document.getElementById('loginButton');
+    if (navLoginButton) {
+        console.log('找到導航列登入按鈕');
+        console.log('按鈕 href:', navLoginButton.href);
+        console.log('按鈕 onclick:', navLoginButton.getAttribute('onclick'));
+        
+        // 檢查按鈕是否有特殊的事件監聽器
+        if (typeof getEventListeners === 'function') {
+            const listeners = getEventListeners(navLoginButton);
+            console.log('導航列登入按鈕的事件監聽器:', listeners);
+        }
+    }
+    
+    // 檢查是否有登入相關的全域函數
+    const loginFunctions = [
+        'showLoginModal',
+        'openLoginPopup', 
+        'displayAuthModal',
+        'showLoginPop',
+        'openAuthModal'
+    ];
+    
+    loginFunctions.forEach(funcName => {
+        if (typeof window[funcName] === 'function') {
+            console.log(`找到全域登入函數: ${funcName}`);
+        }
+    });
+    
+    // 檢查 login_pop.html 是否已載入
+    const loginPop = document.getElementById('login_pop') || 
+                    document.getElementById('loginModal') ||
+                    document.querySelector('[class*="login"][class*="pop"]') ||
+                    document.querySelector('[class*="login"][class*="modal"]');
+    
+    if (loginPop) {
+        console.log('找到登入彈窗元素:', loginPop.id || loginPop.className);
+    } else {
+        console.log('未找到登入彈窗元素');
+    }
+}
+
+// 在 DOM 載入完成後執行初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('join.js 已載入');
+    
+    // 初始化登入整合
+    setTimeout(() => {
+        initializeLoginIntegration();
+    }, 500); // 延遲確保所有 include 的模板都已載入
+    
+    // 初始化其他頁面功能
+    sortActivitiesByStatus();
+    initializeScrollAnimations();
+    initializeParallax();
+    initializeRandomClouds();
+    initializeActivityCards();
+});
+
+// 設為全域函數
+window.triggerNavbarLogin = triggerNavbarLogin;
