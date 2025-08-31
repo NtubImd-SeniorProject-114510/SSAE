@@ -437,121 +437,89 @@ def comment_detail(request):
     return render(request, "comment_detail.html", context)
 
 def add_comment(request):
-    from .models import Course, Department, Academica, AcadeDepart, AcadeGrade
     import json
-    
-    # Get all academics
+    from .models import Course, Departmentd, Academica, AcadeDepart, AcadeGrade
+
     academics = Academica.objects.all()
-    
-    # Prepare departments data by academic
+    departments = Departmentd.objects.all()
+    grades = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
+
+    # 資料對應 dicts
     departments_data = {}
-    for academic in academics:
-        dept_ids = AcadeDepart.objects.filter(academica=academic).values_list('departmentd_id', flat=True)
-        departments = Department.objects.filter(id__in=dept_ids).values('id', 'name')
-        departments_data[str(academic.id)] = [{'id': d['id'], 'name': d['name']} for d in departments]
-    
-    # Prepare grades data by academic
     grades_data = {}
+
+    # 預設學制 0 時顯示全部
+    departments_data[0] = list(departments.values('id', 'name'))
+    grades_data[0] = grades
+
     for academic in academics:
-        grades = AcadeGrade.objects.filter(academica=academic).values_list('grade_level', flat=True).distinct()
-        grades_data[str(academic.id)] = list(grades) if grades.exists() else ['一', '二', '三', '四', '五']
-    
-    # Initialize empty departments and grades for the form
-    departments = Department.objects.none()
-    grades = []
-    
-    context = {
-        'academics': academics,
-        'departments': departments,
-        'grades': grades,
-        'departments_data': json.dumps(departments_data, ensure_ascii=False),
-        'grades_data': json.dumps(grades_data, ensure_ascii=False),
-        'selected_course': None,
-        'selected_teacher': None,
-        'selected_academic': None,
-        'selected_department': None,
-        'selected_grade': None
-    }
-    
-    # 如果有學制ID，獲取對應的科系
-    academic_id = request.GET.get('academic_id')
-    if academic_id:
-        try:
-            context['selected_academic'] = Academica.objects.get(id=academic_id)
-            # 獲取該學制下的科系
-            dept_ids = AcadeDepart.objects.filter(academica_id=academic_id).values_list('departmentd_id', flat=True)
-            departments = Department.objects.filter(id__in=dept_ids)
-            context['departments'] = departments
-        except (Academica.DoesNotExist, ValueError) as e:
-            print(f"Error getting academic data: {e}")
-            pass
-    
-    # 檢查是否有從評論彈窗傳來的課程ID
-    course_id = request.GET.get('course_id')
-    if not course_id:
-        course_id = request.GET.get('course')  # 也檢查是否有 course 參數
-        
+        if not str(academic.id).isdigit():
+            continue
+
+        departments_data[academic.id] = list(
+            Departmentd.objects.filter(
+                acadedepart__academica=academic.id
+            ).values('id', 'name')
+        )
+
+        grades_data[academic.id] = list(
+            AcadeGrade.objects.filter(
+                academica=academic.id
+            ).values_list('grade_level', flat=True).distinct()
+        )
+
+    # 課程資料
+    courses = Course.objects.select_related('departmentd', 'academica').all()
+    courses_data = [{
+        'id': course.id,
+        'course_id': course.course_id,
+        'course_name': course.course_name,      # 確保course_name欄位存在
+        'course_teacher': course.course_teacher,
+        'academic_id': course.academica_id,
+        'academic_name': course.academica.name if course.academica else '',
+        'department_id': course.departmentd_id,
+        'department_name': course.departmentd.name if course.departmentd else '',
+        'grade_level': course.grade_level,
+    } for course in courses]
+
+    # 是否有選到某課程
+    course_id = request.GET.get('course_id') or request.GET.get('course')
+    selected_course = None
+    selected_teacher = None
+    selected_academic = None
+    selected_department = None
+    selected_grade = None
+
     if course_id:
         try:
-            # 檢查 course_id 是否是數字
-            if not str(course_id).isdigit():
-                # 如果不是數字，嘗試通過 course_id 欄位查找
-                course = Course.objects.filter(course_id=course_id).first()
-                if not course and '_' in course_id:
-                    # 如果找不到且包含底線，嘗試分割 course_id 獲取數字部分
-                    numeric_part = course_id.split('_')[0]
-                    if numeric_part.isdigit():
-                        course = Course.objects.filter(id=int(numeric_part)).first()
-            else:
-                # 如果是數字，直接通過 id 查找
-                course = Course.objects.filter(id=int(course_id)).first()
-                
-            if not course:
-                raise Course.DoesNotExist(f"找不到 ID 為 {course_id} 的課程")
-                
-            context['selected_course'] = course
-            
-            # 如果有傳入教師名稱，也一併傳給模板
-            teacher_name = request.GET.get('teacher_name')
-            if teacher_name:
-                context['selected_teacher'] = teacher_name
-            
-            # 設置課程對應的學制和科系
-            try:
-                context['selected_academic'] = course.academica
-                context['selected_department'] = course.departmentd
-                
-                # 獲取該學制的年級
-                grades = course.grade_level.split(',') if course.grade_level else []
-                if grades:
-                    context['grades'] = [g.strip() for g in grades]
-                
-                # 如果沒有年級數據，使用默認年級
-                if not context['grades']:
-                    context['grades'] = ['一', '二', '三', '四', '五']
-                
-                # 設置選中的年級
-                if course.grade_level:
-                    context['selected_grade'] = course.grade_level.split(',')[0].strip()
-                
-                # 加載該學制下的所有科系
-                dept_ids = AcadeDepart.objects.filter(academica=course.academica).values_list('departmentd_id', flat=True)
-                context['departments'] = Department.objects.filter(id__in=dept_ids)
-                    
-            except Exception as e:
-                print(f"Error getting course relationships: {e}")
-                
-        except (Course.DoesNotExist, ValueError) as e:
-            print(f"Error getting course: {e}")
-            # 設置預設值，避免模板錯誤
-            context['grades'] = ['一', '二', '三', '四', '五']
-            pass
-    
-    # Add validation for course_id to ensure it's a valid number before querying the database
-    if course_id and not str(course_id).isdigit():
-        return HttpResponseBadRequest("Invalid course ID")
+            selected_course = Course.objects.get(id=course_id)
+            selected_teacher = selected_course.course_teacher
+            selected_academic = selected_course.academica
+            selected_department = selected_course.departmentd
 
-    return render(request, "add_comment.html", context)
+            if selected_course.grade_level:
+                grades_split = selected_course.grade_level.split(',')
+                selected_grade = grades_split[0].strip() if grades_split else None
+        except Course.DoesNotExist:
+            pass
+
+    return render(request, "add_comment.html", {
+        "academics": academics,
+        "departments": departments,
+        "grades": grades,
+        "departments_data": json.dumps(departments_data, ensure_ascii=False),
+        "grades_data": json.dumps(grades_data, ensure_ascii=False),
+        "courses": courses,
+        "courses_json": json.dumps(courses_data, ensure_ascii=False),  # 這裡有回傳 JSON 格式資料
+        "selected_course": selected_course,
+        "selected_teacher": selected_teacher,
+        "selected_academic": selected_academic,
+        "selected_department": selected_department,
+        "selected_grade": selected_grade,
+    })
+
+
+
 
 # API Endpoints for Dynamic Dropdowns
 @require_GET

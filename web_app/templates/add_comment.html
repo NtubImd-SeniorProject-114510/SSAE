@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block title %}新增評論{% endblock %}
-
 {% block lang %}zh{% endblock %}
 
 {% load static %}
@@ -10,38 +9,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{% static 'css/add_comment.css' %}">
 <style>
-    /* Add loading spinner for dropdowns */
-    .loading {
-        position: relative;
-        pointer-events: none;
-        opacity: 0.7;
-    }
-    .loading:after {
-        content: "";
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        width: 16px;
-        height: 16px;
-        margin-top: -8px;
-        border: 2px solid #ccc;
-        border-top-color: #333;
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<script id="departments-data" type="application/json">
-    {{ departments_data|safe }}
-</script>
-<script id="grades-data" type="application/json">
-    {{ grades_data|safe }}
-</script>
 <div style="margin-top: 80px;"></div>
 <div class="comment-container">
 
@@ -55,8 +26,8 @@
             <div class="form-col-left">
                 
                 <div class="form-group">
-                    <label for="category">學制</label>
-                    <select id="category" name="academic" class="form-control" required>
+                    <label for="academic">學制</label>
+                    <select id="academic" name="academic" class="form-control" required>
                         <option value="">選擇學制</option>
                         {% for academic in academics %}
                         <option value="{{ academic.id }}" 
@@ -68,8 +39,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="class_info">科系</label>
-                    <select id="class_info" name="department" class="form-control" required>
+                    <label for="department">科系</label>
+                    <select id="department" name="department" class="form-control" required>
                         <option value="">選擇科系</option>
                         {% for department in departments %}
                         <option value="{{ department.id }}" 
@@ -85,7 +56,7 @@
                         <option value="">選擇年級</option>
                         {% for grade in grades %}
                         <option value="{{ grade }}" 
-                                {% if selected_course and selected_grade == grade %}selected{% endif %}>
+                                {% if selected_grade == grade %}selected{% endif %}>
                             {{ grade }}
                         </option>
                         {% endfor %}
@@ -95,12 +66,8 @@
                 <div class="form-group">
                     <label for="course">課程</label>
                     <select id="course" name="course" class="form-control" required>
-                        <option value="">{% if selected_course %}{{ selected_course.course_name }}{% else %}請先選擇學制、科系和年級{% endif %}</option>
-                        {% if selected_course %}
-                            <option value="{{ selected_course.id }}" selected>
-                                {{ selected_course.course_name }}
-                            </option>
-                        {% endif %}
+                        <option value="">請先選擇學制、科系和年級</option>
+                        <!-- JS 動態產生課程選項 -->
                     </select>
                     {% if selected_teacher %}
                     <input type="hidden" id="teacher_name" name="teacher_name" value="{{ selected_teacher }}">
@@ -147,15 +114,14 @@
         <div class="top-row-container">
             <div class="course-info-container">
                 <div class="comment-header">
-                    <h3>{{course.course_name}}</h3>
-                    <h3>授課教師:{{course.course_teacher}}</h3>
+                    <h3>{{ selected_course.course_name }}</h3>
+                    <h3>授課教師: {{ selected_course.course_teacher }}</h3>
                 </div>
             </div>
         </div>
         
         <div class="comment-content">
             <div class="comment-text-area">
-                <!-- 這門課超爛，老師根本不會教，完全是照著投影片念，講話有夠無聊，根本是在整學生，每週都要熬夜寫報告，完全沒有人性，奉勸大家不要踩雷，能避就避！ -->
                 <textarea id="comment_text" name="comment_text" rows="10" placeholder="輸入評論內容..."></textarea>
             </div>
             
@@ -187,20 +153,29 @@
 {% endblock %}
 
 {% block scripts %}
+<script id="departments-data" type="application/json">
+    {{ departments_data|safe }}
+</script>
+<script id="grades-data" type="application/json">
+    {{ grades_data|safe }}
+</script>
+<script id="courses-data" type="application/json">
+    {{ courses_json|safe }}
+</script>
+
 <script src="{% static 'js/add_comment.js' %}"></script>
+
 <script>
-// Initialize form validation
+// 表單送出驗證
 function validateForm() {
     const form = document.getElementById('commentForm');
     if (!form.checkValidity()) {
-        // If the form is invalid, show validation messages
         form.reportValidity();
         return false;
     }
     return true;
 }
 
-// Update form submission to include validation
 const form = document.getElementById('commentForm');
 if (form) {
     form.onsubmit = function(e) {
@@ -211,10 +186,6 @@ if (form) {
         return confirm('確定要提交評論嗎？');
     };
 }
-
-// Initialize tooltips
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip();
-});
 </script>
+
 {% endblock %}
