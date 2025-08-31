@@ -1,5 +1,6 @@
 <!-- join_pop.html - 發起揪團彈跳視窗 -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/static/css/join_pop.css">
 
 <div class="upload-form" id="uploadForm">
     <div class="upload-container">
@@ -33,13 +34,13 @@
                             </div>
                         </div>
                         <div class="preview-description" id="preview-description">活動說明將顯示在這裡...</div>
-                        <div id="preview-map" style="width:100%; height:200px; margin-top:10px; border-radius:8px; overflow:hidden;"></div>
+                        <div id="preview-map" style="width:100%; height:200px; margin-top:10px; border-radius:8px; overflow:hidden; display:none;"></div>
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="activity-title" class="form-label">活動標題</label>
+                <label for="activity-title" class="form-label" style="margin-top: 20px;">活動標題</label>
                 <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
             </div>
             
@@ -59,18 +60,40 @@
                     </div>
                 </div>
                 <div class="form-col">
+                    <!-- 校內校外選擇 -->
                     <div class="form-group">
-                        <label for="activity-location" class="form-label">活動地點</label>
-                        <div class="location-input-container">
-                            <input type="text" id="activity-location" name="location" class="form-input" placeholder="搜尋地點（例：好樂迪）" required>
-                            <div id="location-suggestions" class="location-suggestions"></div>
+                        <label class="form-label">地點類型</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="location_type" value="on_campus">
+                                <span>校內</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="location_type" value="off_campus">
+                                <span>校外</span>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- 校內教室欄位 -->
+            <div class="form-group" id="classroom-field" style="display:none;">
+                <label for="classroom" class="form-label">教室</label>
+                <input type="text" id="classroom" class="form-input" placeholder="例如：承曦樓505、圖書館討論室1">
+            </div>
+
+            <!-- 校外地點欄位 -->
+            <div class="form-group" id="location-field" style="display:none;">
+                <label for="activity-location" class="form-label">活動地點</label>
+                <div class="location-input-container">
+                    <input type="text" id="activity-location" class="form-input" placeholder="搜尋地點（例：好樂迪）">
+                    <div id="location-suggestions" class="location-suggestions"></div>
+                </div>
+            </div>
             
             <!-- 隱藏欄位存儲地理位置資訊 -->
-            <input type="hidden" name="address" id="selected-address">
+            <input type="hidden" id="selected-address" name="location">
             <input type="hidden" name="latitude" id="selected-latitude">
             <input type="hidden" name="longitude" id="selected-longitude">
             <input type="hidden" name="place_id" id="selected-place-id">
@@ -111,16 +134,6 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label">活動封面圖片（選填）</label>
-                <div class="image-upload-container" id="image-upload-area">
-                    <div class="image-upload-icon">📷</div>
-                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
-                </div>
-                <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
-                <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
-            </div>
-            
-            <div class="form-group">
                 <label for="activity-deadline" class="form-label">報名截止日期</label>
                 <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
             </div>
@@ -128,6 +141,16 @@
             <div class="form-group">
                 <label for="contact-info" class="form-label">聯絡方式（選填）</label>
                 <input type="text" id="contact-info" name="contact_info" class="form-input" placeholder="LINE ID、IG、電話等">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">活動封面圖片（選填）</label>
+                <div class="image-upload-container" id="image-upload-area">
+                    <div class="image-upload-icon">📷</div>
+                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+                </div>
+                <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
+                <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
             </div>
             
             <div class="buttons-container">
@@ -139,3 +162,4 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/js/join_pop.js"></script>

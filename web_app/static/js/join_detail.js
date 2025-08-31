@@ -2,34 +2,156 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeActivityMap();
     initializeComments();
     initializeCTAButtons();
+    initializeLoginIntegration(); // 新增：初始化登入整合
 });
+
+// ========================== 登入整合功能 ==========================
+// 觸發導航列登入流程的函數
+function triggerNavbarLogin() {
+    console.log('觸發導航列登入流程...');
+    
+    // 方法1：直接點擊導航列的登入按鈕
+    const navLoginButton = document.getElementById('loginButton');
+    if (navLoginButton) {
+        console.log('找到導航列登入按鈕，模擬點擊');
+        
+        // 先顯示用戶下拉菜單（如果需要）
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (userMenuButton && userDropdown && !userDropdown.classList.contains('show')) {
+            // 顯示下拉菜單
+            userDropdown.classList.add('show');
+            
+            // 延遲一點再點擊登入按鈕，讓動畫完成
+            setTimeout(() => {
+                navLoginButton.click();
+            }, 150);
+        } else {
+            // 直接點擊登入按鈕
+            navLoginButton.click();
+        }
+        return;
+    }
+    
+    // 方法2：檢查手機版的登入按鈕
+    const phoneLoginButton = document.querySelector('#phoneDropdown #loginButton');
+    if (phoneLoginButton) {
+        console.log('使用手機版登入按鈕');
+        
+        // 如果需要先打開手機菜單
+        const phoneDropdown = document.getElementById('phoneDropdown');
+        if (phoneDropdown && !phoneDropdown.classList.contains('show')) {
+            // 打開手機菜單
+            if (typeof openPhoneMenu === 'function') {
+                openPhoneMenu();
+            }
+            
+            setTimeout(() => {
+                phoneLoginButton.click();
+            }, 150);
+        } else {
+            phoneLoginButton.click();
+        }
+        return;
+    }
+    
+    // 方法3：嘗試調用可能存在的登入彈窗函數
+    const possibleLoginFunctions = [
+        'showLoginModal',
+        'openLoginPopup', 
+        'displayAuthModal',
+        'showLoginPop',
+        'openAuthModal',
+        'triggerLoginModal'
+    ];
+    
+    for (const funcName of possibleLoginFunctions) {
+        if (typeof window[funcName] === 'function') {
+            console.log(`找到登入函數: ${funcName}`);
+            window[funcName]();
+            return;
+        }
+    }
+    
+    // 方法4：直接跳轉到 Google OAuth2（最後備用）
+    console.log('直接跳轉到 Google 登入');
+    window.location.href = '/auth/login/google-oauth2/';
+}
+
+// 檢查並初始化登入彈窗功能
+function initializeLoginIntegration() {
+    console.log('初始化登入整合功能...');
+    
+    // 檢查導航列登入按鈕是否存在
+    const navLoginButton = document.getElementById('loginButton');
+    if (navLoginButton) {
+        console.log('找到導航列登入按鈕');
+        console.log('按鈕 href:', navLoginButton.href);
+        console.log('按鈕 onclick:', navLoginButton.getAttribute('onclick'));
+    } else {
+        console.log('未找到導航列登入按鈕');
+    }
+    
+    // 檢查是否有登入相關的全域函數
+    const loginFunctions = [
+        'showLoginModal',
+        'openLoginPopup', 
+        'displayAuthModal',
+        'showLoginPop',
+        'openAuthModal'
+    ];
+    
+    loginFunctions.forEach(funcName => {
+        if (typeof window[funcName] === 'function') {
+            console.log(`找到全域登入函數: ${funcName}`);
+        }
+    });
+    
+    // 檢查 login_pop.html 是否已載入
+    const loginPop = document.getElementById('login_pop') || 
+                    document.getElementById('loginModal') ||
+                    document.querySelector('[class*="login"][class*="pop"]') ||
+                    document.querySelector('[class*="login"][class*="modal"]');
+    
+    if (loginPop) {
+        console.log('找到登入彈窗元素:', loginPop.id || loginPop.className);
+    } else {
+        console.log('未找到登入彈窗元素');
+    }
+}
+
 
 // ========================== 活動地圖 ==========================
 function initializeActivityMap() {
     const mapElement = document.getElementById('activity-map');
-    if (!mapElement) return;
+    if (!mapElement) return; // 沒有地圖就直接返回
 
     const lat = parseFloat(mapElement.dataset.lat);
     const lng = parseFloat(mapElement.dataset.lng);
-    const location = mapElement.dataset.location;
-    const address = mapElement.dataset.address;
+    const location = mapElement.dataset.location || '';
+    const address = mapElement.dataset.address || '';
 
-    if (lat && lng) {
-        const map = L.map('activity-map').setView([lat, lng], 15);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        const marker = L.marker([lat, lng]).addTo(map);
-        
-        marker.bindPopup(`
-            <div style="padding: 10px;">
-                <h4 style="margin: 0 0 5px 0;">${location}</h4>
-                <p style="margin: 0; color: #666;">${address}</p>
-            </div>
-        `);
+    // 如果沒有座標就隱藏整個地圖區塊
+    if (!lat || !lng) {
+        mapElement.closest('.section')?.remove();
+        return;
     }
+
+    const map = L.map('activity-map').setView([lat, lng], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const marker = L.marker([lat, lng]).addTo(map);
+
+    marker.bindPopup(`
+        <div style="padding: 10px;">
+            <h4 style="margin: 0 0 5px 0;">${location}</h4>
+            <p style="margin: 0; color: #666;">${address}</p>
+        </div>
+    `);
 }
 
 // ========================== 評論功能 ==========================
@@ -37,7 +159,6 @@ function initializeComments() {
     const discussionSection = document.querySelector('.discussion-section');
     if (!discussionSection) return;
 
-    // 點擊事件代理
     discussionSection.addEventListener('click', function(e) {
         const likeBtn = e.target.closest('.like-btn');
         if (likeBtn) {
@@ -47,7 +168,6 @@ function initializeComments() {
             return;
         }
 
-        // 只處理主評論的回覆，移除 .reply-to-reply
         const replyBtn = e.target.closest('.reply-btn');
         if (replyBtn) {
             e.preventDefault();
@@ -69,22 +189,17 @@ function initializeComments() {
             const content = textarea.value.trim();
             const parentId = formContainer.dataset.parentId;
             const activityId = formContainer.dataset.activityId;
-            if (content) {
-                submitComment(activityId, content, textarea, parentId);
-            }
+            if (content) submitComment(activityId, content, textarea, parentId);
         }
     });
 
-    // 發表新評論
     const submitBtn = document.getElementById('submitComment');
     if (submitBtn) {
         submitBtn.addEventListener('click', function() {
             const textarea = document.getElementById('newCommentText');
             const content = textarea.value.trim();
             const activityId = this.dataset.activityId;
-            if (content) {
-                submitComment(activityId, content, textarea);
-            }
+            if (content) submitComment(activityId, content, textarea);
         });
     }
 }
@@ -94,7 +209,6 @@ function handleReply(button) {
     const parentCard = button.closest('.comment-card, .reply');
     if (!parentCard) return;
 
-    // 移除舊表單
     parentCard.querySelector('.reply-form-container')?.remove();
 
     const userName = parentCard.querySelector('.user-name')?.textContent.trim() || 'User';
@@ -120,7 +234,6 @@ function handleReply(button) {
 }
 
 // ========================== 後端交互 ==========================
-// 點讚
 function toggleLike(commentId, button) {
     fetch(`/api/comments/${commentId}/toggle-like/`, {
         method: 'POST',
@@ -133,14 +246,13 @@ function toggleLike(commentId, button) {
     .then(data => {
         if (data.success) {
             const likeCount = button.querySelector('.like-count');
-            likeCount.textContent = data.likes_count;
+            if (likeCount) likeCount.textContent = data.likes_count;
             button.classList.toggle('liked', data.is_liked);
         }
     })
     .catch(err => console.error('Like error:', err));
 }
 
-// 發表評論 / 回覆
 function submitComment(activityId, content, textarea, parentId = null) {
     fetch(`/api/activities/${activityId}/comments/`, {
         method: 'POST',
@@ -148,23 +260,18 @@ function submitComment(activityId, content, textarea, parentId = null) {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({
-            content: content,
-            parent_id: parentId
-        })
+        body: JSON.stringify({ content, parent_id: parentId })
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
             textarea.value = '';
-            // 重新載入或用 AJAX 動態插入
             location.reload();
         }
     })
     .catch(err => console.error('Comment error:', err));
 }
 
-// 取 CSRF token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie) {
@@ -186,9 +293,16 @@ function initializeCTAButtons() {
         button.addEventListener('click', function() {
             const targetId = this.getAttribute('data-target');
             const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
-            }
+            if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth' });
         });
     });
 }
+
+
+// 工具函數：檢查用戶是否已登入
+function isUserAuthenticated() {
+    return document.querySelector('[data-user-authenticated]') !== null;
+}
+
+// 設為全域函數，確保模板中的 onclick 可以調用
+window.triggerNavbarLogin = triggerNavbarLogin;

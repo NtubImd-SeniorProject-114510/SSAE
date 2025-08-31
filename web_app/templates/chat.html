@@ -22,7 +22,7 @@
       <i class="fa-solid fa-plus"></i> <span>新增對話</span>
     </button>
     <div class="sidebar-record">
-      <div>---------------  對話歷史  --------------</div>
+      <div id="historyTitle">---------------  對話歷史  --------------</div>
     </div>
     <div class="chat-history" id="chatHistory">
       <!-- 對話歷史由 JavaScript 動態載入 -->
@@ -77,6 +77,9 @@
 {% endblock %}
 
 {% block body_js %}
+<script>
+    window.IS_AUTH = "{{ request.user.is_authenticated|yesno:'true,false' }}" === "true";
+</script>
 <script src="{% static 'js/chat.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 {% endblock %}

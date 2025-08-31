@@ -243,7 +243,7 @@ menuBtn.addEventListener('click', () => {
     }
 });
 
-// 從API載入對話列表
+// 從API載入對話列表（修正版：失敗時顯示訪客提示）
 async function loadConvos() {
     try {
         const res = await fetch('/api/conversations/');
@@ -252,12 +252,102 @@ async function loadConvos() {
         renderConvos();
     } catch (error) {
         console.error('載入對話失敗:', error);
+        // 若發生錯誤，視為沒有對話 -> 顯示訪客提示
+        conversations = [];
+        renderConvos();
     }
 }
 
-// 渲染對話列表
+// 渲染對話列表（含 historyTitle、訪客/已登入差異與 CTA）
 function renderConvos() {
+    const historyTitle = document.getElementById('historyTitle');
     chatHistoryEl.innerHTML = '';
+
+    const isAuth = !!window.IS_AUTH; // 確保為布林
+
+    // 沒有對話的狀況
+    if (!conversations || conversations.length === 0) {
+        // 設定標題（存在就改）
+        if (historyTitle) {
+            historyTitle.textContent = isAuth
+                ? '---------------  對話歷史  --------------'
+                : '---------------  訪客模式  --------------';
+        }
+
+        if (!isAuth) {
+            // 訪客提示
+            const guestNotice = document.createElement('div');
+            guestNotice.className = 'guest-notice';
+            guestNotice.style.cssText = `
+                padding: 15px;
+                text-align: center;
+                color: #666;
+                font-size: 14px;
+                border-radius: 8px;
+                background: #f8f9fa;
+                margin: 10px;
+            `;
+            guestNotice.innerHTML = '👤 訪客模式<br/>對話記錄不會被保存';
+            chatHistoryEl.appendChild(guestNotice);
+        } else {
+            // 已登入但尚無對話：顯示 CTA（使用 newChatBtn 重用既有邏輯）
+            const emptyNotice = document.createElement('div');
+            emptyNotice.className = 'empty-notice';
+            emptyNotice.style.cssText = `
+                padding: 18px;
+                text-align: center;
+                color: #444;
+                font-size: 14px;
+                border-radius: 8px;
+                background: #ffffff;
+                margin: 10px;
+                border: 1px dashed #e0e0e0;
+            `;
+            emptyNotice.innerHTML = `
+                <div style="margin-bottom:10px;">尚無對話 — 您可以建立第一個對話來開始使用。</div>
+                <div><button id="createFirstChatBtn" style="
+                    background:#007bff;color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;
+                ">建立第一個對話</button></div>
+            `;
+            chatHistoryEl.appendChild(emptyNotice);
+
+            // 綁定按鈕
+            const createBtn = document.getElementById('createFirstChatBtn');
+            if (createBtn) {
+                createBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // 如果你已經有 newChatBtn 的處理流程，直接呼叫它最方便
+                    if (typeof newChatBtn !== 'undefined' && newChatBtn) {
+                        newChatBtn.click();
+                    } else {
+                        // fallback：呼叫 API 建立並載入
+                        (async () => {
+                            try {
+                                const title = `新對話${nextSeq++}`;
+                                const res = await fetch("/api/conversations/", {
+                                    method: "POST",
+                                    headers: {"Content-Type": "application/json"},
+                                    body: JSON.stringify({title})
+                                });
+                                const newConvo = await res.json();
+                                await loadConvos();
+                                selectConvo(newConvo.id);
+                            } catch (err) {
+                                console.error('建立對話失敗：', err);
+                            }
+                        })();
+                    }
+                });
+            }
+        }
+
+        return; // 無對話就結束
+    }
+
+    // 有對話：設定標題
+    if (historyTitle) historyTitle.textContent = '---------------  對話歷史  --------------';
+
+    // 原本的對話列表渲染邏輯（保持你既有內容）
     conversations.forEach(c => {
         const chatItem = document.createElement('div');
         chatItem.className = 'chat-item';
@@ -278,7 +368,6 @@ function renderConvos() {
         `;
 
         chatItem.addEventListener('click', (e) => {
-            // 如果點擊的是操作按鈕，不要切換對話
             if (!e.target.closest('.action-btn')) {
                 selectConvo(c.id);
             }
@@ -970,11 +1059,16 @@ messageInput.addEventListener('input', adjustTextareaHeight);
     initDragAndDrop();
     initBlobs();
     
-    // 初始對話選擇
+    // 初始對話選擇（依身份判斷）
     if (conversations.length) {
+        // 有對話 → 選第一個
         selectConvo(conversations[0].id);
     } else {
-        newChatBtn.click();
+        if (window.IS_AUTH) {
+            // 登入使用者 → 自動新建一個對話
+            newChatBtn.click();
+        }
+        // 否則：訪客 → 保持 renderConvos() 的提示
     }
     
     // 默認收起側邊欄，無論窗口大小

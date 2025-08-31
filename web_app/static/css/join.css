@@ -710,3 +710,63 @@ body {
     background-color: #9e8c9d;
     color: #fff;
 }
+.activity-tag.sport {  /* 改為 sport，去掉 s */
+  background-color: var(--pale-green);
+}
+
+.activity-tag.food {
+  background-color: var(--pale-pink);
+}
+
+.activity-tag.study {
+  background-color: var(--pale-blue);
+}
+
+.activity-tag.movie {
+  background-color: var(--pale-purple);
+}
+
+.activity-tag.travel {
+  background-color: #fff2e0;
+}
+
+.activity-tag.other {
+  background-color: #f0f0f0;
+}
+
+/* 新增清除篩選按鈕樣式 */
+.clear-filters-btn {
+    padding: 12px 25px;
+    border-radius: 50px;
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #666;
+}
+
+.clear-filters-btn:hover {
+    background-color: #ebebeb;
+    border-color: #d0d0d0;
+    transform: translateY(-2px);
+}
+
+.read-more {
+  font-size: 13px;
+  color: #9e8c9d;
+  margin-left: 5px;
+}
+.read-more:hover {
+  text-decoration: underline;
+}
+
+a.join-btn, a.fixed-cta, a.like-btn, a.reply-btn {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a.join-btn:hover, a.fixed-cta:hover {
+    /* 保持原有的 hover 效果 */
+}

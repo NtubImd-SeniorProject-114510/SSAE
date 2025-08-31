@@ -513,3 +513,43 @@
         font-size: 20px;
     }
 }
+
+/* 地點類型選擇 (校內/校外) */
+.radio-group {
+    display: flex;
+    gap: 15px;
+    margin: 8px 0;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: normal;
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.radio-option:hover {
+    background-color: #f8f9fa;
+    border-color: #9e8c9d;
+}
+
+.radio-option input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"]:checked + span {
+    color: #9e8c9d;
+    font-weight: 500;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+    background-color: #f0f7ff;
+    border-color: #9e8c9d;
+}

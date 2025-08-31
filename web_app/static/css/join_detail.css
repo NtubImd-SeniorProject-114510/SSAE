@@ -1379,3 +1379,54 @@ h2.section-title:first-of-type::before {
     padding: 40px 20px;
 }
 
+.activity-cover {
+    position: relative;
+    width: 100%;
+    max-width: 800px; /* 視情況調整 */
+    height: 300px;
+    margin: 20px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.activity-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 保持圖片比例，不拉伸 */
+    display: block;
+}
+
+.cover-title {
+    position: absolute;
+    bottom: 15px;
+    left: 20px;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background-color: rgba(0,0,0,0.4); /* 半透明背景 */
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+/* 移除相關活動推薦的連結底線 */
+.related-card {
+    text-decoration: none;   /* 移除底線 */
+    color: inherit;          /* 文字顏色跟父層一致 */
+}
+
+/* 如果想在 hover 時有特效可以另外加 */
+.related-card:hover {
+    text-decoration: none;   /* 保持沒有底線 */
+    opacity: 0.9;            /* 滑過時淡淡效果 */
+}
+
+a.join-btn, a.fixed-cta, a.like-btn, a.reply-btn {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a.join-btn:hover, a.fixed-cta:hover {
+    /* 保持原有的 hover 效果 */
+}
