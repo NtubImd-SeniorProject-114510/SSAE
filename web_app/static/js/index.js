@@ -116,6 +116,7 @@ const keywordMap = [
     { keywords: "會", intent: "event" },
     { keywords: "評", intent: "review" },
     { keywords: "寫", intent: "review" },
+    { keywords: "看", intent: "look" },
     { keywords: "課", intent: "course" },
     { keywords: "老師", intent: "course" }
 ];
@@ -155,18 +156,25 @@ const shortcuts = [
         target: "/chat/",
         label: "校規查詢"
     },
+    
+    {
+        intentSet: ["course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "課程評論區"
+    },
+    {
+        intentSet: ["look", "course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "課程評論區"
+    },
     {
         intentSet: ["review", "course"],
         action: "redirect",
         target: "/comment/",
         label: "新增課程評論",
         popupToOpen: "rating-modal" 
-    },
-    {
-        intentSet: ["course"],
-        action: "redirect",
-        target: "/comment/",
-        label: "課程評論區"
     },
     // {
     //     intentSet: ["event"],

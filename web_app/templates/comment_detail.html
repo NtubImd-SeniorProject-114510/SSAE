@@ -18,8 +18,8 @@
 <body>
     <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
     <div class="course-item" data-course-id="1" style="display: none;">
-        <div class="course-name">計算機概論</div>
-        <div class="course-teacher">王大明教授</div>
+        <div class="course-name">{{course.course_name}}</div>
+        <div class="course-teacher">{{course.course_teacher}}</div>
         <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
         <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
     </div>
@@ -42,48 +42,81 @@
         <!-- 課程資訊區塊 -->
         <div class="course-info">
             <div class="course-header">
-                <h1 class="course-title">計算機概論</h1>
+                <h1 class="course-title">{{course.course_name}}</h1>
                 <div class="course-rating">
-                    <div class="stars" data-rating="4.5">
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <span class="rating-text">4.5/5.0 (24則評論)</span>
+                    <div class="stars">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= avg_rating|floatformat:0|add:0 %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="rating-text">{{ avg_rating|floatformat:1 }}/5.0 ({{ total_ratings }}則評分)</span>
                     </div>
                 </div>
             </div>
             <div class="course-meta">
-                <span class="course-semester">112 學年度 第 2 學期</span>
-                <span class="course-department">資訊管理系</span>
-                <span class="course-teacher">授課教師：王大明 教授</span>
+                <span class="course-academic">{{academic.name}}</span>
+                <span class="course-department">{{department.name}}</span>
+                <span class="course-teacher">授課教師：{{course.course_teacher}}</span>
             </div>
         </div>
         
         <!-- 評論區塊 -->
         <section class="comments-section">
-            <h2 class="section-title">課程評論 <span class="comment-count">(24則評論)</span></h2>
-            
-            <!-- 評論 1 -->
-            <article class="comment-card">
-                <div class="comment-header">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+            <div class="comment-header">
+                <h2 class="section-title">課程評論 <span class="comment-count">({{ review_count }}則評論)</span></h2>
+                {% if avg_rating > 0 %}
+                <div class="average-rating">
+                    <span>平均評分：</span>
+                    <div class="stars" data-rating="{{ avg_rating }}">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= avg_rating|floatformat:0|add:0 %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="rating-number">{{ avg_rating|floatformat:1 }}</span>
                     </div>
-                    <div class="user-info">
-                        <span class="user-name">匿名學生</span>
-                        <div class="comment-meta">
-                            <div class="stars" data-rating="4.5">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if reviews %}
+                {% for review in reviews %}
+                <article class="comment-card">
+                    <div class="comment-header">
+                        <div class="user-avatar">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ review.user.username|default:'匿名學生' }}</span>
+                            <div class="comment-meta">
+                                <div class="stars" data-rating="{{ review.rating }}">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="comment-date">{{ review.created_at|date:"Y/m/d" }}</span>
                             </div>
-                            <span class="comment-date">2024/04/10</span>
                         </div>
                     </div>
+                    <div class="comment-content">
+                        <p>{{ review.content }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+            {% else %}
+                <div class="no-comments">
+                    <p>目前尚無評論，成為第一個留言的人吧！</p>
+                </div>
+            {% endif %}
                     <button class="like-btn small">
                         <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
                         <span class="like-count">12</span>
@@ -126,100 +159,6 @@
                     </div>
                 </div>
             </article>
-
-            <!-- 評論 2 -->
-            <article class="comment-card">
-                <div class="comment-header">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">資管系學生</span>
-                        <div class="comment-meta">
-                            <div class="stars" data-rating="4.0">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                            </div>
-                            <span class="comment-date">2024/04/05</span>
-                        </div>
-                    </div>
-                    <button class="like-btn small">
-                        <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
-                        <span class="like-count">8</span>
-                    </button>
-                </div>
-                <div class="comment-content">
-                    <p>課程內容豐富，但節奏有點快，建議可以多一點實作時間。老師很親切，下課後問問題都會耐心解答。</p>
-                </div>
-                <div class="comment-actions">
-                    <button class="reply-btn">回覆</button>
-                </div>
-                
-                <!-- 回覆表單 (預設隱藏) -->
-                <div class="reply-form" style="display: none;">
-                    <div class="form-group">
-                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button class="cancel-reply-btn">取消</button>
-                        <button class="submit-reply-btn">發送</button>
-                    </div>
-                </div>
-                
-                <!-- 回覆區塊 -->
-                <div class="replies-container"></div>
-            </article>
-
-            <!-- 評論 3 -->
-            <article class="comment-card">
-                <div class="comment-header">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">匿名</span>
-                        <div class="comment-meta">
-                            <div class="stars" data-rating="5.0">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                            </div>
-                            <span class="comment-date">2024/03/28</span>
-                        </div>
-                    </div>
-                    <button class="like-btn small">
-                        <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
-                        <span class="like-count">15</span>
-                    </button>
-                </div>
-                <div class="comment-content">
-                    <p>作業量適中，但考試難度較高，建議要認真聽講並複習課本內容。老師上課會補充很多實用的業界知識，收穫很多！</p>
-                </div>
-                <div class="comment-actions">
-                    <button class="reply-btn">回覆</button>
-                </div>
-                
-                <!-- 回覆表單 (預設隱藏) -->
-                <div class="reply-form" style="display: none;">
-                    <div class="form-group">
-                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button class="cancel-reply-btn">取消</button>
-                        <button class="submit-reply-btn">發送</button>
-                    </div>
-                </div>
-                
-                <!-- 回覆區塊 -->
-                <div class="replies-container"></div>
-            </article>
-        </section>
-    </div>
     
     <div class="deco-line"></div>
 </body>
