@@ -432,7 +432,7 @@ body {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(-5deg);
+    transform: translate(-50%, -50%) rotate(-10deg);
     font-size: 15vw;
     font-weight: 900;
     color: rgba(0, 0, 0, 0.03);

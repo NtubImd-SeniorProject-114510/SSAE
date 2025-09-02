@@ -1,174 +1,336 @@
-// comment_pop.js - 評論彈跳視窗功能
+// static/js/comment_pop.js - 僅在各自的 modal 內更新連結，不影響頁面上其他元素
 
-// 顯示評分模態框 (包含快速評分和完整評論選項)
-function showRatingModal(button) {
-    // 獲取課程信息
-    const courseItem = button.closest('.course-item') || button.closest('.course-card');
-    const courseName = courseItem.querySelector('.course-name, .course-title')?.textContent || '課程名稱';
-    const teacherElement = courseItem.querySelector('.course-teacher, .course-instructor');
-    let courseTeacher = teacherElement ? teacherElement.textContent.replace('教授', '').trim() : '';
-    
-    // 顯示模態框並填充課程信息
-    const modal = document.getElementById('rating-modal');
-    if (!modal) {
-        console.error('找不到評分模態框');
-        return;
+// ===== 小工具：通用取 courseId（不會修改 DOM）=====
+function getCourseIdFrom(el) {
+  // 0) 直接看傳入元素
+  if (el) {
+    const selfId = el.getAttribute?.('data-course-id') || el?.dataset?.courseId;
+    if (selfId && /^\d+$/.test(String(selfId))) return String(selfId);
+
+    const host = el.closest?.('.course-item, .course-card, .modal, [data-course-id]');
+    const hostId = host?.getAttribute?.('data-course-id') || host?.dataset?.courseId;
+    if (hostId && /^\d+$/.test(String(hostId))) return String(hostId);
+
+    const href = el.getAttribute?.('href');
+    if (href) {
+      try {
+        const u = new URL(href, window.location.origin);
+        const q = u.searchParams.get('course_id');
+        if (q && /^\d+$/.test(String(q))) return String(q);
+      } catch (e) {
+        const m = href.match(/(?:\?|&)course_id=(\d+)/);
+        if (m && m[1]) return String(m[1]);
+      }
     }
-    
-    // 更新模態框中的課程信息
-    modal.querySelector('.modal-course-name').textContent = courseName;
-    modal.querySelector('.modal-course-teacher').textContent = courseTeacher ? courseTeacher + ' 教授' : '';
-    
-    // 重置星級評分
-    const modalStars = modal.querySelectorAll('.modal-stars i');
-    modalStars.forEach(star => {
-        star.className = 'far fa-star';
-    });
-    modal.querySelector('#modal-rating-value').value = '0';
-    modal.querySelector('.rating-display').textContent = '0.0';
-    
-    // 顯示模態框
-    modal.classList.add('show');
-    document.body.classList.add('modal-open');
-    
-    // 保存課程 ID 到模態框
-    const courseId = courseItem.getAttribute('data-course-id') || '1';
-    modal.setAttribute('data-course-id', courseId);
-    
-    // 更新「前往評論頁面」按鈕的連結
-    const fullCommentBtn = modal.querySelector('#full-comment-btn');
-    if (fullCommentBtn) {
-        fullCommentBtn.href = `/add_comment/?course_id=${courseId}`;
-    }
+  }
+
+  // 1) 從當前 URL 的 path 推斷：/comment_detail/123/ 或 /add_comment/123/
+  try {
+    const path = window.location.pathname || '';
+    let m = path.match(/\/comment_detail\/(\d+)\//);
+    if (m && m[1]) return String(m[1]);
+    m = path.match(/\/add_comment\/(\d+)\//);
+    if (m && m[1]) return String(m[1]);
+  } catch (e) {}
+
+  // 2) 頁面上第一個帶 data-course-id 的元素
+  const anyData = document.querySelector('[data-course-id]');
+  const anyId = anyData?.getAttribute?.('data-course-id') || anyData?.dataset?.courseId;
+  if (anyId && /^\d+$/.test(String(anyId))) return String(anyId);
+
+  // 3) 從 querystring ?course_id=
+  try {
+    const u = new URL(window.location.href);
+    const q = u.searchParams.get('course_id');
+    if (q && /^\d+$/.test(String(q))) return String(q);
+  } catch (e) {}
+
+  return null;
 }
 
-// 顯示簡單評論模態框 (只有完整評論選項)
-function showSimpleCommentModal(button) {
-    // 獲取課程信息
-    const courseItem = button.closest('.course-item') || button.closest('.course-card');
-    const courseName = courseItem.querySelector('.course-name, .course-title')?.textContent || '課程名稱';
-    const teacherElement = courseItem.querySelector('.course-teacher, .course-instructor');
-    let courseTeacher = teacherElement ? teacherElement.textContent.replace('教授', '').trim() : '';
-    
-    // 設置彈跳視窗寬度為400px
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.style.maxWidth = '400px';
-    }
+// ===== 取得課程名稱（盡量聰明找）=====
+function getCourseNameFrom(triggerEl) {
+  // 先從卡片就近抓
+  const courseItem = triggerEl?.closest?.('.course-item, .course-card');
+  const nearbyName = courseItem?.querySelector?.('.course-name, .course-title, [data-course-name]');
+  if (nearbyName) {
+    const txt = (nearbyName.getAttribute?.('data-course-name') || nearbyName.textContent || '').trim();
+    if (txt) return txt;
+  }
 
-    // 顯示模態框並填充課程信息
-    const modal = document.getElementById('simple-comment-modal');
-    if (!modal) {
-        console.error('找不到評論模態框');
-        return;
+  // 在頁面上常見的位置找（適用 comment_detail 頁）
+  const candidates = [
+    '#detail-course-name',
+    '.detail-course-name',
+    '.course-name',
+    '.course-title',
+    '[data-course-name]',
+  ];
+  for (const sel of candidates) {
+    const el = document.querySelector(sel);
+    if (el) {
+      const txt = (el.getAttribute?.('data-course-name') || el.textContent || '').trim();
+      if (txt) return txt;
     }
-    
-    // 更新模態框中的課程信息
-    modal.querySelector('.modal-course-name').textContent = courseName;
-    modal.querySelector('.modal-course-teacher').textContent = courseTeacher ? courseTeacher + ' 教授' : '';
-    
-    // 顯示模態框
-    modal.classList.add('show');
-    document.body.classList.add('modal-open');
-    
-    // 保存課程 ID 到模態框
-    const courseId = courseItem.getAttribute('data-course-id') || '1';
-    modal.setAttribute('data-course-id', courseId);
-    
-    // 更新「撰寫完整評論」按鈕的連結
-    const fullCommentBtn = modal.querySelector('#simple-full-comment-btn');
-    if (fullCommentBtn) {
-        fullCommentBtn.href = `/add_comment/?course_id=${courseId}`;
-    }
+  }
+
+  return '課程名稱';
 }
 
-// 設置評分模態框
-function setupRatingModal() {
-    console.log('初始化評分模態框');
-    
-    // 綁定新增評論按鈕點擊事件 (完整評分彈窗)
-    const createBtns = document.querySelectorAll('.create-btn');
-    createBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            showRatingModal(this);
-        });
-    });
+// ===== 取得老師名稱（若有）=====
+function getTeacherNameFrom(triggerEl) {
+  const courseItem = triggerEl?.closest?.('.course-item, .course-card');
+  const teacherElement = courseItem?.querySelector?.('.course-teacher, .course-instructor, [data-course-teacher]');
+  if (teacherElement) {
+    return (teacherElement.getAttribute?.('data-course-teacher') || teacherElement.textContent || '')
+      .replace('教授', '')
+      .trim();
+  }
 
-    // 綁定加號按鈕點擊事件 (簡單評論彈窗)
-    const plusBtns = document.querySelectorAll('.add-comment-btn');
-    plusBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            showSimpleCommentModal(this);
-        });
-    });
-
-    // 綁定右下角加號按鈕
-    const commentBtn = document.getElementById('commentBtn');
-    if (commentBtn) {
-        console.log('找到 #commentBtn，準備綁定點擊事件');
-        commentBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('按下右下角加號，開啟簡易評論彈窗');
-            const modal = document.getElementById('simple-comment-modal');
-            if (!modal) {
-                console.error('找不到簡易評論模態框');
-                return;
-            }
-            // 清空課程資訊，顯示預設文字
-            modal.querySelector('.modal-course-name').textContent = '自訂評論';
-            modal.querySelector('.modal-course-teacher').textContent = '';
-            modal.classList.add('show');
-            document.body.classList.add('modal-open');
-            modal.removeAttribute('data-course-id');
-        });
-    } else {
-        console.warn('找不到 #commentBtn，無法綁定點擊事件');
+  const candidates = [
+    '#detail-course-teacher',
+    '.detail-course-teacher',
+    '.course-teacher',
+    '.course-instructor',
+    '[data-course-teacher]',
+  ];
+  for (const sel of candidates) {
+    const el = document.querySelector(sel);
+    if (el) {
+      return (el.getAttribute?.('data-course-teacher') || el.textContent || '')
+        .replace('教授', '')
+        .trim();
     }
+  }
 
-    // 初始化模態框事件處理
-    initializeModalEvents();
+  return '';
 }
 
-// 初始化模態框事件處理
+// ===== 僅在「指定的 modal 範圍內」設定前往評論頁面連結 =====
+function setFullCommentLinkInModal(modalEl, selector, courseId) {
+  if (!modalEl || !selector) return;
+  const a = modalEl.querySelector(selector); // 只找這個 modal 裡的
+  if (!a) return;
+
+  if (courseId && /^\d+$/.test(String(courseId))) {
+    // 用字串相加，避免模板字面值被誤當靜態文字
+    a.href = '/add_comment/' + courseId + '/';
+    a.setAttribute('data-course-id', courseId);
+    modalEl.setAttribute('data-course-id', courseId);
+  } else {
+    // 沒有 id 時，維持原本 href（通常是 /add_comment/）
+    a.href = '/add_comment/';
+    a.removeAttribute('data-course-id');
+    modalEl.removeAttribute('data-course-id');
+  }
+}
+
+// ===== 顯示評分（完整）模態框 =====
+function showRatingModal(triggerEl) {
+  const modal = document.getElementById('rating-modal');
+  if (!modal) {
+    console.error('[comment_pop] 找不到評分模態框 #rating-modal');
+    return;
+  }
+
+  const courseName = getCourseNameFrom(triggerEl);
+  const courseTeacher = getTeacherNameFrom(triggerEl);
+  const nameEl = modal.querySelector('.modal-course-name');
+  const teacherEl = modal.querySelector('.modal-course-teacher');
+  if (nameEl) nameEl.textContent = courseName;
+  if (teacherEl) teacherEl.textContent = courseTeacher ? courseTeacher + ' 教授' : '';
+
+  // 重置星星（僅此 modal）
+  modal.querySelectorAll('.modal-stars i').forEach(
+    (star) => (star.className = 'far fa-star')
+  );
+  const ratingInput = modal.querySelector('#modal-rating-value');
+  if (ratingInput) ratingInput.value = '0';
+  const display = modal.querySelector('.rating-display');
+  if (display) display.textContent = '0.0';
+
+  // 設定「前往評論頁面」連結（帶 ID）
+  const courseId = getCourseIdFrom(triggerEl);
+  setFullCommentLinkInModal(modal, '#full-comment-btn', courseId);
+
+  // 開啟
+  modal.classList.add('show');
+  document.body.classList.add('modal-open');
+}
+
+// ===== 顯示簡易評論模態框 =====
+// opts.blank === true 時，不帶任何課程（給 #commentBtn 用），強制 /add_comment/
+function showSimpleCommentModal(triggerEl, opts = {}) {
+  const modal = document.getElementById('simple-comment-modal');
+  if (!modal) {
+    console.error('[comment_pop] 找不到簡易評論模態框 #simple-comment-modal');
+    return;
+  }
+
+  let courseName = '課程名稱';
+  let courseTeacher = '';
+  let courseId = null;
+
+  if (!opts.blank) {
+    courseName = getCourseNameFrom(triggerEl);
+    courseTeacher = getTeacherNameFrom(triggerEl);
+    courseId = getCourseIdFrom(triggerEl);
+  } else {
+    // blank 模式：顯示通用文字，不帶 ID
+    courseName = '前往新增課程評論頁面';
+    courseTeacher = '';
+    courseId = null;
+  }
+
+  const nameEl = modal.querySelector('.modal-course-name');
+  const teacherEl = modal.querySelector('.modal-course-teacher');
+  if (nameEl) nameEl.textContent = courseName;
+  if (teacherEl) teacherEl.textContent = courseTeacher ? courseTeacher + ' 教授' : '';
+
+  if (opts.blank) {
+    // ✅ 強制不帶 ID，直接導向 /add_comment/
+    const a = modal.querySelector('#simple-full-comment-btn');
+    if (a) {
+      a.href = '/add_comment/';
+      a.removeAttribute('data-course-id');
+    }
+    modal.removeAttribute('data-course-id');
+  } else {
+    // 一般模式：若有 ID 就覆寫成 /add_comment/<id>/
+    setFullCommentLinkInModal(modal, '#simple-full-comment-btn', courseId);
+  }
+
+  // 開啟
+  modal.classList.add('show');
+  document.body.classList.add('modal-open');
+}
+
+// ===== 關閉模態框（僅此 modal）=====
+function closeModal(modalEl) {
+  if (!modalEl) return;
+  modalEl.classList.remove('show');
+  const anyOpen = document.querySelector('.modal.show');
+  if (!anyOpen) document.body.classList.remove('modal-open');
+}
+
+// ===== 初始化模態框事件處理（僅針對各自 modal）=====
 function initializeModalEvents() {
-    // 關閉按鈕
-    const closeButtons = document.querySelectorAll('.modal-close');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) {
-                modal.classList.remove('show');
-                document.body.classList.remove('modal-open');
-            }
-        });
+  // 關閉按鈕（叉叉）
+  document.querySelectorAll('.modal .modal-close').forEach((button) => {
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      closeModal(this.closest('.modal'));
     });
+  });
 
-    // 點擊模態框外部關閉
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('show');
-                document.body.classList.remove('modal-open');
-            }
-        });
+  // 點遮罩關閉
+  document.querySelectorAll('.modal').forEach((modal) => {
+    modal.addEventListener('click', function (e) {
+      if (e.target === this) closeModal(this);
     });
+  });
+
+  // 按 ESC 關閉
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal.show').forEach((m) => closeModal(m));
+    }
+  });
 }
 
-// 確保在頁面載入完成後初始化
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('評分模態框 JS 已載入');
-    // 延遲一點初始化，確保 DOM 元素都已載入
-    setTimeout(() => {
-        setupRatingModal();
-        initializeModalEvents();
-    }, 300);
+/**
+ * ===== 事件委派（使用 capture=true 優先攔截）=====
+ * - comment 頁：.add-comment → 評分選項（帶 ID）
+ * - comment_detail 頁：#add-comment-btn → 評分選項（帶 ID）
+ * - comment 頁：#commentBtn → 簡單評論（不帶 ID、導向 /add_comment/）
+ */
+function initializeInteractions() {
+  // 先攔截（capture phase）
+  document.addEventListener('click', function (e) {
+    // --- .add-comment（comment 頁）→ 評分選項 ---
+    const addBtn = e.target.closest('.add-comment');
+    if (addBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      showRatingModal(addBtn);
+      return;
+    }
 
-    // 導出函數，讓其他 JavaScript 文件可以調用
-    window.CommentPopup = {
-        showRatingModal: showRatingModal,
-        showSimpleCommentModal: showSimpleCommentModal
-    };
+    // --- #add-comment-btn（comment_detail 頁）→ 評分選項 ---
+    const detailAddBtn = e.target.closest('#add-comment-btn');
+    if (detailAddBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      showRatingModal(detailAddBtn);
+      return;
+    }
+
+    // --- #commentBtn（comment 頁）→ 簡單評論（不綁定課程） ---
+    const commentBtn = e.target.closest('#commentBtn');
+    if (commentBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      // blank: true → 不帶 courseId，保留 /add_comment/
+      showSimpleCommentModal(commentBtn, { blank: true });
+      return;
+    }
+  }, true);
+
+  // modal 內部導頁（分流：simple 保持空白；full 依 ID 導向）
+  document.addEventListener('click', function (e) {
+    // ① simple-full-comment-btn：若未明確帶 data-course-id，**一律**去 /add_comment/
+    const aSimple = e.target.closest('#simple-full-comment-btn');
+    if (aSimple) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      const idAttr =
+        aSimple.getAttribute('data-course-id') ||
+        aSimple.closest('.modal')?.getAttribute('data-course-id');
+      if (idAttr && /^\d+$/.test(String(idAttr))) {
+        window.location.href = '/add_comment/' + idAttr + '/';
+      } else {
+        // 明確不帶 ID（避免從網址/其他元素再推斷）
+        window.location.href = '/add_comment/';
+      }
+      return;
+    }
+
+    // ② full-comment-btn：可依頁面/按鈕/彈窗帶入的 ID 導向
+    const aFull = e.target.closest('#full-comment-btn');
+    if (aFull) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+      const modal = aFull.closest('.modal');
+      const id =
+        aFull.getAttribute('data-course-id') ||
+        modal?.getAttribute('data-course-id') ||
+        getCourseIdFrom(aFull);
+      if (id && /^\d+$/.test(String(id))) {
+        window.location.href = '/add_comment/' + id + '/';
+      } else {
+        // 沒有 ID 時保留原始 href（通常是 /add_comment/）
+        window.location.href = aFull.href || '/add_comment/';
+      }
+      return;
+    }
+  });
+}
+
+// ===== 首次載入 =====
+document.addEventListener('DOMContentLoaded', function () {
+  initializeModalEvents();
+  initializeInteractions();
+
+  // 導出 API（給其他檔案可用）
+  window.CommentPopup = {
+    showRatingModal,
+    showSimpleCommentModal,
+  };
 });
