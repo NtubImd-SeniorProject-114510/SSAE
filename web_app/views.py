@@ -144,7 +144,76 @@ from django.shortcuts import get_object_or_404
 def book_detail(request, pk):
     book = get_object_or_404(Book2, pk=pk)
     seller_user = book.seller
-    return render(request, 'book_detail.html', {'book': book, 'seller_user': seller_user})
+    
+    # 獲取賣家 Google 頭像 (保持原有邏輯)
+    seller_google_picture = None
+    try:
+        if hasattr(seller_user, 'social_auth'):
+            social = seller_user.social_auth.filter(provider='google-oauth2').first()
+            if social and 'picture' in social.extra_data:
+                seller_google_picture = social.extra_data['picture']
+    except Exception as e:
+        print(f"Error getting seller social auth data: {e}")
+    
+    # 智能相關書籍推薦 - 按優先級排序
+    related_books_query = Book2.objects.exclude(pk=pk).exclude(
+        status__name__in=['已售出', '下架']
+    )
+    
+    related_books = []
+    
+    # 第一優先：同分類 + 同系所
+    if book.category and book.department:
+        priority1 = related_books_query.filter(
+            category=book.category,
+            department=book.department
+        )[:2]
+        related_books.extend(priority1)
+    
+    # 第二優先：同分類 + 同學制
+    if book.category and book.academic and len(related_books) < 6:
+        priority2 = related_books_query.filter(
+            category=book.category,
+            academic=book.academic
+        ).exclude(pk__in=[b.pk for b in related_books])[:2]
+        related_books.extend(priority2)
+    
+    # 第三優先：同分類但不同系所
+    if book.category and len(related_books) < 6:
+        priority3 = related_books_query.filter(
+            category=book.category
+        ).exclude(pk__in=[b.pk for b in related_books])[:2]
+        related_books.extend(priority3)
+    
+    # 第四優先：同系所但不同分類
+    if book.department and len(related_books) < 6:
+        priority4 = related_books_query.filter(
+            department=book.department
+        ).exclude(pk__in=[b.pk for b in related_books])[:2]
+        related_books.extend(priority4)
+    
+    # 最後：同學制填滿剩餘位置
+    if book.academic and len(related_books) < 6:
+        remaining = 6 - len(related_books)
+        priority5 = related_books_query.filter(
+            academic=book.academic
+        ).exclude(pk__in=[b.pk for b in related_books]).order_by('-created_at')[:remaining]
+        related_books.extend(priority5)
+    
+    # 如果還不夠，隨機推薦其他書籍
+    if len(related_books) < 6:
+        remaining = 6 - len(related_books)
+        priority6 = related_books_query.exclude(
+            pk__in=[b.pk for b in related_books]
+        ).order_by('?')[:remaining]  # 隨機排序
+        related_books.extend(priority6)
+    
+    return render(request, 'book_detail.html', {
+        'book': book, 
+        'seller_user': seller_user,
+        'seller_google_picture': seller_google_picture,
+        'related_books': related_books[:6]  # 最多6本
+    })
 
 from .forms import Book2Form
 from .models import Book2
