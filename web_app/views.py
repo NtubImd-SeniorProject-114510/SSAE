@@ -179,9 +179,19 @@ def upload_book2(request):
 def ask_page(request):
     return render(request, "ask.html")
     
-############################################################
-from .models import Course, Departmentd, Academica, AcadeGrade, CourseReview, AcadeDepart  # 依你的 models 實際匯入
-from django.db.models import Q
+
+
+
+###########################課程評論區##############################
+from .models import Course, Departmentd, Academica, AcadeGrade, AcadeDepart  # 依你的 models 實際匯入
+from .models import CourseReview, CourseStar  # ★ 新增：實際寫入/讀取的兩張表
+from django.db.models import Q, Avg, Count
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods, require_GET
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 # =========================
 # 列表頁（含動態篩選）
@@ -423,10 +433,11 @@ def add_comment_page(request, course_id):
 @require_http_methods(["POST"])
 def add_comment_submit(request, course_id):
     """
-    接收 POST，新建/更新使用者對該課程的評論與評分。
-    （把你原本寫在 add_comment(request, course_id) 裡的存檔邏輯搬到這裡）
+    接收 POST，建立/更新使用者對該課程的【評論】與【評分】。
+    - 評論表：web_app_CourseReview（add_comment 專屬）
+    - 評分表：web_app_CourseStar（comment_pop 與 add_comment 共用）
+    兩張表都以 (user_id, course_id) 當唯一鍵來 upsert。
     """
-    from .models import CourseReview  # 依你的實際 model 匯入
     course = get_object_or_404(Course, id=int(course_id))
 
     try:
@@ -444,19 +455,32 @@ def add_comment_submit(request, course_id):
         if rating < 1 or rating > 5:
             raise ValueError
     except Exception:
-        return JsonResponse({"error": "評分必須是1-5的數字"}, status=400)
+        return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
 
-    review, created = CourseReview.objects.update_or_create(
-        course=course,
-        user=request.user,
-        defaults={"content": content, "rating": rating},
+    user_id = request.user.id
+
+    # ★ 寫入/更新：web_app_CourseReview（以 user_id+course_id 唯一）
+    review, created_review = CourseReview.objects.update_or_create(
+        user_id=user_id,
+        course_id=course.id,
+        defaults={"content": content},
+    )
+
+    # ★ 寫入/更新：web_app_CourseStar（以 user_id+course_id 唯一）
+    star, created_star = CourseStar.objects.update_or_create(
+        user_id=user_id,
+        course_id=course.id,
+        defaults={"star": rating},
     )
 
     return JsonResponse({
         "ok": True,
-        "created": created,
+        "created_review": created_review,
+        "created_star": created_star,
         "course_id": course.id,
         "rating": rating,
+        "review_id": review.id,
+        "star_id": star.id,
     })
 
 
@@ -466,8 +490,12 @@ def add_comment_submit(request, course_id):
 @csrf_exempt
 @login_required
 def delete_review(request, review_id):
+    """
+    改為刪除 web_app_CourseReview；評分是否同刪視你的需求（此處不動 CourseStar）。
+    僅允許刪除自己的評論。
+    """
     if request.method == 'POST':
-        review = get_object_or_404(CourseReview, id=review_id, user=request.user)
+        review = get_object_or_404(CourseReview, id=review_id, user_id=request.user.id)
         review.delete()
         return JsonResponse({'success': True})
     
@@ -477,6 +505,9 @@ def delete_review(request, review_id):
 @csrf_exempt
 @login_required
 def toggle_like(request, comment_id):
+    """
+    與原本相同（若你的 ActivityComment 不屬於本功能，可視情況移除）。
+    """
     if request.method == 'POST':
         comment = get_object_or_404(ActivityComment, id=comment_id)
         
@@ -497,24 +528,47 @@ def toggle_like(request, comment_id):
 
 
 def comment_detail(request, id=None):
+    """
+    詳細頁改為：
+    - 讀取評論：web_app_CourseReview
+    - 平均評分與分佈：依 web_app_CourseStar 聚合
+    """
     course_id = id or request.GET.get('course_id')
     if not course_id:
         from django.http import HttpResponseBadRequest
         return HttpResponseBadRequest("Missing course_id parameter")
 
     course = get_object_or_404(Course, id=course_id)
-    reviews = CourseReview.objects.filter(course=course).select_related('user').order_by('-created_at')
 
+    # 讀評論（含作者名稱）
+    reviews = (
+        CourseReview.objects
+        .filter(course_id=course.id)
+        .select_related()  # 若 model 沒 ForeignKey user，只能用 user_id 另外查；此處保留
+        .order_by('-created_at')
+    )
+
+    # 目前使用者的評論
     user_review = None
     if request.user.is_authenticated:
-        user_review = CourseReview.objects.filter(course=course, user=request.user).first()
+        user_review = CourseReview.objects.filter(
+            course_id=course.id, user_id=request.user.id
+        ).first()
 
-    avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
+    # 平均星等（從 web_app_CourseStar）
+    avg_rating = (
+        CourseStar.objects.filter(course_id=course.id)
+        .aggregate(avg=Avg('star'))['avg']
+    )
 
-    star_counts = reviews.exclude(rating__isnull=True).values('rating').annotate(count=Count('rating'))
+    # 星等分布（1~5）
+    star_counts = (
+        CourseStar.objects.filter(course_id=course.id)
+        .values('star').annotate(count=Count('star'))
+    )
     star_distribution = {1:0, 2:0, 3:0, 4:0, 5:0}
     for item in star_counts:
-        r = item['rating']
+        r = item['star']
         if r in star_distribution:
             star_distribution[r] = item['count']
 
@@ -594,33 +648,44 @@ def get_grades(request):
 @login_required
 @require_http_methods(["POST"])
 def create_course_review(request, course_id):
+    """
+    新增/更新單一使用者對該課的評論與評分（同 add_comment_submit，但給 comment_pop 用）。
+    """
     try:
         # 處理不同類型的 course_id
         if not str(course_id).isdigit():
-            # 如果不是數字，嘗試通過 course_id 欄位查找
             course = Course.objects.filter(course_id=course_id).first()
             if not course and '_' in course_id:
-                # 如果找不到且包含底線，嘗試分割 course_id 獲取數字部分
                 numeric_part = course_id.split('_')[0]
                 if numeric_part.isdigit():
                     course = Course.objects.filter(id=int(numeric_part)).first()
         else:
-            # 如果是數字，直接通過 id 查找
             course = Course.objects.filter(id=int(course_id)).first()
             
         if not course:
             return JsonResponse({'error': f'找不到 ID 為 {course_id} 的課程'}, status=404)
             
-        data = json.loads(request.body)
-        
-        # Create or update review
+        data = json.loads(request.body or "{}")
+        content = (data.get('content') or '').strip()
+        rating = int(data.get('rating', 5))
+        if rating < 1 or rating > 5:
+            return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
+        if not content:
+            return JsonResponse({'error': '評論內容不能為空'}, status=400)
+
+        user_id = request.user.id
+
+        # Review upsert
         review, created = CourseReview.objects.update_or_create(
-            course=course,
-            user=request.user,
-            defaults={
-                'content': data.get('content'),
-                'rating': int(data.get('rating', 5))
-            }
+            user_id=user_id,
+            course_id=course.id,
+            defaults={'content': content}
+        )
+        # Star upsert
+        star, _ = CourseStar.objects.update_or_create(
+            user_id=user_id,
+            course_id=course.id,
+            defaults={'star': rating}
         )
         
         return JsonResponse({
@@ -629,10 +694,12 @@ def create_course_review(request, course_id):
             'review': {
                 'id': review.id,
                 'content': review.content,
-                'rating': review.rating,
-                'user_name': request.user.first_name or request.user.username,
-                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M'),
-                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M') if review.updated_at else None
+                'user_id': user_id,
+            },
+            'star': {
+                'id': star.id,
+                'star': rating,
+                'user_id': user_id,
             }
         })
     except Exception as e:
@@ -642,24 +709,35 @@ def create_course_review(request, course_id):
 @login_required
 @require_http_methods(["PUT"])
 def update_course_review(request, course_id, review_id):
+    """
+    僅更新評論文字與/或評分；資料來源為 web_app_CourseReview / web_app_CourseStar。
+    """
     try:
-        review = get_object_or_404(CourseReview, id=review_id, user=request.user, course_id=course_id)
-        data = json.loads(request.body)
-        
+        course = get_object_or_404(Course, id=course_id)
+        data = json.loads(request.body or "{}")
+
+        # 更新評論內容（只能改自己的）
+        review = get_object_or_404(CourseReview, id=review_id, user_id=request.user.id, course_id=course.id)
         if 'content' in data:
-            review.content = data['content']
+            review.content = (data['content'] or '').strip()
+            review.save()
+
+        # 若帶 rating，一併更新 star
         if 'rating' in data:
-            review.rating = int(data['rating'])
-        
-        review.save()
+            rating = int(data['rating'])
+            if rating < 1 or rating > 5:
+                return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
+            CourseStar.objects.update_or_create(
+                user_id=request.user.id,
+                course_id=course.id,
+                defaults={'star': rating}
+            )
         
         return JsonResponse({
             'success': True,
             'review': {
                 'id': review.id,
                 'content': review.content,
-                'rating': review.rating,
-                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M')
             }
         })
     except Exception as e:
@@ -669,8 +747,11 @@ def update_course_review(request, course_id, review_id):
 @login_required
 @require_http_methods(["DELETE"])
 def delete_course_review(request, course_id, review_id):
+    """
+    刪除 web_app_CourseReview（僅能刪自己的）。不動 web_app_CourseStar。
+    """
     try:
-        review = get_object_or_404(CourseReview, id=review_id, user=request.user, course_id=course_id)
+        review = get_object_or_404(CourseReview, id=review_id, user_id=request.user.id, course_id=course_id)
         review.delete()
         return JsonResponse({'success': True})
     except Exception as e:
@@ -699,8 +780,7 @@ def toggle_like(request, comment_id):
         })
     
     return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
-#####
-
+#############################課程評論區##############################
 
 
 

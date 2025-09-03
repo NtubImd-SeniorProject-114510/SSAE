@@ -11,6 +11,7 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/comment.css' %}">
 <link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
+<link rel="stylesheet" href="{% static 'css/comment_toast.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -101,6 +102,7 @@
 {% block body_js %}
   <script src="{% static 'js/comment.js' %}"></script>
   <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
+  <script src="{% static 'js/comment_toast.js' %}"></script>
 
   <!-- 只做「學制排序」與「依學制更新科系/年級」的小初始化（其餘邏輯在 comment.js） -->
   <script>

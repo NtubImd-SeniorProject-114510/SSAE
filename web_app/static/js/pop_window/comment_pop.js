@@ -113,12 +113,10 @@ function setFullCommentLinkInModal(modalEl, selector, courseId) {
   if (!a) return;
 
   if (courseId && /^\d+$/.test(String(courseId))) {
-    // 用字串相加，避免模板字面值被誤當靜態文字
     a.href = '/add_comment/' + courseId + '/';
     a.setAttribute('data-course-id', courseId);
     modalEl.setAttribute('data-course-id', courseId);
   } else {
-    // 沒有 id 時，維持原本 href（通常是 /add_comment/）
     a.href = '/add_comment/';
     a.removeAttribute('data-course-id');
     modalEl.removeAttribute('data-course-id');
@@ -140,7 +138,7 @@ function showRatingModal(triggerEl) {
   if (nameEl) nameEl.textContent = courseName;
   if (teacherEl) teacherEl.textContent = courseTeacher ? courseTeacher + ' 教授' : '';
 
-  // 重置星星（僅此 modal）
+  // 重置星星與顯示
   modal.querySelectorAll('.modal-stars i').forEach(
     (star) => (star.className = 'far fa-star')
   );
@@ -149,13 +147,115 @@ function showRatingModal(triggerEl) {
   const display = modal.querySelector('.rating-display');
   if (display) display.textContent = '0.0';
 
-  // 設定「前往評論頁面」連結（帶 ID）
+  // ★ 啟用評分控制
+  initModalRatingControls(modal);
+
+  // 設定「前往評論頁面」連結（帶 ID）+ 把 ID 設到提交按鈕
   const courseId = getCourseIdFrom(triggerEl);
   setFullCommentLinkInModal(modal, '#full-comment-btn', courseId);
+  const submitBtn = modal.querySelector('#rating-submit-btn');
+  if (submitBtn) {
+    if (courseId) submitBtn.setAttribute('data-course-id', courseId);
+    else submitBtn.removeAttribute('data-course-id');
+  }
+  if (courseId) {
+    modal.setAttribute('data-course-id', courseId);
+  } else {
+    modal.removeAttribute('data-course-id');
+  }
 
   // 開啟
   modal.classList.add('show');
   document.body.classList.add('modal-open');
+}
+
+// ===== 評分星星互動：hover 高亮、click 設定、鍵盤操作 =====
+function initModalRatingControls(modal) {
+  if (!modal || modal.dataset.ratingBound === '1') return;
+
+  const starsWrap = modal.querySelector('.modal-stars');
+  const stars = modal.querySelectorAll('.modal-stars i');
+  const input = modal.querySelector('#modal-rating-value');
+  const display = modal.querySelector('.rating-display');
+
+  // 目前評分（以 input 為主，沒有就以 0）
+  function getCurrent() {
+    const v = parseInt(input?.value || '0', 10);
+    return Number.isFinite(v) ? Math.max(0, Math.min(5, v)) : 0;
+  }
+
+  // 套用指定顯示值（不寫入 input）
+  function paint(value) {
+    const v = Math.max(0, Math.min(5, parseInt(value || '0', 10)));
+    stars.forEach((s) => {
+      const n = parseInt(s.getAttribute('data-value') || '0', 10);
+      s.className = (n <= v) ? 'fas fa-star' : 'far fa-star';
+    });
+    if (display && Number.isFinite(v)) {
+      display.textContent = v.toFixed(1);
+    }
+  }
+
+  // 設定實際評分（同時寫入 input 與顯示）
+  function commit(value) {
+    const v = Math.max(1, Math.min(5, parseInt(value || '0', 10)));
+    if (input) input.value = String(v);
+    paint(v);
+  }
+
+  // 事件：滑過高亮、移出還原、點擊設定
+  stars.forEach((star) => {
+    star.style.cursor = 'pointer';
+
+    star.addEventListener('mouseenter', () => {
+      const v = parseInt(star.getAttribute('data-value') || '0', 10);
+      paint(v);
+    });
+
+    star.addEventListener('mouseleave', () => {
+      paint(getCurrent());
+    });
+
+    star.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const v = parseInt(star.getAttribute('data-value') || '0', 10);
+      commit(v);
+    });
+
+    // 觸控裝置：touchstart 直接評分
+    star.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const v = parseInt(star.getAttribute('data-value') || '0', 10);
+      commit(v);
+    }, { passive: false });
+  });
+
+  // 鍵盤操作：方向鍵/數字鍵 1-5/Backspace 清空
+  modal.addEventListener('keydown', (e) => {
+    const cur = getCurrent();
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      commit(Math.min(5, cur + 1));
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      commit(Math.max(1, cur - 1));
+    } else if (/^[1-5]$/.test(e.key)) {
+      e.preventDefault();
+      commit(parseInt(e.key, 10));
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault();
+      if (input) input.value = '0';
+      paint(0);
+    }
+  });
+
+  // 初始狀態：根據 input 畫一次（沒有就 0.0）
+  paint(getCurrent());
+
+  // 避免重複綁定
+  modal.dataset.ratingBound = '1';
 }
 
 // ===== 顯示簡易評論模態框 =====
@@ -334,3 +434,98 @@ document.addEventListener('DOMContentLoaded', function () {
     showSimpleCommentModal,
   };
 });
+
+// ====== 評分提交（使用 modal 內的欄位與按鈕）======
+(function () {
+  function getCourseId() {
+    // 優先讀取 modal 或按鈕上的 data-course-id
+    const modal = document.getElementById('rating-modal');
+    const fromModal = modal?.getAttribute('data-course-id');
+    if (fromModal && /^\d+$/.test(String(fromModal))) return String(fromModal);
+
+    const btn = document.getElementById('rating-submit-btn');
+    const fromBtn = btn && (btn.dataset.courseId || btn.getAttribute('data-course-id'));
+    if (fromBtn && /^\d+$/.test(String(fromBtn))) return String(fromBtn);
+
+    return window.courseId || null;
+  }
+
+  async function submitRating() {
+    const modal = document.getElementById('rating-modal');
+    const ratingEl = modal?.querySelector('#modal-rating-value') || document.getElementById('rating-input');
+    const submitBtn = modal?.querySelector('#rating-submit-btn') || document.getElementById('rating-submit-btn');
+
+    const rating = ratingEl ? parseInt(ratingEl.value || '0', 10) : 0;
+    const courseId = getCourseId();
+
+    if (!courseId) {
+      CommentToast?.toastError?.('找不到課程代號，無法提交評分');
+      return;
+    }
+    if (!rating || rating < 1 || rating > 5) {
+      CommentToast?.toastInfo?.('請先選擇 1–5 顆星再提交');
+      return;
+    }
+
+    // 按鈕 loading
+    let origHTML = '';
+    if (submitBtn) {
+      origHTML = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 提交中…';
+    }
+
+    try {
+      const res = await fetch(`/api/comments/${courseId}/reviews/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ rating, content: (window.currentCommentText || '').trim() || '（僅評分）' })
+      });
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+
+      // ✅ 成功提示
+      CommentToast?.toastSuccess?.('已記錄您的評分！感謝提供回饋。');
+
+      // 重置並關閉 modal
+      if (modal) {
+        // 重置星星
+        modal.querySelectorAll('.modal-stars i').forEach(
+          (star) => (star.className = 'far fa-star')
+        );
+        const ratingInput = modal.querySelector('#modal-rating-value');
+        if (ratingInput) ratingInput.value = '0';
+        const display = modal.querySelector('.rating-display');
+        if (display) display.textContent = '0.0';
+
+        closeModal(modal);
+      }
+
+      // TODO: 若需要，這裡可以觸發頁面上的平均星等/分布刷新
+      // refreshStarsUI(data);
+
+    } catch (err) {
+      CommentToast?.toastError?.(err.message || '提交評分失敗，請稍後再試');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origHTML || '提交評分';
+      }
+    }
+  }
+
+  function bind() {
+    // 明確的提交按鈕（modal 內）
+    const btn = document.getElementById('rating-submit-btn') 
+             || document.getElementById('submit-rating') 
+             || document.querySelector('[data-action="submit-rating"], .submit-rating-btn');
+    if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); submitRating(); });
+
+    // 若是表單提交（modal 內）
+    const form = document.getElementById('rating-form') || document.querySelector('form[data-rating-form]');
+    if (form) form.addEventListener('submit', (e) => { e.preventDefault(); submitRating(); });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();

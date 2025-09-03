@@ -8,6 +8,7 @@
 {% block css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{% static 'css/add_comment.css' %}">
+<link rel="stylesheet" href="{% static 'css/comment_toast.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -93,11 +94,18 @@
     <div class="top-row-container">
         <div class="course-info-container">
             <div class="comment-header">
-                <h3>{{ selected_course.course_name }}</h3>
-                <h3>授課教師: {{ selected_course.course_teacher }}</h3>
+            <h3 id="course-name-display">
+                {{ selected_course.course_name|default:"請先選擇課程" }}
+            </h3>
+            <h3>
+                授課教師:
+                <span id="course-teacher-display">
+                {{ selected_course.course_teacher|default:"—" }}
+                </span>
+            </h3>
             </div>
         </div>
-    </div>
+        </div>
     
     <div class="comment-content">
         <div class="comment-text-area">
@@ -130,6 +138,8 @@
 <script id="departments-data" type="application/json">{{ departments_data|safe }}</script>
 <script id="grades-data" type="application/json">{{ grades_data|safe }}</script>
 <script id="courses-data" type="application/json">{{ courses_json|safe }}</script>
+<script src="{% static 'js/comment_toast.js' %}"></script>
+
 <script>
   window.__PRESELECTED__ = {
     courseId: {{ selected_course.id|default:'null' }},
