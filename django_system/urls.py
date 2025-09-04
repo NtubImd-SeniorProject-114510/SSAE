@@ -69,6 +69,8 @@ urlpatterns = [
     path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
+    
+    path("api/comment/optimize_ai", views.optimize_comment_ai, name="optimize_comment_ai"),
     #####
 
     path("personal/", views.personal, name="personal"),

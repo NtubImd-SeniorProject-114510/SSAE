@@ -8,7 +8,6 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_GET
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 from django.db import models
@@ -190,7 +189,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_GET
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
-from django.views.decorators.csrf import csrf_exempt
 import json
 
 # =========================
@@ -338,7 +336,7 @@ def add_comment_blank(request):
             .values_list('grade_level', flat=True).distinct()
         )
 
-    # 課程清單（可一次全給，或先給空陣列，等使用者選了學制/科系/年級再呼叫 get_courses 載入）
+    # 課程清單
     courses = Course.objects.select_related('departmentd', 'academica').all()
     courses_data = [{
         'id': c.id,
@@ -352,6 +350,7 @@ def add_comment_blank(request):
         'grade_level': c.grade_level,
     } for c in courses]
 
+    # 👉 重點：空白頁沒有特定課程，所以明確提供 review=None，避免模板找不到 review 變數
     context = {
         "academics": academics,
         "departments": departments,
@@ -361,14 +360,33 @@ def add_comment_blank(request):
         "courses": courses,
         "courses_json": json.dumps(courses_data, ensure_ascii=False),
 
-        # 這四個都設 None / 不輸出，代表「沒有預選」
+        "review": None,
+        "google_picture": _google_picture(request.user),
+
         "selected_course": None,
         "selected_teacher": "",
         "selected_academic": None,
         "selected_department": None,
         "selected_grade": None,
+
+        # 供模板安全使用
+        "review": None,
     }
     return render(request, "add_comment.html", context)
+
+
+# 放在檔案頂端匯入之下（不需額外 import）
+def _google_picture(user):
+    # 盡量穩健：只要是 google 登入就抓 extra_data.picture
+    try:
+        sa = user.social_auth.filter(provider__icontains='google').first()
+        if sa and isinstance(sa.extra_data, dict):
+            pic = sa.extra_data.get('picture') or sa.extra_data.get('avatar_url')
+            if pic:
+                return pic
+    except Exception:
+        pass
+    return None
 
 # =========================
 # 新增評論頁（專屬於某課）
@@ -378,34 +396,37 @@ def add_comment_blank(request):
 def add_comment_page(request, course_id):
     """
     渲染 add_comment 頁面，四個 dropdown 只顯示這門課對應的選項（專屬狀態）。
+    同時將當前登入者對此課的既有評論（若有）放入 context.review，避免模板 VariableDoesNotExist。
     """
     course = get_object_or_404(Course, id=int(course_id))
+
+    # 目前使用者對此課的既有評論（可能為 None）
+    user_review = CourseReview.objects.filter(course=course, user=request.user).first()
 
     # 把這門課對應的單一選項，直接當成 dropdown 的唯一選項
     academics = Academica.objects.filter(id=course.academica_id)
     departments = Departmentd.objects.filter(id=course.departmentd_id)
 
-    # 年級：你的 Course.grade_level 是字串（可能是 '一年級, 二年級'），這裡取第一個或只取它本身
+    # 年級處理
     selected_grade = None
     if course.grade_level:
         parts = [p.strip() for p in course.grade_level.split(',') if p.strip()]
         selected_grade = parts[0] if parts else course.grade_level
-
     grades = [selected_grade] if selected_grade else []
 
     # courses：只給這一門（為了前端一致性仍提供 JSON）
     courses = [course]
     courses_data = [{
-        "id": course.id,                             # ！！用主鍵 id
+        "id": course.id,
         "academic_id": course.academica_id,
         "department_id": course.departmentd_id,
-        "course_id": course.course_id,               # 文字代碼，留著顯示可用
+        "course_id": course.course_id,
         "course_name": course.course_name,
         "course_teacher": course.course_teacher or "",
         "grade_level": selected_grade,
     }]
 
-    # 供前端 JS 使用的輔助資料（即使只有一個也維持結構）
+    # 前端 JS 輔助資料
     departments_data = {str(course.academica_id): [{
         "id": course.departmentd_id,
         "name": departments.first().name if departments.exists() else ""
@@ -420,17 +441,27 @@ def add_comment_page(request, course_id):
         "grades_data": json.dumps(grades_data, ensure_ascii=False),
         "courses": courses,
         "courses_json": json.dumps(courses_data, ensure_ascii=False),
+
+        "review": user_review,
+        "google_picture": _google_picture(request.user),
+        "user_data": getattr(request.user, "user_data", None),
+
         "selected_course": course,
         "selected_teacher": course.course_teacher or "",
         "selected_academic": academics.first() if academics.exists() else None,
         "selected_department": departments.first() if departments.exists() else None,
         "selected_grade": selected_grade,
+
+        # 👉 重點：提供模板用的 review（None 或使用者既有評論）
+        "review": user_review,
     }
     return render(request, "add_comment.html", context)
 
 
+from django.db import transaction
 @login_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def add_comment_submit(request, course_id):
     """
     接收 POST，建立/更新使用者對該課程的【評論】與【評分】。
@@ -438,8 +469,13 @@ def add_comment_submit(request, course_id):
     - 評分表：web_app_CourseStar（comment_pop 與 add_comment 共用）
     兩張表都以 (user_id, course_id) 當唯一鍵來 upsert。
     """
-    course = get_object_or_404(Course, id=int(course_id))
+    # 取得課程
+    try:
+        course = get_object_or_404(Course, id=int(course_id))
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "無效的課程代號"}, status=400)
 
+    # 解析 JSON 請求
     try:
         data = json.loads(request.body.decode("utf-8"))
     except Exception:
@@ -450,6 +486,8 @@ def add_comment_submit(request, course_id):
 
     if not content:
         return JsonResponse({"error": "評論內容不能為空"}, status=400)
+
+    # 驗證評分 1-5
     try:
         rating = int(rating)
         if rating < 1 or rating > 5:
@@ -457,19 +495,40 @@ def add_comment_submit(request, course_id):
     except Exception:
         return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
 
-    user_id = request.user.id
+    # 匿名狀態處理（容錯：支援 bool 或字串）
+    anon_raw = data.get("anonymous", True)
+    if isinstance(anon_raw, str):
+        anon_norm = anon_raw.strip().lower()
+        is_anonymous = anon_norm in ("true", "1", "yes", "y", "on", "匿名")
+    else:
+        is_anonymous = bool(anon_raw)
 
-    # ★ 寫入/更新：web_app_CourseReview（以 user_id+course_id 唯一）
+    user = request.user
+
+    # ===== Upsert：CourseReview（(user, course) 唯一）=====
+    review_defaults = {
+        "content": content,
+        "rating": rating,  # 若評分也希望記在 Review 表，一併存；不需要可移除
+    }
+
+    # 僅當模型有 is_anonymous 欄位時才寫入（向後相容）
+    try:
+        review_fields = {f.name for f in CourseReview._meta.get_fields()}
+        if "is_anonymous" in review_fields:
+            review_defaults["is_anonymous"] = is_anonymous
+    except Exception:
+        pass
+
     review, created_review = CourseReview.objects.update_or_create(
-        user_id=user_id,
-        course_id=course.id,
-        defaults={"content": content},
+        user=user,
+        course=course,
+        defaults=review_defaults,
     )
 
-    # ★ 寫入/更新：web_app_CourseStar（以 user_id+course_id 唯一）
+    # ===== Upsert：CourseStar（(user, course) 唯一）=====
     star, created_star = CourseStar.objects.update_or_create(
-        user_id=user_id,
-        course_id=course.id,
+        user=user,
+        course=course,
         defaults={"star": rating},
     )
 
@@ -478,9 +537,15 @@ def add_comment_submit(request, course_id):
         "created_review": created_review,
         "created_star": created_star,
         "course_id": course.id,
+        "user_id": user.id,
         "rating": rating,
         "review_id": review.id,
         "star_id": star.id,
+        # 前端可用來顯示
+        "display": {
+            "is_anonymous": is_anonymous,
+            "user_name": user.get_full_name() or user.username,
+        },
     })
 
 
@@ -780,6 +845,90 @@ def toggle_like(request, comment_id):
         })
     
     return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+# ===== AI Comment Optimization =====
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+import re, openai
+
+def _clean_input(text: str) -> str:
+    text = re.sub(r"\r\n?", "\n", text or "")
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
+
+# 只輸出「可提交的中性評論」，不產生流程說明/小標/道歉
+SYSTEM_PROMPT = (
+    "你是一位課程評論的文字編輯器。請將使用者原始評論改寫為可直接提交的中性、具參考價值的內容："
+    "1) 維持使用者觀點，避免命令口吻與對話式語氣；"
+    "2) 去除粗話、人身攻擊與過度情緒用語；"
+    "3) 盡量具體（內容、節奏、作業/評分、互動、資源等面向）；"
+    "4) 允許提出期望或改進方向，但以描述式語句表達（如「希望能提供更多實作範例」），"
+    "5) 僅輸出最終評論文本，不要加入任何標題、註解、道歉或教學性提示。"
+    "6) 繁體中文輸出。"
+)
+
+@csrf_exempt
+@require_POST
+def optimize_comment_ai(request):
+    api_key    = settings.AZURE_OPENAI_API_KEY
+    endpoint   = settings.AZURE_OPENAI_ENDPOINT
+    api_ver    = settings.AZURE_OPENAI_API_VERSION
+    deployment = settings.AZURE_OPENAI_DEPLOYMENT_NAME  # 共用 RAG 的部署
+
+    if not (api_key and endpoint and deployment):
+        return JsonResponse({"error": "Azure OpenAI not configured"}, status=503)
+
+    raw = _clean_input(request.POST.get("content", ""))
+    if not raw:
+        return JsonResponse({"result": ""})
+
+    # ===== 過短：明確告知使用者「不可轉換/不可送出」 =====
+    short = raw.replace("\n", "").strip()
+    if len(short) < 6:  # 可自行調整門檻
+        return JsonResponse({
+            "result": "（內容過短）目前的評論資訊不足，無法進行語意優化與送出。"
+                     "請補充具體細節（例如：單元/作業類型/上課節奏/評分標準/時間點等），再按「轉換」。"
+        })
+
+    try:
+        client = openai.AzureOpenAI(
+            api_key=api_key,
+            api_version=api_ver,
+            azure_endpoint=endpoint,
+        )
+
+        # 僅描述要改寫的任務；不要求小標與教學字句
+        msg_user = (
+            "請將以下評論改寫為可直接提交的中性評論文本，避免對話式與流程說明：\n\n"
+            f"{raw}\n\n"
+            "注意：只輸出改寫後的最終評論內容；不要出現道歉、無法處理、需要更多資訊等字樣。"
+        )
+
+        resp = client.chat.completions.create(
+            model=deployment,
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": msg_user},
+            ],
+            max_tokens=400,
+        )
+
+        text = (resp.choices[0].message.content or "").strip()
+
+        # ===== 保險清洗：若模型仍回不可處理/請補充，改為可提交的短評句型 =====
+        blacklist = ["無法", "需要更多資訊", "不便", "抱歉", "無法進行有效", "建議您提供"]
+        if any(k in text for k in blacklist) or len(text) < 6:
+            text = "課程整體品質仍有進步空間；期望在教學重點與作業說明上更清楚，並提供更多實作示例以提升理解。"
+
+        return JsonResponse({"result": text})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+# ===== end AI Comment Optimization =====
+
 #############################課程評論區##############################
 
 
@@ -1445,3 +1594,5 @@ def add_comment(request, course_id):
         })
     
     return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+

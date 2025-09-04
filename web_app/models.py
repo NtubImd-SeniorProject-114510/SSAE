@@ -120,23 +120,41 @@ class CourseStar(models.Model):
 
 
 class CourseReview(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reviews')
+    course = models.ForeignKey(
+        'Course',
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # 內容 & 評分
     content = models.TextField()
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         null=True,
         blank=True,
     )
+
+    # 匿名開關：True = 匿名顯示；False = 實名顯示
+    is_anonymous = models.BooleanField(default=True)
+
+    # 時間戳記
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         db_table = 'web_app_coursereview'
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"Review by {self.user.username} for {self.course.course_name}"
+
+    # 提供一個方便的方法，前端顯示用
+    @property
+    def display_name(self):
+        if self.is_anonymous:
+            return "匿名"
+        return self.user.get_full_name() or self.user.username
 
 
 #-------------

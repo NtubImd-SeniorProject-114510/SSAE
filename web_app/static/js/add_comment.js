@@ -1,4 +1,6 @@
-// add_comment.js — robust version (整合：頂端顯示 / 中文可見搜尋泡泡 / Toast 送出)
+// static/js/add_comment.js — robust version
+// 功能：頂端顯示同步 / 中文可見搜尋泡泡 / Toast 提示 / 匿名或實名顯示切換 & 上傳 / 保證 user_id 由後端以 request.user 儲存
+
 (function(){
   let departmentsData = {};
   let gradesData = {};
@@ -6,8 +8,76 @@
 
   function el(id){ return document.getElementById(id); }
 
+  // 嘗試多種來源取得目前使用者資訊（供「實名」顯示）
+  function getCurrentUserInfo(){
+    // 1) <script type="application/json" id="current-user">{"username":"張三","avatar":"/media/u1.png"}</script>
+    try{
+      const j = el('current-user')?.textContent;
+      if (j) {
+        const data = JSON.parse(j);
+        if (data && (data.username || data.name)) {
+          return {
+            username: data.username || data.name || '使用者',
+            avatar: data.avatar || data.photo || data.image || ''
+          };
+        }
+      }
+    }catch(_){}
+    // 2) <body data-username="張三" data-avatar="/media/u1.png">
+    try{
+      const b = document.body;
+      const u = b?.dataset?.username || '';
+      const a = b?.dataset?.avatar || '';
+      if (u) return { username: u, avatar: a || '' };
+    }catch(_){}
+    // 3) window.CURRENT_USER = { username, avatar }
+    try{
+      if (window.CURRENT_USER && (window.CURRENT_USER.username || window.CURRENT_USER.name)) {
+        return {
+          username: window.CURRENT_USER.username || window.CURRENT_USER.name || '使用者',
+          avatar: window.CURRENT_USER.avatar || ''
+        };
+      }
+    }catch(_){}
+    // 4) 預設
+    return { username: '使用者', avatar: '' };
+  }
+
+  // 切換「匿名/實名」顯示
+  function bindAnonymousToggle(){
+    const container = document.querySelector('.display-mode-container');
+    if (!container) return;
+
+    const radioAnon = el('anonymous_yes'); // HTML 標籤文字是「匿名」
+    const radioReal = el('anonymous_no');  // HTML 標籤文字是「實名」
+    const avatarEl = container.querySelector('.user-info .avatar');
+    const nameEl = container.querySelector('.user-info .username');
+
+    const CURRENT = getCurrentUserInfo();
+    const REAL_NAME = CURRENT.username || '使用者';
+    const REAL_AVATAR = CURRENT.avatar || '/static/image/anonymous.png';
+    const ANON_NAME = '匿名';
+    const ANON_AVATAR = '/static/image/anonymous.png';
+
+    function applyDisplay(isAnonymous){
+      if (avatarEl) avatarEl.src = isAnonymous ? ANON_AVATAR : REAL_AVATAR;
+      if (nameEl) nameEl.textContent = isAnonymous ? ANON_NAME : REAL_NAME;
+    }
+
+    // 依目前 radio 狀態套用（容錯：有些模板預設 checked 在匿名）
+    const initialAnonymous = !!(radioAnon?.checked); // radioAnon 代表匿名
+    applyDisplay(initialAnonymous);
+
+    radioAnon?.addEventListener('change', ()=> {
+      if (radioAnon.checked) applyDisplay(true);
+    });
+    radioReal?.addEventListener('change', ()=> {
+      if (radioReal.checked) applyDisplay(false);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
-    // 讀取嵌入的 JSON 資料（<script type="application/json" id="departments-data">…）
+    // 讀取嵌入的 JSON 資料
     try{
       departmentsData = JSON.parse(el('departments-data')?.textContent || '{}');
       gradesData = JSON.parse(el('grades-data')?.textContent || '{}');
@@ -21,7 +91,7 @@
     const grade = el('grade');
     const course = el('course');
     const comment = el('comment_text');
-    const ratingInput = el('rating-input');   // ← 統一用這個
+    const ratingInput = el('rating-input');
     const btnPreview = el('preview-btn');
     const btnSubmit = el('submit-btn');
     const preview = el('preview');
@@ -94,11 +164,8 @@
         course.appendChild(opt);
       });
 
-      // 若有預選 courseId 則選上
       const pre = window.__PRESELECTED__ && window.__PRESELECTED__.courseId;
-      if (pre) {
-        course.value = String(pre);
-      }
+      if (pre) course.value = String(pre);
 
       updateCourseHeaderFromSelect();
     }
@@ -132,6 +199,9 @@
     populateCourses();
     updateCourseHeaderFromSelect();
 
+    // 綁定匿名/實名切換與視覺
+    bindAnonymousToggle();
+
     // 預覽
     btnPreview?.addEventListener('click', ()=>{
       const val = (comment?.value || '').trim();
@@ -141,7 +211,7 @@
       preview?.scrollIntoView({behavior:'smooth', block:'center'});
     });
 
-    // 送出（Toast 版；確保只有一個 handler）
+    // 送出（含匿名狀態）
     btnSubmit?.addEventListener('click', async (e)=>{
       e.preventDefault();
 
@@ -149,12 +219,17 @@
       const text = (comment?.value || '').trim();
       const star = parseInt(ratingInput?.value || '0', 10);
 
+      const isAnonymous =
+        // radio「匿名」通常是 #anonymous_yes
+        (el('anonymous_yes')?.checked === true) ||
+        // 若沒有那組 radio，預設匿名 false
+        false;
+
       if(!cId){ CommentToast?.toastError?.('請先選擇課程'); return; }
       if(!text){ CommentToast?.toastInfo?.('評論內容不能為空'); return; }
       if(!(star >=1 && star <=5)){ CommentToast?.toastInfo?.('評分必須是 1–5'); return; }
 
-      // 依你的 URLConf 決定是否要尾斜線
-      const url = `/add_comment/${cId}/submit`;
+      const url = `/add_comment/${cId}/submit/`;
 
       try{
         btnSubmit.disabled = true;
@@ -162,7 +237,7 @@
         const res = await fetch(url, {
           method: 'POST',
           headers: {'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest'},
-          body: JSON.stringify({ content: text, rating: star })
+          body: JSON.stringify({ content: text, rating: star, anonymous: isAnonymous })
         });
         const data = await res.json().catch(()=> ({}));
         if(!res.ok || data.error){
@@ -322,7 +397,7 @@
     select._vss_bound = true;
 
     let buffer = "";
-    let lastType = 0;
+       let lastType = 0;
     let composing = false;
     let composeBuf = "";
 
@@ -453,7 +528,7 @@
   // 對外
   window.initVisibleSearchableSelects = initVisibleSearchableSelects;
 
-  // 自動初始化：使用你 add_comment 頁面的實際 id
+  // 自動初始化：使用 add_comment 頁的實際 id
   if (document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", ()=> initVisibleSearchableSelects(["academic", "department", "grade", "course"]));
   }else{

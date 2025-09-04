@@ -14,133 +14,214 @@
 {% block content %}
 <div class="container" style="margin-top:80px"></div>
 <div class="comment-container">
-    <div class="back-button" onclick="history.back()">
-        <a href="#">返回</a>
-    </div>
-    
+  <div class="back-button" onclick="history.back()">
+    <a href="#">返回</a>
+  </div>
+  
   <form id="comment-form" class="comment-form" onsubmit="return false;">
     <div class="form-row">
-        <div class="form-col-left">
-            <div class="form-group">
-                <label for="academic" class="form-label">學制</label>
-                <select id="academic" class="form-control">
-                    <option value="">請選擇學制</option>
-                {% for a in academics %}
-                <option value="{{ a.id }}" {% if selected_academic and selected_academic.id == a.id %}selected{% endif %}>{{ a.name }}</option>
-                {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="department" class="form-label">科系</label>
-                <select id="department" class="form-control">
-                <option value="">請先選擇學制</option>
-                {% if selected_department %}
-                <option value="{{ selected_department.id }}" selected>{{ selected_department.name }}</option>
-                {% endif %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="grade" class="form-label">年級</label>
-                <select id="grade" class="form-control">
-                <option value="">請先選擇學制</option>
-                {% if selected_grade %}
-                <option value="{{ selected_grade }}" selected>{{ selected_grade }}</option>
-                {% endif %}
-                </select>
-            </div>
-            <div class="form-group course-group">
-                <label for="course" class="form-label">課程</label>
-                <select id="course" name="course" class="form-control course" required>
-                <option value="">請先選擇學制、科系和年級</option>
-                {% if selected_course %}
-                <option value="{{ selected_course.id }}" selected>{{ selected_course.course_name }}（{{ selected_course.course_teacher }}）</option>
-                {% endif %}
-                </select>
-            </div>
+      <div class="form-col-left">
+        <div class="form-group">
+          <label for="academic" class="form-label">學制</label>
+          <select id="academic" class="form-control">
+            <option value="">請選擇學制</option>
+            {% for a in academics %}
+              <option value="{{ a.id }}" {% if selected_academic and selected_academic.id == a.id %}selected{% endif %}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="form-col">
-            <div class="display-mode-container">
-                <label>顯示方式</label>
-                <div class="user-info-container">
-                    <div class="user-info">
-                        <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar">
-                        <span class="username">匿名</span>
-                    </div>
-                    <div class="anonymous-options">
-                        <input type="radio" id="anonymous_yes" name="anonymous" value="no" checked>
-                        <label for="anonymous_yes">匿名</label>
-                        <input type="radio" id="anonymous_no" name="anonymous" value="yes">
-                        <label for="anonymous_no">實名</label>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group rating-group">
-                <label>課程評分</label>
-                <div class="rating-controls">
-                    <div class="stars editable" id="rating-stars" data-rating="1">
-                        <i class="fa-regular fa-star" data-rating="1"></i>
-                        <i class="fa-regular fa-star" data-rating="2"></i>
-                        <i class="fa-regular fa-star" data-rating="3"></i>
-                        <i class="fa-regular fa-star" data-rating="4"></i>
-                        <i class="fa-regular fa-star" data-rating="5"></i>
-                        <input type="hidden" name="rating" id="rating-input" value="1">
-                        <span class="rating-text">{{ avg_rating|floatformat:1 }}/5.0</span>
-                    </div>
-                </div>
-            </div>
+
+        <div class="form-group">
+          <label for="department" class="form-label">科系</label>
+          <select id="department" class="form-control">
+            <option value="">請先選擇學制</option>
+            {% if selected_department %}
+              <option value="{{ selected_department.id }}" selected>{{ selected_department.name }}</option>
+            {% endif %}
+          </select>
         </div>
+
+        <div class="form-group">
+          <label for="grade" class="form-label">年級</label>
+          <select id="grade" class="form-control">
+            <option value="">請先選擇學制</option>
+            {% if selected_grade %}
+              <option value="{{ selected_grade }}" selected>{{ selected_grade }}</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div class="form-group course-group">
+          <label for="course" class="form-label">課程</label>
+          <select id="course" name="course" class="form-control course" required>
+            <option value="">請先選擇學制、科系和年級</option>
+            {% if selected_course %}
+              <option value="{{ selected_course.id }}" selected>
+                {{ selected_course.course_name }}（{{ selected_course.course_teacher }}）
+              </option>
+            {% endif %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-col">
+        <div class="display-mode-container">
+          <label>顯示方式</label>
+          <div class="user-info-container">
+            <div class="user-info">
+              {% if review and review.is_anonymous %}
+                <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar" id="display-avatar">
+                <span class="username" id="display-username">匿名</span>
+              {% elif review and not review.is_anonymous %}
+                {% if google_picture %}
+                    <img src="{{ google_picture }}" alt="{{ review.user.last_name }}{{ review.user.first_name }}" 
+                        class="avatar" id="display-avatar" style="border-radius:50%; object-fit:cover;">
+                {% elif review.user.profile and review.user.profile.avatar %}
+                    <img src="{{ review.user.profile.avatar.url }}" alt="User Avatar" 
+                        class="avatar" id="display-avatar">
+                {% endif %}
+                <span class="username" id="display-username">
+                    {% if review.user.last_name or review.user.first_name %}
+                    {{ review.user.last_name }}{{ review.user.first_name }}
+                    {% else %}
+                    {{ review.user.username }}
+                    {% endif %}
+                </span>
+                {% else %}
+                <!-- 尚未有 review：預設匿名顯示，切換時由 JS 更新 -->
+                <img src="{% static 'image/anonymous.png' %}" alt="User Avatar" class="avatar" id="display-avatar">
+                <span class="username" id="display-username">匿名</span>
+              {% endif %}
+            </div>
+
+            <div class="anonymous-options">
+              {# 注意：Django 模板不支援括號，改成巢狀判斷 #}
+              <input type="radio" id="anonymous_yes" name="anonymous" value="true"
+                {% if review %}
+                  {% if review.is_anonymous %}checked{% endif %}
+                {% else %}
+                  checked
+                {% endif %}>
+              <label for="anonymous_yes">匿名</label>
+
+              <input type="radio" id="anonymous_no" name="anonymous" value="false"
+                     {% if review and not review.is_anonymous %}checked{% endif %}>
+              <label for="anonymous_no">實名</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group rating-group">
+          <label>課程評分</label>
+          <div class="rating-controls">
+            <div class="stars editable" id="rating-stars" data-rating="{% if review and review.rating %}{{ review.rating }}{% else %}1{% endif %}">
+              <i class="fa-regular fa-star" data-rating="1"></i>
+              <i class="fa-regular fa-star" data-rating="2"></i>
+              <i class="fa-regular fa-star" data-rating="3"></i>
+              <i class="fa-regular fa-star" data-rating="4"></i>
+              <i class="fa-regular fa-star" data-rating="5"></i>
+              <input type="hidden" name="rating" id="rating-input" value="{% if review and review.rating %}{{ review.rating }}{% else %}1{% endif %}">
+              <span class="rating-text">
+                {% if avg_rating %}{{ avg_rating|floatformat:1 }}{% else %}1.0{% endif %}/5.0
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
         
     <div class="top-row-container">
-        <div class="course-info-container">
-            <div class="comment-header">
-            <h3 id="course-name-display">
-                {{ selected_course.course_name|default:"請先選擇課程" }}
-            </h3>
-            <h3>
-                授課教師:
-                <span id="course-teacher-display">
-                {{ selected_course.course_teacher|default:"—" }}
-                </span>
-            </h3>
-            </div>
+      <div class="course-info-container">
+        <div class="comment-header">
+          <h3 id="course-name-display">
+            {{ selected_course.course_name|default:"請先選擇課程" }}
+          </h3>
+          <h3>
+            授課教師:
+            <span id="course-teacher-display">
+              {{ selected_course.course_teacher|default:"—" }}
+            </span>
+          </h3>
         </div>
-        </div>
+      </div>
+    </div>
     
     <div class="comment-content">
-        <div class="comment-text-area">
-            <textarea id="comment_text" name="comment_text" rows="10" placeholder="輸入評論內容..."></textarea>
+      <div class="comment-text-area">
+        <textarea id="comment_text" name="comment_text" rows="10" placeholder="輸入評論內容...">{% if review %}{{ review.content }}{% endif %}</textarea>
+      </div>
+      
+      <div class="arrows-container">
+        <div class="arrow">
+          <i class="fa-solid fa-arrow-right"></i>
         </div>
-        
-        <div class="arrows-container">
-            <div class="arrow">
-                <i class="fa-solid fa-arrow-right"></i>
-            </div>
-            <button type="button" id="convert_btn" class="btn-convert">轉換</button>
-            <div class="arrow">
-                <i class="fa-solid fa-arrow-right"></i>
-            </div>
+        <button type="button" id="convert-btn" class="btn-convert">轉換</button>
+        <div class="arrow">
+          <i class="fa-solid fa-arrow-right"></i>
         </div>
-        
-        <div class="comment-preview">
-            <div class="preview-content">
-                <textarea id="preview_text" placeholder="可以在這裡直接編輯或使用轉換按鈕..."></textarea>
-            </div>
+      </div>
+      
+      <div class="comment-preview">
+        <div class="preview-content">
+          <textarea id="preview_text" placeholder="可以在這裡直接編輯或使用轉換按鈕..."></textarea>
         </div>
+      </div>
     </div>
     
     <div class="add-comment-form-actions">
-        <button type="submit" class="btn-submit">送出</button>
+      <button type="submit" id="submit-btn" class="btn-submit">送出</button>
     </div>
-</form>
+  </form>
 </div>
+
 <!-- 內嵌資料供 JS 使用 -->
 <script id="departments-data" type="application/json">{{ departments_data|safe }}</script>
 <script id="grades-data" type="application/json">{{ grades_data|safe }}</script>
 <script id="courses-data" type="application/json">{{ courses_json|safe }}</script>
-<script src="{% static 'js/comment_toast.js' %}"></script>
+
+<script src="{% static 'js/pop_window/comment_toast.js' %}"></script>
+
+<!-- 提供目前使用者資訊，實名顯示時會使用 -->
+<script type="application/json" id="current-user">
+{
+  "username": "{{ request.user.last_name }}{{ request.user.first_name }}",
+  "avatar": "{% if google_picture %}{{ google_picture }}{% elif request.user.profile and request.user.profile.avatar %}{{ request.user.profile.avatar.url }}{% else %}{% static 'image/default.png' %}{% endif %}"
+}
+</script>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function(){
+        const anonYes = document.getElementById("anonymous_yes");
+        const anonNo  = document.getElementById("anonymous_no");
+        const avatar  = document.getElementById("display-avatar");
+        const nameEl  = document.getElementById("display-username");
+
+        // 從 current-user 讀取 Google/本地頭像與姓名
+        let current = { username: "使用者", avatar: "" };
+        try{
+            const j = document.getElementById("current-user")?.textContent;
+            if (j) current = JSON.parse(j);
+        }catch(e){}
+
+        function apply(isAnonymous){
+            if (isAnonymous){
+            if (avatar) avatar.src = "{% static 'image/anonymous.png' %}";
+            if (nameEl) nameEl.textContent = "匿名";
+            } else {
+            if (avatar) avatar.src = current.avatar || "{% static 'image/default.png' %}";
+            if (nameEl) nameEl.textContent = current.username || "{{ request.user.username }}";
+            }
+        }
+
+        // 初始狀態
+        apply(!!anonYes?.checked);
+
+        anonYes?.addEventListener("change", function(){ if (this.checked) apply(true); });
+        anonNo?.addEventListener("change",  function(){ if (this.checked) apply(false); });
+        });
+
+
+
   window.__PRESELECTED__ = {
     courseId: {{ selected_course.id|default:'null' }},
     academicId: {{ selected_academic.id|default:'null' }},
@@ -148,28 +229,25 @@
     grade: {% if selected_grade %}"{{ selected_grade }}"{% else %}null{% endif %}
   };
 
-    // 若是從課程點進來，直接上鎖四個下拉（專屬狀態）
-    (function lockIfPreselected() {
+  // 若是從課程點進來，直接上鎖四個下拉（專屬狀態）
+  (function lockIfPreselected() {
     const pre = window.__PRESELECTED__ || {};
     const academic = document.getElementById('academic');
     const department = document.getElementById('department');
     const grade = document.getElementById('grade');
     const course = document.getElementById('course');
 
-    // 只有當 courseId 存在時才鎖定（確定是從課程跳轉）
     if (pre.courseId) {
-        // 直接設定值（如果你的 populate 流程已經把唯一選項塞好，這裡只是保險）
-        if (pre.academicId && academic) academic.value = String(pre.academicId);
-        if (pre.departmentId && department) department.value = String(pre.departmentId);
-        if (pre.grade && grade) grade.value = pre.grade;
-        if (course) course.value = String(pre.courseId);
+      if (pre.academicId && academic) academic.value = String(pre.academicId);
+      if (pre.departmentId && department) department.value = String(pre.departmentId);
+      if (pre.grade && grade) grade.value = pre.grade;
+      if (course) course.value = String(pre.courseId);
 
-        // 上鎖避免被改動（如果你希望仍可改，移除此段）
-        [academic, department, grade, course].forEach(sel => {
-        if (sel) sel.disabled = true;
-        });
+      [academic, department, grade, course].forEach(sel => { if (sel) sel.disabled = true; });
     }
-    })();
+  })();
 </script>
+
 <script src="{% static 'js/add_comment.js' %}"></script>
+<script src="{% static 'js/comment_ai_optimize.js' %}"></script>
 {% endblock %}
