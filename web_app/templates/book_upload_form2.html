@@ -1,6 +1,36 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/book_upload_form.css' %}">
+<style>
+.quick-tag {
+    background: #f3f4f6;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.quick-tag.selected {
+    background: #6F557D;
+    color: white;
+    border-color: #6F557D;
+}
+.upload-modal2 {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 3500;
+    display: flex;
+    align-items: flex-start;  /* 頂部開始對齊 */
+    justify-content: center;
+    padding-top: 150px;        /* 這個控制距離頂部距離 */
+    background: rgba(111,85,125,0.13);
+}
 
+</style>
 <div id="uploadFormModal2" class="upload-modal2" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3500;align-items:center;justify-content:center;background:rgba(111,85,125,0.13);">
   <div class="container">
     <div class="header">
@@ -70,14 +100,28 @@
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label" for="id_grade">年級</label>
-                    <select name="grade" class="form-select" id="id_grade">
-                        <option value="">請選擇年級</option>
-                        {% for grade in academic_grades %}
-                            <option value="{{ grade.id }}">{{ grade.grade_level }}</option>
-                        {% endfor %}
-                    </select>
+            <div class="form-group">
+                <label class="form-label" for="id_grade">年級</label>
+                    <script>
+                        // 把 Django 的 JSON 字串轉成 JS 物件
+                        const gradesData = JSON.parse('{{ grades_data|escapejs }}');  // 這裡用 escapejs
+                        const academicSelect = document.getElementById('id_academic');
+                        const gradeSelect = document.getElementById('id_grade');
+
+                        academicSelect.addEventListener('change', () => {
+                            const academicId = academicSelect.value;
+                            // 清空年級
+                            gradeSelect.innerHTML = '<option value="">請選擇年級</option>';
+                            if(academicId && gradesData[academicId]) {
+                                gradesData[academicId].forEach(g => {
+                                    const opt = document.createElement('option');
+                                    opt.value = g.id;
+                                    opt.textContent = g.grade_level;
+                                    gradeSelect.appendChild(opt);
+                                });
+                            }
+                        });
+                    </script>
                 </div>
             </div>
             
@@ -175,15 +219,21 @@ function handleFileSelect(input) {
     reader.readAsDataURL(file);
 }
 
-function toggleTag(btn,text){
+function toggleTag(btn, text){
     const textarea = document.getElementById('description');
+    let tags = textarea.value ? textarea.value.split('、') : [];
+    tags = tags.map(t=>t.trim()).filter(t=>t); // 清理空值
+
     if(btn.classList.contains('selected')){
-        textarea.value = textarea.value.replace(text,'').trim();
+        // 移除 tag
+        tags = tags.filter(t=>t !== text);
         btn.classList.remove('selected');
     } else {
-        textarea.value += (textarea.value?' ':'') + text;
+        // 加入 tag
+        tags.push(text);
         btn.classList.add('selected');
     }
+    textarea.value = tags.join('、');
 }
 
 function clearSelectedTags(){
