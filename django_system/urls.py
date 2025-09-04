@@ -37,7 +37,7 @@ urlpatterns = [
     path('join_create/' , views.join_create),
     path('book/', views.book, name='book'),
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
-    path('book/upload/', views.upload_book2, name='upload_book'),
+    path('book/upload/', views.upload_book2, name='upload_book2'),
     
     # Course Reviews
     path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
@@ -77,6 +77,7 @@ urlpatterns = [
     path('my-activities/', views.my_activities, name='my_activities'),
     path('api/activities/<int:activity_id>/comments/', views.add_comment, name='add_comment_api'),
     path('api/comments/<int:comment_id>/toggle-like/', views.toggle_like, name='toggle_like'),
+
 ]
 
 from django.conf import settings

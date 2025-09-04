@@ -219,32 +219,33 @@ from .forms import Book2Form
 from .models import Book2
 from django.shortcuts import redirect
 
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from .forms import Book2Form
+from django.template.loader import render_to_string
 
+@login_required
 def upload_book2(request):
-    from .models import AcademicGrade
-    academic_grades = AcademicGrade.objects.all()
-    if request.method == 'POST':
+    if request.method == "POST":
         form = Book2Form(request.POST, request.FILES)
         if form.is_valid():
             book = form.save(commit=False)
-            book.contact = request.user
             book.seller = request.user
-            from .models import Status
-            if not book.status:
-                book.status = Status.objects.get(name='在售')
+            book.contact = request.user
+
+            if 'cover_image' in request.FILES:
+                book.cover_image = request.FILES['cover_image']
+
             book.save()
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': '書籍上架成功'})
-            return redirect('book')
+
+            # 上傳成功後直接重導向回書籍列表頁或當前頁
+            return redirect('book')  # 替換成你的書籍列表 URL 名稱
         else:
-            print('Book2Form errors:', form.errors)
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-            return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
+            # 如果表單錯誤，也重新渲染表單並顯示錯誤
+            return render(request, 'book.html', {'form': form, 'books': Book2.objects.all()})
     else:
         form = Book2Form()
-        return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
+        return render(request, 'book.html', {'form': form, 'books': Book2.objects.all()})
 
 def ask_page(request):
     return render(request, "ask.html")
