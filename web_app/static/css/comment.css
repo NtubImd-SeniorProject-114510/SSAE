@@ -1,5 +1,4 @@
 
-
 :root {
     /* Main colors */
     --primary-color: #abbef9;
@@ -269,6 +268,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+     font-size: 18px;
 }
 
 .course-bottom {
