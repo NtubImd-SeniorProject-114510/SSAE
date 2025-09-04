@@ -16,6 +16,17 @@
 
 {% block content %}
 <body>
+    {% if messages %}
+        {% for message in messages %}
+            {% if '報名成功！可至個人中心查看已參加的活動' in message %}
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    alert('報名成功！可至個人中心查看已參加的活動');
+                });
+                </script>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
     {% if remaining_slots <= 0 %}
         <button class="fixed-cta" disabled>已額滿</button>
     {% elif a.is_deadline_passed %}
@@ -23,23 +34,50 @@
     {% elif not request.user.is_authenticated %}
         <button class="fixed-cta" onclick="triggerNavbarLogin();">登入即可參加</button>
     {% elif joined %}
-        <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form">
+        <form action="{% url 'cancel_activity' a.id %}" method="post" class="fixed-cta-form" id="cancel-activity-form">
             {% csrf_token %}
-            <button class="fixed-cta" type="submit">取消參加</button>
+            <button class="fixed-cta" type="submit" id="cancel-activity-btn">取消參加</button>
         </form>
     {% elif is_creator %}
         <button class="fixed-cta" disabled>您是發起人</button>
     {% else %}
-        <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form">
+        <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form" id="join-activity-form">
             {% csrf_token %}
-            <button class="fixed-cta" type="submit">立即報名</button>
+            <button class="fixed-cta" type="submit" id="join-activity-btn">立即報名</button>
         </form>
     {% endif %}
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var joinForm = document.getElementById('join-activity-form');
+        if (joinForm) {
+            joinForm.addEventListener('submit', function(e) {
+                if (!confirm('確定要參加嗎？')) {
+                    e.preventDefault();
+                }
+            });
+        }
+        var cancelForm = document.getElementById('cancel-activity-form');
+        if (cancelForm) {
+            cancelForm.addEventListener('submit', function(e) {
+                if (!confirm('確定要取消參加嗎？')) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+    </script>
 
     <div class="container">    
         <div class="back-button" onclick="history.back()">
             <a href="#">返回</a>
         </div>    
+
+        <div class="section ">
+            <div class="activity-title ">
+                <h2 class="section-title">{{ a.title }}</h2>
+            </div>
+        </div>
 
         <!-- 活動資訊卡 -->
         <div class="section">
@@ -242,7 +280,10 @@
                 <div class="form-group">
                     <textarea id="newCommentText" class="form-control" rows="4" placeholder="分享你的想法..."></textarea>
                 </div>
-                <button id="submitComment" class="submit-comment-btn" data-activity-id="{{ a.id }}">發表留言</button>
+                <div class="add-comment-actions">
+                    <button id="submitComment" class="submit-comment-btn" data-activity-id="{{ a.id }}">發佈
+                    </button>
+                </div>
             </div>
             {% else %}
             <div class="login-prompt">
@@ -279,11 +320,25 @@
                 {% endfor %}
             </div>
         </div>
+        <div class="block-haha" style="height: 100px;">
+            
+        </div>
     </div>
 </body>
 {% endblock %}
 
 {% block footer %}
+{% if messages %}
+  {% for message in messages %}
+    {% if '報名成功！可至個人中心查看已參加的活動' in message %}
+      <script>
+        window.addEventListener('DOMContentLoaded', function() {
+          alert("{{ message|escapejs }}");
+        });
+      </script>
+    {% endif %}
+  {% endfor %}
+{% endif %}
 {% endblock %}
 
 {% block body_js %}

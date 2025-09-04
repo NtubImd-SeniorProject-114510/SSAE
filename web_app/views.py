@@ -1194,7 +1194,7 @@ def join_activity(request, pk):
 
     ActivityParticipant.objects.update_or_create(activity_id=a.id, user_id=request.user.id, defaults={'status': 'joined', 'joined_at': timezone.now(), 'updated_at': timezone.now()})
     updated_joined_count = ActivityParticipant.objects.filter(activity_id=a.id, status='joined').count()
-    messages.success(request, '報名成功！')
+    messages.success(request, '報名成功！可至個人中心查看已參加的活動')
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'ok': True, 'participants': updated_joined_count, 'message': '報名成功！'})
