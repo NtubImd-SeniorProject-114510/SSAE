@@ -65,11 +65,13 @@ urlpatterns = [
     # 送出評論的 POST API 送出評論（保留）
     path("add_comment/<int:course_id>/submit/", views.add_comment_submit, name="add_comment_submit"),
 
+    path("comment/review/<int:id>/delete/", views.comment_review_delete, name="comment_review_delete"),
     # 其餘 Review API（如你需要 REST 介面）
     path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
-    
+    path("api/reviews/<int:review_id>/toggle-like/", views.toggle_review_like, name="toggle_review_like"),
+   
     path("api/comment/optimize_ai", views.optimize_comment_ai, name="optimize_comment_ai"),
     #####
 

@@ -525,12 +525,20 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
+    .arrow i {
+        transform: rotate(90deg);
+    }
+    
     .form-group {
         min-width: 180px;
     }
 }
 
 @media (max-width: 1000px) {
+    .arrow i {
+        transform: rotate(90deg);
+    }
+
     .form-group {
         min-width: 150px;
     }
@@ -551,6 +559,11 @@ body {
 }
 
 @media (max-width: 768px) {
+    .arrow i {
+        transform: rotate(90deg);
+    }
+
+
     .form-row {
         flex-direction: column;
     }

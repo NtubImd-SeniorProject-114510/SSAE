@@ -1094,24 +1094,29 @@ to {
   }
 
 
-  .dialog-group-l:hover .dialog-text {
-    animation: text-scroll 20s linear infinite;
+
+
+  .dialog-group-l:hover .dialog-text,
+  .dialog-group-r:hover .dialog-text {
+    animation: text-scroll 30s linear infinite;
   }
 
-  @keyframes text-scroll {
-    0% {
-      transform: translateX(0);
-    }
-    40% {
-      transform: translateX(calc(-100% + 320px));
-    }
-    60% {
-      transform: translateX(calc(-100% + 320px));
-    }
-    100% {
-      transform: translateX(0);
-    }
+@keyframes text-scroll {
+  0% {
+    transform: translateX(0);
   }
+  40% {
+    transform: translateX(calc(-100% + 300px)); /* 調整數字決定右邊留白 */
+  }
+  60% {
+    transform: translateX(calc(-100% + 300px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+
   
   .path-outline {
     transition: transform 0.3s ease;
@@ -1518,6 +1523,10 @@ to {
     transform-origin: top left;
     animation: none; /* 移除桌面版 fly-out 動畫 */
     opacity: 1; /* 確保可見 */
+  }
+
+  .dialog-text{
+    font-size: 10px;
   }
 
 

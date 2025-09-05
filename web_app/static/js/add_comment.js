@@ -8,6 +8,16 @@
 
   function el(id){ return document.getElementById(id); }
 
+  function getCSRFToken() {
+  // 先從 cookie 拿
+  const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
+  if (m) return decodeURIComponent(m[1]);
+  // 退而求其次：從頁面上的 hidden input / meta 拿
+  return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value
+      || document.querySelector('meta[name="csrf-token"]')?.content
+      || '';
+  }
+
   // 嘗試多種來源取得目前使用者資訊（供「實名」顯示）
   function getCurrentUserInfo(){
     // 1) <script type="application/json" id="current-user">{"username":"張三","avatar":"/media/u1.png"}</script>
@@ -77,6 +87,111 @@
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+
+    // === 強化：預覽區僅允許「刪除/剪下」，中英/注音都無法新增 ===
+    (function enforceDeleteOnlyOnPreview_hard(){
+      const el = document.getElementById('comment-preview') || document.getElementById('preview_text');
+      if (!el) return;
+
+      const isTextarea = el.tagName === 'TEXTAREA';
+
+      // 關閉系統自動更正，避免自動插入
+      if (isTextarea) {
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('autocapitalize', 'off');
+        el.setAttribute('spellcheck', 'false');
+      }
+
+      // 取值/設值封裝，兼容 div / textarea
+      const getVal = () => ('value' in el ? el.value : el.textContent || '');
+      const setVal = (v) => {
+        if ('value' in el) el.value = v;
+        else el.textContent = v;
+      };
+
+      // 快照（含游標）
+      let prev = getVal();
+      let selStart = isTextarea ? (el.selectionStart ?? prev.length) : null;
+      let selEnd   = isTextarea ? (el.selectionEnd   ?? prev.length) : null;
+
+      function snapshot() {
+        prev = getVal();
+        if (isTextarea) {
+          selStart = el.selectionStart ?? prev.length;
+          selEnd   = el.selectionEnd   ?? prev.length;
+        }
+      }
+      function restore() {
+        setVal(prev);
+        if (isTextarea) {
+          try {
+            el.setSelectionRange(selStart, selEnd);
+          } catch(_){}
+        }
+      }
+
+      // 允許的 beforeinput 類型（刪除相關）
+      const ALLOWED = new Set([
+        'deleteContentBackward',
+        'deleteContentForward',
+        'deleteByCut',
+        'deleteByDrag',
+        'deleteContent'
+      ]);
+
+      // 1) 先用 beforeinput 擋（可攔 New text / Paste / IME 插入）
+      el.addEventListener('beforeinput', (e) => {
+        const t = e.inputType || '';
+        if (!ALLOWED.has(t)) {
+          // 禁止任何插入/貼上/IME 組字造成的插入
+          e.preventDefault();
+        } else {
+          // 刪除動作 → 先存快照（刪除後若瀏覽器有奇怪行為可回滾）
+          snapshot();
+        }
+      });
+
+      // 2) 後盾：input 事件上做「差異比對」，若偵測到有新增 → 立刻回滾
+      el.addEventListener('input', () => {
+        const cur = getVal();
+        if (cur.length > prev.length) {
+          // 有新增字（中/英/注音都會落在這）→ 回滾
+          restore();
+        } else {
+          // 沒新增（相等或變短）：視為刪除或無變化 → 接受並更新快照
+          snapshot();
+        }
+      });
+
+      // 3) 禁止貼上、拖放插入
+      el.addEventListener('paste', (e) => e.preventDefault());
+      el.addEventListener('drop',  (e) => e.preventDefault());
+
+      // 4) 鍵盤層限制：允許刪除/導航/複製/剪下；禁止可見字元與貼上/Undo/Redo
+      el.addEventListener('keydown', (e) => {
+        const NAV = new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Tab','Escape','Shift','Control','Alt','Meta']);
+        if (NAV.has(e.key)) return;
+        if (e.key === 'Backspace' || e.key === 'Delete') { snapshot(); return; }
+
+        if (e.ctrlKey || e.metaKey) {
+          const k = e.key.toLowerCase();
+          if (k === 'a' || k === 'c' || k === 'x') { snapshot(); return; } // 全選/複製/剪下
+          if (k === 'v' || k === 'z' || k === 'y') { e.preventDefault(); return; } // 貼上/Undo/Redo 可能造成插入 → 禁
+        }
+
+        if (e.key.length === 1) { // 任何可見字元
+          e.preventDefault();
+        }
+      });
+
+      // 5) 部分瀏覽器的 IME 組字事件不可取消，這裡仍記快照並在 input 後回滾
+      el.addEventListener('compositionstart', () => snapshot());
+      el.addEventListener('compositionupdate', () => {/* 先不處理，交給 input 後台回滾 */});
+      el.addEventListener('compositionend', () => {/* 交給 input 事件差異比對 */});
+    })();
+
+
     // 讀取嵌入的 JSON 資料
     try{
       departmentsData = JSON.parse(el('departments-data')?.textContent || '{}');
@@ -211,49 +326,71 @@
       preview?.scrollIntoView({behavior:'smooth', block:'center'});
     });
 
-    // 送出（含匿名狀態）
+    // 送出（一律以預覽內容為準；禁止送出原始 comment_text）
     btnSubmit?.addEventListener('click', async (e)=>{
       e.preventDefault();
 
       const cId = course?.value;
-      const text = (comment?.value || '').trim();
       const star = parseInt(ratingInput?.value || '0', 10);
+      const isAnonymous = (el('anonymous_yes')?.checked === true) || false;
 
-      const isAnonymous =
-        // radio「匿名」通常是 #anonymous_yes
-        (el('anonymous_yes')?.checked === true) ||
-        // 若沒有那組 radio，預設匿名 false
-        false;
+      // 取「轉換後」的內容（優先 #comment-preview，其次 #preview_text）
+      const previewBox = el('comment-preview') || el('preview_text');
+      const previewVal = (previewBox ? ('value' in previewBox ? previewBox.value : previewBox.textContent) : '').trim();
 
+      // 基本檢查
       if(!cId){ CommentToast?.toastError?.('請先選擇課程'); return; }
-      if(!text){ CommentToast?.toastInfo?.('評論內容不能為空'); return; }
-      if(!(star >=1 && star <=5)){ CommentToast?.toastInfo?.('評分必須是 1–5'); return; }
+      if(!(star >= 1 && star <= 5)){ CommentToast?.toastInfo?.('評分必須是 1–5'); return; }
+
+      // 必須先按「轉換」產生預覽
+      if(!previewVal){
+        CommentToast?.toastInfo?.('請先按「轉換」，產生可提交的評論內容，再送出。');
+        return;
+      }
+
+      // 後端的「過短」提示，禁止送出
+      if(previewVal.startsWith('（內容過短）')){
+        CommentToast?.toastInfo?.('評論內容過短，請補充具體細節後再送出。');
+        return;
+      }
+
+      // 覆蓋原始輸入：保證送出的是「轉換後」內容
+      if (comment) comment.value = previewVal;
 
       const url = `/add_comment/${cId}/submit/`;
 
       try{
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 送出中…';
+
         const res = await fetch(url, {
           method: 'POST',
-          headers: {'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest'},
-          body: JSON.stringify({ content: text, rating: star, anonymous: isAnonymous })
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type':'application/json',
+            'X-Requested-With':'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken(),
+          },
+          body: JSON.stringify({
+            content: previewVal,        // ★ 只送轉換後的內容
+            rating: star,
+            anonymous: isAnonymous
+          })
         });
+
         const data = await res.json().catch(()=> ({}));
         if(!res.ok || data.error){
           throw new Error(data.error || `HTTP ${res.status}`);
         }
 
-        CommentToast?.toastSuccess?.('已送出您的評論與評分！');
+        // 成功 → 跳轉到 comment_detail/<cId>
+        window.location.href = `/comment_detail/${cId}`;
 
-        // 成功後是否導頁：依需求
-        // window.location.href = `/comment_detail/${cId}`;
       }catch(err){
         console.error(err);
         CommentToast?.toastError?.(err.message || '送出失敗，請稍後再試');
-      }finally{
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = '<i class="fa-regular fa-paper-plane"></i> 送出';
+        // 送出失敗也保持 disabled 狀態，避免重複送出
+        btnSubmit.innerHTML = '送出失敗';
       }
     });
   });
@@ -345,193 +482,3 @@
   document.addEventListener('DOMContentLoaded', initAddCommentStars);
 })();
 
-/* visible-searchable-select.js — 讓 <select> 有「可見的」搜尋輸入泡泡（中文 IME 支援） */
-(function(){
-  const RESET_MS = 700;
-
-  const toHalfWidth = (s) =>
-    (s || "")
-      .replace(/[\uFF01-\uFF5E]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-      .replace(/\u3000/g, " ");
-
-  const normalize = (s) =>
-    toHalfWidth(String(s || "").trim())
-      .toLowerCase()
-      .replace(/^[\s\-\[\]\(\)【】·•・]+/, "");
-
-  function ensureOverlay(){
-    let box = document.getElementById("select-search-overlay");
-    if (box) return box;
-    box = document.createElement("input");
-    box.type = "text";
-    box.id = "select-search-overlay";
-    Object.assign(box.style, {
-      position: "absolute",
-      zIndex: 9999,
-      minWidth: "120px",
-      padding: "6px 10px",
-      fontSize: "14px",
-      border: "1px solid #ccc",
-      borderRadius: "8px",
-      boxShadow: "0 6px 18px rgba(0,0,0,.08)",
-      background: "#fff",
-      outline: "none",
-      display: "none",
-    });
-    box.addEventListener("mousedown", (e)=> e.stopPropagation());
-    document.body.appendChild(box);
-    return box;
-  }
-
-  function positionOverlay(overlay, anchor){
-    const r = anchor.getBoundingClientRect();
-    const top = window.scrollY + r.top - 40; // 選單上方
-    const left = window.scrollX + r.left;
-    overlay.style.top = `${Math.max(top, window.scrollY)}px`;
-    overlay.style.left = `${left}px`;
-    overlay.style.minWidth = `${Math.max(160, r.width)}px`;
-  }
-
-  function attach(select){
-    if (!select || select._vss_bound) return;
-    select._vss_bound = true;
-
-    let buffer = "";
-       let lastType = 0;
-    let composing = false;
-    let composeBuf = "";
-
-    const overlay = ensureOverlay();
-
-    const resetIfTimeout = () => {
-      const now = Date.now();
-      if (now - lastType > RESET_MS) buffer = "";
-      lastType = now;
-    };
-
-    const applyMatch = () => {
-      const opts = Array.from(select.options);
-      if (!opts.length) return;
-      const from = Math.max(0, select.selectedIndex);
-      const n = normalize(buffer);
-      if (!n) return;
-
-      const tryMatch = (pred)=>{
-        for (let i=1;i<=opts.length;i++){
-          const idx = (from + i) % opts.length;
-          const txt = normalize(opts[idx].text);
-          if (pred(txt)) return idx;
-        }
-        return -1;
-      };
-      let idx = tryMatch(t=>t.startsWith(n));
-      if (idx === -1) idx = tryMatch(t=>t.includes(n));
-      if (idx !== -1){
-        select.selectedIndex = idx;
-        select.dispatchEvent(new Event("change", { bubbles: true }));
-        if (select.options[idx] && select.options[idx].scrollIntoView){
-          select.options[idx].scrollIntoView({ block: "nearest" });
-        }
-      }
-    };
-
-    const showOverlay = () => {
-      positionOverlay(overlay, select);
-      overlay.value = buffer;
-      overlay.style.display = "block";
-    };
-    const hideOverlay = () => { overlay.style.display = "none"; };
-
-    new MutationObserver(()=>{ buffer = ""; overlay.value = ""; })
-      .observe(select, { childList: true, subtree: true });
-
-    // IME（中文）支援
-    select.addEventListener("compositionstart", ()=>{ composing = true; composeBuf=""; showOverlay(); });
-    select.addEventListener("compositionupdate", (e)=>{ composeBuf = e.data || ""; overlay.value = buffer + composeBuf; showOverlay(); });
-    select.addEventListener("compositionend", (e)=>{
-      composing = false;
-      const data = e.data || composeBuf || "";
-      resetIfTimeout();
-      buffer += data;
-      overlay.value = buffer;
-      applyMatch();
-      composeBuf = "";
-    });
-
-    // 攔截鍵盤（capture 擋掉原生 typeahead）
-    const onKeyDown = (e) => {
-      if (document.activeElement !== select) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-      const nav = ["ArrowUp","ArrowDown","Home","End","Enter","Tab","Escape","PageUp","PageDown"];
-      if (nav.includes(e.key)){
-        if (e.key === "Escape") { buffer=""; overlay.value=""; hideOverlay(); }
-        return;
-      }
-
-      showOverlay();
-
-      if (composing){ e.preventDefault(); e.stopPropagation(); return; }
-
-      if (e.key === "Backspace"){
-        e.preventDefault(); e.stopPropagation();
-        resetIfTimeout();
-        buffer = buffer.slice(0,-1);
-        overlay.value = buffer;
-        applyMatch();
-        if (!buffer) hideOverlay();
-        return;
-      }
-
-      if (e.key === " "){
-        e.preventDefault(); e.stopPropagation();
-        resetIfTimeout();
-        buffer += " ";
-        overlay.value = buffer;
-        applyMatch();
-        return;
-      }
-
-      if (e.key && e.key.length === 1){
-        e.preventDefault(); e.stopPropagation();
-        resetIfTimeout();
-        buffer += e.key;
-        overlay.value = buffer;
-        applyMatch();
-        return;
-      }
-    };
-    document.addEventListener("keydown", onKeyDown, true);
-
-    select.addEventListener("focus", () => { buffer && showOverlay(); });
-    select.addEventListener("blur", () => { setTimeout(()=> hideOverlay(), 80); });
-
-    document.addEventListener("mousedown", (e)=>{
-      if (e.target === overlay) return;
-      if (e.target === select) return;
-      hideOverlay();
-    });
-    window.addEventListener("scroll", ()=>{ if (overlay.style.display==="block") positionOverlay(overlay, select); }, true);
-    window.addEventListener("resize", ()=>{ if (overlay.style.display==="block") positionOverlay(overlay, select); });
-  }
-
-  function initVisibleSearchableSelects(ids){
-    if (Array.isArray(ids) && ids.length){
-      ids.forEach(id=>{
-        const el = document.getElementById(id);
-        if (el && el.tagName==="SELECT") attach(el);
-      });
-    }
-    document.querySelectorAll("select.searchable").forEach(attach);
-  }
-
-  // 對外
-  window.initVisibleSearchableSelects = initVisibleSearchableSelects;
-
-  // 自動初始化：使用 add_comment 頁的實際 id
-  if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", ()=> initVisibleSearchableSelects(["academic", "department", "grade", "course"]));
-  }else{
-    initVisibleSearchableSelects(["academic", "department", "grade", "course"]);
-  }
-})();

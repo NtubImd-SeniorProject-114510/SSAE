@@ -437,8 +437,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ====== 評分提交（使用 modal 內的欄位與按鈕）======
 (function () {
+  // ---- Toast 相容層：同時支援 CommentToast.success 與 CommentToast.toastSuccess ----
+  const Toast = {
+    success(msg, opt) {
+      if (window.CommentToast?.success) return window.CommentToast.success(msg, opt);
+      if (window.CommentToast?.toastSuccess) return window.CommentToast.toastSuccess(msg, opt);
+      alert(msg);
+    },
+    error(msg, opt) {
+      if (window.CommentToast?.error) return window.CommentToast.error(msg, opt);
+      if (window.CommentToast?.toastError) return window.CommentToast.toastError(msg, opt);
+      alert(msg);
+    },
+    info(msg, opt) {
+      if (window.CommentToast?.info) return window.CommentToast.info(msg, opt);
+      if (window.CommentToast?.toastInfo) return window.CommentToast.toastInfo(msg, opt);
+      alert(msg);
+    }
+  };
+
+  // ---- CSRF for Django ----
+  function getCSRFToken() {
+    const t1 = document.querySelector("input[name='csrfmiddlewaretoken']")?.value;
+    if (t1) return t1;
+    const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+
   function getCourseId() {
-    // 優先讀取 modal 或按鈕上的 data-course-id
     const modal = document.getElementById('rating-modal');
     const fromModal = modal?.getAttribute('data-course-id');
     if (fromModal && /^\d+$/.test(String(fromModal))) return String(fromModal);
@@ -458,14 +484,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const rating = ratingEl ? parseInt(ratingEl.value || '0', 10) : 0;
     const courseId = getCourseId();
 
-    if (!courseId) {
-      CommentToast?.toastError?.('找不到課程代號，無法提交評分');
-      return;
-    }
-    if (!rating || rating < 1 || rating > 5) {
-      CommentToast?.toastInfo?.('請先選擇 1–5 顆星再提交');
-      return;
-    }
+    if (!courseId) { Toast.error('找不到課程代號，無法提交評分'); return; }
+    if (!rating || rating < 1 || rating > 5) { Toast.info('請先選擇 1–5 顆星再提交'); return; }
 
     // 按鈕 loading
     let origHTML = '';
@@ -476,36 +496,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     try {
-      const res = await fetch(`/api/comments/${courseId}/reviews/`, {
+      const res = await fetch(`/api/courses/${courseId}/reviews/`, {   // ← 修正路徑
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify({ rating, content: (window.currentCommentText || '').trim() || '（僅評分）' })
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCSRFToken() || ''
+        },
+        body: JSON.stringify({
+          rating,
+          content: (window.currentCommentText || '').trim() || '',
+        })
       });
-      const data = await res.json().catch(()=> ({}));
+
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
 
-      // ✅ 成功提示
-      CommentToast?.toastSuccess?.('已記錄您的評分！感謝提供回饋。');
+      // 成功提示
+      Toast.success('已記錄您的評分！感謝提供回饋。', { title: '成功' });
 
       // 重置並關閉 modal
       if (modal) {
-        // 重置星星
-        modal.querySelectorAll('.modal-stars i').forEach(
-          (star) => (star.className = 'far fa-star')
-        );
+        modal.querySelectorAll('.modal-stars i').forEach(star => (star.className = 'far fa-star'));
         const ratingInput = modal.querySelector('#modal-rating-value');
         if (ratingInput) ratingInput.value = '0';
         const display = modal.querySelector('.rating-display');
         if (display) display.textContent = '0.0';
-
-        closeModal(modal);
+        typeof closeModal === 'function' && closeModal(modal);
       }
 
-      // TODO: 若需要，這裡可以觸發頁面上的平均星等/分布刷新
-      // refreshStarsUI(data);
+      // TODO: 若需要，這裡刷新該卡片的平均分或評論數
+      // refreshCourseCard(courseId);
 
     } catch (err) {
-      CommentToast?.toastError?.(err.message || '提交評分失敗，請稍後再試');
+      console.error('submitRating error:', err);
+      Toast.error('提交評分失敗，請稍後再試');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -515,13 +540,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function bind() {
-    // 明確的提交按鈕（modal 內）
     const btn = document.getElementById('rating-submit-btn') 
              || document.getElementById('submit-rating') 
              || document.querySelector('[data-action="submit-rating"], .submit-rating-btn');
     if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); submitRating(); });
 
-    // 若是表單提交（modal 內）
     const form = document.getElementById('rating-form') || document.querySelector('form[data-rating-form]');
     if (form) form.addEventListener('submit', (e) => { e.preventDefault(); submitRating(); });
   }

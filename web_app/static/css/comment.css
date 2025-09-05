@@ -369,16 +369,25 @@ body {
     padding: 5px 10px 10px;
     border-radius: 5px;
     background-color: #f1f1f1;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
 }
 
 .course-summary p {
-    margin-bottom: 30px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     min-height: 76px;
+}
+
+.likes{
+    text-align: right;
+}
+
+.review-counter{
+    text-align: right;
+    font-size: 14px;
+    color: var(--dark-gray);
 }
 
 /* Decorative elements */

@@ -31,8 +31,13 @@ class Department(models.Model):
         managed = False
 
 #---------
+
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+# ===== 學制 / 科系 / 關聯 / 年級 =====
 class Academica(models.Model):
-    id = models.CharField(primary_key=True, max_length=1)  # 明確設定為主鍵
+    id = models.CharField(primary_key=True, max_length=1)
     name = models.CharField(max_length=50)
     class Meta:
         db_table = 'academic'
@@ -55,7 +60,8 @@ class AcadeDepart(models.Model):
         db_table = 'academic_department'
         managed = False
     def __str__(self):
-        return self.name
+        # 安全回傳
+        return f"{getattr(self.academica, 'name', '')}-{getattr(self.departmentd, 'name', '')}".strip('-')
 
 class AcadeGrade(models.Model):
     academica = models.ForeignKey(Academica, db_column='academic_id', on_delete=models.CASCADE)
@@ -64,8 +70,19 @@ class AcadeGrade(models.Model):
         db_table = 'academic_grade'
         managed = False
     def __str__(self):
-        return self.name
+        return self.grade_level
 
+# ===== 唯一的使用者表（就是你資料庫的 User）=====
+class User(models.Model):
+    user_id = models.AutoField(primary_key=True)
+    mail = models.CharField(max_length=255, blank=True, null=True)
+    class Meta:
+        db_table = "User"
+        managed = False
+    def __str__(self):
+        return self.mail or f"User({self.user_id})"
+
+# ===== 課程 =====
 class Course(models.Model):
     academica = models.ForeignKey(Academica, db_column='academic_id', on_delete=models.CASCADE)
     departmentd = models.ForeignKey(Departmentd, db_column='department_id', on_delete=models.CASCADE)
@@ -77,87 +94,67 @@ class Course(models.Model):
     class Meta:
         db_table = 'web_app_course'
         managed = False
-
     def __str__(self):
-        return f"Course related to {self.academica.name} {self.departmentd.name}"
+        return f"{self.course_name}（{self.course_teacher}）"
 
-# class CourseStar(models.Model):
-#     """
-#     Model for storing star ratings for courses.
-#     Maps to the existing web_app_CourseStar table.
-#     """
-#     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_stars')
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     star = models.PositiveSmallIntegerField(
-#         validators=[MinValueValidator(1), MaxValueValidator(5)]
-#     )
-#     created_at = models.DateTimeField(auto_now_add=True)
-    
-#     class Meta:
-#         db_table = 'web_app_CourseStar'  # Map to existing table
-#         unique_together = ['course', 'user']  # Each user can only rate a course once
-#         ordering = ['-created_at']
-    
-#     def __str__(self):
-#         return f"{self.star} stars by {self.user.username} for {self.course.course_name}"
-
-class CourseStar(models.Model):
-    """Stores individual star ratings for courses"""
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_stars')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    star = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)]
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'web_app_CourseStar'  # Specify the correct table name
-        ordering = ['-created_at']
-        unique_together = ['course_id', 'user_id']  # Each user can only rate a course once
-    
-    def __str__(self):
-        return f"{self.star} stars by {self.user.username} for {self.course.course_name}"
-
-
+# ===== 評論（user → 你家的 User.user_id）=====
 class CourseReview(models.Model):
-    course = models.ForeignKey(
-        'Course',
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='reviews')
+    user   = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', to_field='user_id')
 
-    # 內容 & 評分
     content = models.TextField()
-    rating = models.PositiveSmallIntegerField(
+    rating  = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=True,
-        blank=True,
+        null=False, blank=False,
     )
-
-    # 匿名開關：True = 匿名顯示；False = 實名顯示
     is_anonymous = models.BooleanField(default=True)
 
-    # 時間戳記
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'web_app_coursereview'
+        managed = False
         ordering = ['-created_at']
+        # 注意：managed=False 下 constraints 只作為文件；實際約束請在 DB 裡維護
+        constraints = [
+            models.UniqueConstraint(
+                fields=['course', 'user'],
+                name='web_app_coursereview_course_id_user_id_e646b5c0_uniq',
+            ),
+        ]
 
     def __str__(self):
-        return f"Review by {self.user.username} for {self.course.course_name}"
+        return f"Review(user_id={getattr(self.user, 'user_id', None)}, course_id={getattr(self.course, 'id', None)})"
 
-    # 提供一個方便的方法，前端顯示用
     @property
     def display_name(self):
         if self.is_anonymous:
             return "匿名"
-        return self.user.get_full_name() or self.user.username
+        # 你家的 User 只有 mail；若你有 name 欄位，可自行改為 name
+        return self.user.mail or f"使用者{self.user.user_id}"
 
+# ===== 按讚（user → 你家的 User.user_id）=====
+class ReviewLike(models.Model):
+    review = models.ForeignKey('CourseReview', on_delete=models.CASCADE, related_name='review_likes')
+    user   = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', to_field='user_id')
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        db_table = 'web_app_ReviewLike'
+        managed  = False
+        constraints = [
+            models.UniqueConstraint(fields=['review', 'user'], name='uniq_reviewlike_review_user'),
+        ]
+        indexes = [
+            models.Index(fields=['review', 'user'], name='idx_reviewlike_review_user'),
+        ]
+
+    def __str__(self):
+        return f"Like(review={getattr(self.review, 'id', None)}, user={getattr(self.user, 'user_id', None)})"
 #-------------
+
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -196,117 +193,6 @@ class Book2(models.Model):
 
     def __str__(self):
         return self.title
-
-class GroupActivity(models.Model):
-    TYPE_CHOICES = [
-        ('food', '美食'),
-        ('sport', '運動'),
-        ('study', '讀書'),
-        ('travel', '旅遊'),
-        ('movie', '電影'),
-        ('other', '其他'),
-    ]
-
-    LOCATION_TYPE_CHOICES = [
-        ('on_campus', '校內'),
-        ('off_campus', '校外'),
-    ]
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 發起者
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    type = models.CharField(max_length=50, choices=TYPE_CHOICES) 
-    location = models.CharField(max_length=200)  # 地點名稱
-    location_type = models.CharField(max_length=20, choices=LOCATION_TYPE_CHOICES, default='on_campus')
-    
-    # 新增地理位置相關欄位
-    address = models.TextField(blank=True, null=True)  # 完整地址
-    latitude = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)  # 緯度
-    longitude = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)  # 經度
-    place_id = models.CharField(max_length=200, blank=True, null=True)  # Google Places ID
-    
-    date = models.DateField()
-    time = models.TimeField()
-    deadline = models.DateField()  # 報名截止日期
-    min_participants = models.IntegerField(default=1)
-    max_participants = models.IntegerField(default=10)
-    cover_image = models.ImageField(upload_to='group_activity_images/', null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)  # 新增時自動填入
-    # 新增聯絡方式欄位
-    contact_info = models.CharField(max_length=200, blank=True, null=True)
-
-    @property
-    def location_display(self):
-        return self.location_short
-
-    @property
-    def location_short(self):
-        """逗號前的部分"""
-        if not self.location:
-            return ""
-        return self.location.split(",")[0]
-
-    @property
-    def location_full(self):
-        """完整地址，優先用 address，沒有就用 location"""
-        return self.address or self.location or ""
-
-    @property
-    def joined_count(self):
-        """返回已加入活動的參與者數量"""
-        return self.participants.filter(status='joined').count()
-
-    @property
-    def is_full(self):
-        """檢查活動是否已額滿"""
-        return self.joined_count >= self.max_participants
-
-    @property
-    def tag_css(self):
-        mapping = {'美食':'food','運動':'sports','讀書':'study','旅遊':'travel','電影':'movie'}
-        return mapping.get(self.type, 'other')
-
-    @property
-    def is_deadline_passed(self):
-        if self.deadline:
-            return timezone.localdate() > self.deadline
-        return False
-    
-    @property
-    def has_location_data(self):
-        """檢查是否有地理位置資料"""
-        return self.latitude is not None and self.longitude is not None
-
-    def get_type_display_chinese(self):
-        """獲取中文顯示的活動類型"""
-        type_dict = dict(self.TYPE_CHOICES)
-        return type_dict.get(self.type, self.type)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = '團體活動'
-        verbose_name_plural = '團體活動'
-        ordering = ['-created_at']
-
-class ActivityParticipant(models.Model):
-    STATUS_CHOICES = [
-        ("joined", "已加入"),
-        ("cancelled", "已取消"),
-    ]
-
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="joined")
-    joined_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    activity = models.ForeignKey(GroupActivity, on_delete=models.CASCADE, related_name="participants")
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'activity'], name='uniq_user_activity')
-        ]
-
 
 
 
@@ -360,21 +246,223 @@ class Book(models.Model):
 
 
 
+
+# activities/models.py
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
+
+
+class GroupActivity(models.Model):
+    TYPE_CHOICES = [
+        ('food', '美食'),
+        ('sport', '運動'),
+        ('study', '讀書'),
+        ('travel', '旅遊'),
+        ('movie', '電影'),
+        ('other', '其他'),
+    ]
+
+    LOCATION_TYPE_CHOICES = [
+        ('on_campus', '校內'),
+        ('off_campus', '校外'),
+    ]
+
+    # 發起者：一律使用 auth_user
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='group_activities_created',
+        verbose_name='發起者'
+    )
+
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    location = models.CharField(max_length=200)  # 地點名稱
+    location_type = models.CharField(max_length=20, choices=LOCATION_TYPE_CHOICES, default='on_campus')
+
+    # 地理位置相關欄位
+    address = models.TextField(blank=True, null=True)  # 完整地址
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)   # 緯度
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, blank=True, null=True)  # 經度
+    place_id = models.CharField(max_length=200, blank=True, null=True)  # Google Places ID
+
+    date = models.DateField()
+    time = models.TimeField()
+    deadline = models.DateField()  # 報名截止日期
+    min_participants = models.IntegerField(default=1)
+    max_participants = models.IntegerField(default=10)
+
+    cover_image = models.ImageField(upload_to='group_activity_images/', null=True, blank=True)
+    contact_info = models.CharField(max_length=200, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # ====== 顯示/計算用屬性 ======
+    @property
+    def location_display(self):
+        return self.location_short
+
+    @property
+    def location_short(self):
+        """逗號前的部分"""
+        if not self.location:
+            return ""
+        return self.location.split(",")[0]
+
+    @property
+    def location_full(self):
+        """完整地址，優先用 address，沒有就用 location"""
+        return self.address or self.location or ""
+
+    @property
+    def joined_count(self):
+        """返回已加入活動的參與者數量"""
+        return self.participants.filter(status='joined').count()
+
+    @property
+    def is_full(self):
+        """檢查活動是否已額滿"""
+        try:
+            return self.joined_count >= (self.max_participants or 0)
+        except Exception:
+            return False
+
+    @property
+    def tag_css(self):
+        # 注意：type 存的是 key（如 'sport'），這裡對應 CSS 類別
+        mapping = {
+            'food': 'food',
+            'sport': 'sport',
+            'study': 'study',
+            'travel': 'travel',
+            'movie': 'movie',
+            'other': 'other',
+        }
+        return mapping.get(self.type, 'other')
+
+    @property
+    def is_deadline_passed(self):
+        if self.deadline:
+            return timezone.localdate() > self.deadline
+        return False
+
+    @property
+    def has_location_data(self):
+        """檢查是否有地理位置資料"""
+        return self.latitude is not None and self.longitude is not None
+
+    def get_type_display_chinese(self):
+        """獲取中文顯示的活動類型"""
+        type_dict = dict(self.TYPE_CHOICES)
+        return type_dict.get(self.type, self.type)
+
+    def __str__(self):
+        base = self.title or f'活動 {self.pk}'
+        try:
+            uname = getattr(self.user, 'get_full_name', lambda: '')() or getattr(self.user, 'username', '')
+            if uname:
+                return f'{base}／by {uname}'
+        except Exception:
+            pass
+        return base
+
+    class Meta:
+        verbose_name = '團體活動'
+        verbose_name_plural = '團體活動'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['date', 'time'], name='idx_ga_dt'),
+            models.Index(fields=['type'], name='idx_ga_type'),
+            models.Index(fields=['location_type'], name='idx_ga_loctype'),
+        ]
+
+
+class ActivityParticipant(models.Model):
+    STATUS_CHOICES = [
+        ("joined", "已加入"),
+        ("cancelled", "已取消"),
+    ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="joined")
+    joined_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # 參與者 → auth_user
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='group_activity_participations'
+    )
+
+    # 活動
+    activity = models.ForeignKey(
+        GroupActivity,
+        on_delete=models.CASCADE,
+        related_name="participants"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'activity'], name='uniq_user_activity')
+        ]
+        indexes = [
+            models.Index(fields=['activity', 'user'], name='idx_part_activity_user'),
+            models.Index(fields=['status'], name='idx_part_status'),
+        ]
+
+    def __str__(self):
+        return f'Participant(user={self.user_id}, activity={self.activity_id}, status={self.status})'
+
+
 class ActivityComment(models.Model):
-    activity = models.ForeignKey(GroupActivity, on_delete=models.CASCADE, related_name='comments')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    activity = models.ForeignKey(
+        GroupActivity,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+
+    # 留言者 → auth_user
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='activity_comments'
+    )
+
     content = models.TextField()
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
-    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='replies'
+    )
+
+    # 按讚的人 → auth_user
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='liked_activity_comments',
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+        indexes = [
+            models.Index(fields=['activity', 'created_at'], name='idx_cmt_activity_created'),
+        ]
+
     @property
     def likes_count(self):
         return self.likes.count()
-    
+
     def __str__(self):
-        return f'{self.user.username} - {self.content[:50]}'
+        uname = ''
+        try:
+            uname = getattr(self.user, 'get_full_name', lambda: '')() or getattr(self.user, 'username', '')
+        except Exception:
+            pass
+        snippet = (self.content or '')[:20].replace('\n', ' ')
+        return f'{uname or "user"}: {snippet}'

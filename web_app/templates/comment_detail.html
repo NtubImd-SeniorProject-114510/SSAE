@@ -12,14 +12,73 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/comment_detail.css' %}">
 <link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
+
+{# Toast：如已在 base.html 引入，可移除下一行 #}
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_toast.css' %}">
 {% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+/* 精準平均星（0.1 顆精度），保證對齊 + 黃色 */
+.stars-avg{
+  --size: 22px;      /* 星星大小 */
+  --gap:  6px;       /* 星星間距 */
+  --bg:   #e2e8f0;   /* 背景(未填滿)顏色：淺灰 */
+  --fg:   #f5a623;   /* 前景(已填滿)顏色：你的黃色 */
+  --p:    0%;        /* 由行內 style 設定實際百分比 */
+  position: relative;
+  display: inline-block;
+  font-size: var(--size);
+  line-height: 1;
+}
+
+.stars-avg .row{
+  display: flex;
+  gap: var(--gap);
+  letter-spacing: 0;     /* 避免字距影響 */
+}
+
+.stars-avg .star-bg{
+  color: var(--bg);
+}
+
+.stars-avg .star-fg{
+  color: var(--fg);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--p);       /* 例如 86% */
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 垃圾桶按鈕微調（可移到 comment_detail.css） */
+.comment-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:flex-start;
+}
+.review-delete-btn{
+  background:none;
+  border:0;
+  cursor:pointer;
+  color:#dc2626;
+  padding:6px 8px;
+  border-radius:8px;
+}
+.review-delete-btn:hover{
+  background: rgba(220,38,38,.08);
+  color:#b91c1c;
+}
+</style>
+
 <body>
     <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
-    <div class="course-item" data-course-id="1" style="display: none;">
-        <div class="course-name">{{course.course_name}}</div>
-        <div class="course-teacher">{{course.course_teacher}}</div>
+    <div class="course-item" data-course-id="{{ course.id }}" style="display: none;">
+        <div class="course-name">{{ course.course_name }}</div>
+        <div class="course-teacher">{{ course.course_teacher }}</div>
         <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
         <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
     </div>
@@ -42,89 +101,108 @@
         <!-- 課程資訊區塊 -->
         <div class="course-info">
             <div class="course-header">
-                <h1 class="course-title">{{course.course_name}}</h1>
+                <h1 class="course-title">{{ course.course_name }}</h1>
                 <div class="course-rating">
-                    <div class="stars">
-                        {% for i in "12345"|make_list %}
-                            {% if forloop.counter <= avg_rating|floatformat:0|add:0 %}
-                                <i class="fas fa-star"></i>
-                            {% else %}
-                                <i class="far fa-star"></i>
-                            {% endif %}
-                        {% endfor %}
-                        <span class="rating-text">{{ avg_rating|floatformat:1 }}/5.0 ({{ total_ratings }}則評分)</span>
+                    <div class="stars-avg" style="--p: {{ avg_fill_percent }}%;">
+                        <!-- 背景層：淡灰實心 5 星 -->
+                        <div class="row star-bg" aria-hidden="true">
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                        </div>
+                        <!-- 前景層：黃色實心 5 星，被寬度裁切 -->
+                        <div class="row star-fg" aria-label="平均 {{ avg_rating }} 顆星">
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                          <i class="fa-solid fa-star"></i>
+                        </div>
                     </div>
-                </div>
+                    <span class="rating-text">{{ avg_rating|floatformat:1 }}/ 5（{{ total_ratings }} 則評分）</span>
+                </div> 
             </div>
             <div class="course-meta">
-                <span class="course-academic">{{academic.name}}</span>
-                <span class="course-department">{{department.name}}</span>
-                <span class="course-teacher">授課教師：{{course.course_teacher}}</span>
+                <span class="course-academic">{{ academic.name }}</span>
+                <span class="course-department">{{ department.name }}</span>
+                <span class="course-teacher">授課教師：{{ course.course_teacher }}</span>
             </div>
         </div>
         
         <!-- 評論區塊 -->
         <section class="comments-section">
-            <div class="comment-header">
-                <h2 class="section-title">課程評論 <span class="comment-count">({{ review_count }}則評論)</span></h2>
-                {% if avg_rating > 0 %}
-                <div class="average-rating">
-                    <span>平均評分：</span>
-                    <div class="stars" data-rating="{{ avg_rating }}">
+          <div class="comment-header">
+            <h2 class="section-title">
+              課程評論 <span class="comment-count">({{ review_count }}則評論)</span>
+            </h2>
+          </div>
+
+          {% if review_items %}
+            {% for r in review_items %}
+              <article class="comment-card" id="review-{{ r.id }}">
+                <div class="comment-header">
+                  <div class="user-avatar">
+                    <img src="{{ r.avatar_url }}" alt="{{ r.display_name }}"
+                         style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">{{ r.display_name|default:'匿名學生' }}</span>
+                    <div class="comment-meta">
+                      <div class="stars" data-rating="{{ r.rating }}">
                         {% for i in "12345"|make_list %}
-                            {% if forloop.counter <= avg_rating|floatformat:0|add:0 %}
-                                <i class="fas fa-star"></i>
-                            {% else %}
-                                <i class="far fa-star"></i>
-                            {% endif %}
+                          {% if forloop.counter <= r.rating %}
+                            <i class="fas fa-star"></i>
+                          {% else %}
+                            <i class="far fa-star"></i>
+                          {% endif %}
                         {% endfor %}
-                        <span class="rating-number">{{ avg_rating|floatformat:1 }}</span>
+                      </div>
+                      <span class="comment-date">{{ r.created_at|date:"Y/m/d" }}</span>
                     </div>
+                  </div>
                 </div>
-                {% endif %}
-            </div>
-            
-            {% if reviews %}
-                {% for review in reviews %}
-                <article class="comment-card">
-                    <div class="comment-header">
-                        <div class="user-avatar">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                        </div>
-                        <div class="user-info">
-                            <span class="user-name">{{ review.user.username|default:'匿名學生' }}</span>
-                            <div class="comment-meta">
-                                <div class="stars" data-rating="{{ review.rating }}">
-                                    {% for i in "12345"|make_list %}
-                                        {% if forloop.counter <= review.rating %}
-                                            <i class="fas fa-star"></i>
-                                        {% else %}
-                                            <i class="far fa-star"></i>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                                <span class="comment-date">{{ review.created_at|date:"Y/m/d" }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="comment-content">
-                        <p>{{ review.content }}</p>
-                    </div>
-                </article>
-                {% endfor %}
-            {% else %}
-                <div class="no-comments">
-                    <p>目前尚無評論，成為第一個留言的人吧！</p>
+
+                <div class="comment-content">
+                  <p>{{ r.content }}</p>
                 </div>
-            {% endif %}
-                    <button class="like-btn small">
-                        <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
-                        <span class="like-count">12</span>
+
+                <div class="comment-actions">
+                  <button class="like-btn small"
+                          data-review-id="{{ r.id }}"
+                          data-liked="{{ r.is_liked_by_me|yesno:'1,0' }}">
+                    <span class="like-icon">
+                      {% if r.is_liked_by_me %}
+                        <i class="fa-solid fa-thumbs-up"></i>
+                      {% else %}
+                        <i class="fa-regular fa-thumbs-up"></i>
+                      {% endif %}
+                    </span>
+                    <span class="like-count">{{ r.likes_count }}</span>
+                  </button>
+
+                  {# 只有作者本人可見的垃圾桶 #}
+                  {% if r.is_owner %}
+                    <button class="review-delete-btn"
+                            data-review-id="{{ r.id }}"
+                            aria-label="刪除評論"
+                            title="刪除這則評論">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
+                    {% endif %}
                 </div>
-            </article>
+              </article>
+            {% endfor %}
+          {% else %}
+            <div class="no-comments">
+              <p>目前沒有文字評論。</p>
+            </div>
+          {% endif %}
+        </section>
     
-    <div class="deco-line"></div>
+        <div class="deco-line"></div>
+    </div>
 </body>
 
 <!-- 載入模態框HTML -->
@@ -139,4 +217,7 @@
 <script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
 <script src="{% static 'js/comment_detail.js' %}"></script>
+
+{# Toast：如已在 base.html 引入，可移除下一行 #}
+<script defer src="{% static 'js/pop_window/comment_toast.js' %}"></script>
 {% endblock %}

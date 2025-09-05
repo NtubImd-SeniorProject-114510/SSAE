@@ -11,7 +11,7 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/comment.css' %}">
 <link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
-<link rel="stylesheet" href="{% static 'css/comment_toast.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_toast.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -19,6 +19,10 @@
 <!-- 提供給前端的資料（JSON） -->
 <script id="departments-data" type="application/json">
   {{ departments_data|safe }}
+</script>
+<!-- ★★ 新增：grades-data（必須在這裡，給下方 inline JS 解析用） -->
+<script id="grades-data" type="application/json">
+  {{ grades_data|safe }}
 </script>
 <script id="courses-data" type="application/json">
   {{ courses_json|safe }}
@@ -40,7 +44,6 @@
     <select class="filter-item" id="education-select">
       <option value="">所有學制</option>
       {% for academic in academics %}
-      <!-- 修正為 Django 模板用法 -->
       <option value="{{ academic.id }}" data-index="{{ forloop.counter0 }}">{{ academic.name }}</option>
       {% endfor %}
     </select>
@@ -68,7 +71,7 @@
   <!-- 課程列表 -->
   <section class="activities-container" id="activitiesContainer">
     <div class="activity-grid" id="coursesContainer">
-      <!-- 由 comment.js 動態渲染 -->
+      <!-- 由 static/js/comment.js 動態渲染 -->
     </div>
   </section>
 
@@ -94,7 +97,7 @@
   <div class="deco-line"></div>
 </div>
 
-<!-- 載入模態框 HTML -->
+<!-- 載入彈窗 HTML -->
 {% include 'pop_window/comment_pop.html' %}
 
 {% endblock %}
@@ -102,9 +105,19 @@
 {% block body_js %}
   <script src="{% static 'js/comment.js' %}"></script>
   <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
-  <script src="{% static 'js/pop/window/comment_toast.js' %}"></script>
+  <script src="{% static 'js/pop_window/comment_toast.js' %}"></script>
+  <script src="{% static 'js/select_typeahead_ime.js' %}"></script>
 
-  <!-- 只做「學制排序」與「依學制更新科系/年級」的小初始化（其餘邏輯在 comment.js） -->
+  <!-- 提供目前使用者資訊（實名顯示/頭貼用；已改為你家 User 表） -->
+  <script type="application/json" id="current-user">
+  {
+    "username": "{{ current_user_name|default:'使用者' }}",
+    "avatar": "{{ current_user_avatar|default:'/static/image/anonymous.png' }}"
+  }
+  </script>
+
+
+  <!-- 小初始化（依學制更新科系/年級；其餘邏輯在 comment.js） -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const educationSelect = document.getElementById('education-select');
@@ -121,10 +134,10 @@
         catch (e) { console.error(e); return {}; }
       })();
 
-      // === 可選：把特定 index 的學制置前（你現有邏輯） ===
+      // 可選：把特定 index 的學制置前
       if (educationSelect) {
         const priorityIndexes = [2, 3, 5]; // 0-based
-        const allOptions = Array.from(educationSelect.options).slice(1); // 忽略第一個
+        const allOptions = Array.from(educationSelect.options).slice(1);
         const priorityOptions = [];
         const otherOptions = [];
 
@@ -146,7 +159,7 @@
           majorSelect.innerHTML = '<option value="">所有科系</option>';
           const deptList = selectedAcademicId
             ? (departmentsData[selectedAcademicId] || [])
-            : (departmentsData["0"] || []);       // 注意用 "0"
+            : (departmentsData["0"] || []);
           deptList.forEach(d => {
             const op = document.createElement('option');
             op.value = d.id;
