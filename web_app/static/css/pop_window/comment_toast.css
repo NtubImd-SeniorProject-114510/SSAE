@@ -1,0 +1,117 @@
+/* comment_toast.css — 簡潔彈出通知（Toast） */
+#comment-toast-root {
+  position: fixed;
+  z-index: 2147483647; /* 最上層 */
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none; /* 讓背後可點 */
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", Arial, sans-serif;
+}
+
+.comment-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 260px;
+  max-width: 420px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0,0,0,.14);
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.06);
+  animation: toast-in .2s ease-out;
+  color: #111; /* 內文字色 */
+}
+
+.comment-toast .ct-icon {
+  font-size: 18px;
+  line-height: 1;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.comment-toast .ct-body {
+  flex: 1;
+  min-width: 0; /* 讓內容能換行 */
+}
+
+.comment-toast .ct-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #111;
+}
+
+.comment-toast .ct-msg {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+  word-break: break-word;
+}
+
+.comment-toast .ct-close {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #666;
+  margin-left: 6px;
+  border-radius: 8px;
+  padding: 2px 6px;
+}
+.comment-toast .ct-close:hover { color: #111; background: rgba(0,0,0,.06); }
+.comment-toast .ct-close:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* 類型配色 */
+.comment-toast.success { border-color: #d1f1d6; background: #f4fff6; }
+.comment-toast.success .ct-icon { color: #16a34a; }
+
+.comment-toast.info    { border-color: #cfe8ff; background: #f5faff; }
+.comment-toast.info    .ct-icon { color: #2563eb; }
+
+.comment-toast.error   { border-color: #ffd1d1; background: #fff5f5; }
+.comment-toast.error   .ct-icon { color: #dc2626; }
+
+/* 新增：警告 */
+.comment-toast.warn    { border-color: #fde68a; background: #fffbeb; }
+.comment-toast.warn    .ct-icon { color: #ca8a04; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 深色模式優化 */
+@media (prefers-color-scheme: dark) {
+  .comment-toast {
+    background: #111827;
+    border-color: rgba(255,255,255,.08);
+    color: #e5e7eb;
+    box-shadow: 0 12px 36px rgba(0,0,0,.5);
+  }
+  .comment-toast .ct-title { color: #f3f4f6; }
+  .comment-toast .ct-msg   { color: #d1d5db; }
+  .comment-toast .ct-close { color: #9ca3af; }
+  .comment-toast .ct-close:hover { color: #e5e7eb; background: rgba(255,255,255,.06); }
+
+  .comment-toast.success { background: #062e14; border-color: #14532d; }
+  .comment-toast.info    { background: #0b1f37; border-color: #1e3a8a; }
+  .comment-toast.error   { background: #3a0d0d; border-color: #7f1d1d; }
+  .comment-toast.warn    { background: #3a2a0a; border-color: #92400e; }
+  .comment-toast.success .ct-icon { color: #22c55e; }
+  .comment-toast.info    .ct-icon { color: #60a5fa; }
+  .comment-toast.error   .ct-icon { color: #f87171; }
+  .comment-toast.warn    .ct-icon { color: #fbbf24; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comment-toast { animation: none; }
+}

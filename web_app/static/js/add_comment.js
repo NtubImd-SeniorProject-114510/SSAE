@@ -1,638 +1,484 @@
-// add_comment.js - 整合版本
+// static/js/add_comment.js — robust version
+// 功能：頂端顯示同步 / 中文可見搜尋泡泡 / Toast 提示 / 匿名或實名顯示切換 & 上傳 / 保證 user_id 由後端以 request.user 儲存
 
-// 儲存科系和年級資料
-let departmentsData = {};
-let gradesData = {};
-let coursesData = {};
+(function(){
+  let departmentsData = {};
+  let gradesData = {};
+  let coursesData = [];
 
-// 初始化頁面
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('add_comment.js 已載入');
-    
-    try {
-        // 從頁面載入科系和年級資料
-        const deptDataElement = document.getElementById('departments-data');
-        const gradeDataElement = document.getElementById('grades-data');
-        
-        if (deptDataElement && deptDataElement.textContent) {
-            departmentsData = JSON.parse(deptDataElement.textContent);
-            console.log('已載入科系資料');
+  function el(id){ return document.getElementById(id); }
+
+  function getCSRFToken() {
+  // 先從 cookie 拿
+  const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
+  if (m) return decodeURIComponent(m[1]);
+  // 退而求其次：從頁面上的 hidden input / meta 拿
+  return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value
+      || document.querySelector('meta[name="csrf-token"]')?.content
+      || '';
+  }
+
+  // 嘗試多種來源取得目前使用者資訊（供「實名」顯示）
+  function getCurrentUserInfo(){
+    // 1) <script type="application/json" id="current-user">{"username":"張三","avatar":"/media/u1.png"}</script>
+    try{
+      const j = el('current-user')?.textContent;
+      if (j) {
+        const data = JSON.parse(j);
+        if (data && (data.username || data.name)) {
+          return {
+            username: data.username || data.name || '使用者',
+            avatar: data.avatar || data.photo || data.image || ''
+          };
         }
-        
-        if (gradeDataElement && gradeDataElement.textContent) {
-            gradesData = JSON.parse(gradeDataElement.textContent);
-            console.log('已載入年級資料');
-        }
-    } catch (error) {
-        console.error('載入資料時發生錯誤:', error);
+      }
+    }catch(_){}
+    // 2) <body data-username="張三" data-avatar="/media/u1.png">
+    try{
+      const b = document.body;
+      const u = b?.dataset?.username || '';
+      const a = b?.dataset?.avatar || '';
+      if (u) return { username: u, avatar: a || '' };
+    }catch(_){}
+    // 3) window.CURRENT_USER = { username, avatar }
+    try{
+      if (window.CURRENT_USER && (window.CURRENT_USER.username || window.CURRENT_USER.name)) {
+        return {
+          username: window.CURRENT_USER.username || window.CURRENT_USER.name || '使用者',
+          avatar: window.CURRENT_USER.avatar || ''
+        };
+      }
+    }catch(_){}
+    // 4) 預設
+    return { username: '使用者', avatar: '' };
+  }
+
+  // 切換「匿名/實名」顯示
+  function bindAnonymousToggle(){
+    const container = document.querySelector('.display-mode-container');
+    if (!container) return;
+
+    const radioAnon = el('anonymous_yes'); // HTML 標籤文字是「匿名」
+    const radioReal = el('anonymous_no');  // HTML 標籤文字是「實名」
+    const avatarEl = container.querySelector('.user-info .avatar');
+    const nameEl = container.querySelector('.user-info .username');
+
+    const CURRENT = getCurrentUserInfo();
+    const REAL_NAME = CURRENT.username || '使用者';
+    const REAL_AVATAR = CURRENT.avatar || '/static/image/anonymous.png';
+    const ANON_NAME = '匿名';
+    const ANON_AVATAR = '/static/image/anonymous.png';
+
+    function applyDisplay(isAnonymous){
+      if (avatarEl) avatarEl.src = isAnonymous ? ANON_AVATAR : REAL_AVATAR;
+      if (nameEl) nameEl.textContent = isAnonymous ? ANON_NAME : REAL_NAME;
     }
-    
-    // 初始化所有功能
-    initializeUserInterface();
-    initializeRatingSystem();
-    initializeTextConversion();
-    initializeFormValidation();
-    initializeCourseSelection();
-    
-    // 監聽學制變化
-    const academicSelect = document.getElementById('academic');
-    if (academicSelect) {
-        academicSelect.addEventListener('change', handleAcademicChange);
-        
-        // 如果已經有選擇學制，觸發更新
-        if (academicSelect.value) {
-            handleAcademicChange.call(academicSelect);
+
+    // 依目前 radio 狀態套用（容錯：有些模板預設 checked 在匿名）
+    const initialAnonymous = !!(radioAnon?.checked); // radioAnon 代表匿名
+    applyDisplay(initialAnonymous);
+
+    radioAnon?.addEventListener('change', ()=> {
+      if (radioAnon.checked) applyDisplay(true);
+    });
+    radioReal?.addEventListener('change', ()=> {
+      if (radioReal.checked) applyDisplay(false);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+
+    // === 強化：預覽區僅允許「刪除/剪下」，中英/注音都無法新增 ===
+    (function enforceDeleteOnlyOnPreview_hard(){
+      const el = document.getElementById('comment-preview') || document.getElementById('preview_text');
+      if (!el) return;
+
+      const isTextarea = el.tagName === 'TEXTAREA';
+
+      // 關閉系統自動更正，避免自動插入
+      if (isTextarea) {
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('autocapitalize', 'off');
+        el.setAttribute('spellcheck', 'false');
+      }
+
+      // 取值/設值封裝，兼容 div / textarea
+      const getVal = () => ('value' in el ? el.value : el.textContent || '');
+      const setVal = (v) => {
+        if ('value' in el) el.value = v;
+        else el.textContent = v;
+      };
+
+      // 快照（含游標）
+      let prev = getVal();
+      let selStart = isTextarea ? (el.selectionStart ?? prev.length) : null;
+      let selEnd   = isTextarea ? (el.selectionEnd   ?? prev.length) : null;
+
+      function snapshot() {
+        prev = getVal();
+        if (isTextarea) {
+          selStart = el.selectionStart ?? prev.length;
+          selEnd   = el.selectionEnd   ?? prev.length;
         }
+      }
+      function restore() {
+        setVal(prev);
+        if (isTextarea) {
+          try {
+            el.setSelectionRange(selStart, selEnd);
+          } catch(_){}
+        }
+      }
+
+      // 允許的 beforeinput 類型（刪除相關）
+      const ALLOWED = new Set([
+        'deleteContentBackward',
+        'deleteContentForward',
+        'deleteByCut',
+        'deleteByDrag',
+        'deleteContent'
+      ]);
+
+      // 1) 先用 beforeinput 擋（可攔 New text / Paste / IME 插入）
+      el.addEventListener('beforeinput', (e) => {
+        const t = e.inputType || '';
+        if (!ALLOWED.has(t)) {
+          // 禁止任何插入/貼上/IME 組字造成的插入
+          e.preventDefault();
+        } else {
+          // 刪除動作 → 先存快照（刪除後若瀏覽器有奇怪行為可回滾）
+          snapshot();
+        }
+      });
+
+      // 2) 後盾：input 事件上做「差異比對」，若偵測到有新增 → 立刻回滾
+      el.addEventListener('input', () => {
+        const cur = getVal();
+        if (cur.length > prev.length) {
+          // 有新增字（中/英/注音都會落在這）→ 回滾
+          restore();
+        } else {
+          // 沒新增（相等或變短）：視為刪除或無變化 → 接受並更新快照
+          snapshot();
+        }
+      });
+
+      // 3) 禁止貼上、拖放插入
+      el.addEventListener('paste', (e) => e.preventDefault());
+      el.addEventListener('drop',  (e) => e.preventDefault());
+
+      // 4) 鍵盤層限制：允許刪除/導航/複製/剪下；禁止可見字元與貼上/Undo/Redo
+      el.addEventListener('keydown', (e) => {
+        const NAV = new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Tab','Escape','Shift','Control','Alt','Meta']);
+        if (NAV.has(e.key)) return;
+        if (e.key === 'Backspace' || e.key === 'Delete') { snapshot(); return; }
+
+        if (e.ctrlKey || e.metaKey) {
+          const k = e.key.toLowerCase();
+          if (k === 'a' || k === 'c' || k === 'x') { snapshot(); return; } // 全選/複製/剪下
+          if (k === 'v' || k === 'z' || k === 'y') { e.preventDefault(); return; } // 貼上/Undo/Redo 可能造成插入 → 禁
+        }
+
+        if (e.key.length === 1) { // 任何可見字元
+          e.preventDefault();
+        }
+      });
+
+      // 5) 部分瀏覽器的 IME 組字事件不可取消，這裡仍記快照並在 input 後回滾
+      el.addEventListener('compositionstart', () => snapshot());
+      el.addEventListener('compositionupdate', () => {/* 先不處理，交給 input 後台回滾 */});
+      el.addEventListener('compositionend', () => {/* 交給 input 事件差異比對 */});
+    })();
+
+
+    // 讀取嵌入的 JSON 資料
+    try{
+      departmentsData = JSON.parse(el('departments-data')?.textContent || '{}');
+      gradesData = JSON.parse(el('grades-data')?.textContent || '{}');
+      coursesData = JSON.parse(el('courses-data')?.textContent || '[]');
+    }catch(e){
+      console.error('資料解析失敗：', e);
     }
-});
 
+    const academic = el('academic');
+    const department = el('department');
+    const grade = el('grade');
+    const course = el('course');
+    const comment = el('comment_text');
+    const ratingInput = el('rating-input');
+    const btnPreview = el('preview-btn');
+    const btnSubmit = el('submit-btn');
+    const preview = el('preview');
+    const previewText = el('preview_text');
 
-// 動態篩選課程和更新科系、年級下拉的邏輯
-document.addEventListener('DOMContentLoaded', function() {
-    // 讀取資料
-    departmentsData = JSON.parse(document.getElementById('departments-data').textContent);
-    gradesData = JSON.parse(document.getElementById('grades-data').textContent);
-    coursesData = JSON.parse(document.getElementById('courses-data').textContent);
+    // 頂端顯示區塊
+    const courseNameEl = el('course-name-display');
+    const courseTeacherEl = el('course-teacher-display');
 
-    const academicSelect = document.getElementById('academic');
-    const departmentSelect = document.getElementById('department');
-    const gradeSelect = document.getElementById('grade');
-    const courseSelect = document.getElementById('course');
+    // 依課程下拉目前選項更新頂端顯示
+    function updateCourseHeaderFromSelect() {
+      if (!course) return;
+      const opt = course.selectedOptions && course.selectedOptions[0];
+      const name = opt ? (opt.dataset.name || opt.textContent || '') : '';
+      const teacher = opt ? (opt.dataset.teacher || '') : '';
+      if (courseNameEl) courseNameEl.textContent = (name || '請先選擇課程').trim();
+      if (courseTeacherEl) courseTeacherEl.textContent = (teacher || '—').trim();
+    }
 
-    // 當學制改變時更新科系和年級選項
-    academicSelect.addEventListener('change', function() {
-        const academicId = this.value;
-        
-        // 更新科系
-        const departments = departmentsData[academicId] || [];
-        departmentSelect.innerHTML = '<option value="">請選擇科系</option>';
-        departments.forEach(dept => {
-            const option = document.createElement('option');
-            option.value = dept.id;
-            option.textContent = dept.name;
-            departmentSelect.appendChild(option);
-        });
+    // 學制改變時重建科系與年級
+    function populateDepartments(){
+      if (!academic || !department) return;
+      const list = departmentsData[academic.value] || [];
+      department.innerHTML = '<option value="">請先選擇學制</option>';
+      list.forEach(d=>{
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.name;
+        department.appendChild(opt);
+      });
+    }
 
-        // 更新年級
-        const grades = gradesData[academicId] || [];
-        gradeSelect.innerHTML = '<option value="">請選擇年級</option>';
-        grades.forEach(grade => {
-            const option = document.createElement('option');
-            option.value = grade;
-            option.textContent = grade;
-            gradeSelect.appendChild(option);
-        });
+    function populateGrades(){
+      if (!academic || !grade) return;
+      const list = gradesData[academic.value] || [];
+      grade.innerHTML = '<option value="">請先選擇學制</option>';
+      list.forEach(g=>{
+        const val = g.grade_level || g;
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        grade.appendChild(opt);
+      });
+    }
 
-        // 清空課程
-        courseSelect.innerHTML = '<option value="">請先選擇科系和年級</option>';
+    function populateCourses(){
+      if (!course) return;
+      const a = academic?.value, d = department?.value, g = grade?.value;
+
+      let filtered = (coursesData || []).filter(c=>
+        (!a || String(c.academic_id) === String(a)) &&
+        (!d || String(c.department_id) === String(d)) &&
+        (!g || String(c.grade_level) === String(g))
+      );
+      course.innerHTML = '<option value="">請先選擇學制、科系和年級</option>';
+
+      if(filtered.length === 0){
+        course.innerHTML = '<option value="">沒有符合條件的課程</option>';
+        updateCourseHeaderFromSelect();
+        return;
+      }
+
+      filtered.forEach(c=>{
+        const opt = document.createElement('option');
+        // value 使用資料表主鍵 id
+        opt.value = c.id;
+        opt.textContent = `${c.course_name}（${c.course_teacher || '未填寫教師'}）`;
+        opt.dataset.name = c.course_name || '';
+        opt.dataset.teacher = c.course_teacher || '';
+        course.appendChild(opt);
+      });
+
+      const pre = window.__PRESELECTED__ && window.__PRESELECTED__.courseId;
+      if (pre) course.value = String(pre);
+
+      updateCourseHeaderFromSelect();
+    }
+
+    // 事件綁定
+    academic?.addEventListener('change', ()=>{
+      populateDepartments();
+      populateGrades();
+      populateCourses();
+    });
+    department?.addEventListener('change', populateCourses);
+    grade?.addEventListener('change', populateCourses);
+    course?.addEventListener('change', updateCourseHeaderFromSelect);
+
+    // 初始預選
+    if(window.__PRESELECTED__){
+      if(window.__PRESELECTED__.academicId && academic) {
+        academic.value = String(window.__PRESELECTED__.academicId);
+      }
+      populateDepartments();
+      if(window.__PRESELECTED__.departmentId && department){
+        department.value = String(window.__PRESELECTED__.departmentId);
+      }
+      populateGrades();
+      if(window.__PRESELECTED__.grade && grade){
+        grade.value = String(window.__PRESELECTED__.grade);
+      }
+    }
+
+    // 初始課程清單 + 同步頂端顯示
+    populateCourses();
+    updateCourseHeaderFromSelect();
+
+    // 綁定匿名/實名切換與視覺
+    bindAnonymousToggle();
+
+    // 預覽
+    btnPreview?.addEventListener('click', ()=>{
+      const val = (comment?.value || '').trim();
+      if(!val){ CommentToast?.toastInfo?.('請先輸入評論內容'); return; }
+      preview?.classList.remove('d-none');
+      if (previewText) previewText.textContent = val;
+      preview?.scrollIntoView({behavior:'smooth', block:'center'});
     });
 
-    // 根據學制、科系、年級更新課程選項
-    function updateCourses() {
-        const academicId = academicSelect.value;
-        const departmentId = departmentSelect.value;
-        const grade = gradeSelect.value;
+    // 送出（一律以預覽內容為準；禁止送出原始 comment_text）
+    btnSubmit?.addEventListener('click', async (e)=>{
+      e.preventDefault();
 
-        let filteredCourses = coursesData.filter(course => {
-            return (!academicId || course.academic_id == academicId)
-                && (!departmentId || course.department_id == departmentId)
-                && (!grade || course.grade_level == grade);
+      const cId = course?.value;
+      const star = parseInt(ratingInput?.value || '0', 10);
+      const isAnonymous = (el('anonymous_yes')?.checked === true) || false;
+
+      // 取「轉換後」的內容（優先 #comment-preview，其次 #preview_text）
+      const previewBox = el('comment-preview') || el('preview_text');
+      const previewVal = (previewBox ? ('value' in previewBox ? previewBox.value : previewBox.textContent) : '').trim();
+
+      // 基本檢查
+      if(!cId){ CommentToast?.toastError?.('請先選擇課程'); return; }
+      if(!(star >= 1 && star <= 5)){ CommentToast?.toastInfo?.('評分必須是 1–5'); return; }
+
+      // 必須先按「轉換」產生預覽
+      if(!previewVal){
+        CommentToast?.toastInfo?.('請先按「轉換」，產生可提交的評論內容，再送出。');
+        return;
+      }
+
+      // 後端的「過短」提示，禁止送出
+      if(previewVal.startsWith('（內容過短）')){
+        CommentToast?.toastInfo?.('評論內容過短，請補充具體細節後再送出。');
+        return;
+      }
+
+      // 覆蓋原始輸入：保證送出的是「轉換後」內容
+      if (comment) comment.value = previewVal;
+
+      const url = `/add_comment/${cId}/submit/`;
+
+      try{
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 送出中…';
+
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type':'application/json',
+            'X-Requested-With':'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken(),
+          },
+          body: JSON.stringify({
+            content: previewVal,        // ★ 只送轉換後的內容
+            rating: star,
+            anonymous: isAnonymous
+          })
         });
 
-        courseSelect.innerHTML = '<option value="">請選擇課程</option>';
-        if (filteredCourses.length === 0) {
-            courseSelect.innerHTML = '<option value="">沒有符合條件的課程</option>';
-        } else {
-            filteredCourses.forEach(course => {
-                const option = document.createElement('option');
-                option.value = course.id;
-                option.textContent = course.course_name;
-                courseSelect.appendChild(option);
-            });
+        const data = await res.json().catch(()=> ({}));
+        if(!res.ok || data.error){
+          throw new Error(data.error || `HTTP ${res.status}`);
         }
+
+        // 成功 → 跳轉到 comment_detail/<cId>
+        window.location.href = `/comment_detail/${cId}`;
+
+      }catch(err){
+        console.error(err);
+        CommentToast?.toastError?.(err.message || '送出失敗，請稍後再試');
+        // 送出失敗也保持 disabled 狀態，避免重複送出
+        btnSubmit.innerHTML = '送出失敗';
+      }
+    });
+  });
+})();
+
+// ======== 評分星星互動（健壯化） ========
+(function () {
+  function initAddCommentStars() {
+    const root = document.getElementById('rating-stars');
+    if (!root || root.dataset.bound === '1') return;
+
+    const stars = root.querySelectorAll('i[data-rating]');
+    const input = document.getElementById('rating-input');
+    const text  = root.querySelector('.rating-text');
+
+    function getCurrent() {
+      const v = parseInt(input?.value || root.getAttribute('data-rating') || '0', 10);
+      return Number.isFinite(v) ? Math.max(0, Math.min(5, v)) : 0;
     }
 
-    departmentSelect.addEventListener('change', updateCourses);
-    gradeSelect.addEventListener('change', updateCourses);
-
-    // 初始化 - 若學制已有選擇，觸發一次更新
-    if (academicSelect.value) {
-        academicSelect.dispatchEvent(new Event('change'));
+    function paint(val) {
+      const v = Math.max(0, Math.min(5, parseInt(val || '0', 10)));
+      stars.forEach((s) => {
+        const n = parseInt(s.getAttribute('data-rating') || '0', 10);
+        if (n <= v) {
+          s.classList.remove('fa-regular');
+          s.classList.add('fa-solid');
+        } else {
+          s.classList.remove('fa-solid');
+          s.classList.add('fa-regular');
+        }
+        s.classList.add('fa-star');
+      });
+      if (text) { text.textContent = (v || 0).toFixed(1) + '/5.0'; }
+      root.setAttribute('data-rating', String(v));
     }
-});
 
+    function commit(val) {
+      const v = Math.max(1, Math.min(5, parseInt(val || '0', 10)));
+      if (input) input.value = String(v);
+      paint(v);
+    }
 
+    stars.forEach((star) => {
+      star.style.cursor = 'pointer';
 
+      star.addEventListener('mouseenter', () => {
+        const v = parseInt(star.getAttribute('data-rating') || '0', 10);
+        paint(v);
+      });
 
+      star.addEventListener('mouseleave', () => {
+        paint(getCurrent());
+      });
 
-// // 處理學制變化
-// function handleAcademicChange() {
-//     const academicId = this.value;
-//     const departmentSelect = document.getElementById('class_info');
-//     const gradeSelect = document.getElementById('grade');
-//     const courseSelect = document.getElementById('course');
-    
-//     if (!academicId) {
-//         // 重置科系、年級和課程下拉選單
-//         departmentSelect.innerHTML = '<option value="">選擇科系</option>';
-//         gradeSelect.innerHTML = '<option value="">選擇年級</option>';
-//         courseSelect.innerHTML = '<option value="">選擇課程</option>';
-//         return;
-//     }
-    
-//     // 更新科系下拉選單
-//     updateDepartmentOptions(academicId);
-    
-//     // 更新年級下拉選單
-//     updateGradeOptions(academicId);
-    
-//     // 清空課程下拉選單
-//     courseSelect.innerHTML = '<option value="">請先選擇科系和年級</option>';
-//     courseSelect.disabled = true;
-// }
+      star.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const v = parseInt(star.getAttribute('data-rating') || '0', 10);
+        commit(v);
+      });
 
-// // 更新科系選項
-// function updateDepartmentOptions(academicId) {
-//     const departmentSelect = document.getElementById('class_info');
-//     departmentSelect.innerHTML = '<option value="">選擇科系</option>';
-//     departmentSelect.disabled = true;
+      star.addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const v = parseInt(star.getAttribute('data-rating') || '0', 10);
+        commit(v);
+      }, { passive: false });
+    });
 
-//     if (!academicId) return;
+    root.tabIndex = 0;
+    root.addEventListener('keydown', (e) => {
+      const cur = getCurrent();
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+        e.preventDefault(); commit(Math.min(5, cur + 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+        e.preventDefault(); commit(Math.max(1, cur - 1));
+      } else if (/^[1-5]$/.test(e.key)) {
+        e.preventDefault(); commit(parseInt(e.key, 10));
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        if (input) input.value = '0';
+        paint(0);
+      }
+    });
 
-//     // 從預先載入的資料中獲取科系列表
-//     const departments = departmentsData[academicId] || [];
-    
-//     if (departments.length > 0) {
-//         departments.forEach(dept => {
-//             const option = document.createElement('option');
-//             // 確保 ID 作為字串處理
-//             option.value = String(dept.id);
-//             option.textContent = dept.name;
-//             departmentSelect.appendChild(option);
-//         });
-//         departmentSelect.disabled = false;
-//     } else {
-//         departmentSelect.innerHTML = '<option value="">沒有可用的科系</option>';
-//     }
-// }
+    paint(getCurrent());
+    root.dataset.bound = '1';
+  }
 
-// // 更新年級選項
-// function updateGradeOptions(academicId) {
-//     const gradeSelect = document.getElementById('grade');
-//     if (!gradeSelect) return;
-    
-//     // 清空現有選項，保留「選擇年級」
-//     gradeSelect.innerHTML = '<option value="">選擇年級</option>';
-//     gradeSelect.disabled = true;
-    
-//     // 如果沒有選擇學制，則不顯示任何年級選項
-//     if (!academicId) return;
-    
-//     // 從預載的資料中獲取年級列表
-//     const grades = gradesData[academicId] || [];
-    
-//     // 添加年級選項
-//     if (grades.length > 0) {
-//         // 排序年級（一、二、三、四、五）
-//         const gradeOrder = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5};
-//         const sortedGrades = [...grades].sort((a, b) => (gradeOrder[a] || 99) - (gradeOrder[b] || 99));
-        
-//         sortedGrades.forEach(grade => {
-//             const option = document.createElement('option');
-//             option.value = grade;
-//             option.textContent = grade;
-//             gradeSelect.appendChild(option);
-//         });
-        
-//         gradeSelect.disabled = false;
-//     } else {
-//         gradeSelect.innerHTML = '<option value="">沒有可用的年級</option>';
-//     }
-// }
+  document.addEventListener('DOMContentLoaded', initAddCommentStars);
+})();
 
-// // 處理科系變化
-// function handleDepartmentChange() {
-//     const academicId = document.getElementById('academic').value;
-//     const departmentId = this.value;
-//     const gradeId = document.getElementById('grade').value;
-//     const courseSelect = document.getElementById('course');
-    
-//     if (!academicId || !departmentId || !gradeId) {
-//         courseSelect.innerHTML = '<option value="">請先選擇學制、科系和年級</option>';
-//         courseSelect.disabled = true;
-//         return;
-//     }
-    
-//     // 觸發載入課程
-//     loadCourses();
-// }
-
-// // 載入課程列表
-// function loadCourses() {
-//     const academicId = document.getElementById('academic')?.value;
-//     const departmentId = document.getElementById('class_info')?.value;
-//     const gradeId = document.getElementById('grade')?.value;
-//     const courseSelect = document.getElementById('course');
-    
-//     // 如果沒有選擇學制、科系或年級，則不進行查詢
-//     if (!academicId || !departmentId || !gradeId) {
-//         courseSelect.innerHTML = '<option value="">請先選擇學制、科系和年級</option>';
-//         return;
-//     }
-    
-//     // 顯示載入中
-//     courseSelect.disabled = true;
-//     courseSelect.innerHTML = '<option value="">載入中...</option>';
-    
-//     // 構建API URL
-//     const params = new URLSearchParams({
-//         academic_id: academicId,
-//         department_id: departmentId,
-//         grade: gradeId  // 修正變數名稱錯誤
-//     });
-    
-//     // 檢查URL中是否有預選的課程ID
-//     const urlParams = new URLSearchParams(window.location.search);
-//     const selectedCourseId = urlParams.get('course_id') || urlParams.get('course');
-    
-//     // 發送AJAX請求獲取課程列表
-//     fetch(`/get_courses/?${params.toString()}`)
-//         .then(response => {
-//             if (!response.ok) {
-//                 throw new Error('獲取課程列表失敗');
-//             }
-//             return response.json();
-//         })
-//         .then(data => {
-//             // 清空現有選項
-//             courseSelect.innerHTML = '<option value="">選擇課程</option>';
-            
-//             if (data.courses && data.courses.length > 0) {
-//                 // 添加課程選項
-//                 data.courses.forEach(course => {
-//                     const option = document.createElement('option');
-//                     option.value = course.id;
-//                     option.textContent = course.course_name || course.name;
-                    
-//                     // 如果這是預選的課程，則選中它
-//                     if (selectedCourseId && course.id == selectedCourseId) {
-//                         option.selected = true;
-//                     }
-                    
-//                     courseSelect.appendChild(option);
-//                 });
-                
-//                 // 如果URL中有課程ID但沒有找到對應的課程，則顯示錯誤
-//                 if (selectedCourseId && !Array.from(courseSelect.options).some(opt => opt.selected)) {
-//                     console.warn('未找到匹配的課程');
-//                     // 不顯示警報，因為用戶可能正在手動選擇
-//                 }
-//             } else {
-//                 courseSelect.innerHTML = '<option value="">沒有找到相關課程</option>';
-//             }
-            
-//             // 啟用下拉選單
-//             courseSelect.disabled = false;
-//         })
-//         .catch(error => {
-//             console.error('載入課程時出錯:', error);
-//             courseSelect.innerHTML = '<option value="">載入失敗，請重試</option>';
-//         });
-// }
-
-// // 初始化用戶界面功能
-// function initializeUserInterface() {
-//     // 注意：根據HTML，anonymous_yes對應匿名，anonymous_no對應實名
-//     const anonymousRadio = document.getElementById('anonymous_yes');  // 匿名選項
-//     const realNameRadio = document.getElementById('anonymous_no');    // 實名選項
-//     const usernameElement = document.querySelector('.username');
-//     const avatarElement = document.querySelector('.avatar');
-    
-//     // 檢查元素是否存在
-//     if (!anonymousRadio || !realNameRadio || !usernameElement || !avatarElement) {
-//         console.error('找不到必要的用戶界面元素');
-//         console.log('anonymousRadio:', anonymousRadio);
-//         console.log('realNameRadio:', realNameRadio);
-//         console.log('usernameElement:', usernameElement);
-//         console.log('avatarElement:', avatarElement);
-//         return;
-//     }
-    
-//     // 設定固定的用戶名和頭像路徑
-//     const realName = '實名用戶';  // 您可以根據需要修改這個名稱
-//     const anonymousName = '匿名';
-//     const realNameAvatarPath = '/static/image/lay.png';
-//     const anonymousAvatarPath = '/static/image/anonymous.png';
-    
-//     console.log('實名用戶名:', realName);
-//     console.log('實名頭像路徑:', realNameAvatarPath);
-//     console.log('匿名頭像路徑:', anonymousAvatarPath);
-    
-//     // Handle anonymous selection (anonymous_yes = 匿名)
-//     anonymousRadio.addEventListener('change', function() {
-//         console.log('選擇匿名:', this.checked);
-//         if (this.checked) {
-//             usernameElement.textContent = anonymousName;
-//             avatarElement.src = anonymousAvatarPath;
-//             console.log('已切換到匿名模式');
-//             console.log('當前頭像路徑:', avatarElement.src);
-//         }
-//     });
-    
-//     // Handle real name selection (anonymous_no = 實名)  
-//     realNameRadio.addEventListener('change', function() {
-//         console.log('選擇實名:', this.checked);
-//         if (this.checked) {
-//             usernameElement.textContent = realName;
-//             avatarElement.src = realNameAvatarPath;
-//             console.log('已切換到實名模式');
-//             console.log('當前頭像路徑:', avatarElement.src);
-//         }
-//     });
-    
-//     // 設置初始狀態 - 根據HTML，默認選中匿名 (anonymous_yes checked)
-//     if (anonymousRadio.checked) {
-//         usernameElement.textContent = anonymousName;
-//         avatarElement.src = anonymousAvatarPath;
-//         console.log('初始化為匿名模式');
-//         console.log('初始頭像路徑:', avatarElement.src);
-//     } else if (realNameRadio.checked) {
-//         usernameElement.textContent = realName;
-//         avatarElement.src = realNameAvatarPath;
-//         console.log('初始化為實名模式');
-//         console.log('初始頭像路徑:', avatarElement.src);
-//     }
-// }
-
-// // 初始化星級評分系統
-// function initializeRatingSystem() {
-//     const starsContainer = document.getElementById('rating-stars');
-//     if (!starsContainer) return;
-    
-//     const stars = Array.from(starsContainer.querySelectorAll('i'));
-//     const ratingInput = document.getElementById('rating-input');
-//     const ratingText = starsContainer.querySelector('.rating-text');
-    
-//     // Set initial rating to 1 by default
-//     let currentRating = 1;
-//     if (ratingInput) ratingInput.value = '1';
-//     updateStars(currentRating);
-    
-//     // Click to set rating
-//     starsContainer.addEventListener('click', (e) => {
-//         if (e.target.matches('i')) {
-//             const star = e.target;
-//             const newRating = parseInt(star.getAttribute('data-rating'));
-            
-//             // 設置為新的評分值
-//             currentRating = Math.min(5, Math.max(1, newRating)); // 確保最小評分為1
-            
-//             updateStars(currentRating);
-//             if (ratingInput) ratingInput.value = currentRating;
-//             if (ratingText) ratingText.textContent = `${currentRating}/5.0`;
-//         }
-//     });
-    
-//     // Hover effect for better user experience
-//     stars.forEach(star => {
-//         star.addEventListener('mouseenter', function() {
-//             const hoverRating = parseInt(this.getAttribute('data-rating'));
-//             updateStars(hoverRating, false); // Don't update input on hover
-//         });
-//     });
-    
-//     // Reset to current rating when mouse leaves
-//     starsContainer.addEventListener('mouseleave', function() {
-//         updateStars(currentRating);
-//     });
-    
-//     function updateStars(rating, updateText = true) {
-//         // Ensure rating is at least 1
-//         if (rating < 1) rating = 1;
-        
-//         stars.forEach((star, index) => {
-//             const starRating = index + 1; // 1, 2, 3, 4, 5
-            
-//             if (rating >= starRating) {
-//                 // Full star
-//                 star.className = 'fa-solid fa-star';
-//             } else {
-//                 // Empty star
-//                 star.className = 'fa-regular fa-star';
-//             }
-//         });
-        
-//         // Update rating text
-//         if (updateText && ratingText) {
-//             ratingText.textContent = `${rating}/5.0`;
-//         }
-//     }
-// }
-
-// // 初始化文字轉換功能
-// function initializeTextConversion() {
-//     const commentTextarea = document.getElementById('comment_text');
-//     const previewTextarea = document.getElementById('preview_text');
-//     const convertBtn = document.getElementById('convert_btn');
-    
-//     // Make sure preview is initially empty
-//     previewTextarea.value = '';
-    
-//     // Handle convert button click - transfer content from left to right with filtering
-//     convertBtn.addEventListener('click', function() {
-//         const originalText = commentTextarea.value;
-        
-//         if (!originalText.trim()) {
-//             alert('請先輸入評論內容再進行轉換');
-//             return;
-//         }
-        
-//         // 示例轉換：將原文轉換為更正面的評論
-//         let convertedText = '';
-        
-//         // 檢查是否包含負面詞彙並轉換
-//         const negativeWords = {
-//             // '很爛': '有改進空間',
-//             // '超爛': '需要加強',
-//             // '難死了': '具有挑戰性',
-//             // '無聊': '比較平淡',
-//             // '垃圾': '不太適合',
-//             // '糟糕': '需要改善',
-//             // '討厭': '不太喜歡',
-//             // '幹': '真是',
-//             // '靠': '哎呀',
-//             // '爛': '需要改善',
-//             // '廢': '有些不足',
-//             '這門課超爛，老師根本不會教，完全是照著投影片念，講話有夠無聊，根本是在整學生，每週都要熬夜寫報告，完全沒有人性，奉勸大家不要踩雷，能避就避！':'這門課的教學方式以照著投影片講解為主，整體互動較少，對於習慣討論式學習或需要更多說明的同學來說，可能較難投入。老師授課節奏較快，說明部分內容時較為簡略，可能會影響理解。課程作業安排較密集，每週需要花費相當多時間準備報告，對時間管理能力是很大的挑戰。若沒有充足準備，可能會感受到學習壓力較大。整體來說，這門課對於具備自學能力與良好時間規劃的學生會比較適合。',
-//         };
-        
-//         convertedText = originalText;   
-        
-//         // 替換負面詞彙
-//         Object.keys(negativeWords).forEach(word => {
-//             const regex = new RegExp(word, 'g');
-//             convertedText = convertedText.replace(regex, negativeWords[word]);
-//         });
-        
-//         // 如果沒有需要轉換的內容，添加一些正面的修飾
-//         if (convertedText === originalText) {
-//             convertedText = '總體來說，' + originalText + ' 希望能持續改進，讓課程更好。';
-//          } 
-//         // else {
-//         //     convertedText = '經過思考後，我認為' + convertedText + ' 以上是我的客觀評價。';
-//         // }
-        
-//         // Update preview with converted text
-//         previewTextarea.value = convertedText;
-        
-//         // 顯示轉換完成提示
-//         const originalBtnText = convertBtn.innerHTML;
-//         const originalBgColor = convertBtn.style.backgroundColor;
-        
-//         convertBtn.innerHTML = '已轉換';
-//         convertBtn.style.backgroundColor = '#e0d3e0';
-//         convertBtn.style.color = '#635c63';
-//         convertBtn.disabled = true;
-        
-//         setTimeout(() => {
-//             convertBtn.innerHTML = originalBtnText;
-//             convertBtn.style.backgroundColor = originalBgColor;
-//             convertBtn.style.color = '#fff';
-//             convertBtn.disabled = false;
-//         }, 1500);
-//     });
-// }
-
-// // 初始化表單驗證和提交
-// function initializeFormValidation() {
-//     const commentForm = document.querySelector('.comment-form');
-//     const commentTextarea = document.getElementById('comment_text');
-//     const previewTextarea = document.getElementById('preview_text');
-    
-//     if (!commentForm) return;
-    
-//     // Remove the onsubmit attribute from HTML to prevent conflicts
-//     commentForm.removeAttribute('onsubmit');
-    
-//     // Form submission handling with validation
-//     commentForm.addEventListener('submit', function(e) {
-//         e.preventDefault(); // 防止默認提交
-        
-//         // 獲取所有必填欄位
-//         const schoolYear = document.getElementById('school_year')?.value || '';
-//         const category = document.getElementById('category')?.value || '';
-//         const classInfo = document.getElementById('class_info')?.value || '';
-//         const course = document.getElementById('course')?.value || '';
-//         const rating = document.getElementById('rating-input')?.value || '';
-//         const commentText = commentTextarea?.value.trim() || '';
-//         const previewText = previewTextarea?.value.trim() || '';
-//         const realNameRadio = document.getElementById('anonymous_no'); // 實名選項
-        
-//         // 驗證必填欄位
-//         let missingFields = [];
-        
-//         if (!schoolYear) missingFields.push('學年度');
-//         if (!category) missingFields.push('學制');
-//         if (!classInfo) missingFields.push('班級');
-//         if (!course) missingFields.push('課程');
-//         if (!rating || rating < 1 || rating > 5) missingFields.push('課程評分');
-//         if (!commentText && !previewText) missingFields.push('評論內容');
-        
-//         if (missingFields.length > 0) {
-//             alert('請填寫以下必填欄位：\n' + missingFields.join('、'));
-//             return;
-//         }
-        
-//         // 確認提交
-//         const isAnonymous = realNameRadio?.checked ? '實名' : '匿名';
-//         const finalText = previewText || commentText; // 優先使用轉換後的文字
-        
-//         const confirmMessage = `送出後將無法修改，確定要送出嗎？`;
-        
-//         if (confirm(confirmMessage)) {
-//             // 如果有轉換後的文字，將其設為主要提交內容
-//             if (previewText && commentTextarea) {
-//                 commentTextarea.value = previewText;
-//             }
-            
-//             // 顯示提交中狀態
-//             const submitBtn = this.querySelector('.btn-submit');
-//             if (submitBtn) {
-//                 const originalText = submitBtn.innerHTML;
-                
-//                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
-//                 submitBtn.disabled = true;
-                
-//                 // 模擬提交過程
-//                 setTimeout(() => {
-//                     alert('評論送出成功！');
-//                     window.location.href = '/comment/';
-//                 }, 1500);
-//             }
-//         }
-//     });
-// }
-
-// // 全域函數用於確認提交（向後兼容，並整合原本HTML中的驗證邏輯）
-// function confirmSubmission() {
-//     const form = document.getElementById('commentForm');
-//     if (!form) return false;
-    
-//     const comment = form.querySelector('textarea[name="comment_text"]')?.value.trim() || '';
-//     const rating = parseFloat(document.getElementById('rating-input')?.value || 0);
-//     const courseSelect = form.querySelector('select[name="course"]');
-//     const classSelect = form.querySelector('select[name="class_info"]');
-//     const schoolYearSelect = form.querySelector('select[name="school_year"]');
-//     const categorySelect = form.querySelector('select[name="category"]');
-    
-//     // 驗證必填欄位
-//     if (!courseSelect?.value) {
-//         alert('請選擇課程');
-//         return false;
-//     }
-    
-//     if (!classSelect?.value) {
-//         alert('請選擇班級');
-//         return false;
-//     }
-    
-//     if (!schoolYearSelect?.value) {
-//         alert('請選擇學年度');
-//         return false;
-//     }
-    
-//     if (!categorySelect?.value) {
-//         alert('請選擇學制');
-//         return false;
-//     }
-    
-//     if (!comment) {
-//         alert('請輸入評論內容');
-//         return false;
-//     }
-    
-//     if (isNaN(rating) || rating < 1 || rating > 5) {
-//         alert('請給出有效的評分 (1-5分)');
-//         return false;
-//     }
-    
-//     // 顯示確認對話框
-//     const confirmation = confirm('評論將公開顯示，送出後無法修改。');
-        
-//     if (confirmation) {
-//         // 顯示載入中或禁用按鈕等處理
-//         const submitBtn = form.querySelector('button[type="submit"]');
-//         if (submitBtn) {
-//             submitBtn.disabled = true;
-//             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
-            
-//             // 模擬提交完成後跳轉
-//             setTimeout(() => {
-//                 alert('評論送出成功！');
-//                 window.location.href = '/comment/';
-//             }, 1500);
-//         }
-//     }
-    
-//     return confirmation;
-// }

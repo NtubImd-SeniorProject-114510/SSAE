@@ -122,58 +122,133 @@
 
         <div class="lsection">
             <svg class="sectionl" xmlns="http://www.w3.org/2000/svg" width="32vw" height="60vw" viewBox="0 0 1522 395" fill="none">
+              <defs>
+                <clipPath id="clip-left-1">
+                  <path d="M35 10.5H386.233C386.501 10.5 386.721 10.7212 386.72 10.9895L386.72 43.9895C386.72 63.0438 371.274 78.4895 352.22 78.4895H69.5C50.4461 78.4895 35 93.9356 35 112.989V312.5C35 331.554 19.5538 347 0.499939 347H-0.0000610352"/>
+                </clipPath>
+                <clipPath id="clip-left-2">
+                  <path d="M285 166.5H444.087C444.355 166.5 444.576 166.721 444.575 166.989V199.989C444.575 219.044 429.129 234.489 410.075 234.489H327.5C308.446 234.489 293 249.936 293 268.989V352.5C293 371.554 277.554 387 258.5 387H252"/>
+                </clipPath>
+                <clipPath id="clip-left-3">
+                  <path d="M171 322.5H397.73C397.998 322.5 398.219 322.721 398.218 322.989V355.989C398.218 375.044 382.772 390.489 363.718 390.489H206.5C187.446 390.489 172 405.936 172 424.989V502.5C172 521.554 156.554 537 137.5 537H131"/>
+                </clipPath>
+              </defs>
+
               <g class="dialog-group-l">
-                <defs>
-                  <clipPath id="dialogClip">
-                    <path d="M41 0.5H387.233C387.509 0.500133 382.733 0.723942 382.733 1V33C387.733 52.0537 372.287 67.4999 353.233 67.5H7C6.72386 67.5 6.5 67.2761 6.5 67V35C6.5 15.9462 21.9462 0.500001 41 0.5Z" />
-                  </clipPath>
-                </defs>
                 <path class="path-outline" d="M35 10.5H386.233C386.509 10.5001 386.733 10.7239 386.733 11V43C386.733 62.0537 371.287 77.4999 352.233 77.5H1C0.723857 77.5 0.5 77.2761 0.5 77V45C0.500001 25.9462 15.9462 10.5 35 10.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M41 0.5H392.233C392.509 0.500133 392.733 0.723942 392.733 1V33C392.733 52.0537 377.287 67.4999 358.233 67.5H7C6.72386 67.5 6.5 67.2761 6.5 67V35C6.5 15.9462 21.9462 0.500001 41 0.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
-                <g clip-path="url(#dialogClip)">
-                  <text class="dialog-text" x="30" y="42" fill="black">最新！課程評論：</text>
+                <g clip-path="url(#clip-left-1)">
+                  <a href="{{ dlg_left.0.url }}" style="cursor:pointer; text-decoration:none;">
+                    <text class="dialog-text" x="38" y="42" fill="black">{{ dlg_left.0.title }}</text>
+                  </a>
                 </g>
               </g>
-              
               <g class="dialog-group-l">
                 <path class="path-outline" d="M285 166.5H444.087C444.363 166.5 444.587 166.724 444.587 167V199C444.587 218.054 429.141 233.5 410.087 233.5H251C250.724 233.5 250.5 233.276 250.5 233V201C250.5 181.946 265.946 166.5 285 166.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M291 156.5H450.087C450.363 156.5 450.587 156.724 450.587 157V189C450.587 208.054 435.141 223.5 416.087 223.5H257C256.724 223.5 256.5 223.276 256.5 223V191C256.5 171.946 271.946 156.5 291 156.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+                <g clip-path="url(#clip-left-2)">
+                  <a href="{{ dlg_left.1.url }}" style="cursor:pointer; text-decoration:none;">
+                    <text class="dialog-text" x="280" y="200" fill="black">{{ dlg_left.1.title }}</text>
+                  </a>
+                </g>
               </g>
               <g class="dialog-group-l">
                 <path class="path-outline" d="M171 322.5H397.73C398.007 322.5 398.23 322.724 398.23 323V355C398.23 374.054 382.784 389.5 363.73 389.5H137C136.724 389.5 136.5 389.276 136.5 389V357C136.5 337.946 151.946 322.5 171 322.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M177 312.5H403.73C404.007 312.5 404.23 312.724 404.23 313V345C404.23 364.054 388.784 379.5 369.73 379.5H143C142.724 379.5 142.5 379.276 142.5 379V347C142.5 327.946 157.946 312.5 177 312.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+                <g clip-path="url(#clip-left-3)">
+                  <a href="{{ dlg_left.2.url }}" style="cursor:pointer; text-decoration:none;">
+                    <text class="dialog-text" x="178" y="356" fill="black">{{ dlg_left.2.title }}</text>
+                  </a>
+                </g>
               </g>
             </svg>
 
             <svg class="svg-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 300" fill="none">
+              <!-- 手機版 SVG 的 defs -->
+              <defs>
+                <clipPath id="clip-mobile-1">
+                  <path d="M105.251 0.5H203.36C203.437 0.5 203.5 0.562734 203.5 0.639648C203.5 12.7202 193.707 22.5136 181.626 22.5137H83.5166C83.4397 22.5137 83.377 22.4509 83.377 22.374C83.377 10.2934 93.1703 0.500048 105.251 0.5Z"/>
+                </clipPath>
+                <clipPath id="clip-mobile-2">
+                  <path d="M27.2119 37.5H144.346C144.431 37.5 144.5 37.5693 144.5 37.6543C144.5 50.0167 134.478 60.0381 122.115 60.0381H4.98145C4.89657 60.0381 4.82729 59.9696 4.82715 59.8848C4.82715 47.5221 14.8493 37.5 27.2119 37.5Z"/>
+                </clipPath>
+                <clipPath id="clip-mobile-3">
+                  <path d="M100.166 75.5H258.37C258.442 75.5 258.5 75.5583 258.5 75.6299C258.5 87.5245 248.858 97.167 236.963 97.167H78.7588C78.6872 97.167 78.6289 97.1087 78.6289 97.0371C78.629 85.1425 88.2714 75.5001 100.166 75.5Z"/>
+                </clipPath>
+              </defs>
+
               <g class="dialog-group-l">
               <path class="path-outline" d="M103.374 3.88477H201.483C201.56 3.88477 201.623 3.9475 201.623 4.02441C201.623 16.1049 191.83 25.8984 179.749 25.8984H81.6396C81.5627 25.8984 81.5 25.8357 81.5 25.7588C81.5001 13.6781 91.2934 3.88481 103.374 3.88477Z" stroke="#9E8C9E"/>
               <path class="path-fill" d="M105.251 0.5H203.36C203.437 0.5 203.5 0.562734 203.5 0.639648C203.5 12.7202 193.707 22.5136 181.626 22.5137H83.5166C83.4397 22.5137 83.377 22.4509 83.377 22.374C83.377 10.2934 93.1703 0.500048 105.251 0.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
-              </g>
+                <g clip-path="url(#clip-mobile-1)">
+                  <a href="{{ dlg_mobile.0.url }}" style="cursor:pointer; text-decoration:none;">
+                    <text class="dialog-text" x="100" y="16" fill="black">{{ dlg_mobile.0.title }}</text>
+                  </a>
+                </g>
+            </g>
               <g class="dialog-group-l"> 
               <path class="path-outline" d="M22.8848 40.9609H140.019C140.104 40.9609 140.173 41.0303 140.173 41.1152C140.173 53.4776 130.151 63.499 117.788 63.499H0.654297C0.569417 63.499 0.500138 63.4306 0.5 63.3457C0.5 50.9831 10.5221 40.9609 22.8848 40.9609Z" stroke="#9E8C9E"/>
               <path class="path-fill" d="M27.2119 37.5H144.346C144.431 37.5 144.5 37.5693 144.5 37.6543C144.5 50.0167 134.478 60.0381 122.115 60.0381H4.98145C4.89657 60.0381 4.82729 59.9696 4.82715 59.8848C4.82715 47.5221 14.8493 37.5 27.2119 37.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
-              </g>
+                <g clip-path="url(#clip-mobile-2)">
+                  <a href="{{ dlg_mobile.1.url }}" style="cursor:pointer; text-decoration:none;">
+                    <text class="dialog-text" x="16" y="54" fill="black">{{ dlg_mobile.1.title }}</text>
+                  </a>
+                </g>
+            </g>
               <g class="dialog-group-l">
               <path class="path-outline" d="M96.0371 78.833H254.241C254.313 78.833 254.371 78.8913 254.371 78.9629C254.371 90.8575 244.729 100.5 232.834 100.5H74.6299C74.5583 100.5 74.5 100.442 74.5 100.37C74.5001 88.4755 84.1425 78.8331 96.0371 78.833Z" stroke="#9E8C9E"/>
               <path class="path-fill" d="M100.166 75.5H258.37C258.442 75.5 258.5 75.5583 258.5 75.6299C258.5 87.5245 248.858 97.167 236.963 97.167H78.7588C78.6872 97.167 78.6289 97.1087 78.6289 97.0371C78.629 85.1425 88.2714 75.5001 100.166 75.5Z" fill="#D1C5D1" stroke="#9E8C9E"/>
+                <g clip-path="url(#clip-mobile-3)">
+                  <a href="{{ dlg_mobile.1.url }}" style="cursor:pointer; text-decoration:none;">
+                    <text class="dialog-text" x="100" y="90" fill="black">{{ dlg_mobile.2.title }}</text>
+                  </a>
+                </g>
             </g>
             </svg>
           </div>
 
           <div class="rsection">
             <svg class="sectionr" xmlns="http://www.w3.org/2000/svg" width="32vw" height="60vw" viewBox="0 0 1522 395" fill="none">
+              <!-- 右側 SVG 的 defs -->
+              <defs>
+                <clipPath id="clip-right-1">
+                  <path d="M292 0.5H132.913C132.637 0.5 132.413 0.723861 132.413 1V33C132.413 52.0538 147.859 67.5 166.913 67.5H326C326.276 67.5 326.5 67.2761 326.5 67V35C326.5 15.9462 311.054 0.5 292 0.5Z"/>
+                </clipPath>
+                <clipPath id="clip-right-2">
+                  <path d="M228 156.5H1.26953C0.993446 156.5 0.769531 156.724 0.769531 157V189C0.769532 208.054 16.2158 223.5 35.2695 223.5H262C262.276 223.5 262.5 223.276 262.5 223V191C262.5 171.946 247.054 156.5 228 156.5Z"/>
+                </clipPath>
+                <clipPath id="clip-right-3">
+                  <path d="M436 312.5H84.7666C84.4906 312.5 84.2666 312.724 84.2666 313V345C84.2666 364.054 99.7129 379.5 118.767 379.5H470C470.276 379.5 470.5 379.276 470.5 379V347C470.5 327.946 455.054 312.5 436 312.5Z"/>
+                </clipPath>
+              </defs>
+
               <g class="dialog-group-r">
                 <path class="path-outline" d="M298 10.5H138.913C138.637 10.5 138.413 10.7239 138.413 11V43C138.413 62.0538 153.859 77.5 172.913 77.5H332C332.276 77.5 332.5 77.2761 332.5 77V45C332.5 25.9462 317.054 10.5 298 10.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M292 0.5H132.913C132.637 0.5 132.413 0.723861 132.413 1V33C132.413 52.0538 147.859 67.5 166.913 67.5H326C326.276 67.5 326.5 67.2761 326.5 67V35C326.5 15.9462 311.054 0.5 292 0.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+                  <g clip-path="url(#clip-right-1)">
+                    <a href="{{ dlg_right.0.url }}" style="cursor:pointer; text-decoration:none;">
+                      <text class="dialog-text" x="158" y="42" fill="black">{{ dlg_right.0.title }}</text>
+                    </a>
+                  </g>
+                </defs>
               </g>
               <g class="dialog-group-r">
                 <path class="path-outline" d="M234 166.5H7.26953C6.99345 166.5 6.76953 166.724 6.76953 167V199C6.76953 218.054 22.2158 233.5 41.2695 233.5H268C268.276 233.5 268.5 233.276 268.5 233V201C268.5 181.946 253.054 166.5 234 166.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M228 156.5H1.26953C0.993446 156.5 0.769531 156.724 0.769531 157V189C0.769532 208.054 16.2158 223.5 35.2695 223.5H262C262.276 223.5 262.5 223.276 262.5 223V191C262.5 171.946 247.054 156.5 228 156.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+                  <g clip-path="url(#clip-right-2)">
+                    <a href="{{ dlg_right.1.url }}" style="cursor:pointer; text-decoration:none;">
+                      <text class="dialog-text" x="30" y="200" fill="black">{{ dlg_right.1.title }}</text>
+                    </a>
+                  </g>
               </g>
               <g class="dialog-group-r">
                 <path class="path-outline" d="M442 322.5H90.7666C90.4906 322.5 90.2666 322.724 90.2666 323V355C90.2666 374.054 105.713 389.5 124.767 389.5H476C476.276 389.5 476.5 389.276 476.5 389V357C476.5 337.946 461.054 322.5 442 322.5Z" stroke-width="2" stroke="#9E8C9E"/>
                 <path class="path-fill" d="M436 312.5H84.7666C84.4906 312.5 84.2666 312.724 84.2666 313V345C84.2666 364.054 99.7129 379.5 118.767 379.5H470C470.276 379.5 470.5 379.276 470.5 379V347C470.5 327.946 455.054 312.5 436 312.5Z" fill="#D1C5D1" stroke-width="2" stroke="#9E8C9E"/>
+                  <g clip-path="url(#clip-right-3)">
+                    <a href="{{ dlg_right.2.url }}" style="cursor:pointer; text-decoration:none;">
+                      <text class="dialog-text" x="118" y="356" fill="black">{{ dlg_right.2.title }}</text>
+                    </a>
+                  </g>
               </g>
             </svg>
           </div>
@@ -213,8 +288,7 @@
           <div class="feature-item">
             <div class="floating-slogan slogan-2">
               <div class="slogan-inner">
-                要不要修多媒體製作導論勒<br>
-                <span class="indent">不知道會不會跟不上進度...</span>
+                啊還差兩學分 要修什麼課呢
               </div>
             </div>
             <div class="feature-title">
@@ -239,7 +313,7 @@
           </div>
           <div class="feature-item">
             <div class="floating-slogan slogan-4">
-              <div class="slogan-inner">全新的原文書好貴歐，但直屬的書不見了:(</div>
+              <div class="slogan-inner">全新的原文書好貴歐，不知道該在哪裡買:(</div>
             </div>
             <div class="feature-title">
               <h3>二手書專區</h3>
