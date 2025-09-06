@@ -37,27 +37,27 @@
 }
 
 /* Add loading spinner for dropdowns */
-    .loading {
-        position: relative;
-        pointer-events: none;
-        opacity: 0.7;
-    }
-    .loading:after {
-        content: "";
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        width: 16px;
-        height: 16px;
-        margin-top: -8px;
-        border: 2px solid #ccc;
-        border-top-color: #333;
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+.loading:after {
+    content: "";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    border: 2px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 /* Container styles */
 .comment-container {
@@ -69,7 +69,7 @@
     background-color: var(--bg-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
-    margin-bottom: 100px; /* 增加底部邊距，避免送出按鈕被擋住 */
+    margin-bottom: 100px;
 }
 
 /* Back button styles */
@@ -124,7 +124,7 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
     z-index: 1;
-    min-height: auto; /* 移除固定高度 */
+    min-height: auto;
 }
 
 /* Form row layout */
@@ -132,7 +132,7 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 25px;
-    gap: 20px;
+    gap: 50px;
     position: relative;
     z-index: 1;
     margin-top: 30px;
@@ -141,22 +141,46 @@
 .form-col {
     width: 42%;
     min-width: 300px;
+    display: flex;
+    gap: 20px;
+}
+
+/* Updated form-col-left with flex layout */
+.form-col-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: flex-start;
+    flex: 1;
+    min-width: 0; /* Allow shrinking */
 }
 
 /* Form group styles */
 .form-group {
+    flex: 1;
+    min-width: 200px;
     margin-bottom: 20px;
-    margin-right: 10%;
-    /* transition: var(--transition); */
     position: relative;
 }
 
-.form-col-left {
-    display: grid;
-    grid-template-columns: 50% 50% 50%;
+/* Rating group styling */
+.form-group.rating-group {
+    flex: 1;
+    min-width: 200px;
 }
 
-/* Form controls */
+.form-group.rating-group .stars {
+    margin-top: 8px;
+    padding: 0;
+}
+
+/* Course group takes full width */
+.form-group.course-group {
+    flex-basis: 100%;
+    min-width: 100%;
+}
+
+/* Form controls */ 
 label {
     display: block;
     margin-bottom: 8px;
@@ -176,6 +200,7 @@ label {
     outline: none;
     transition: var(--transition);
     border-radius: var(--radius-sm);
+    box-sizing: border-box;
 }
 
 /* Custom dropdown styling */
@@ -187,7 +212,7 @@ input[list].form-control {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
     background-repeat: no-repeat;
     background-position: calc(100% - 12px) center;
-    padding-right: 30px; /* Space for the arrow */
+    padding-right: 30px;
 }
 
 .form-control:focus {
@@ -205,16 +230,15 @@ input[list].form-control {
 /* Display mode container */
 .display-mode-container {
     margin-bottom: 20px;
-}
-
-.form-col {
-    display: flex;
-    justify-content: space-between;
+    flex: 1;
+    min-width: 200px;
 }
 
 /* Rating container */
 .rating-container {
     border-radius: var(--radius-md);
+    flex: 1;
+    min-width: 200px;
 }
 
 .stars {
@@ -228,7 +252,7 @@ input[list].form-control {
 
 .stars i {
     font-size: 1.3rem;
-    color: #e0e0e0; /* Default empty star color */
+    color: #e0e0e0;
     cursor: pointer;
     transition: transform 0.15s ease, color 0.15s ease;
     position: relative;
@@ -238,7 +262,7 @@ input[list].form-control {
 
 .stars i.fa-star,
 .stars i.fa-star-half-stroke {
-    color: #ffc107; /* Filled and half-filled star color */
+    color: #ffc107;
 }
 
 .stars i:hover {
@@ -317,12 +341,12 @@ input[list].form-control {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    transition: var(--transition); /* 添加圖片切換動畫 */
+    transition: var(--transition);
 }
 
 .username {
     font-weight: bold;
-    transition: var(--transition); /* 添加文字切換動畫 */
+    transition: var(--transition);
 }
 
 .anonymous-options {
@@ -447,9 +471,9 @@ textarea:focus {
     padding-top: 20px;
     border-top: 1px solid var(--medium-gray);
     position: relative;
-    z-index: 10; /* 確保送出按鈕在最上層 */
-    background-color: white; /* 添加背景色避免被遮擋 */
-    margin-bottom: 30px; /* 增加底部間距 */
+    z-index: 10;
+    background-color: white;
+    margin-bottom: 30px;
 }
 
 .btn-submit {
@@ -465,7 +489,7 @@ textarea:focus {
     box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
-    z-index: 11; /* 確保按鈕本身在最上層 */
+    z-index: 11;
 }
 
 .btn-submit:disabled {
@@ -495,37 +519,99 @@ textarea:focus {
     box-shadow: 0 8px 16px rgba(170, 157, 169, 0.4);
 }
 
-/* 確保表單底部有足夠空間 */
 body {
     padding-bottom: 50px;
 }
 
 /* Responsive adjustments */
-@media (max-width: 1290px) {
-    .form-col-left {
-        grid-template-columns: 60% 60%;
+@media (max-width: 1200px) {
+    .arrow i {
+        transform: rotate(90deg);
+    }
+    
+    .form-group {
+        min-width: 180px;
+    }
+}
+
+@media (max-width: 1000px) {
+    .arrow i {
+        transform: rotate(90deg);
+    }
+
+    .form-group {
+        min-width: 150px;
+    }
+    
+    .form-group.course-group {
+        flex-basis: 100%;
+    }
+    
+    .form-col {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .display-mode-container,
+    .rating-container {
+        min-width: 100%;
     }
 }
 
 @media (max-width: 768px) {
+    .arrow i {
+        transform: rotate(90deg);
+    }
+
+
     .form-row {
         flex-direction: column;
     }
     
     .form-col {
-        display: block;
         width: 100%;
+        min-width: 0;
+        flex-direction: column;
+    }
+    
+    .form-col-left {
+        flex-direction: column;
+    }
+    
+    .form-group {
+        min-width: 100%;
+        flex: none;
+    }
+    
+    .display-mode-container,
+    .rating-container {
+        min-width: 100%;
     }
     
     .comment-content {
         flex-direction: column;
     }
+    
+    .comment-container {
+        margin-bottom: 150px;
+        padding: 20px;
+    }
+    
+    .comment-form {
+        padding: 20px;
+    }
+}
 
+@media (max-width: 480px) {
     .form-col-left {
-        grid-template-columns: 50% 50%;
+        gap: 10px;
     }
     
     .comment-container {
-        margin-bottom: 150px; /* 在手機版增加更多底部間距 */
+        padding: 15px;
+    }
+    
+    .comment-form {
+        padding: 15px;
     }
 }

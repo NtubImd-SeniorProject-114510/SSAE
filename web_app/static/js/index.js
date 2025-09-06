@@ -156,7 +156,13 @@ const shortcuts = [
         target: "/chat/",
         label: "校規查詢"
     },
-    
+    {
+        intentSet: ["review", "course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "新增課程評論",
+        popupToOpen: "simple-comment-modal" 
+    },
     {
         intentSet: ["course"],
         action: "redirect",
@@ -169,13 +175,7 @@ const shortcuts = [
         target: "/comment/",
         label: "課程評論區"
     },
-    {
-        intentSet: ["review", "course"],
-        action: "redirect",
-        target: "/comment/",
-        label: "新增課程評論",
-        popupToOpen: "rating-modal" 
-    },
+    
     // {
     //     intentSet: ["event"],
     //     action: "form-fill",

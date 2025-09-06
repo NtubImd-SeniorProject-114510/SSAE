@@ -74,6 +74,29 @@ body {
     position: relative;
 }
 
+.join-btn, .add-comment {
+    margin-top: 30px;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #9e8c9d;
+    color: white;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.create-btn:hover,
+.join-btn:hover,
+.add-comment:hover {
+    background-color: #635c63;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+
 /* Filter Section */
 .filter-section {
     display: flex;
@@ -346,16 +369,25 @@ body {
     padding: 5px 10px 10px;
     border-radius: 5px;
     background-color: #f1f1f1;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
 }
 
 .course-summary p {
-    margin-bottom: 30px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     min-height: 76px;
+}
+
+.likes{
+    text-align: right;
+}
+
+.review-counter{
+    text-align: right;
+    font-size: 14px;
+    color: var(--dark-gray);
 }
 
 /* Decorative elements */
