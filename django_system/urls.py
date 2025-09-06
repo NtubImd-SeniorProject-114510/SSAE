@@ -39,24 +39,42 @@ urlpatterns = [
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
     path('book/upload/', views.upload_book2, name='upload_book'),
     
-    # Course Reviews
-    path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
-    path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
-    path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
-    
+  
     # Dynamic Dropdowns API
     path('api/departments/', views.get_departments, name='get_departments'),
     path('api/grades/', views.get_grades, name='get_grades'),
     path('book_2/', views.book_2, name='book_2'),
     path("test/", views.ask_page, name="ask_page"),
     path('navbar2/' , views.navbar2),
+
     # 新增：統一檔案上傳路由 (支援 PDF 和 ZIP)
     path("upload_files/", views.upload_files, name="upload_files"),
     # 保留：向後相容的 ZIP 上傳路由
     path("upload_zip/", views.upload_zip, name="upload_zip"),
-    path("comment/", views.comment, name="comment"),   
-    path("comment_detail/", views.comment_detail, name="comment_detail"),   
-    path("add_comment/", views.add_comment, name="add_comment"),
+
+    #####
+    # 保留的頁面
+    path("comment/", views.comment, name="comment"),
+    path('comment_detail/<int:id>/', views.comment_detail, name='comment_detail'),
+    path('comment_detail/', views.comment_detail, name='comment_detail_legacy'),
+
+    # 空白建立（未選課）—— 新增這條
+    path("add_comment/", views.add_comment_blank, name="add_comment_new"),
+    # 已選課（保留）
+    path("add_comment/<int:course_id>/", views.add_comment_page, name="add_comment"),
+    # 送出評論的 POST API 送出評論（保留）
+    path("add_comment/<int:course_id>/submit/", views.add_comment_submit, name="add_comment_submit"),
+
+    path("comment/review/<int:id>/delete/", views.comment_review_delete, name="comment_review_delete"),
+    # 其餘 Review API（如你需要 REST 介面）
+    path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
+    path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
+    path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
+    path("api/reviews/<int:review_id>/toggle-like/", views.toggle_review_like, name="toggle_review_like"),
+   
+    path("api/comment/optimize_ai", views.optimize_comment_ai, name="optimize_comment_ai"),
+    #####
+
     path("personal/", views.personal, name="personal"),
     path('api/conversations/', views.api_conversations),
     path('api/messages/<str:convo_id>/', views.api_messages),

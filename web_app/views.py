@@ -8,12 +8,13 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_GET
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 from django.db import models
 from .views_rag import ask_question, create_vector_store, load_pdf_documents, split_documents
 from django.contrib.auth.decorators import login_required
+from django.db import connection, transaction
+
 
 def base(request):
     return render(request, 'base.html')
@@ -92,11 +93,9 @@ def join_create(request):
 def join_detail(request):
     return render(request, 'join_detail.html')
 
-from .models import ActivityComment, Book2, Course, CourseReview
+from .models import ActivityComment, Book2
 
 from .models import Department, Category
-######
-from .models import Course, Departmentd, Academica, AcadeGrade, AcadeDepart,CourseReview, CourseStar
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -180,439 +179,930 @@ def upload_book2(request):
 def ask_page(request):
     return render(request, "ask.html")
     
-##########
+
+
+############################################################
+from django.urls import reverse, NoReverseMatch
+from django.db.models import Count, Q
+
+def _safe_reverse(name: str, args=None, kwargs=None, fallback: str = "/") -> str:
+    """有就用 url name，沒有就用備援字串。"""
+    try:
+        return reverse(name, args=args or [], kwargs=kwargs or {})
+    except NoReverseMatch:
+        return fallback
+
+
+def _shorten(text: str, limit: int = 24) -> str:
+    text = (text or "").strip()
+    return text if len(text) <= limit else (text[: limit - 1] + "…")
+
+
+def index(request):
+    from .models import CourseReview, Book2, GroupActivity
+
+    # ====== 課程評論：最新 ======
+    comment_new_item = None
+    cr_new = (
+        CourseReview.objects.select_related("course").order_by("-created_at").first()
+    )
+    if cr_new and cr_new.course:
+        title = f"最新！課程評論︰{_shorten(cr_new.course.course_name)}"
+        url = f"/comment_detail/{cr_new.course.id}/"  # 專案已採用此路徑樣式
+        comment_new_item = {"title": title, "url": url}
+
+    # ====== 課程評論：熱門（依按讚數） ======
+    from .models import ReviewLike  # 確認存在
+    comment_hot_item = None
+    cr_hot = (
+        CourseReview.objects.select_related("course")
+        .annotate(likes_count=Count("review_likes"))
+        .order_by("-likes_count", "-created_at")
+        .first()
+    )
+    if cr_hot and cr_hot.course:
+        title = f"🔥 課程評論︰{_shorten(cr_hot.course.course_name)}"
+        url = f"/comment_detail/{cr_hot.course.id}/"
+        comment_hot_item = {"title": title, "url": url}
+
+    # ====== 二手書：最新（Book2） ======
+    book_new_item = None
+    try:
+        b_new = Book2.objects.order_by("-created_at").first()
+        if b_new:
+            title = f"最新上架！二手書︰{_shorten(b_new.title)}"
+            url = _safe_reverse("book_detail", args=[b_new.pk], fallback=f"/book/{b_new.pk}/")
+            book_new_item = {"title": title, "url": url}
+    except Exception:
+        pass
+
+    # ====== 二手書：熱門 → 直接導到 NTUB 網站 ======
+    ntub = {
+        "title": "國立臺北商業大學",
+        "url": "https://www.ntub.edu.tw/"
+    }
+
+    # ====== 活動召集：最新 ======
+    activity_new_item = None
+    try:
+        a_new = GroupActivity.objects.order_by("-created_at").first()
+        if a_new:
+            title = f"最新！活動︰{_shorten(a_new.title)}"
+            url = _safe_reverse("activity_detail", args=[a_new.pk], fallback=f"/activity/{a_new.pk}/")
+            activity_new_item = {"title": title, "url": url}
+    except Exception:
+        pass
+
+    # ====== 活動召集：熱門（依參與人數） ======
+    activity_hot_item = None
+    try:
+        a_hot = (
+            GroupActivity.objects
+            .annotate(joined_count=Count("participants", filter=Q(participants__status="joined")))
+            .order_by("-joined_count", "-created_at")
+            .first()
+        )
+        if a_hot:
+            title = f"🔥 活動︰{_shorten(a_hot.title)}"
+            url = _safe_reverse("activity_detail", args=[a_hot.pk], fallback=f"/activity/{a_hot.pk}/")
+            activity_hot_item = {"title": title, "url": url}
+    except Exception:
+        pass
+
+    # ====== 組裝給前端 ======
+    # 桌機：左邊 3 個（最新：課程／二手書／活動），右邊 3 個（熱門：課程／二手書／活動）
+    dlg_left = [
+        activity_new_item or {"title": "最新！活動︰暫無資料", "url": _safe_reverse("activity_list", fallback="/activities/")},
+        comment_hot_item  or {"title": "🔥 課程評論︰暫無資料", "url": "/comment/"},
+        ntub     or {"title": "國立臺北商業大學",   "url": "https://www.ntub.edu.tw/"},
+    ]
+    dlg_right = [
+        activity_hot_item or {"title": "🔥 活動︰暫無資料", "url": _safe_reverse("activity_list", fallback="/activities/")}, 
+        book_new_item    or {"title": "最新上架！二手書︰暫無資料",   "url": _safe_reverse("book", fallback="/book/")},
+        comment_new_item or {"title": "最新！課程評論︰暫無資料", "url": "/comment/"},
+    ]
+
+    # 手機：3 個（只顯示最新：課程／二手書／活動）
+    dlg_mobile = [
+        activity_new_item or {"title": "最新！活動︰暫無資料", "url": _safe_reverse("activity_list", fallback="/activities/")},
+        book_new_item    or {"title": "最新上架！二手書︰暫無資料",   "url": _safe_reverse("book", fallback="/book/")},
+        comment_new_item or {"title": "最新！課程評論︰暫無資料", "url": "/comment/"},
+    ] 
+
+    return render(request, 'index.html', {
+        'dlg_left': dlg_left,
+        'dlg_right': dlg_right,
+        'dlg_mobile': dlg_mobile,
+    })
+
+
+# views.py — 課程評論「列表頁」產 JSON 給前端，顯示熱門評論的頭貼與姓名
+from django.conf import settings
+from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+from datetime import timedelta
+import json
+
+from .models import (
+    Course, Departmentd, Academica, AcadeGrade, AcadeDepart,
+    CourseReview, ReviewLike,
+    User as LegacyUser,   # 你的主系統 User（review 外鍵就是它）
+)
+
+# 只用於「顯示頭貼」：透過 email 對應到 auth_user + social_django
+from django.contrib.auth import get_user_model
+from social_django.models import UserSocialAuth
+AuthUser = get_user_model()
+# 你家的 User
+from .models import User as LegacyUser  
+
+def get_legacy_user_id(request) -> int | None:
+    """
+    回傳你家 User.user_id；若 request.user 沒有 email 或找不到對應，就回傳 None
+    """
+    email = getattr(request.user, "email", None)
+    if not email:
+        return None
+
+    return (
+        LegacyUser.objects
+        .filter(mail=email)
+        .values_list("user_id", flat=True)
+        .first()
+    )
+
+def _auth_user_map_by_email(emails):
+    """
+    批次把 email 對應到：
+      - auth_user 物件（以 email 為 key）
+      - Google 頭貼：pics_by_uid[auth_user.id] = picture_url
+    回傳 (u_by_email, pics_by_uid)
+    """
+    emails = list(emails or [])
+    if not emails:
+        return {}, {}
+
+    users = AuthUser.objects.filter(email__in=emails).only(
+        'id', 'email', 'first_name', 'last_name', 'username'
+    )
+    u_by_email = {u.email: u for u in users}
+    pics_by_uid = {}
+
+    if users:
+        sa_qs = UserSocialAuth.objects.filter(
+            user_id__in=[u.id for u in users],
+            provider__icontains='google'
+        )
+        for sa in sa_qs:
+            try:
+                extra = sa.extra_data or {}
+                pic = extra.get('picture') or extra.get('avatar_url')
+                if pic:
+                    pics_by_uid[sa.user_id] = pic
+            except Exception:
+                pass
+
+    return u_by_email, pics_by_uid
+
+# ---------- 小工具：把時間轉成「幾小時前」 ----------
+def _humanize(dt):
+    if not dt:
+        return ""
+    now = timezone.now()
+    diff = now - dt
+    if diff.total_seconds() < 60:
+        return "剛剛"
+    if diff.total_seconds() < 3600:
+        return f"{int(diff.total_seconds() // 60)} 分鐘前"
+    if diff.days < 1:
+        return f"{int(diff.total_seconds() // 3600)} 小時前"
+    if diff.days < 7:
+        return f"{diff.days} 天前"
+    return dt.strftime("%Y/%m/%d")
+
+
+# ---------- 小工具：一次把多個 email 轉成 {email: picture_url} 與 {email: display_name} ----------
+def _google_avatar_and_name_by_emails(emails: set[str]) -> tuple[dict, dict]:
+    """
+    依 email 批次查 auth_user 與 social_django，回傳：
+    - pics[email] = 'https://...' 或 None
+    - names[email] = '張三' / 'username' / 'email前綴'
+    若查不到或沒綁 Google，就回 None/預設名。
+    """
+    pics: dict[str, str | None] = {}
+    names: dict[str, str] = {}
+
+    if not emails:
+        return pics, names
+
+    users = list(AuthUser.objects.filter(email__in=list(emails)))
+    u_by_id = {u.id: u for u in users}
+    u_by_email = {u.email: u for u in users}
+
+    # 先給預設名字
+    for em in emails:
+        u = u_by_email.get(em)
+        if u:
+            full = f"{(u.last_name or '')}{(u.first_name or '')}".strip()
+            names[em] = full or (u.username or em.split("@")[0])
+        else:
+            names[em] = em.split("@")[0]
+
+    if not users:
+        return pics, names
+
+    # 找 Google 綁定的頭貼
+    for sa in UserSocialAuth.objects.filter(user_id__in=u_by_id.keys(), provider__icontains="google"):
+        try:
+            extra = sa.extra_data or {}
+            pic = extra.get("picture") or extra.get("avatar_url")
+            if pic:
+                au = u_by_id.get(sa.user_id)
+                if au and au.email:
+                    pics[au.email] = pic
+        except Exception:
+            pass
+
+    return pics, names
+
+
+# =========================
+# 列表頁（含動態統計 + 熱門評論頭貼/姓名）
+# =========================
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef, F
+from django.db.models.functions import Coalesce
+
+@ensure_csrf_cookie
 def comment(request):
     academics = Academica.objects.all()
     departments = Departmentd.objects.all()
     grades = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
 
-    # Prepare data for dynamic filtering
-    departments_data = {}
-    grades_data = {}
-
-    # 所有學制時，顯示所有科系、所有年級
-    departments_data[0] = list(Departmentd.objects.all().values('id', 'name'))
-    grades_data[0] = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
-
-    for academic in academics:
-        # 只處理 academic.id 是數字的情況
-        if not str(academic.id).isdigit():
-            continue
-        departments_data[academic.id] = list(
-            Departmentd.objects.filter(
-                acadedepart__academica=academic.id
-            ).values('id', 'name')
+    # 下拉資料
+    departments_data = {"0": list(Departmentd.objects.all().values('id', 'name'))}
+    grades_data = {"0": list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())}
+    for a in academics:
+        dept_ids = AcadeDepart.objects.filter(academica=a).values_list('departmentd_id', flat=True)
+        departments_data[str(a.id)] = list(
+            Departmentd.objects.filter(id__in=dept_ids).values('id', 'name')
         )
-        grades_data[academic.id] = list(
-            AcadeGrade.objects.filter(academica=academic.id).values_list('grade_level', flat=True).distinct()
+        grades_data[str(a.id)] = list(
+            AcadeGrade.objects.filter(academica=a)
+            .values_list('grade_level', flat=True).distinct()
         )
 
-    # Get all courses with related data
-    courses = Course.objects.select_related('departmentd', 'academica').all()
-    
-    # Prepare courses data for the template
-    courses_data = [{
-        'id': course.id,
-        'course_id': course.course_id,
-        'course_name': course.course_name,
-        'course_teacher': course.course_teacher,
-        'academic_id': course.academica_id,
-        'academic_name': course.academica.name if course.academica else '',
-        'department_id': course.departmentd_id,
-        'department_name': course.departmentd.name if course.departmentd else '',
-        'grade_level': course.grade_level,
-    } for course in courses]
-    
-    # Convert data to JSON for the template
-    import json
-    departments_json = json.dumps(departments_data)
-    courses_json = json.dumps(courses_data)
-    
+    # 子查詢：每門課「讚數最多（同讚取最新）」的評論
+    top_base = (
+        CourseReview.objects
+        .filter(course_id=OuterRef('pk'))
+        .annotate(likes=Count('review_likes'))
+        .order_by('-likes', '-created_at')
+    )
+
+    # 一次把統計與熱門評論核心欄位拉回來
+    qs = (
+        Course.objects
+        .select_related('departmentd', 'academica')
+        .annotate(
+            avg_rating   = Coalesce(Avg('reviews__rating'), 0.0),
+            rating_count = Coalesce(Count('reviews__id'), 0),
+            review_count = Coalesce(
+                Count('reviews__id', filter=~Q(reviews__content__isnull=True) & ~Q(reviews__content__exact='')),
+                0
+            ),
+            last_dt      = Max('reviews__created_at'),
+            top_review_id      = Subquery(top_base.values('id')[:1]),
+            top_review_likes   = Subquery(top_base.values('likes')[:1]),
+            top_review_created = Subquery(top_base.values('created_at')[:1]),
+            top_review_content = Subquery(top_base.values('content')[:1]),
+            top_review_user    = Subquery(top_base.values('user_id')[:1]),
+            top_review_anony   = Subquery(top_base.values('is_anonymous')[:1]),
+        )
+        # ✅ 熱門度：評分數 +（有文字的）評論數
+        .annotate(
+            popularity = Coalesce(F('rating_count'), 0) + Coalesce(F('review_count'), 0)
+        )
+        # ✅ 預設用熱門度排序（越熱門越前），再用讚數/最近互動/平均分/ID 穩定排序
+        .order_by('-popularity', '-top_review_likes', '-last_dt', '-avg_rating', '-id')
+    )
+
+    # 先把需要查頭貼的 email 蒐集起來：只收「實名」的熱門評論
+    email_needed = set()
+    user_id_to_email = {}
+    for c in qs:
+        if c.top_review_id and not bool(c.top_review_anony):
+            # 用你的 User 表：user_id → mail
+            u = LegacyUser.objects.filter(user_id=c.top_review_user).only("mail").first()
+            if u and u.mail:
+                user_id_to_email[int(c.top_review_user)] = u.mail
+                email_needed.add(u.mail)
+
+    # 一次把 email → (avatar, display_name) 查好
+    pics_by_email, names_by_email = _google_avatar_and_name_by_emails(email_needed)
+
+    # 組裝 payload（可選：把 popularity 放進去以利除錯/顯示）
+    payload = []
+    for c in qs:
+        summary = (c.top_review_content or '').strip()
+        if summary and len(summary) > 80:
+            summary = summary[:80] + "…"
+
+        course_summary = None
+        if c.top_review_id:
+            # 頭貼/姓名
+            is_anonymous = bool(c.top_review_anony)
+            avatar_url = "/static/image/anonymous.png"
+            display_name = "匿名"
+
+            if not is_anonymous:
+                em = user_id_to_email.get(int(c.top_review_user))
+                if em:
+                    avatar_url = pics_by_email.get(em) or "/static/image/anonymous.png"
+                    display_name = names_by_email.get(em) or em.split("@")[0]
+
+            course_summary = {
+                "review_id": int(c.top_review_id),
+                "likes": int(c.top_review_likes or 0),
+                "summary": summary,
+                "created": _humanize(c.top_review_created) if c.top_review_created else "",
+                "avatar_url": avatar_url,
+                "display_name": display_name,
+            }
+
+        item = {
+            "id": c.id,
+            "course_id": c.course_id,
+            "course_name": c.course_name,
+            "course_teacher": c.course_teacher,
+            "academic_id": c.academica_id,
+            "academic_name": c.academica.name if c.academica else "",
+            "department_id": c.departmentd_id,
+            "department_name": c.departmentd.name if c.departmentd else "",
+            "grade_level": c.grade_level,
+
+            "avg_rating": round(float(c.avg_rating or 0), 1),
+            "rating_count": int(c.rating_count or 0),     # 幾則評分（含純評分）
+            "review_count": int(c.review_count or 0),     # 幾則評論（有文字）
+            "popularity": int(getattr(c, 'popularity', 0) or 0),  # ✅ 新增：熱門度
+            "last_date": _humanize(c.last_dt) if c.last_dt else "",
+            "course_summary": course_summary,
+        }
+        payload.append(item)
+
     return render(request, "comment.html", {
         "academics": academics,
         "departments": departments,
         "grades": grades,
-        "departments_data": departments_json,
-        "grades_data": grades_data,
-        "courses": courses,
-        "courses_json": courses_json,
+        "departments_data": json.dumps(departments_data, ensure_ascii=False),
+        "grades_data": json.dumps(grades_data, ensure_ascii=False),
+        "courses_json": json.dumps(payload, ensure_ascii=False),
     })
 
 
+
+from django.db.models import Avg, Count, Max, Q
+from django.contrib.auth import get_user_model
+from social_django.models import UserSocialAuth
+from .models import User
+
+@require_GET
 def get_courses(request):
-    academic_id = request.GET.get("academic_id")
+    academic_id   = request.GET.get("academic_id")
     department_id = request.GET.get("department_id")
-    grade = request.GET.get("grade")
-    search_query = request.GET.get("search", "").strip()
-    course_id = request.GET.get("course_id")  # 新增 course_id 參數
+    grade         = request.GET.get("grade")
+    search_query  = request.GET.get("search", "").strip()
+    course_id     = request.GET.get("course_id")
 
-    # Start with all courses and use select_related to optimize database queries
-    courses = Course.objects.select_related('departmentd', 'academica').all()
+    qs = Course.objects.select_related('departmentd', 'academica').all()
 
-    # 如果有提供 course_id，優先使用它來查詢
     if course_id:
-        if str(course_id).isdigit():
-            courses = courses.filter(id=course_id)
-        else:
-            # 如果不是數字，嘗試通過 course_id 欄位查找
-            courses = courses.filter(course_id=course_id)
+        qs = qs.filter(id=course_id) if str(course_id).isdigit() else qs.filter(course_id=course_id)
     else:
-        # 否則使用其他過濾條件
         if academic_id and academic_id.isdigit():
-            courses = courses.filter(academica_id=academic_id)
-        
+            qs = qs.filter(academica_id=academic_id)
         if department_id and department_id.isdigit():
-            courses = courses.filter(departmentd_id=department_id)
-        
+            qs = qs.filter(departmentd_id=department_id)
         if grade:
-            courses = courses.filter(grade_level__contains=grade)
-        
-        # Apply search query if provided
+            qs = qs.filter(grade_level__contains=grade)
         if search_query:
-            courses = courses.filter(
+            qs = qs.filter(
                 Q(course_name__icontains=search_query) |
                 Q(course_teacher__icontains=search_query) |
                 Q(course_id__icontains=search_query)
             )
 
-    # Prepare the response data
+    course_ids = list(qs.values_list('id', flat=True))
+
+    # A) 統計（含純評分）
+    ratings_agg = (
+        CourseReview.objects
+        .filter(course_id__in=course_ids)
+        .values('course_id')
+        .annotate(
+            avg=Avg('rating'),
+            total=Count('id'),
+            last=Max('created_at'),
+        )
+    )
+    agg_map = {a['course_id']: a for a in ratings_agg}
+
+    # B) 有文字的評論數
+    text_counts = (
+        CourseReview.objects
+        .filter(course_id__in=course_ids)
+        .exclude(content__isnull=True)
+        .exclude(content__exact='')
+        .values('course_id')
+        .annotate(cnt=Count('id'))
+    )
+    text_map = {t['course_id']: t['cnt'] for t in text_counts}
+
+    # C) 先抓每門課的熱門評論（同讚數取最新）→ 批次組出 email 清單
+    rough_tops = {}
+    emails_needed = set()
+
+    for cid in course_ids:
+        top = (
+            CourseReview.objects
+            .filter(course_id=cid)
+            .annotate(likes=Count('review_likes'))
+            .order_by('-likes', '-created_at')
+            .values('id', 'content', 'likes', 'created_at', 'user_id', 'is_anonymous')
+            .first()
+        )
+        if not top:
+            continue
+        rough_tops[cid] = top
+        if not top["is_anonymous"]:
+            # 你家 User.user_id → mail
+            u = User.objects.filter(user_id=top["user_id"]).only('mail').first()
+            if u and u.mail:
+                emails_needed.add(u.mail)
+
+    # D) 批次把 email → auth_user → (名字、google 頭貼)
+    AuthUser = get_user_model()
+    auth_users = {au.email: au for au in AuthUser.objects.filter(email__in=emails_needed)}
+
+    # 批次查頭貼（provider 一般為 google-oauth2）
+    auth_ids = [au.id for au in auth_users.values()]
+    pic_map = {}  # auth_user.id -> picture url
+    if auth_ids:
+        for sa in UserSocialAuth.objects.filter(user_id__in=auth_ids, provider='google-oauth2'):
+            try:
+                if isinstance(sa.extra_data, dict):
+                    pic = sa.extra_data.get('picture')
+                    if pic:
+                        pic_map[sa.user_id] = pic
+            except Exception:
+                pass
+
+    # E) 組裝 top_reviews（帶上 display_name / avatar_url）
+    top_reviews = {}
+    for cid, top in rough_tops.items():
+        avatar_url = "/static/image/anonymous.png"
+        display_name = "匿名"
+
+        if not top["is_anonymous"]:
+            u = User.objects.filter(user_id=top["user_id"]).only('mail').first()
+            if u and u.mail:
+                au = auth_users.get(u.mail)  # 可能拿不到（不同系統）
+                if au:
+                    # 名字：先姓+名，否則 username，再退回 mail
+                    full_name = f"{getattr(au, 'last_name', '')}{getattr(au, 'first_name', '')}".strip()
+                    display_name = full_name or getattr(au, "username", "") or u.mail
+
+                    # 頭貼
+                    avatar_url = pic_map.get(au.id, avatar_url)
+
+        top_reviews[cid] = {
+            "id": top["id"],
+            "content": top["content"] or "",
+            "likes": int(top["likes"] or 0),
+            "created_at": top["created_at"],
+            "avatar_url": avatar_url,
+            "display_name": display_name,
+        }
+
+    # F) 回傳
     data = []
-    for course in courses:
-        data.append({
-            "id": course.id,  # 使用資料庫中的主鍵 id
-            "course_id": course.course_id,  # 保留 course_id 用於顯示
-            "course_name": course.course_name,
-            "course_teacher": course.course_teacher,
-            "academic_id": course.academica_id,
-            "academic_name": course.academica.name if course.academica else "",
-            "department_id": course.departmentd_id,
-            "department_name": course.departmentd.name if course.departmentd else "",
-            "grade_level": course.grade_level,
-        })
+    for c in qs:
+        a = agg_map.get(c.id, {}) or {}
+        avg = a.get('avg') or 0.0
+        last_dt = a.get('last')
+
+        item = {
+            "id": c.id,
+            "course_id": c.course_id,
+            "course_name": c.course_name,
+            "course_teacher": c.course_teacher,
+            "academic_id": c.academica_id,
+            "academic_name": c.academica.name if c.academica else "",
+            "department_id": c.departmentd_id,
+            "department_name": c.departmentd.name if c.departmentd else "",
+            "grade_level": c.grade_level,
+
+            "avg_rating": round(avg, 1),
+            "rating_count": int(a.get('total') or 0),
+            "review_count": int(text_map.get(c.id, 0)),
+            "last_date": _humanize(last_dt) if last_dt else "",
+
+            "course_summary": None,
+        }
+
+        top = top_reviews.get(c.id)
+        if top:
+            summary = top['content'].strip()
+            if len(summary) > 80:
+                summary = summary[:80] + "…"
+            item["course_summary"] = {
+                "review_id": top['id'],
+                "likes": top['likes'],
+                "summary": summary,
+                "created": _humanize(top['created_at']),
+                "avatar_url": top['avatar_url'],
+                "display_name": top['display_name'],
+            }
+
+        data.append(item)
 
     return JsonResponse(data, safe=False)
 
 
-@csrf_exempt
+@ensure_csrf_cookie
 @login_required
-def add_comment(request, course_id):
-    try:
-        # Convert course_id to integer if it's not already
-        course_id = int(course_id)
-        course = get_object_or_404(Course, id=course_id)
-    except (ValueError, TypeError):
-        return JsonResponse({'error': '無效的課程ID'}, status=400)
-        
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        content = data.get('content', '').strip()
-        rating = data.get('rating', 5)  # Default to 5 if not provided
-        
-        if not content:
-            return JsonResponse({'error': '評論內容不能為空'}, status=400)
-        
-        # Validate rating
-        try:
-            rating = int(rating)
-            if rating < 1 or rating > 5:
-                raise ValueError("Rating must be between 1 and 5")
-        except (ValueError, TypeError):
-            return JsonResponse({'error': '評分必須是1-5的數字'}, status=400)
-        
-        # Create or update review
-        review, created = CourseReview.objects.update_or_create(
-            course=course,
-            user=request.user,
-            defaults={
-                'content': content,
-                'rating': rating
-            }
-        )
-        
-        # 獲取用戶頭像
-        user_avatar = '/static/image/avatar24-01.jpg'  # 預設頭像
-        if hasattr(request.user, 'social_auth'):
-            social = request.user.social_auth.filter(provider='google-oauth2').first()
-            if social and 'picture' in social.extra_data:
-                user_avatar = social.extra_data['picture']
-        
-        return JsonResponse({
-            'success': True,
-            'is_new': created,
-            'review': {
-                'id': review.id,
-                'content': review.content,
-                'rating': review.rating,
-                'user_name': request.user.first_name or request.user.username,
-                'user_avatar': user_avatar,
-                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M'),
-                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M') if review.updated_at else None
-            }
-        })
-    
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
-
-
-@csrf_exempt
-@login_required
-def delete_review(request, review_id):
-    if request.method == 'POST':
-        review = get_object_or_404(CourseReview, id=review_id, user=request.user)
-        review.delete()
-        return JsonResponse({'success': True})
-    
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
-
-
-@csrf_exempt
-@login_required
-def toggle_like(request, comment_id):
-    if request.method == 'POST':
-        comment = get_object_or_404(ActivityComment, id=comment_id)
-        
-        if request.user in comment.likes.all():
-            comment.likes.remove(request.user)
-            is_liked = False
-        else:
-            comment.likes.add(request.user)
-            is_liked = True
-        
-        return JsonResponse({
-            'success': True,
-            'is_liked': is_liked,
-            'likes_count': comment.likes.count()
-        })
-    
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
-
-
-def comment_detail(request):
-    """View to display course reviews and comments"""
-    course_id = request.GET.get('course_id')
-    if not course_id:
-        from django.http import HttpResponseBadRequest
-        return HttpResponseBadRequest("Missing course_id parameter")
-        
-    course = get_object_or_404(Course, id=course_id)
-    reviews = CourseReview.objects.filter(course=course).select_related('user').order_by('-created_at')
-    
-    # Get user's review if exists
-    user_review = None
-    if request.user.is_authenticated:
-        try:
-            user_review = CourseReview.objects.get(course=course, user=request.user)
-        except CourseReview.DoesNotExist:
-            pass
-    
-    course = get_object_or_404(Course, id=course_id)
-    reviews = course.reviews.all()
-    
-    # Calculate average rating from reviews
-    avg_rating = reviews.aggregate(
-        avg_rating=Avg('rating')
-    )['avg_rating']
-    
-    # Get star counts for each rating (1-5)
-    star_counts = reviews.exclude(rating__isnull=True).values('rating').annotate(
-        count=Count('rating')
-    ).order_by('rating')
-    
-    star_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-    for item in star_counts:
-        rating = item['rating']
-        if rating and 1 <= rating <= 5:  # Validate rating value
-            star_distribution[rating] = item['count']
-    
-    context = {
-        'course': course,
-        'reviews': reviews,
-        'user_review': user_review,
-        'avg_rating': round(avg_rating, 1) if avg_rating is not None else '尚無評分',
-        'review_count': reviews.count(),
-        'academic': course.academica,
-        'department': course.departmentd,
-        'star_distribution': star_distribution,
-        'total_ratings': sum(star_distribution.values()),
-    }
-    return render(request, "comment_detail.html", context)
-
-def add_comment(request):
-    import json
-    from .models import Course, Departmentd, Academica, AcadeDepart, AcadeGrade
-
+@require_http_methods(["GET"])
+def add_comment_blank(request):
     academics = Academica.objects.all()
     departments = Departmentd.objects.all()
     grades = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
 
-    # 資料對應 dicts
     departments_data = {}
     grades_data = {}
 
-    # 預設學制 0 時顯示全部
-    departments_data[0] = list(departments.values('id', 'name'))
-    grades_data[0] = grades
+    departments_data["0"] = list(Departmentd.objects.all().values('id', 'name'))
+    grades_data["0"] = list(AcadeGrade.objects.values_list('grade_level', flat=True).distinct())
 
     for academic in academics:
-        if not str(academic.id).isdigit():
-            continue
-
-        departments_data[academic.id] = list(
-            Departmentd.objects.filter(
-                acadedepart__academica=academic.id
-            ).values('id', 'name')
+        aid = str(academic.id)
+        dept_ids = AcadeDepart.objects.filter(academica=academic).values_list('departmentd_id', flat=True)
+        departments_data[aid] = list(Departmentd.objects.filter(id__in=dept_ids).values('id', 'name'))
+        grades_data[aid] = list(
+            AcadeGrade.objects.filter(academica=academic)
+            .values_list('grade_level', flat=True).distinct()
         )
 
-        grades_data[academic.id] = list(
-            AcadeGrade.objects.filter(
-                academica=academic.id
-            ).values_list('grade_level', flat=True).distinct()
-        )
-
-    # 課程資料
     courses = Course.objects.select_related('departmentd', 'academica').all()
     courses_data = [{
-        'id': course.id,
-        'course_id': course.course_id,
-        'course_name': course.course_name,      # 確保course_name欄位存在
-        'course_teacher': course.course_teacher,
-        'academic_id': course.academica_id,
-        'academic_name': course.academica.name if course.academica else '',
-        'department_id': course.departmentd_id,
-        'department_name': course.departmentd.name if course.departmentd else '',
-        'grade_level': course.grade_level,
-    } for course in courses]
+        'id': c.id,
+        'course_id': c.course_id,
+        'course_name': c.course_name,
+        'course_teacher': c.course_teacher,
+        'academic_id': c.academica_id,
+        'academic_name': c.academica.name if c.academica else '',
+        'department_id': c.departmentd_id,
+        'department_name': c.departmentd.name if c.departmentd else '',
+        'grade_level': c.grade_level,
+    } for c in courses]
 
-    # 是否有選到某課程
-    course_id = request.GET.get('course_id') or request.GET.get('course')
-    selected_course = None
-    selected_teacher = None
-    selected_academic = None
-    selected_department = None
-    selected_grade = None
-
-    if course_id:
-        try:
-            selected_course = Course.objects.get(id=course_id)
-            selected_teacher = selected_course.course_teacher
-            selected_academic = selected_course.academica
-            selected_department = selected_course.departmentd
-
-            if selected_course.grade_level:
-                grades_split = selected_course.grade_level.split(',')
-                selected_grade = grades_split[0].strip() if grades_split else None
-        except Course.DoesNotExist:
-            pass
-
-    return render(request, "add_comment.html", {
+    context = {
         "academics": academics,
         "departments": departments,
         "grades": grades,
         "departments_data": json.dumps(departments_data, ensure_ascii=False),
         "grades_data": json.dumps(grades_data, ensure_ascii=False),
         "courses": courses,
-        "courses_json": json.dumps(courses_data, ensure_ascii=False),  # 這裡有回傳 JSON 格式資料
-        "selected_course": selected_course,
-        "selected_teacher": selected_teacher,
-        "selected_academic": selected_academic,
-        "selected_department": selected_department,
+        "courses_json": json.dumps(courses_data, ensure_ascii=False),
+
+        "review": None,
+        "google_picture": _google_picture(request.user),
+
+        "selected_course": None,
+        "selected_teacher": "",
+        "selected_academic": None,
+        "selected_department": None,
+        "selected_grade": None,
+    }
+    return render(request, "add_comment.html", context)
+
+
+def _google_picture(user):
+    try:
+        sa = user.social_auth.filter(provider__icontains='google').first()
+        if sa and isinstance(sa.extra_data, dict):
+            pic = sa.extra_data.get('picture') or sa.extra_data.get('avatar_url')
+            if pic:
+                return pic
+    except Exception:
+        pass
+    return None
+
+
+@ensure_csrf_cookie
+@login_required
+@require_http_methods(["GET"])
+def add_comment_page(request, course_id):
+    course = get_object_or_404(Course, id=int(course_id))
+
+    # ★ 用你的 User 表：以 email 對應 user_id
+    legacy_uid = get_legacy_user_id(request)
+    user_review = None
+    if legacy_uid is not None:
+        user_review = CourseReview.objects.filter(course=course, user_id=legacy_uid).first()
+
+    academics = Academica.objects.filter(id=course.academica_id)
+    departments = Departmentd.objects.filter(id=course.departmentd_id)
+
+    selected_grade = None
+    if course.grade_level:
+        parts = [p.strip() for p in course.grade_level.split(',') if p.strip()]
+        selected_grade = parts[0] if parts else course.grade_level
+    grades = [selected_grade] if selected_grade else []
+
+    courses = [course]
+    courses_data = [{
+        "id": course.id,
+        "academic_id": course.academica_id,
+        "department_id": course.departmentd_id,
+        "course_id": course.course_id,
+        "course_name": course.course_name,
+        "course_teacher": course.course_teacher or "",
+        "grade_level": selected_grade,
+    }]
+
+    departments_data = {str(course.academica_id): [{
+        "id": course.departmentd_id,
+        "name": departments.first().name if departments.exists() else ""
+    }]}
+    grades_data = {str(course.academica_id): [selected_grade] if selected_grade else []}
+
+    context = {
+        "academics": academics,
+        "departments": departments,
+        "grades": grades,
+        "departments_data": json.dumps(departments_data, ensure_ascii=False),
+        "grades_data": json.dumps(grades_data, ensure_ascii=False),
+        "courses": courses,
+        "courses_json": json.dumps(courses_data, ensure_ascii=False),
+
+        "review": user_review,
+        "google_picture": _google_picture(request.user),
+        "selected_course": course,
+        "selected_teacher": course.course_teacher or "",
+        "selected_academic": academics.first() if academics.exists() else None,
+        "selected_department": departments.first() if departments.exists() else None,
         "selected_grade": selected_grade,
+    }
+    return render(request, "add_comment.html", context)
+
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def add_comment_submit(request, course_id):
+    """
+    建立/更新使用者對該課程的「評論 + 評分」。
+    - 一律以「你家的 user_id」為準（由 email 對應），不接受前端 user_id。
+    - 允許只有評分（content 可為空字串）
+    - 以 (user_id, course_id) 做 upsert
+    """
+    try:
+        course = get_object_or_404(Course, id=int(course_id))
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "無效的課程代號"}, status=400)
+
+    # ★ 取得你家的 user_id
+    legacy_uid = get_legacy_user_id(request)
+    if legacy_uid is None:
+        return JsonResponse({"error": "無法找到對應的使用者（email 未綁定你家的 User）"}, status=403)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({"error": "無效的請求內容"}, status=400)
+
+    content = (data.get("content") or "").trim() if hasattr(str, 'trim') else (data.get("content") or "").strip()
+    rating = data.get("rating", 5)
+
+    try:
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except Exception:
+        return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
+
+    anon_raw = data.get("anonymous", True)
+    if isinstance(anon_raw, str):
+        anon_norm = anon_raw.strip().lower()
+        is_anonymous = anon_norm in ("true", "1", "yes", "y", "on", "匿名")
+    else:
+        is_anonymous = bool(anon_raw)
+
+    review, created_review = CourseReview.objects.update_or_create(
+        user_id=legacy_uid,            # ★ 用你家的 user_id
+        course=course,
+        defaults={
+            "content": content,
+            "rating": rating,
+            "is_anonymous": is_anonymous,
+        },
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "created_review": created_review,
+        "course_id": course.id,
+        "user_id": legacy_uid,         # ★ 回傳你家的 user_id
+        "rating": rating,
+        "review_id": review.id,
+        "display": {
+            "is_anonymous": is_anonymous,
+            "user_name": getattr(request.user, "username", f"使用者{legacy_uid}"),
+        },
     })
 
 
+@csrf_exempt
+@login_required
+def delete_review(request, review_id):
+    """
+    刪除自己的 CourseReview（僅刪自己，且以你家的 user_id 為準）。
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+    legacy_uid = get_legacy_user_id(request)
+    if legacy_uid is None:
+        return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
+
+    review = get_object_or_404(CourseReview, id=review_id, user_id=legacy_uid)
+    review.delete()
+    return JsonResponse({'success': True})
 
 
-# API Endpoints for Dynamic Dropdowns
-@require_GET
-def get_departments(request):
-    """API endpoint to get departments for a given academic system"""
-    academic_id = request.GET.get('academic_id')
-    if not academic_id:
-        return JsonResponse({'error': 'Missing academic_id parameter'}, status=400)
-    
-    try:
-        from .models import AcadeDepart, Department, Academica
-        
-        # Get the academic system
-        academic = Academica.objects.get(id=academic_id)
-        
-        # Get department IDs for the selected academic system
-        dept_ids = AcadeDepart.objects.filter(academica=academic).values_list('departmentd_id', flat=True)
-        departments = Department.objects.filter(id__in=dept_ids).values('id', 'name')
-        
-        return JsonResponse({
-            'success': True,
-            'departments': list(departments)
+
+from django.templatetags.static import static
+
+def comment_detail(request, id=None):
+    course_id = id or request.GET.get('course_id')
+    if not course_id:
+        from django.http import HttpResponseBadRequest
+        return HttpResponseBadRequest("Missing course_id parameter")
+
+    course = get_object_or_404(Course, id=course_id)
+
+    stats_qs = CourseReview.objects.filter(course_id=course.id)
+    raw_qs = stats_qs.order_by('-created_at')
+
+    # 只取有文字的做顯示
+    display_list = [rv for rv in raw_qs if (rv.content or '').strip()]
+
+    # 先把要查的 email 蒐集起來（非匿名才需要）
+    emails = set()
+    for rv in display_list:
+        if rv.is_anonymous:
+            continue
+        if getattr(rv.user, 'mail', None):
+            emails.add(rv.user.mail)
+
+    u_by_email, pics_by_uid = _auth_user_map_by_email(emails)
+
+    # 當前登入者的你家 user_id（做「我是否按讚」）
+    legacy_uid = get_legacy_user_id(request)
+    liked_by_me_ids = set()
+    if legacy_uid and display_list:
+        ids = [rv.id for rv in display_list]
+        liked_by_me_ids = set(
+            ReviewLike.objects.filter(user_id=legacy_uid, review_id__in=ids)
+            .values_list('review_id', flat=True)
+        )
+
+    review_items = []
+    for rv in display_list:
+        # 預設
+        display_name = "匿名"
+        avatar_url = static('image/anonymous.png')  # 匿名預設圖
+
+        if not rv.is_anonymous and getattr(rv.user, 'mail', None):
+            au = u_by_email.get(rv.user.mail)
+            # 顯示姓名（優先姓+名，退而 username，再退 email）
+            if au:
+                full = f"{au.last_name or ''}{au.first_name or ''}".strip()
+                display_name = full or au.username or rv.user.mail
+                # 取 Google 頭貼
+                pic = pics_by_uid.get(getattr(au, 'id', None))
+                if pic:
+                    avatar_url = pic
+                else:
+                    # 沒有 Google 頭貼時，用一般預設圖
+                    avatar_url = static('image/default.png')
+
+        is_owner = bool(request.user.is_authenticated and legacy_uid and rv.user_id == legacy_uid)
+
+        review_items.append({
+            "id": rv.id,
+            "content": rv.content,
+            "rating": rv.rating,
+            "created_at": rv.created_at,
+            "created_human": _humanize(rv.created_at),
+            "user_id": rv.user_id,                # 你家的 user_id
+            "display_name": display_name,         # 姓名/匿名
+            "avatar_url": avatar_url,             # 一定不為空
+            "likes_count": ReviewLike.objects.filter(review_id=rv.id).count(),
+            "is_liked_by_me": rv.id in liked_by_me_ids,
+            "is_owner": is_owner,
         })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
 
-@require_GET
-def get_grades(request):
-    """API endpoint to get grades for a given academic system"""
-    academic_id = request.GET.get('academic_id')
-    if not academic_id:
-        return JsonResponse({'error': 'Missing academic_id parameter'}, status=400)
-    
-    try:
-        from .models import AcadeGrade, Academica
-        
-        # Get the academic system
-        academic = Academica.objects.get(id=academic_id)
-        
-        # Get all unique grade levels for this academic system
-        grades = AcadeGrade.objects.filter(academica=academic).values_list('grade_level', flat=True).distinct()
-        
-        # If no specific grades found, return default grades
-        if not grades:
-            grades = ['一', '二', '三', '四', '五']
-        else:
-            # Convert to list and remove duplicates
-            grades = list(set(grades))
-            # Sort grades if needed
-            grade_order = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5}
-            grades.sort(key=lambda x: grade_order.get(x, 99))
-        
-        return JsonResponse({
-            'success': True,
-            'grades': list(grades)
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e), 'grades': ['一', '二', '三', '四', '五']}, status=200)
+    # 平均星等（全部評分）
+    avg_rating = stats_qs.aggregate(avg=Avg('rating'))['avg'] or 0.0
+    avg_fill_percent = (avg_rating / 5.0) * 100.0
 
-# API Views for Course Reviews
+    # 星等分布（1~5）
+    star_counts = stats_qs.values('rating').annotate(count=Count('rating'))
+    star_distribution = {1:0, 2:0, 3:0, 4:0, 5:0}
+    for item in star_counts:
+        r = item['rating']
+        if r in star_distribution:
+            star_distribution[r] = item['count']
+
+    context = {
+        'course': course,
+        'review_items': review_items,
+        'avg_rating': round(avg_rating, 1),
+        'avg_fill_percent': avg_fill_percent,
+        'review_count': len([rv for rv in raw_qs if (rv.content or '').strip()]),  # 有文字的
+        'total_ratings': stats_qs.count(),                                         # 含純評分
+        'academic': course.academica,
+        'department': course.departmentd,
+        'star_distribution': star_distribution,
+        'last_review_human': _humanize(display_list[0].created_at) if display_list else "",
+    }
+    return render(request, "comment_detail.html", context)
+
+
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@require_POST
+def comment_review_delete(request, id):
+    """
+    只允許評論作者本人（或管理員）刪除這則評論。
+    回傳 JSON：{"ok": True} or {"ok": False, "error": "..."}
+    """
+    review = get_object_or_404(CourseReview, id=id)
+
+    # 用你家的 user_id 來驗證本人
+    legacy_uid = get_legacy_user_id(request)
+    if (legacy_uid is None) or (review.user_id != legacy_uid and not request.user.is_staff):
+        return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
+
+    review.delete()
+    return JsonResponse({"ok": True})
+
+
+
+# ========= REST 介面（只用 CourseReview） =========
 @csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def create_course_review(request, course_id):
+    """
+    新增/更新一筆「評論 + 評分」記錄（僅 CourseReview；允許 content 空字串）。
+    一律使用你家的 user_id。
+    """
     try:
-        # 處理不同類型的 course_id
+        # 支援 course_id 或 URL 上傳入的 DB 主鍵
         if not str(course_id).isdigit():
-            # 如果不是數字，嘗試通過 course_id 欄位查找
             course = Course.objects.filter(course_id=course_id).first()
-            if not course and '_' in course_id:
-                # 如果找不到且包含底線，嘗試分割 course_id 獲取數字部分
-                numeric_part = course_id.split('_')[0]
+            if not course and "_" in course_id:
+                numeric_part = course_id.split("_")[0]
                 if numeric_part.isdigit():
                     course = Course.objects.filter(id=int(numeric_part)).first()
         else:
-            # 如果是數字，直接通過 id 查找
             course = Course.objects.filter(id=int(course_id)).first()
-            
+
         if not course:
             return JsonResponse({'error': f'找不到 ID 為 {course_id} 的課程'}, status=404)
-            
-        data = json.loads(request.body)
-        
-        # Create or update review
+
+        # ★ 你家的 user_id
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
+
+        data = json.loads(request.body or "{}")
+        content = (data.get('content') or '').strip()
+        rating = int(data.get('rating', 0))
+        if not (1 <= rating <= 5):
+            return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
+
         review, created = CourseReview.objects.update_or_create(
-            course=course,
-            user=request.user,
-            defaults={
-                'content': data.get('content'),
-                'rating': int(data.get('rating', 5))
-            }
+            user_id=legacy_uid,              # ★
+            course_id=course.id,
+            defaults={'content': content, 'rating': rating}
         )
-        
+
         return JsonResponse({
             'success': True,
             'is_new': created,
@@ -620,54 +1110,229 @@ def create_course_review(request, course_id):
                 'id': review.id,
                 'content': review.content,
                 'rating': review.rating,
-                'user_name': request.user.first_name or request.user.username,
-                'created_at': review.created_at.strftime('%Y-%m-%d %H:%M'),
-                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M') if review.updated_at else None
-            }
-        })
+                'user_id': legacy_uid,      # ★
+            },
+        }, status=201)
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
 
 @csrf_exempt
 @login_required
 @require_http_methods(["PUT"])
 def update_course_review(request, course_id, review_id):
     try:
-        review = get_object_or_404(CourseReview, id=review_id, user=request.user, course_id=course_id)
-        data = json.loads(request.body)
-        
+        course = get_object_or_404(Course, id=course_id)
+        data = json.loads(request.body or "{}")
+
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
+
+        review = get_object_or_404(
+            CourseReview,
+            id=review_id,
+            user_id=legacy_uid,         # ★ 僅限本人
+            course_id=course.id
+        )
+
         if 'content' in data:
-            review.content = data['content']
+            review.content = (data['content'] or '').strip()
+
         if 'rating' in data:
-            review.rating = int(data['rating'])
-        
+            rating = int(data['rating'])
+            if not (1 <= rating <= 5):
+                return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
+            review.rating = rating
+
         review.save()
-        
+
         return JsonResponse({
             'success': True,
-            'review': {
-                'id': review.id,
-                'content': review.content,
-                'rating': review.rating,
-                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M')
-            }
+            'review': {'id': review.id, 'content': review.content, 'rating': review.rating}
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
 
 @csrf_exempt
 @login_required
 @require_http_methods(["DELETE"])
 def delete_course_review(request, course_id, review_id):
     try:
-        review = get_object_or_404(CourseReview, id=review_id, user=request.user, course_id=course_id)
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
+
+        review = get_object_or_404(
+            CourseReview, id=review_id, user_id=legacy_uid, course_id=course_id
+        )
         review.delete()
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-#####
 
 
+# =========================
+# 動態下拉 API
+# =========================
+@require_GET
+def get_departments(request):
+    academic_id = request.GET.get('academic_id')
+    if not academic_id:
+        return JsonResponse({'error': 'Missing academic_id parameter'}, status=400)
+
+    try:
+        academic = get_object_or_404(Academica, id=academic_id)
+        dept_ids = AcadeDepart.objects.filter(academica=academic).values_list('departmentd_id', flat=True)
+        depts = Departmentd.objects.filter(id__in=dept_ids).values('id', 'name')
+        return JsonResponse({'success': True, 'departments': list(depts)})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_GET
+def get_grades(request):
+    academic_id = request.GET.get('academic_id')
+    if not academic_id:
+        return JsonResponse({'error': 'Missing academic_id parameter'}, status=400)
+
+    try:
+        academic = get_object_or_404(Academica, id=academic_id)
+        grades_qs = (
+            AcadeGrade.objects
+            .filter(academica=academic)
+            .values_list('grade_level', flat=True)
+            .distinct()
+        )
+        grades = list(grades_qs)
+
+        if not grades:
+            grades = ['一', '二', '三', '四', '五']
+        else:
+            grades = list(set(grades))
+            order = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5}
+            grades.sort(key=lambda x: order.get(x, 99))
+
+        return JsonResponse({'success': True, 'grades': grades})
+    except Exception as e:
+        return JsonResponse({'error': str(e), 'grades': ['一', '二', '三', '四', '五']}, status=200)
+
+
+# =========================
+# CourseReview 專屬「按讚」API（使用 ReviewLike 表）
+# =========================
+from django.views.decorators.http import require_POST
+
+@csrf_exempt
+@login_required
+@require_POST
+def toggle_review_like(request, review_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+    legacy_uid = get_legacy_user_id(request)
+    if legacy_uid is None:
+        return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
+
+    review = get_object_or_404(CourseReview, id=review_id)
+    legacy_user = get_object_or_404(LegacyUser, user_id=legacy_uid)
+
+    like = ReviewLike.objects.filter(review=review, user=legacy_user).first()
+
+    if like:
+        like.delete()
+        is_liked = False
+    else:
+        ReviewLike.objects.create(review=review, user=legacy_user)
+        is_liked = True
+
+    return JsonResponse({
+        'success': True,
+        'is_liked': is_liked,
+        'likes_count': review.review_likes.count(),
+        'review_id': review.id,
+    })
+
+# ===== AI Comment Optimization =====
+from django.views.decorators.http import require_POST
+from django.conf import settings
+import re, openai
+
+def _clean_input(text: str) -> str:
+    text = re.sub(r"\r\n?", "\n", text or "")
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
+
+SYSTEM_PROMPT = (
+    "你是一位課程評論的文字編輯器。請將使用者原始評論改寫為可直接提交的中性、具參考價值的內容："
+    "1) 維持使用者觀點，避免命令口吻與對話式語氣；"
+    "2) 去除粗話、人身攻擊與過度情緒用語；"
+    "3) 盡量具體（內容、節奏、作業/評分、互動、資源等面向）；"
+    "4) 允許提出期望或改進方向，但以描述式語句表達（如「希望能提供更多實作範例」），"
+    "5) 僅輸出最終評論文本，不要加入任何標題、註解、道歉或教學性提示。"
+    "6) 繁體中文輸出。"
+)
+
+@csrf_exempt
+@require_POST
+def optimize_comment_ai(request):
+    api_key    = settings.AZURE_OPENAI_API_KEY
+    endpoint   = settings.AZURE_OPENAI_ENDPOINT
+    api_ver    = settings.AZURE_OPENAI_API_VERSION
+    deployment = settings.AZURE_OPENAI_DEPLOYMENT_NAME
+
+    if not (api_key and endpoint and deployment):
+        return JsonResponse({"error": "Azure OpenAI not configured"}, status=503)
+
+    raw = _clean_input(request.POST.get("content", ""))
+    if not raw:
+        return JsonResponse({"result": ""})
+
+    short = raw.replace("\n", "").strip()
+    if len(short) < 6:
+        return JsonResponse({
+            "result": "（內容過短）目前的評論資訊不足，無法進行語意優化與送出。"
+                     "請補充具體細節（例如：單元/作業類型/上課節奏/評分標準/時間點等），再按「轉換」。"
+        })
+
+    try:
+        client = openai.AzureOpenAI(
+            api_key=api_key,
+            api_version=api_ver,
+            azure_endpoint=endpoint,
+        )
+
+        msg_user = (
+            "請將以下評論改寫為可直接提交的中性評論文本，避免對話式與流程說明：\n\n"
+            f"{raw}\n\n"
+            "注意：只輸出改寫後的最終評論內容；不要出現道歉、無法處理、需要更多資訊等字樣。"
+        )
+
+        resp = client.chat.completions.create(
+            model=deployment,
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": msg_user},
+            ],
+            max_tokens=400,
+        )
+
+        text = (resp.choices[0].message.content or "").strip()
+
+        blacklist = ["無法", "需要更多資訊", "不便", "抱歉", "無法進行有效", "建議您提供"]
+        if any(k in text for k in blacklist) or len(text) < 6:
+            text = "課程整體品質仍有進步空間；期望在教學重點與作業說明上更清楚，並提供更多實作示例以提升理解。"
+
+        return JsonResponse({"result": text})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+# ===== end AI Comment Optimization =====
+
+#############################課程評論區##############################
 
 
 # web_app/views.py
@@ -1058,6 +1723,8 @@ def pdf_options(request, filename):
         return view_pdf(request, filename)
     # web_app/views.py（活動相關部分）
 
+# activities/views.py  或 你目前放活動 view 的檔案
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import models
 from django.contrib.auth.decorators import login_required
@@ -1067,8 +1734,9 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date, datetime, timedelta
+import json  # ← 你有用到 json.loads，要記得匯入
 
-from .models import GroupActivity, ActivityParticipant
+from .models import GroupActivity, ActivityParticipant, ActivityComment
 from .forms import ActivityForm
 
 # -----------------------
@@ -1077,18 +1745,23 @@ from .forms import ActivityForm
 def activity_list(request):
     activity_type = request.GET.get('type', '')
     location_type = request.GET.get('location_type', '')
-    time_filter = request.GET.get('time', '')
-    search_query = request.GET.get('search', '')
+    time_filter   = request.GET.get('time', '')
+    search_query  = request.GET.get('search', '')
     
-    activities = GroupActivity.objects.prefetch_related(
-        Prefetch(
-            'participants',
-            queryset=ActivityParticipant.objects.filter(status='joined').select_related('user'),
-            to_attr='joined_participants'
+    activities = (
+        GroupActivity.objects
+        .prefetch_related(
+            Prefetch(
+                'participants',
+                queryset=ActivityParticipant.objects.filter(status='joined').select_related('user'),
+                to_attr='joined_participants'
+            )
         )
-    ).annotate(
-        participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True)
-    ).annotate(total_count=F('participants_count') + 1)
+        .annotate(
+            participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True)
+        )
+        .annotate(total_count=F('participants_count') + 1)  # + 發起者
+    )
     
     if activity_type:
         activities = activities.filter(type=activity_type)
@@ -1099,7 +1772,7 @@ def activity_list(request):
     if time_filter == 'today':
         activities = activities.filter(date=today)
     elif time_filter == 'this_week':
-        end_week = today + timedelta(days=7-today.weekday())
+        end_week = today + timedelta(days=7 - today.weekday())
         activities = activities.filter(date__range=[today, end_week])
     elif time_filter == 'this_month':
         activities = activities.filter(date__year=today.year, date__month=today.month)
@@ -1111,19 +1784,30 @@ def activity_list(request):
             Q(location__icontains=search_query)
         )
     
+    # 未過期優先，其餘依時間排序
     activities = activities.order_by(
-        Case(When(deadline__lt=timezone.now().date(), then=1), default=0, output_field=IntegerField()),
+        Case(When(deadline__lt=timezone.localdate(), then=1), default=0, output_field=IntegerField()),
         'date', 'time', 'deadline'
     )
     
+    # 過濾掉發起者本人的參與列表（前端顯示用）
     for a in activities:
-        a.cleaned_participants = [p for p in a.joined_participants if p.user_id != a.user_id]
+        jp = getattr(a, 'joined_participants', []) or []
+        a.cleaned_participants = [p for p in jp if p.user_id != a.user_id]
 
-    # 只有登入用戶才需要取得參與狀態
+    # 只有登入用戶才需要取得參與/建立狀態
     joined_ids, created_ids = [], []
     if request.user.is_authenticated:
-        joined_ids = list(ActivityParticipant.objects.filter(user=request.user, status='joined').values_list('activity_id', flat=True))
-        created_ids = list(GroupActivity.objects.filter(user=request.user).values_list('id', flat=True))
+        joined_ids = list(
+            ActivityParticipant.objects
+            .filter(user=request.user, status='joined')
+            .values_list('activity_id', flat=True)
+        )
+        created_ids = list(
+            GroupActivity.objects
+            .filter(user=request.user)
+            .values_list('id', flat=True)
+        )
 
     return render(request, 'join.html', {
         'activities': activities,
@@ -1140,22 +1824,46 @@ def activity_list(request):
 # -----------------------
 def activity_detail(request, pk):
     a = get_object_or_404(GroupActivity, pk=pk)
-    participants = ActivityParticipant.objects.filter(activity=a, status='joined').select_related('user')
-    participants_count = participants.count()
-    total_participants = participants_count + 1
-    remaining_slots = max(0, a.max_participants - total_participants)
+
+    participants = (
+        ActivityParticipant.objects
+        .filter(activity=a, status='joined')
+        .select_related('user')
+    )
+    participants_count   = participants.count()
+    total_participants   = participants_count + 1  # + 發起者
+    remaining_slots      = max(0, (a.max_participants or 0) - total_participants)
 
     # 只有登入用戶才檢查參與狀態
     joined, is_creator = False, False
     if request.user.is_authenticated:
-        joined = ActivityParticipant.objects.filter(activity=a, user=request.user, status='joined').exists()
+        joined     = ActivityParticipant.objects.filter(activity=a, user=request.user, status='joined').exists()
         is_creator = (request.user == a.user)
 
-    comments = ActivityComment.objects.filter(activity=a, parent=None).select_related('user').prefetch_related('replies__user', 'likes').order_by('-created_at')
+    comments = (
+        ActivityComment.objects
+        .filter(activity=a, parent=None)
+        .select_related('user')
+        .prefetch_related('replies__user', 'likes')
+        .order_by('-created_at')
+    )
 
-    related_activities = list(GroupActivity.objects.filter(type=a.type, deadline__gte=timezone.now().date()).exclude(id=a.id).annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('-created_at')[:3])
+    related_activities = list(
+        GroupActivity.objects
+        .filter(type=a.type, deadline__gte=timezone.localdate())
+        .exclude(id=a.id)
+        .annotate(participants_count=Count('participants', filter=Q(participants__status='joined')))
+        .order_by('-created_at')[:3]
+    )
     if len(related_activities) < 3:
-        other_activities = list(GroupActivity.objects.filter(deadline__gte=timezone.now().date()).exclude(type=a.type).exclude(id=a.id).annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('-created_at')[:3-len(related_activities)])
+        other_activities = list(
+            GroupActivity.objects
+            .filter(deadline__gte=timezone.localdate())
+            .exclude(type=a.type)
+            .exclude(id=a.id)
+            .annotate(participants_count=Count('participants', filter=Q(participants__status='joined')))
+            .order_by('-created_at')[: (3 - len(related_activities))]
+        )
         related_activities.extend(other_activities)
 
     return render(request, 'join_detail.html', {
@@ -1183,16 +1891,21 @@ def join_activity(request, pk):
     if a.is_deadline_passed:
         messages.error(request, '已超過報名截止時間')
         return redirect('activity_detail', pk=pk)
-    if current_joined_count >= a.max_participants:
+    if current_joined_count >= (a.max_participants or 0):
         messages.error(request, '本活動已額滿')
         return redirect('activity_detail', pk=pk)
 
-    existing_participant = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id).first()
-    if existing_participant and existing_participant.status == 'joined':
+    # 使用 auth_user（request.user）
+    existing = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id).first()
+    if existing and existing.status == 'joined':
         messages.info(request, '您已經報名此活動')
         return redirect('activity_detail', pk=pk)
 
-    ActivityParticipant.objects.update_or_create(activity_id=a.id, user_id=request.user.id, defaults={'status': 'joined', 'joined_at': timezone.now(), 'updated_at': timezone.now()})
+    ActivityParticipant.objects.update_or_create(
+        activity_id=a.id,
+        user_id=request.user.id,
+        defaults={'status': 'joined', 'joined_at': timezone.now(), 'updated_at': timezone.now()}
+    )
     updated_joined_count = ActivityParticipant.objects.filter(activity_id=a.id, status='joined').count()
     messages.success(request, '報名成功！可至個人中心查看已參加的活動')
 
@@ -1241,7 +1954,7 @@ def create_activity(request):
         if form.is_valid():
             try:
                 activity = form.save(commit=False)
-                activity.user = request.user
+                activity.user = request.user  # ← auth_user
                 activity.save()
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'ok': True, 'message': '活動創建成功！', 'activity_id': activity.id})
@@ -1267,12 +1980,25 @@ def create_activity(request):
 # -----------------------
 @login_required
 def my_activities(request):
-    joined_activities = GroupActivity.objects.filter(participants__user=request.user, participants__status='joined').annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('date', 'time')
-    created_activities = GroupActivity.objects.filter(user=request.user).annotate(participants_count=Count('participants', filter=Q(participants__status='joined'))).order_by('date', 'time')
-    return render(request, 'my_activities.html', {'joined_activities': joined_activities, 'created_activities': created_activities})
+    joined_activities = (
+        GroupActivity.objects
+        .filter(participants__user=request.user, participants__status='joined')
+        .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
+        .order_by('date', 'time')
+    )
+    created_activities = (
+        GroupActivity.objects
+        .filter(user=request.user)
+        .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
+        .order_by('date', 'time')
+    )
+    return render(request, 'my_activities.html', {
+        'joined_activities': joined_activities,
+        'created_activities': created_activities
+    })
 
 # -----------------------
-# 活動參與者列表
+# 活動參與者列表（主辦者才能看）
 # -----------------------
 @login_required
 def activity_participants(request, pk):
@@ -1281,77 +2007,101 @@ def activity_participants(request, pk):
         messages.error(request, '您沒有權限查看此活動的參與者信息')
         return redirect('activity_detail', pk=pk)
     
-    participants = ActivityParticipant.objects.filter(activity=activity, status='joined').select_related('user').order_by('joined_at')
-    return render(request, 'activity_participants.html', {'activity': activity, 'participants': participants})
+    participants = (
+        ActivityParticipant.objects
+        .filter(activity=activity, status='joined')
+        .select_related('user')
+        .order_by('joined_at')
+    )
+    return render(request, 'activity_participants.html', {
+        'activity': activity,
+        'participants': participants
+    })
 
 # -----------------------
-# 新增評論（保留 @login_required）
+# 新增活動留言（不是課程評論）
 # -----------------------
 @csrf_exempt
 @login_required
 def add_comment(request, activity_id):
-    if request.method == 'POST':
-        activity = get_object_or_404(GroupActivity, id=activity_id)
-        data = json.loads(request.body)
-        content = data.get('content', '').strip()
-        parent_id = data.get('parent_id')
-        
-        if not content:
-            return JsonResponse({'error': '評論內容不能為空'}, status=400)
-        
-        parent_comment = None
-        if parent_id:
-            parent_comment = get_object_or_404(ActivityComment, id=parent_id)
-        
-        comment = ActivityComment.objects.create(
-            activity=activity,
-            user=request.user,
-            content=content,
-            parent=parent_comment
-        )
-        
-        # 獲取用戶頭像
-        user_avatar = '/static/image/avatar24-01.jpg'  # 預設頭像
-        if hasattr(request.user, 'social_auth'):
-            social = request.user.social_auth.filter(provider='google-oauth2').first()
-            if social and 'picture' in social.extra_data:
-                user_avatar = social.extra_data['picture']
-        
-        return JsonResponse({
-            'success': True,
-            'comment': {
-                'id': comment.id,
-                'content': comment.content,
-                'user_name': request.user.first_name or request.user.username,
-                'user_avatar': user_avatar,
-                'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
-                'likes_count': 0,
-                'is_liked': False
-            }
-        })
-    
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+    """
+    AJAX：新增一則活動留言（支援 parent_id 做子留言）
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+    a = get_object_or_404(GroupActivity, id=activity_id)
+
+    try:
+        data = json.loads(request.body or "{}")
+    except Exception:
+        return JsonResponse({'error': '無效的請求內容'}, status=400)
+
+    content   = (data.get('content') or '').strip()
+    parent_id = data.get('parent_id')
+
+    if not content:
+        return JsonResponse({'error': '留言內容不能為空'}, status=400)
+
+    parent = None
+    if parent_id:
+        parent = get_object_or_404(ActivityComment, id=parent_id, activity=a)
+
+    comment = ActivityComment.objects.create(
+        activity=a,
+        user=request.user,   # ← auth_user
+        content=content,
+        parent=parent
+    )
+
+    # 嘗試取 Google 頭像（若你有 social_auth）
+    user_avatar = '/static/image/avatar24-01.jpg'
+    try:
+        social = getattr(request.user, 'social_auth', None)
+        if social:
+            sa = social.filter(provider__icontains='google').first()
+            if sa and isinstance(sa.extra_data, dict):
+                user_avatar = sa.extra_data.get('picture') or user_avatar
+    except Exception:
+        pass
+
+    display_name = (getattr(request.user, 'last_name', '') or '') + (getattr(request.user, 'first_name', '') or '')
+    if not display_name:
+        display_name = getattr(request.user, 'username', '') or '使用者'
+
+    return JsonResponse({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'content': comment.content,
+            'user_name': display_name,
+            'user_avatar': user_avatar,
+            'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
+            'likes_count': 0,
+            'is_liked': False
+        }
+    })
 
 # -----------------------
-# 切換按讚（保留 @login_required）
+# 切換按讚（活動留言）
 # -----------------------
 @csrf_exempt
 @login_required
 def toggle_like(request, comment_id):
-    if request.method == 'POST':
-        comment = get_object_or_404(ActivityComment, id=comment_id)
+    if request.method != 'POST':
+        return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+
+    comment = get_object_or_404(ActivityComment, id=comment_id)
         
-        if request.user in comment.likes.all():
-            comment.likes.remove(request.user)
-            is_liked = False
-        else:
-            comment.likes.add(request.user)
-            is_liked = True
-        
-        return JsonResponse({
-            'success': True,
-            'is_liked': is_liked,
-            'likes_count': comment.likes_count
-        })
+    if request.user in comment.likes.all():
+        comment.likes.remove(request.user)
+        is_liked = False
+    else:
+        comment.likes.add(request.user)
+        is_liked = True
     
-    return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+    return JsonResponse({
+        'success': True,
+        'is_liked': is_liked,
+        'likes_count': comment.likes.count()
+    })

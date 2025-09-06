@@ -16,6 +16,36 @@ body {
     z-index: 1;
 }
 
+.stars-avg {
+  --size: 22px;           /* 調整整體大小 */
+  --gap: 4px;             /* 星星間距 */
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+  font-size: var(--size);
+}
+.stars-avg .star-bg,
+.stars-avg .star-fg {
+  white-space: nowrap;
+  letter-spacing: var(--gap);
+}
+.stars-avg .star-bg { color: #dcdcdc; }     /* 空心星顏色 */
+.stars-avg .star-fg {
+  color: #f5a623;                           /* 實心星顏色 */
+  position: absolute;
+  inset: 0 auto 0 0;                        /* 置於左上 */
+  width: var(--p);                           /* 依比例裁切 */
+  overflow: hidden;
+  pointer-events: none;
+}
+.course-rating .rating-text {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+
 /* Back button styles */
 .back-button {
     margin-bottom: 25px;
@@ -432,7 +462,7 @@ body {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(-5deg);
+    transform: translate(-50%, -50%) rotate(-10deg);
     font-size: 15vw;
     font-weight: 900;
     color: rgba(0, 0, 0, 0.03);
