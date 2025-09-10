@@ -94,16 +94,14 @@ def join_detail(request):
     return render(request, 'join_detail.html')
 
 from .models import ActivityComment, Book2
-
 from .models import Department, Category
-
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
-from .models import Book2, Category, Academic, AcademicGrade, Department
+from .models import Book2, Category, Academic, AcademicGrade, Department, AcadeDepart, AcadeGrade
 from .forms import Book2Form
+from django.http import JsonResponse
 
 def book(request):
     books_list = Book2.objects.all().order_by('-created_at')
@@ -124,8 +122,9 @@ def book(request):
     form = Book2Form()
     categories = Category.objects.all()
     academics = Academic.objects.all()
-    academic_grades = AcademicGrade.objects.all()
-    departments = Department.objects.all()
+    # 只傳遞學制，科系和年級透過 AJAX 動態載入
+    departments = []  # 空的科系列表
+    academic_grades = []  # 空的年級列表
 
     return render(request, 'book.html', {
         'books': books,
@@ -134,13 +133,12 @@ def book(request):
         'academics': academics,
         'academic_grades': academic_grades,
         'departments': departments,
-        'items_per_row': items_per_row,  # 傳給前端
+        'items_per_row': items_per_row,
     })
 
 def book_2(request):
     return render(request, 'book_2.html')
 
-from django.shortcuts import get_object_or_404
 def book_detail(request, pk):
     book = get_object_or_404(Book2, pk=pk)
     seller_user = book.seller
@@ -193,6 +191,86 @@ def book_detail(request, pk):
         'related_books': related_books[:6]
     })
 
+def get_related_data(request):
+    """根據學制ID獲取對應的科系和年級"""
+    academic_id = request.GET.get("academic_id")
+    
+    # 添加調試資訊
+    print(f"收到請求，academic_id: {academic_id}")
+    
+    if not academic_id:
+        return JsonResponse({
+            "departments": [], 
+            "grades": [],
+            "debug": "沒有收到 academic_id"
+        })
+
+    try:
+        # 先檢查學制是否存在
+        try:
+            academic = Academic.objects.get(id=academic_id)
+            print(f"找到學制: {academic.name}")
+        except Academic.DoesNotExist:
+            print(f"學制 ID {academic_id} 不存在")
+            return JsonResponse({
+                "departments": [], 
+                "grades": [],
+                "error": f"學制 ID {academic_id} 不存在"
+            })
+
+        # 找科系：根據 academic_department 表找出該學制下的所有科系
+        print("開始查詢科系...")
+        academic_departments = AcadeDepart.objects.filter(
+            academica_id=academic_id
+        ).select_related("departmentd")
+        
+        print(f"找到 {academic_departments.count()} 個科系關聯")
+        
+        dept_list = []
+        for ad in academic_departments:
+            print(f"科系: {ad.departmentd.name}")
+            dept_list.append({
+                "id": ad.departmentd.id, 
+                "name": ad.departmentd.name
+            })
+
+        # 找年級：根據 academic_grade 表找出該學制下的所有年級
+        print("開始查詢年級...")
+        academic_grades = AcadeGrade.objects.filter(
+            academica_id=academic_id
+        ).order_by('id')
+        
+        print(f"找到 {academic_grades.count()} 個年級")
+        
+        grade_list = []
+        for ag in academic_grades:
+            print(f"年級: {ag.grade_level}")
+            grade_list.append({
+                "id": ag.id, 
+                "grade_level": ag.grade_level
+            })
+
+        result = {
+            "departments": dept_list,
+            "grades": grade_list,
+            "debug": f"成功載入 {len(dept_list)} 個科系和 {len(grade_list)} 個年級"
+        }
+        
+        print(f"返回結果: {result}")
+        return JsonResponse(result)
+        
+    except Exception as e:
+        error_msg = f"Error in get_related_data: {str(e)}"
+        print(error_msg)
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            "departments": [], 
+            "grades": [],
+            "error": error_msg
+        }, status=500)
+
 @login_required
 def upload_book2(request):
     if request.method == "POST":
@@ -204,16 +282,21 @@ def upload_book2(request):
             if 'cover_image' in request.FILES:
                 book.cover_image = request.FILES['cover_image']
             book.save()
-            return redirect('book')
-    else:
-        form = Book2Form()
-    return render(request, 'book.html', {'form': form, 'books': Book2.objects.all()})
+            return JsonResponse({'success': True, 'message': '書籍上架成功！', 'book_id': book.pk})
+        else:
+            return JsonResponse({'success': False, 'message': str(form.errors)}, status=400)
+
+    form = Book2Form()
+    academics = Academic.objects.all()
+
+    return render(request, 'book.html', {
+        'form': form,
+        'books': Book2.objects.all(),
+        'academics': academics,
+    })
 
 def ask_page(request):
     return render(request, "ask.html")
-    
-
-
 ############################################################
 from django.urls import reverse, NoReverseMatch
 from django.db.models import Count, Q

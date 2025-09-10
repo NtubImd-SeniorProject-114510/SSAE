@@ -95,7 +95,7 @@ urlpatterns = [
     path('my-activities/', views.my_activities, name='my_activities'),
     path('api/activities/<int:activity_id>/comments/', views.add_comment, name='add_comment_api'),
     path('api/comments/<int:comment_id>/toggle-like/', views.toggle_like, name='toggle_like'),
-
+    path('get-related-data/', views.get_related_data, name='get_related_data'),
 ]
 
 from django.conf import settings

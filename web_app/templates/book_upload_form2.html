@@ -20,17 +20,30 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
     z-index: 3500;
     display: flex;
-    align-items: flex-start;  /* 頂部開始對齊 */
     justify-content: center;
-    padding-top: 150px;        /* 這個控制距離頂部距離 */
     background: rgba(111,85,125,0.13);
+    overflow-y: auto;
 }
 
+.upload-modal2 .container {
+    background: #fff;
+    border-radius: 12px;
+    margin-top: 200px;
+    margin-bottom: 50px;
+}
+
+.loading-option {
+    color: #999;
+    font-style: italic;
+}
+
+.error-option {
+    color: #dc3545;
+}
 </style>
+
 <div id="uploadFormModal2" class="upload-modal2" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3500;align-items:center;justify-content:center;background:rgba(111,85,125,0.13);">
   <div class="container">
     <div class="header">
@@ -40,7 +53,6 @@
     </div>
 
     <div class="form-container">
-        <!-- 改成直接 POST 到後端，不用 AJAX -->
         <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book2' %}">
             {% csrf_token %}
             
@@ -84,7 +96,7 @@
                     <label class="form-label" for="id_academic">學制</label>
                     <select name="academic" class="form-select" id="id_academic">
                         <option value="">請選擇學制</option>
-                        {% for academic in form.academic.field.queryset %}
+                        {% for academic in academics %}
                             <option value="{{ academic.pk }}">{{ academic.name }}</option>
                         {% endfor %}
                     </select>
@@ -92,36 +104,16 @@
                 
                 <div class="form-group">
                     <label class="form-label" for="id_department">科系</label>
-                    <select name="department" class="form-select" id="id_department">
-                        <option value="">請選擇科系</option>
-                        {% for department in form.department.field.queryset %}
-                            <option value="{{ department.pk }}">{{ department.name }}</option>
-                        {% endfor %}
+                    <select name="department" class="form-select" id="id_department" disabled>
+                        <option value="">請先選擇學制</option>
                     </select>
                 </div>
                 
-            <div class="form-group">
-                <label class="form-label" for="id_grade">年級</label>
-                    <script>
-                        // 把 Django 的 JSON 字串轉成 JS 物件
-                        const gradesData = JSON.parse('{{ grades_data|escapejs }}');  // 這裡用 escapejs
-                        const academicSelect = document.getElementById('id_academic');
-                        const gradeSelect = document.getElementById('id_grade');
-
-                        academicSelect.addEventListener('change', () => {
-                            const academicId = academicSelect.value;
-                            // 清空年級
-                            gradeSelect.innerHTML = '<option value="">請選擇年級</option>';
-                            if(academicId && gradesData[academicId]) {
-                                gradesData[academicId].forEach(g => {
-                                    const opt = document.createElement('option');
-                                    opt.value = g.id;
-                                    opt.textContent = g.grade_level;
-                                    gradeSelect.appendChild(opt);
-                                });
-                            }
-                        });
-                    </script>
+                <div class="form-group">
+                    <label class="form-label" for="id_grade">年級</label>
+                    <select name="grade" class="form-select" id="id_grade" disabled>
+                        <option value="">請先選擇學制</option>
+                    </select>
                 </div>
             </div>
             
@@ -130,7 +122,7 @@
                     <label class="form-label" for="id_category">分類</label>
                     <select name="category" class="form-select" id="id_category">
                         <option value="">請選擇分類</option>
-                        {% for category in form.category.field.queryset %}
+                        {% for category in categories %}
                             <option value="{{ category.pk }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
@@ -182,6 +174,138 @@
 
 <script>
 let selectedFile = null;
+let isLoadingData = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const academicSelect = document.getElementById('id_academic');
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+
+    if (academicSelect) {
+        academicSelect.addEventListener('change', function() {
+            const academicId = this.value;
+            console.log('學制選擇變更:', academicId);
+
+            // 重置科系和年級選項
+            resetDepartmentAndGrade();
+
+            if (!academicId) {
+                // 如果沒有選擇學制，禁用科系和年級
+                deptSelect.disabled = true;
+                gradeSelect.disabled = true;
+                return;
+            }
+
+            // 顯示載入中
+            showLoadingState();
+            isLoadingData = true;
+
+            // 發送AJAX請求
+            fetch(`/get-related-data/?academic_id=${academicId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                console.log('響應狀態:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('收到資料:', data);
+                
+                // 更新科系選項
+                updateDepartmentOptions(data.departments);
+                
+                // 更新年級選項
+                updateGradeOptions(data.grades);
+                
+                // 啟用選單
+                deptSelect.disabled = false;
+                gradeSelect.disabled = false;
+                
+                // 顯示除錯資訊（開發用）
+                if (data.debug) {
+                    console.log('除錯資訊:', data.debug);
+                }
+            })
+            .catch(error => {
+                console.error('載入失敗:', error);
+                showErrorState(error.message);
+            })
+            .finally(() => {
+                isLoadingData = false;
+            });
+        });
+    }
+});
+
+function resetDepartmentAndGrade() {
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+    
+    deptSelect.innerHTML = '<option value="">請先選擇學制</option>';
+    gradeSelect.innerHTML = '<option value="">請先選擇學制</option>';
+    deptSelect.disabled = true;
+    gradeSelect.disabled = true;
+}
+
+function showLoadingState() {
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+    
+    deptSelect.innerHTML = '<option value="" class="loading-option">載入中...</option>';
+    gradeSelect.innerHTML = '<option value="" class="loading-option">載入中...</option>';
+    deptSelect.disabled = true;
+    gradeSelect.disabled = true;
+}
+
+function updateDepartmentOptions(departments) {
+    const deptSelect = document.getElementById('id_department');
+    
+    if (departments && departments.length > 0) {
+        deptSelect.innerHTML = '<option value="">請選擇科系</option>';
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept.id;
+            option.textContent = dept.name;
+            deptSelect.appendChild(option);
+        });
+    } else {
+        deptSelect.innerHTML = '<option value="">此學制無科系資料</option>';
+    }
+}
+
+function updateGradeOptions(grades) {
+    const gradeSelect = document.getElementById('id_grade');
+    
+    if (grades && grades.length > 0) {
+        gradeSelect.innerHTML = '<option value="">請選擇年級</option>';
+        grades.forEach(grade => {
+            const option = document.createElement('option');
+            option.value = grade.id;
+            option.textContent = grade.grade_level;
+            gradeSelect.appendChild(option);
+        });
+    } else {
+        gradeSelect.innerHTML = '<option value="">此學制無年級資料</option>';
+    }
+}
+
+function showErrorState(errorMessage) {
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+    
+    deptSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
+    gradeSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
+    
+    // 可以選擇是否顯示具體錯誤
+    console.error('資料載入錯誤:', errorMessage);
+}
 
 function triggerFileInput() { 
     document.getElementById('id_cover_image').click(); 
@@ -190,72 +314,205 @@ function triggerFileInput() {
 function handleFileSelect(input) {
     const file = input.files[0];
     const uploadArea = document.getElementById('uploadArea');
-    if (!file) { selectedFile = null; return; }
-
-    const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
-    if (!allowedTypes.includes(file.type)) { 
-        alert('不支援的格式'); 
-        input.value=''; 
-        selectedFile=null; 
+    
+    if (!file) { 
+        selectedFile = null; 
         return; 
     }
 
-    if (file.size > 5*1024*1024 || file.size < 100) { 
-        alert('圖片大小不正確'); 
-        input.value=''; 
-        selectedFile=null; 
+    const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
+    if (!allowedTypes.includes(file.type)) { 
+        alert('不支援的格式，請上傳 JPG、PNG、GIF 或 WebP 格式的圖片'); 
+        input.value = ''; 
+        selectedFile = null; 
+        return; 
+    }
+
+    if (file.size > 5 * 1024 * 1024) { 
+        alert('圖片大小不能超過 5MB'); 
+        input.value = ''; 
+        selectedFile = null; 
+        return; 
+    }
+
+    if (file.size < 100) { 
+        alert('圖片檔案過小，請選擇有效的圖片'); 
+        input.value = ''; 
+        selectedFile = null; 
         return; 
     }
 
     selectedFile = file;
 
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = function(e) {
         uploadArea.innerHTML = `
-            <img src="${e.target.result}" style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:1rem;object-fit:cover;">
+            <img src="${e.target.result}" 
+                 style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:1rem;object-fit:cover;"
+                 alt="預覽圖片">
             <div class="upload-text">圖片已選擇：${file.name}</div>
-            <div class="upload-subtext">大小：${(file.size/1024).toFixed(1)}KB | 點擊重新選擇</div>`;
+            <div class="upload-subtext">大小：${(file.size/1024).toFixed(1)}KB | 點擊重新選擇</div>
+        `;
     };
     reader.readAsDataURL(file);
 }
 
-function toggleTag(btn, text){
+function toggleTag(btn, text) {
     const textarea = document.getElementById('description');
-    let tags = textarea.value ? textarea.value.split('、') : [];
-    tags = tags.map(t=>t.trim()).filter(t=>t); // 清理空值
+    let tags = textarea.value ? textarea.value.split('、').map(t => t.trim()).filter(t => t) : [];
 
-    if(btn.classList.contains('selected')){
-        // 移除 tag
-        tags = tags.filter(t=>t !== text);
+    if (btn.classList.contains('selected')) {
+        // 移除標籤
+        tags = tags.filter(t => t !== text);
         btn.classList.remove('selected');
     } else {
-        // 加入 tag
-        tags.push(text);
+        // 添加標籤
+        if (!tags.includes(text)) {
+            tags.push(text);
+        }
         btn.classList.add('selected');
     }
+    
     textarea.value = tags.join('、');
 }
 
-function clearSelectedTags(){
-    document.getElementById('description').value='';
-    document.querySelectorAll('.quick-tag.selected').forEach(t=>t.classList.remove('selected'));
+function clearSelectedTags() {
+    document.getElementById('description').value = '';
+    document.querySelectorAll('.quick-tag.selected').forEach(tag => {
+        tag.classList.remove('selected');
+    });
 }
 
-function closeForm2(){
+function closeForm2() {
     const modal = document.getElementById('uploadFormModal2');
-    modal.style.display='none';
-    document.body.style.overflow='';
-    document.getElementById('bookForm2').reset();
-    selectedFile=null;
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    
+    // 重置表單
+    const form = document.getElementById('bookForm2');
+    form.reset();
+    
+    selectedFile = null;
+    
+    // 重置上傳區域
     const uploadArea = document.getElementById('uploadArea');
-    uploadArea.innerHTML=`<div class="upload-icon">📷</div>
-                           <div class="upload-text">點擊上傳書籍封面圖片</div>
-                           <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>`;
+    uploadArea.innerHTML = `
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">點擊上傳書籍封面圖片</div>
+        <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
+    `;
+    
+    // 清除標籤
     clearSelectedTags();
+    
+    // 重置級聯選擇
+    resetDepartmentAndGrade();
 }
 
-function openBookUploadModal2(){
-    document.getElementById('uploadFormModal2').style.display='flex';
-    document.body.style.overflow='hidden';
+function openBookUploadModal2() {
+    const modal = document.getElementById('uploadFormModal2');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // 確保表單是乾淨的狀態
+    resetDepartmentAndGrade();
 }
+
+// 表單提交處理
+document.getElementById('bookForm2').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // 防止重複提交
+    if (isLoadingData) {
+        alert('正在載入資料，請稍候再提交');
+        return;
+    }
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    // 基本驗證
+    const title = formData.get('title');
+    const price = formData.get('price');
+    
+    if (!title || !title.trim()) {
+        alert('請輸入書名');
+        return;
+    }
+    
+    if (!price || parseFloat(price) < 0) {
+        alert('請輸入有效的價格');
+        return;
+    }
+    
+    submitBtn.textContent = '上架中...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success || response.ok) {
+            // 使用 showNotification 如果存在，否則使用 alert
+            if (typeof showNotification === 'function') {
+                showNotification('success', '書籍上架成功！');
+            } else {
+                alert('書籍上架成功！');
+            }
+            
+            closeForm2();
+            
+            // 重新載入頁面或更新書籍列表
+            setTimeout(() => {
+                if (typeof updateBooksList === 'function') {
+                    updateBooksList();
+                } else {
+                    location.reload();
+                }
+            }, 1500);
+        } else {
+            const errorMessage = data.message || data.error || '上架失敗，請重試';
+            
+            if (typeof showNotification === 'function') {
+                showNotification('error', errorMessage);
+            } else {
+                alert(errorMessage);
+            }
+            
+            console.error('上架失敗:', data);
+        }
+        
+    } catch (error) {
+        console.error('網路錯誤:', error);
+        
+        if (typeof showNotification === 'function') {
+            showNotification('error', '網路錯誤，請檢查連線後重試');
+        } else {
+            alert('網路錯誤，請檢查連線後重試');
+        }
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// 頁面關閉前的警告（如果有未保存的內容）
+window.addEventListener('beforeunload', function(e) {
+    const form = document.getElementById('bookForm2');
+    const modal = document.getElementById('uploadFormModal2');
+    
+    if (modal.style.display === 'flex' && form.checkValidity && selectedFile) {
+        e.preventDefault();
+        e.returnValue = '您有未保存的內容，確定要離開嗎？';
+        return '您有未保存的內容，確定要離開嗎？';
+    }
+});
 </script>
