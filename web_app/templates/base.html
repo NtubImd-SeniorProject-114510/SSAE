@@ -34,8 +34,146 @@
     <script src="{% static 'js/footer.js' %}"></script>
     {% block body_js %}{% endblock %}
 </body>
+
+<!-- 通用提示彈窗 -->
+<div id="notificationModal" class="notification-modal">
+  <div class="notification-content">
+    <div class="notification-icon" id="notificationIcon"></div>
+    <div class="notification-message" id="notificationMessage"></div>
+    <div class="notification-close" onclick="closeNotification()">&times;</div>
+  </div>
+</div>
+
+<style>
+.notification-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.notification-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  min-width: 300px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  animation: slideIn 0.3s ease;
+}
+
+.notification-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.notification-message {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #374151;
+  margin-bottom: 1.5rem;
+}
+
+.notification-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #9CA3AF;
+  transition: color 0.2s;
+}
+
+.notification-close:hover {
+  color: #374151;
+}
+
+/* 成功樣式 */
+.notification-success .notification-icon {
+  color: #10B981;
+}
+
+.notification-success .notification-content {
+  border-left: 4px solid #10B981;
+}
+
+/* 錯誤樣式 */
+.notification-error .notification-icon {
+  color: #EF4444;
+}
+
+.notification-error .notification-content {
+  border-left: 4px solid #EF4444;
+}
+
+/* 動畫 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+</style>
+
+<script>
+function showNotification(type, message, autoClose = true) {
+  const modal = document.getElementById('notificationModal');
+  const icon = document.getElementById('notificationIcon');
+  const messageEl = document.getElementById('notificationMessage');
+  
+  // 設置內容
+  messageEl.textContent = message;
+  
+  // 設置樣式和圖標
+  modal.className = `notification-modal notification-${type}`;
+  
+  if (type === 'success') {
+    icon.textContent = '✅';
+  } else if (type === 'error') {
+    icon.textContent = '❌';
+  }
+  
+  // 顯示彈窗
+  modal.style.display = 'flex';
+  
+  // 自動關閉
+  if (autoClose) {
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  }
+}
+
+function closeNotification() {
+  const modal = document.getElementById('notificationModal');
+  modal.style.display = 'none';
+}
+
+// 點擊背景關閉
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('notificationModal');
+  if (e.target === modal) {
+    closeNotification();
+  }
+});
+</script>
+
 </html>
-
-
-
-

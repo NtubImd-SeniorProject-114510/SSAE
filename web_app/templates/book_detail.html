@@ -83,60 +83,49 @@
     </div>
     
     <!-- 賣家資訊區域 -->
-<div class="section">
-    <h2 class="section-title">賣家資訊</h2>
-    <div class="seller-profile">
-        <div class="seller-avatar">
-            {% if seller_user.profile.avatar %}
-                <img src="{{ seller_user.profile.avatar.url }}" alt="賣家頭像">
-            {% else %}
-                <img src="{% static 'images/default-avatar.png' %}" alt="賣家頭像">
-            {% endif %}
-        </div>
-        <div class="seller-info">
-            <h3 class="seller-name">{{ seller_user.get_full_name|default:seller_user.username }}</h3>
-            {% if book.department %}
-                <p class="seller-department">{{ book.department }}</p>
-            {% endif %}
-
-            <button class="contact-seller-btn">聯絡賣家</button>
+    <div class="section">
+        <h2 class="section-title">賣家資訊</h2>
+        <div class="seller-profile">
+            <div class="seller-avatar">
+                {% if seller_google_picture %}
+                    <img src="{{ seller_google_picture }}" alt="賣家頭像">
+                {% elif seller_user.profile.avatar %}
+                    <img src="{{ seller_user.profile.avatar.url }}" alt="賣家頭像">
+                {% else %}
+                    <img src="{% static 'image/avatar24-01.jpg' %}" alt="賣家頭像">
+                {% endif %}
+            </div>
+            <div class="seller-info">
+                <h3 class="seller-name">{{ seller_user.get_full_name|default:seller_user.username }}</h3>
+                {% if book.department %}
+                    <p class="seller-department">{{ book.department }}</p>
+                {% endif %}
+                <button class="contact-seller-btn">聯絡賣家</button>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- 相關書籍推薦區域 -->
     <div class="section">
         <h2 class="section-title">相關書籍推薦</h2>
         <div class="related-grid">
-            <a href="#" class="related-book-card">
-                <div class="related-book-image">
-                    <img src="{% static 'image/test/b1.jpg' %}" alt="統計學概論">
-                </div>
-                <div class="related-book-info">
-                    <h3>統計學概論</h3>
-                    <p class="related-book-price">NT$300</p>
-                </div>
-            </a>
-            
-            <a href="#" class="related-book-card">
-                <div class="related-book-image">
-                    <img src="{% static 'image/test/b2.jpg' %}" alt="經濟學原理">
-                </div>
-                <div class="related-book-info">
-                    <h3>經濟學原理</h3>
-                    <p class="related-book-price">NT$420</p>
-                </div>
-            </a>
-            
-            <a href="#" class="related-book-card">
-                <div class="related-book-image">
-                    <img src="{% static 'image/test/b3.webp' %}" alt="財務管理">
-                </div>
-                <div class="related-book-info">
-                    <h3>財務管理</h3>
-                    <p class="related-book-price">NT$380</p>
-                </div>
-            </a>
+            {% for related_book in related_books %}
+                <a href="{% url 'book_detail' related_book.pk %}" class="related-book-card">
+                    <div class="related-book-image">
+                        {% if related_book.cover_image %}
+                            <img src="{{ related_book.cover_image.url }}" alt="{{ related_book.title }}">
+                        {% else %}
+                            <img src="{% static 'image/placeholder.png' %}" alt="no image">
+                        {% endif %}
+                    </div>
+                    <div class="related-book-info">
+                        <h3>{{ related_book.title }}</h3>
+                        <p class="related-book-price">NT${{ related_book.price }}</p>
+                    </div>
+                </a>
+            {% empty %}
+                <p>暫無相關書籍</p>
+            {% endfor %}
         </div>
     </div>
     
@@ -154,8 +143,12 @@
             </div>
             <div class="modal-body">
                 <div class="seller-brief">
-                    <div class="seller-avatar-small">
-                        <img src="{% static 'image/default-avatar.png' %}" alt="賣家頭像">
+                    <div class="seller-avatar">
+                        {% if seller_google_picture %}
+                            <img src="{{ seller_google_picture }}" alt="賣家頭像">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" alt="賣家頭像">
+                        {% endif %}
                     </div>
                     <div class="seller-brief-info">
                         <h4>{{ seller_user.get_full_name|default:seller_user.username }}</h4>
