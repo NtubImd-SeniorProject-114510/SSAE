@@ -1,4 +1,3 @@
-
 # web_app\views.py
 
 import os
@@ -974,22 +973,23 @@ def add_comment_page(request, course_id):
     return render(request, "add_comment.html", context)
 
 
+from django.db import transaction, IntegrityError
+
 @login_required
 @require_http_methods(["POST"])
 @transaction.atomic
 def add_comment_submit(request, course_id):
     """
-    建立/更新使用者對該課程的「評論 + 評分」。
-    - 一律以「你家的 user_id」為準（由 email 對應），不接受前端 user_id。
-    - 允許只有評分（content 可為空字串）
-    - 以 (user_id, course_id) 做 upsert
+    建立一筆新的「評論 + 評分」。
+    - 一律以你家的 user_id（由 email 對應）為準。
+    - 允許只有評分（content 可為空字串）。
+    - ✅ 不再 upsert；每次呼叫都新增一筆，保留歷史。
     """
     try:
         course = get_object_or_404(Course, id=int(course_id))
     except (ValueError, TypeError):
         return JsonResponse({"error": "無效的課程代號"}, status=400)
 
-    # ★ 取得你家的 user_id
     legacy_uid = get_legacy_user_id(request)
     if legacy_uid is None:
         return JsonResponse({"error": "無法找到對應的使用者（email 未綁定你家的 User）"}, status=403)
@@ -999,9 +999,9 @@ def add_comment_submit(request, course_id):
     except Exception:
         return JsonResponse({"error": "無效的請求內容"}, status=400)
 
-    content = (data.get("content") or "").trim() if hasattr(str, 'trim') else (data.get("content") or "").strip()
+    # 內容/評分/匿名
+    content = (data.get("content") or "").strip()
     rating = data.get("rating", 5)
-
     try:
         rating = int(rating)
         if rating < 1 or rating > 5:
@@ -1016,21 +1016,27 @@ def add_comment_submit(request, course_id):
     else:
         is_anonymous = bool(anon_raw)
 
-    review, created_review = CourseReview.objects.update_or_create(
-        user_id=legacy_uid,            # ★ 用你家的 user_id
-        course=course,
-        defaults={
-            "content": content,
-            "rating": rating,
-            "is_anonymous": is_anonymous,
-        },
-    )
+    try:
+        # ✅ 直接建立新評論（不覆蓋舊的）
+        review = CourseReview.objects.create(
+            user_id=legacy_uid,
+            course=course,
+            content=content,
+            rating=rating,
+            is_anonymous=is_anonymous,
+        )
+    except IntegrityError as e:
+        # 若 DB 仍有 (course_id, user_id) 唯一約束，這裡會噴錯
+        return JsonResponse({
+            "error": "新增失敗：資料庫仍有 (course_id, user_id) 的唯一約束，請先移除該唯一索引後再試。",
+            "detail": str(e),
+        }, status=409)
 
     return JsonResponse({
         "ok": True,
-        "created_review": created_review,
+        "created_review": True,
         "course_id": course.id,
-        "user_id": legacy_uid,         # ★ 回傳你家的 user_id
+        "user_id": legacy_uid,
         "rating": rating,
         "review_id": review.id,
         "display": {
@@ -1186,8 +1192,9 @@ def comment_review_delete(request, id):
 @require_http_methods(["POST"])
 def create_course_review(request, course_id):
     """
-    新增/更新一筆「評論 + 評分」記錄（僅 CourseReview；允許 content 空字串）。
+    新增一筆「評論 + 評分」記錄（允許 content 空字串）。
     一律使用你家的 user_id。
+    ✅ 不再 update_or_create；每次呼叫都新增一筆。
     """
     try:
         # 支援 course_id 或 URL 上傳入的 DB 主鍵
@@ -1203,7 +1210,6 @@ def create_course_review(request, course_id):
         if not course:
             return JsonResponse({'error': f'找不到 ID 為 {course_id} 的課程'}, status=404)
 
-        # ★ 你家的 user_id
         legacy_uid = get_legacy_user_id(request)
         if legacy_uid is None:
             return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
@@ -1214,23 +1220,30 @@ def create_course_review(request, course_id):
         if not (1 <= rating <= 5):
             return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
 
-        review, created = CourseReview.objects.update_or_create(
-            user_id=legacy_uid,              # ★
+        # ✅ 改為 create：每次都新增一筆
+        review = CourseReview.objects.create(
+            user_id=legacy_uid,
             course_id=course.id,
-            defaults={'content': content, 'rating': rating}
+            content=content,
+            rating=rating
         )
 
         return JsonResponse({
             'success': True,
-            'is_new': created,
+            'is_new': True,
             'review': {
                 'id': review.id,
                 'content': review.content,
                 'rating': review.rating,
-                'user_id': legacy_uid,      # ★
+                'user_id': legacy_uid,
             },
         }, status=201)
 
+    except IntegrityError as e:
+        return JsonResponse({
+            'error': '新增失敗：資料庫仍有 (course_id, user_id) 的唯一約束，請先移除該唯一索引後再試。',
+            'detail': str(e),
+        }, status=409)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
