@@ -117,12 +117,12 @@ class CourseReview(models.Model):
         managed = False
         ordering = ['-created_at']
         # 注意：managed=False 下 constraints 只作為文件；實際約束請在 DB 裡維護
-        constraints = [
-            models.UniqueConstraint(
-                fields=['course', 'user'],
-                name='web_app_coursereview_course_id_user_id_e646b5c0_uniq',
-            ),
-        ]
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['course', 'user'],
+        #         name='web_app_coursereview_course_id_user_id_e646b5c0_uniq',
+        #     ),
+        # ]
 
     def __str__(self):
         return f"Review(user_id={getattr(self.user, 'user_id', None)}, course_id={getattr(self.course, 'id', None)})"
