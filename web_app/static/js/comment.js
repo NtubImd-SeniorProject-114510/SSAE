@@ -222,7 +222,7 @@ function renderCourses(courses) {
           <span class="username">${course.course_summary.display_name || '使用者'}</span>
         </div>
         <p>${course.course_summary.summary}</p>
-        <div class="likes">👍 ${course.course_summary.likes}　${course.course_summary.created}</div>
+        <div class="likes"><i class="fa-solid fa-thumbs-up"></i> ${course.course_summary.likes}　${course.course_summary.created}</div>
       `;
     }
 
