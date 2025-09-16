@@ -553,3 +553,13 @@
     background-color: #f0f7ff;
     border-color: #9e8c9d;
 }
+
+/* 聯絡資訊輸入欄位 */
+.contact-input-group {
+    display: none;
+    margin-top: 10px;
+}
+
+.contact-input-group.active {
+    display: block;
+}

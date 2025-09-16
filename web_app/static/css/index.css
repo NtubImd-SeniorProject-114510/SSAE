@@ -295,6 +295,7 @@ background: var(--cr-2);
 .send-icon {
     display: inline-block;
     transform: rotate(-30deg);
+    padding: 0 0 3px 3px;
 }
 
 .send-button:hover {

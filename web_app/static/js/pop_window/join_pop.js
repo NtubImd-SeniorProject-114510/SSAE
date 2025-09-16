@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePreview();
     initializePreviewMap();
     initializeLocationAutocomplete();
+    initializeContactTypeHandler();
 });
 
 let previewMap;
@@ -403,3 +404,26 @@ document.addEventListener('change',function(e){
         updateLocationPreview();
     }
 });
+
+// 監聽聯絡方式選擇變化
+function initializeContactTypeHandler() {
+    const contactRadios = document.querySelectorAll('input[name="contact_type"]');
+    const contactInputGroups = document.querySelectorAll('.contact-input-group');
+    
+    contactRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // 隱藏所有聯絡資訊輸入欄位
+            contactInputGroups.forEach(group => {
+                group.classList.remove('active');
+            });
+            
+            // 顯示對應的輸入欄位
+            if (this.checked) {
+                const targetGroup = document.getElementById(this.value + '-input');
+                if (targetGroup) {
+                    targetGroup.classList.add('active');
+                }
+            }
+        });
+    });
+}

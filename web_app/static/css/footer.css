@@ -140,8 +140,14 @@ footer .wave#wave4{
   flex: 3; /* 讓details區域占更多空間 */
 }
 
-.footer-info p {
+.footer-info p, 
+.footer-info a {
   margin-bottom: 6px;
+}
+
+.footer-info a {
+  color: #fff;
+  text-decoration: none;
 }
 
 .social-icons {
