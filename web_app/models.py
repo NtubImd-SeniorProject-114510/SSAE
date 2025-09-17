@@ -100,15 +100,14 @@ class Course(models.Model):
 # ===== 評論（user → 你家的 User.user_id）=====
 class CourseReview(models.Model):
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='reviews')
-    user   = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', to_field='user_id')
-
-    content = models.TextField()
-    rating  = models.PositiveSmallIntegerField(
+    user = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', to_field='user_id')
+    content = models.TextField(blank=True, null=True)  # 評論可以為空
+    rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=False, blank=False,
+        blank=True, null=True  # 評分可以為空
     )
     is_anonymous = models.BooleanField(default=True)
-
+    is_rating_only = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -116,13 +115,6 @@ class CourseReview(models.Model):
         db_table = 'web_app_coursereview'
         managed = False
         ordering = ['-created_at']
-        # 注意：managed=False 下 constraints 只作為文件；實際約束請在 DB 裡維護
-        # constraints = [
-        #     models.UniqueConstraint(
-        #         fields=['course', 'user'],
-        #         name='web_app_coursereview_course_id_user_id_e646b5c0_uniq',
-        #     ),
-        # ]
 
     def __str__(self):
         return f"Review(user_id={getattr(self.user, 'user_id', None)}, course_id={getattr(self.course, 'id', None)})"

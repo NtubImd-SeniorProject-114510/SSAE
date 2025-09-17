@@ -547,7 +547,7 @@ def _google_avatar_and_name_by_emails(emails: set[str]) -> tuple[dict, dict]:
 # 列表頁（含動態統計 + 熱門評論頭貼/姓名）
 # =========================
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef, F
+from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef, F, Value, BooleanField, Case, When
 from django.db.models.functions import Coalesce
 
 @ensure_csrf_cookie
@@ -569,80 +569,80 @@ def comment(request):
             .values_list('grade_level', flat=True).distinct()
         )
 
-    # 子查詢：每門課「讚數最多（同讚取最新）」的評論
-    top_base = (
-        CourseReview.objects
-        .filter(course_id=OuterRef('pk'))
-        .annotate(likes=Count('review_likes'))
-        .order_by('-likes', '-created_at')
-    )
-
-    # 一次把統計與熱門評論核心欄位拉回來
+    # 一次抓所有課程
     qs = (
         Course.objects
         .select_related('departmentd', 'academica')
         .annotate(
-            avg_rating   = Coalesce(Avg('reviews__rating'), 0.0),
-            rating_count = Coalesce(Count('reviews__id'), 0),
-            review_count = Coalesce(
-                Count('reviews__id', filter=~Q(reviews__content__isnull=True) & ~Q(reviews__content__exact='')),
-                0
+            avg_rating=Coalesce(
+                Avg('reviews__rating', filter=Q(reviews__is_rating_only=True)), 0.0
             ),
-            last_dt      = Max('reviews__created_at'),
-            top_review_id      = Subquery(top_base.values('id')[:1]),
-            top_review_likes   = Subquery(top_base.values('likes')[:1]),
-            top_review_created = Subquery(top_base.values('created_at')[:1]),
-            top_review_content = Subquery(top_base.values('content')[:1]),
-            top_review_user    = Subquery(top_base.values('user_id')[:1]),
-            top_review_anony   = Subquery(top_base.values('is_anonymous')[:1]),
+            rating_count=Coalesce(
+                Count('reviews__id', filter=Q(reviews__is_rating_only=True)), 0
+            ),
+            comment_count=Coalesce(
+                Count('reviews__id', filter=Q(reviews__is_rating_only=False)), 0
+            ),
+            last_dt=Max('reviews__created_at', filter=Q(reviews__is_rating_only=False)),
+
+            # 新增欄位：是否有評分或評論
+            has_activity=Case(
+                When(Q(rating_count__gt=0) | Q(comment_count__gt=0), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
         )
-        # ✅ 熱門度：評分數 +（有文字的）評論數
-        .annotate(
-            popularity = Coalesce(F('rating_count'), 0) + Coalesce(F('review_count'), 0)
-        )
-        # ✅ 預設用熱門度排序（越熱門越前），再用讚數/最近互動/平均分/ID 穩定排序
-        .order_by('-popularity', '-top_review_likes', '-last_dt', '-avg_rating', '-id')
+        .order_by('-has_activity', 'course_name')  # 有活動的課先排前面，再按課程名稱
     )
 
-    # 先把需要查頭貼的 email 蒐集起來：只收「實名」的熱門評論
-    email_needed = set()
-    user_id_to_email = {}
-    for c in qs:
-        if c.top_review_id and not bool(c.top_review_anony):
-            # 用你的 User 表：user_id → mail
-            u = LegacyUser.objects.filter(user_id=c.top_review_user).only("mail").first()
-            if u and u.mail:
-                user_id_to_email[int(c.top_review_user)] = u.mail
-                email_needed.add(u.mail)
+    course_ids = [c.id for c in qs]
 
-    # 一次把 email → (avatar, display_name) 查好
+    # 批量抓每門課熱門評論（按讚數+時間）
+    top_reviews_qs = (
+        CourseReview.objects
+        .filter(course_id__in=course_ids, is_rating_only=False)
+        .annotate(likes=Count('review_likes'))
+        .order_by('course_id', '-likes', '-created_at')
+    )
+
+    # 只保留每門課一條熱門評論
+    top_review_map = {}
+    for tr in top_reviews_qs:
+        if tr.course_id not in top_review_map:
+            top_review_map[tr.course_id] = tr
+
+    # 批量抓使用者 email
+    user_ids = [tr.user_id for tr in top_review_map.values() if not tr.is_anonymous]
+    users = LegacyUser.objects.filter(user_id__in=user_ids).only('user_id', 'mail')
+    user_id_to_email = {u.user_id: u.mail for u in users if u.mail}
+
+    # 批量查 avatar/name
+    email_needed = set(user_id_to_email.values())
     pics_by_email, names_by_email = _google_avatar_and_name_by_emails(email_needed)
 
-    # 組裝 payload（可選：把 popularity 放進去以利除錯/顯示）
+    # 組裝 payload
     payload = []
     for c in qs:
-        summary = (c.top_review_content or '').strip()
-        if summary and len(summary) > 80:
-            summary = summary[:80] + "…"
-
+        top_review = top_review_map.get(c.id)
         course_summary = None
-        if c.top_review_id:
-            # 頭貼/姓名
-            is_anonymous = bool(c.top_review_anony)
+        if top_review:
+            summary = (top_review.content or '').strip()
+            if len(summary) > 80:
+                summary = summary[:80] + "…"
+
             avatar_url = "/static/image/anonymous.png"
             display_name = "匿名"
-
-            if not is_anonymous:
-                em = user_id_to_email.get(int(c.top_review_user))
+            if not top_review.is_anonymous:
+                em = user_id_to_email.get(top_review.user_id)
                 if em:
                     avatar_url = pics_by_email.get(em) or "/static/image/anonymous.png"
                     display_name = names_by_email.get(em) or em.split("@")[0]
 
             course_summary = {
-                "review_id": int(c.top_review_id),
-                "likes": int(c.top_review_likes or 0),
+                "review_id": top_review.id,
+                "likes": getattr(top_review, "likes", 0),
                 "summary": summary,
-                "created": _humanize(c.top_review_created) if c.top_review_created else "",
+                "created": _humanize(top_review.created_at),
                 "avatar_url": avatar_url,
                 "display_name": display_name,
             }
@@ -657,11 +657,9 @@ def comment(request):
             "department_id": c.departmentd_id,
             "department_name": c.departmentd.name if c.departmentd else "",
             "grade_level": c.grade_level,
-
             "avg_rating": round(float(c.avg_rating or 0), 1),
-            "rating_count": int(c.rating_count or 0),     # 幾則評分（含純評分）
-            "review_count": int(c.review_count or 0),     # 幾則評論（有文字）
-            "popularity": int(getattr(c, 'popularity', 0) or 0),  # ✅ 新增：熱門度
+            "rating_count": int(c.rating_count or 0),
+            "review_count": int(c.comment_count or 0),
             "last_date": _humanize(c.last_dt) if c.last_dt else "",
             "course_summary": course_summary,
         }
@@ -677,6 +675,44 @@ def comment(request):
     })
 
 
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def submit_rating_only(request, course_id):
+    """
+    純評分功能 - 一個使用者對一門課只能有一個評分
+    """
+    try:
+        course = get_object_or_404(Course, id=int(course_id))
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({"error": "無法找到對應的使用者"}, status=403)
+
+        data = json.loads(request.body.decode("utf-8"))
+        rating = int(data.get("rating", 0))
+        
+        if rating < 1 or rating > 5:
+            return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
+
+        rating_record, created = CourseReview.objects.update_or_create(
+            user_id=legacy_uid,
+            course=course,
+            is_rating_only=True,
+            defaults={
+                "rating": rating,
+                "content": "",
+                "is_anonymous": False,
+            },
+        )
+
+        return JsonResponse({
+            "ok": True,
+            "created": created,
+            "rating": rating,
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 from django.db.models import Avg, Count, Max, Q
 from django.contrib.auth import get_user_model
@@ -980,70 +1016,39 @@ from django.db import transaction, IntegrityError
 @transaction.atomic
 def add_comment_submit(request, course_id):
     """
-    建立一筆新的「評論 + 評分」。
-    - 一律以你家的 user_id（由 email 對應）為準。
-    - 允許只有評分（content 可為空字串）。
-    - ✅ 不再 upsert；每次呼叫都新增一筆，保留歷史。
+    新增評論 - 一個使用者可以有多個評論，不包含評分
     """
     try:
         course = get_object_or_404(Course, id=int(course_id))
-    except (ValueError, TypeError):
-        return JsonResponse({"error": "無效的課程代號"}, status=400)
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({"error": "無法找到對應的使用者"}, status=403)
 
-    legacy_uid = get_legacy_user_id(request)
-    if legacy_uid is None:
-        return JsonResponse({"error": "無法找到對應的使用者（email 未綁定你家的 User）"}, status=403)
-
-    try:
         data = json.loads(request.body.decode("utf-8"))
-    except Exception:
-        return JsonResponse({"error": "無效的請求內容"}, status=400)
+        content = (data.get("content") or "").strip()
+        
+        if not content:
+            return JsonResponse({"error": "評論內容不能為空"}, status=400)
 
-    # 內容/評分/匿名
-    content = (data.get("content") or "").strip()
-    rating = data.get("rating", 5)
-    try:
-        rating = int(rating)
-        if rating < 1 or rating > 5:
-            raise ValueError
-    except Exception:
-        return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
+        is_anonymous = bool(data.get("anonymous", True))
 
-    anon_raw = data.get("anonymous", True)
-    if isinstance(anon_raw, str):
-        anon_norm = anon_raw.strip().lower()
-        is_anonymous = anon_norm in ("true", "1", "yes", "y", "on", "匿名")
-    else:
-        is_anonymous = bool(anon_raw)
-
-    try:
-        # ✅ 直接建立新評論（不覆蓋舊的）
-        review = CourseReview.objects.create(
+        comment = CourseReview.objects.create(
             user_id=legacy_uid,
             course=course,
             content=content,
-            rating=rating,
+            rating=None,  # 不包含評分
             is_anonymous=is_anonymous,
+            is_rating_only=False,
         )
-    except IntegrityError as e:
-        # 若 DB 仍有 (course_id, user_id) 唯一約束，這裡會噴錯
-        return JsonResponse({
-            "error": "新增失敗：資料庫仍有 (course_id, user_id) 的唯一約束，請先移除該唯一索引後再試。",
-            "detail": str(e),
-        }, status=409)
 
-    return JsonResponse({
-        "ok": True,
-        "created_review": True,
-        "course_id": course.id,
-        "user_id": legacy_uid,
-        "rating": rating,
-        "review_id": review.id,
-        "display": {
-            "is_anonymous": is_anonymous,
-            "user_name": getattr(request.user, "username", f"使用者{legacy_uid}"),
-        },
-    })
+        return JsonResponse({
+            "ok": True,
+            "comment_id": comment.id,
+            "created_at": comment.created_at.isoformat(),
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 
 @csrf_exempt
