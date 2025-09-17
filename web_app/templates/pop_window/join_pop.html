@@ -11,6 +11,156 @@
         
         <form id="create-group-form" enctype="multipart/form-data">
             <!-- 預覽區域 -->
+            <div class="form-group">
+                <label class="form-label">活動封面圖片（選填）</label>
+                <div class="image-upload-container" id="image-upload-area">
+                    <div class="image-upload-icon">📷</div>
+                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
+                </div>
+                <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
+                <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
+            </div>
+
+            <div class="form-group">
+                <label for="activity-title" class="form-label" style="margin-top: 20px;">活動標題*</label>
+                <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-type" class="form-label">活動類型*</label>
+                        <select id="activity-type" name="type" class="form-select" required>
+                            <option value="" disabled selected>請選擇活動類型</option>
+                            <option value="food">美食</option>
+                            <option value="sport">運動</option>
+                            <option value="study">讀書</option>
+                            <option value="travel">旅遊</option>
+                            <option value="movie">電影</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <!-- 校內校外選擇 -->
+                    <div class="form-group">
+                        <label class="form-label">地點類型*</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="location_type" value="on_campus">
+                                <span>校內</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="location_type" value="off_campus">
+                                <span>校外</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 校內教室欄位 -->
+            <div class="form-group" id="classroom-field" style="display:none;">
+                <label for="classroom" class="form-label">教室*</label>
+                <input type="text" id="classroom" class="form-input" placeholder="例如：承曦樓505、圖書館討論室1">
+            </div>
+
+            <!-- 校外地點欄位 -->
+            <div class="form-group" id="location-field" style="display:none;">
+                <label for="activity-location" class="form-label">活動地點*</label>
+                <div class="location-input-container">
+                    <input type="text" id="activity-location" class="form-input" placeholder="搜尋地點（例：好樂迪）">
+                    <div id="location-suggestions" class="location-suggestions"></div>
+                </div>
+            </div>
+            
+            <!-- 隱藏欄位存儲地理位置資訊 -->
+            <input type="hidden" id="selected-address" name="location">
+            <input type="hidden" name="latitude" id="selected-latitude">
+            <input type="hidden" name="longitude" id="selected-longitude">
+            <input type="hidden" name="place_id" id="selected-place-id">
+
+            
+            <div class="form-group">
+                <label for="activity-description" class="form-label">活動說明*</label>
+                <textarea id="activity-description" name="description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
+            </div>
+            
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-date" class="form-label">活動日期*</label>
+                        <input type="date" id="activity-date" name="date" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-time" class="form-label">活動時間*</label>
+                        <input type="time" id="activity-time" name="time" class="form-input" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="activity-deadline" class="form-label">報名截止日期*</label>
+                        <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
+                    </div>
+                </div>
+
+                <div class="form-col">
+                    <div class="form-group">
+                        <label class="form-label">聯絡方式*</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="contact_type" value="line">
+                                <span>Line</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="contact_type" value="instagram">
+                                <span>Instagram</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="contact_type" value="phone">
+                                <span>電話</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 根據選擇顯示不同的輸入欄位 -->
+            <div class="contact-input-group" id="line-input">
+                <input type="text" class="form-input" name="line_id" placeholder="請輸入 Line ID">
+                <div class="help-text">請輸入您的 Line ID</div>
+            </div>
+            <div class="contact-input-group" id="instagram-input">
+                <input type="text" class="form-input" name="instagram_id" placeholder="請輸入 Instagram 帳號">
+                <div class="help-text">請輸入您的 Instagram 帳號</div>
+            </div>
+            <div class="contact-input-group" id="phone-input">
+                <input type="tel" class="form-input" name="phone_number" placeholder="請輸入手機號碼">
+                <div class="help-text">請輸入您的手機號碼</div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="min-participants" class="form-label">最少參加人數*</label>
+                        <input type="number" id="min-participants" name="min_participants" class="form-input" min="2" value="2" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="max-participants" class="form-label">最多參加人數*</label>
+                        <input type="number" id="max-participants" name="max_participants" class="form-input" min="2" value="10" required>
+                    </div>
+                </div>
+            </div>
+            
+            
             <div class="preview-section">
                 <div class="preview-title">
                     <span class="preview-icon">👁</span>
@@ -39,120 +189,6 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="activity-title" class="form-label" style="margin-top: 20px;">活動標題</label>
-                <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="activity-type" class="form-label">活動類型</label>
-                        <select id="activity-type" name="type" class="form-select" required>
-                            <option value="" disabled selected>請選擇活動類型</option>
-                            <option value="food">美食</option>
-                            <option value="sport">運動</option>
-                            <option value="study">讀書</option>
-                            <option value="travel">旅遊</option>
-                            <option value="movie">電影</option>
-                            <option value="other">其他</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <!-- 校內校外選擇 -->
-                    <div class="form-group">
-                        <label class="form-label">地點類型</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="location_type" value="on_campus">
-                                <span>校內</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="location_type" value="off_campus">
-                                <span>校外</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 校內教室欄位 -->
-            <div class="form-group" id="classroom-field" style="display:none;">
-                <label for="classroom" class="form-label">教室</label>
-                <input type="text" id="classroom" class="form-input" placeholder="例如：承曦樓505、圖書館討論室1">
-            </div>
-
-            <!-- 校外地點欄位 -->
-            <div class="form-group" id="location-field" style="display:none;">
-                <label for="activity-location" class="form-label">活動地點</label>
-                <div class="location-input-container">
-                    <input type="text" id="activity-location" class="form-input" placeholder="搜尋地點（例：好樂迪）">
-                    <div id="location-suggestions" class="location-suggestions"></div>
-                </div>
-            </div>
-            
-            <!-- 隱藏欄位存儲地理位置資訊 -->
-            <input type="hidden" id="selected-address" name="location">
-            <input type="hidden" name="latitude" id="selected-latitude">
-            <input type="hidden" name="longitude" id="selected-longitude">
-            <input type="hidden" name="place_id" id="selected-place-id">
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="activity-date" class="form-label">活動日期</label>
-                        <input type="date" id="activity-date" name="date" class="form-input" required>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="activity-time" class="form-label">活動時間</label>
-                        <input type="time" id="activity-time" name="time" class="form-input" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="min-participants" class="form-label">最少參加人數</label>
-                        <input type="number" id="min-participants" name="min_participants" class="form-input" min="2" value="2" required>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="max-participants" class="form-label">最多參加人數</label>
-                        <input type="number" id="max-participants" name="max_participants" class="form-input" min="2" value="10" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="activity-description" class="form-label">活動說明</label>
-                <textarea id="activity-description" name="description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="activity-deadline" class="form-label">報名截止日期</label>
-                <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
-            </div>
-
-            <div class="form-group">
-                <label for="contact-info" class="form-label">聯絡方式（選填）</label>
-                <input type="text" id="contact-info" name="contact_info" class="form-input" placeholder="LINE ID、IG、電話等">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">活動封面圖片（選填）</label>
-                <div class="image-upload-container" id="image-upload-area">
-                    <div class="image-upload-icon">📷</div>
-                    <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
-                </div>
-                <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
-                <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
-            </div>
-            
             <div class="buttons-container">
                 <button type="button" class="cancel-btn" id="cancel-create-btn">取消</button>
                 <button type="submit" class="submit-btn">發布活動</button>

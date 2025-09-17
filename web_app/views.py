@@ -297,7 +297,7 @@ def upload_book2(request):
 
 def ask_page(request):
     return render(request, "ask.html")
-############################################################
+
 from django.urls import reverse, NoReverseMatch
 from django.db.models import Count, Q
 
@@ -411,7 +411,7 @@ def index(request):
         'dlg_mobile': dlg_mobile,
     })
 
-
+############################################################
 # views.py — 課程評論「列表頁」產 JSON 給前端，顯示熱門評論的頭貼與姓名
 from django.conf import settings
 from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef
@@ -1009,6 +1009,8 @@ def add_comment_page(request, course_id):
     return render(request, "add_comment.html", context)
 
 
+from django.db import transaction, IntegrityError
+
 @login_required
 @require_http_methods(["POST"])
 @transaction.atomic
@@ -1195,8 +1197,9 @@ def comment_review_delete(request, id):
 @require_http_methods(["POST"])
 def create_course_review(request, course_id):
     """
-    新增/更新一筆「評論 + 評分」記錄（僅 CourseReview；允許 content 空字串）。
+    新增一筆「評論 + 評分」記錄（允許 content 空字串）。
     一律使用你家的 user_id。
+    ✅ 不再 update_or_create；每次呼叫都新增一筆。
     """
     try:
         # 支援 course_id 或 URL 上傳入的 DB 主鍵
@@ -1212,7 +1215,6 @@ def create_course_review(request, course_id):
         if not course:
             return JsonResponse({'error': f'找不到 ID 為 {course_id} 的課程'}, status=404)
 
-        # ★ 你家的 user_id
         legacy_uid = get_legacy_user_id(request)
         if legacy_uid is None:
             return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
@@ -1223,23 +1225,30 @@ def create_course_review(request, course_id):
         if not (1 <= rating <= 5):
             return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
 
-        review, created = CourseReview.objects.update_or_create(
-            user_id=legacy_uid,              # ★
+        # ✅ 改為 create：每次都新增一筆
+        review = CourseReview.objects.create(
+            user_id=legacy_uid,
             course_id=course.id,
-            defaults={'content': content, 'rating': rating}
+            content=content,
+            rating=rating
         )
 
         return JsonResponse({
             'success': True,
-            'is_new': created,
+            'is_new': True,
             'review': {
                 'id': review.id,
                 'content': review.content,
                 'rating': review.rating,
-                'user_id': legacy_uid,      # ★
+                'user_id': legacy_uid,
             },
         }, status=201)
 
+    except IntegrityError as e:
+        return JsonResponse({
+            'error': '新增失敗：資料庫仍有 (course_id, user_id) 的唯一約束，請先移除該唯一索引後再試。',
+            'detail': str(e),
+        }, status=409)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
@@ -1392,13 +1401,14 @@ def _clean_input(text: str) -> str:
     return text.strip()
 
 SYSTEM_PROMPT = (
-    "你是一位課程評論的文字編輯器。請將使用者原始評論改寫為可直接提交的中性、具參考價值的內容："
-    "1) 維持使用者觀點，避免命令口吻與對話式語氣；"
-    "2) 去除粗話、人身攻擊與過度情緒用語；"
-    "3) 盡量具體（內容、節奏、作業/評分、互動、資源等面向）；"
-    "4) 允許提出期望或改進方向，但以描述式語句表達（如「希望能提供更多實作範例」），"
-    "5) 僅輸出最終評論文本，不要加入任何標題、註解、道歉或教學性提示。"
-    "6) 繁體中文輸出。"
+    "你是一位課程評論的文字潤飾助手。請在保留使用者原始意思的前提下，"
+    "僅針對用詞與語氣進行優化，讓文字更中性、禮貌且具參考價值："
+    "1) 嚴禁新增使用者未提及的內容或細節；"
+    "2) 僅調整表達方式，使語句更流暢與委婉；"
+    "3) 移除粗話、人身攻擊或過度情緒化字眼，但保留原本要表達的核心觀點；"
+    "4) 若有期望或建議，保持為描述式語氣（如「希望能有更多實作範例」），"
+    "5) 僅輸出最終潤飾後的評論文字，不要附加任何解釋或標題；"
+    "6) 請使用繁體中文輸出。"
 )
 
 @csrf_exempt

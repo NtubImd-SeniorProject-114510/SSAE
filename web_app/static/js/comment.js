@@ -242,7 +242,7 @@ function renderCourses(courses) {
         <div class="course-rating">
           <div class="stars" data-rating="${avgRating}">
             <span class="rating-text">${avgRating}</span>
-            <i class="fas fa-star"></i>
+            <i class="fa-solid fa-thumbs-up"></i>
           </div>
           <div class="rating-count">${ratingCount} 則評分</div>
         </div>
