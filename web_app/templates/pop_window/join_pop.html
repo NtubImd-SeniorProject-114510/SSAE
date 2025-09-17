@@ -101,37 +101,33 @@
                     </div>
                 </div>
             </div>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="activity-deadline" class="form-label">報名截止日期*</label>
-                        <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
-                    </div>
-                </div>
-
-                <div class="form-col">
-                    <div class="form-group">
-                        <label class="form-label">聯絡方式*</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="contact_type" value="line">
-                                <span>Line</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="contact_type" value="instagram">
-                                <span>Instagram</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="contact_type" value="phone">
-                                <span>電話</span>
-                            </label>
-                        </div>
-                    </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="activity-deadline" class="form-label">報名截止日期*</label>
+                    <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
                 </div>
             </div>
 
             <!-- 根據選擇顯示不同的輸入欄位 -->
+            {% comment %} 
+            <div class="form-group">
+                <label class="form-label">聯絡方式*</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="contact_type" value="line">
+                        <span>Line</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="contact_type" value="instagram">
+                        <span>Instagram</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="contact_type" value="phone">
+                        <span>電話</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="contact-input-group" id="line-input">
                 <input type="text" class="form-input" name="line_id" placeholder="請輸入 Line ID">
                 <div class="help-text">請輸入您的 Line ID</div>
@@ -158,7 +154,8 @@
                         <input type="number" id="max-participants" name="max_participants" class="form-input" min="2" value="10" required>
                     </div>
                 </div>
-            </div>
+            </div> 
+            {% endcomment %}
             
             
             <div class="preview-section">
