@@ -303,18 +303,24 @@ body {
   text-align: center;
   padding-bottom: 20px;
   border-bottom: 1px solid #f0f0f0;
-  height: 100px;
+  height: 60px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
+.activity-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .activity-info {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
+  justify-content: center;
+  /* margin-bottom: 30px; */
 }
 
 .activity-location, .activity-time {
@@ -332,9 +338,8 @@ body {
 
 .activity-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-top: auto;
 }
 
 .participants {
