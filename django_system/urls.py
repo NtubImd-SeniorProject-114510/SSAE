@@ -37,7 +37,7 @@ urlpatterns = [
     path('join_create/' , views.join_create),
     path('book/', views.book, name='book'),
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
-    path('book/upload/', views.upload_book2, name='upload_book'),
+    path('book/upload/', views.upload_book2, name='upload_book2'),
     
   
     # Dynamic Dropdowns API
@@ -71,7 +71,7 @@ urlpatterns = [
     path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
     path("api/reviews/<int:review_id>/toggle-like/", views.toggle_review_like, name="toggle_review_like"),
-   
+    path('api/rating/<int:course_id>/', views.submit_rating_only, name='submit_rating_only'),
     path("api/comment/optimize_ai", views.optimize_comment_ai, name="optimize_comment_ai"),
     #####
 
@@ -95,6 +95,7 @@ urlpatterns = [
     path('my-activities/', views.my_activities, name='my_activities'),
     path('api/activities/<int:activity_id>/comments/', views.add_comment, name='add_comment_api'),
     path('api/comments/<int:comment_id>/toggle-like/', views.toggle_like, name='toggle_like'),
+    path('get-related-data/', views.get_related_data, name='get_related_data'),
 ]
 
 from django.conf import settings
@@ -105,3 +106,4 @@ from django.conf.urls.static import static
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

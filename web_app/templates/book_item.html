@@ -1,0 +1,25 @@
+{% load static %}
+<a href="{% url 'book_detail' book.pk %}" class="book-card">
+    <div class="book-image-container">
+        {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="book-image">
+        {% else %}
+            <img src="{% static 'image/placeholder.png' %}" alt="no image" class="book-image">
+        {% endif %}
+    </div>
+    {% if book.category %}<div class="book-tag">{{ book.category.name }}</div>{% endif %}
+    <div class="book-info">
+        <div class="book-header">{{ book.title }}</div>
+        <div class="book-footer">
+            <div class="book-meta">
+                {% if book.condition %}
+                    <span class="book-meta-tag">{{ book.get_condition_display }}</span>
+                {% endif %}
+                {% if book.academic %}<span class="book-meta-tag">{{ book.academic.name }}</span>{% endif %}
+                {% if book.department %}<span class="book-meta-tag">{{ book.department.name }}</span>{% endif %}
+                {% if book.grade %}<span class="book-meta-tag">{{ book.grade.grade_level }}</span>{% endif %}
+            </div>
+            <div class="book-price">${{ book.price }}</div>
+        </div>
+    </div>
+</a>

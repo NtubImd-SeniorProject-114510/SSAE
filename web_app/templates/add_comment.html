@@ -112,23 +112,6 @@
             </div>
           </div>
         </div>
-
-        <div class="form-group rating-group">
-          <label>課程評分</label>
-          <div class="rating-controls">
-            <div class="stars editable" id="rating-stars" data-rating="{% if review and review.rating %}{{ review.rating }}{% else %}1{% endif %}">
-              <i class="fa-regular fa-star" data-rating="1"></i>
-              <i class="fa-regular fa-star" data-rating="2"></i>
-              <i class="fa-regular fa-star" data-rating="3"></i>
-              <i class="fa-regular fa-star" data-rating="4"></i>
-              <i class="fa-regular fa-star" data-rating="5"></i>
-              <input type="hidden" name="rating" id="rating-input" value="{% if review and review.rating %}{{ review.rating }}{% else %}1{% endif %}">
-              <span class="rating-text">
-                {% if avg_rating %}{{ avg_rating|floatformat:1 }}{% else %}1.0{% endif %}/5.0
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
         
@@ -175,6 +158,9 @@
     </div>
   </form>
 </div>
+
+{% block footer %}
+{% endblock %}
 
 <!-- 內嵌資料供 JS 使用 -->
 <script id="departments-data" type="application/json">{{ departments_data|safe }}</script>

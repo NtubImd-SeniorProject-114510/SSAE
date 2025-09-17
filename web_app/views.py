@@ -94,94 +94,210 @@ def join_detail(request):
     return render(request, 'join_detail.html')
 
 from .models import ActivityComment, Book2
-
 from .models import Department, Category
-
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render, get_object_or_404, redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.decorators import login_required
+from .models import Book2, Category, Academic, AcademicGrade, Department, AcadeDepart, AcadeGrade
+from .forms import Book2Form
+from django.http import JsonResponse
 
 def book(request):
     books_list = Book2.objects.all().order_by('-created_at')
-    paginator = Paginator(books_list, 10)  # 每頁 10 本書
-    page = request.GET.get('page')
+
+    # 每行顯示數量（URL參數，預設4）
+    items_per_row = int(request.GET.get('items_per_row', 4))
+    items_per_page = items_per_row * 3  # 每頁3行
+
+    paginator = Paginator(books_list, items_per_page)
+    page_number = request.GET.get('page')
     try:
-        books = paginator.page(page)
+        books = paginator.page(page_number)
     except PageNotAnInteger:
         books = paginator.page(1)
     except EmptyPage:
         books = paginator.page(paginator.num_pages)
 
-    from .forms import Book2Form
     form = Book2Form()
     categories = Category.objects.all()
-    from .models import Academic, AcademicGrade
     academics = Academic.objects.all()
-    academic_grades = AcademicGrade.objects.all()
-    # Extract unique grades from Book2, sort, and map to display names
-    grade_map = {
-        1: '專一', 2: '專二', 3: '專三', 4: '專四',
-        5: '大一', 6: '大二', 7: '大三', 8: '大四', 9: '研究所'
-    }
-    grades_qs = Book2.objects.values_list('grade', flat=True).distinct()
-    grades = sorted(set(g for g in grades_qs if g is not None))
-    grade_choices = [(g, grade_map.get(g, str(g))) for g in grades if g in grade_map]
-    departments = Department.objects.all()
+    # 只傳遞學制，科系和年級透過 AJAX 動態載入
+    departments = []  # 空的科系列表
+    academic_grades = []  # 空的年級列表
+
     return render(request, 'book.html', {
         'books': books,
         'form': form,
         'categories': categories,
-        'grade_choices': grade_choices,
         'academics': academics,
         'academic_grades': academic_grades,
         'departments': departments,
+        'items_per_row': items_per_row,
     })
 
 def book_2(request):
     return render(request, 'book_2.html')
 
-from django.shortcuts import get_object_or_404
-
 def book_detail(request, pk):
     book = get_object_or_404(Book2, pk=pk)
     seller_user = book.seller
-    return render(request, 'book_detail.html', {'book': book, 'seller_user': seller_user})
+    seller_google_picture = None
+    try:
+        if hasattr(seller_user, 'social_auth'):
+            social = seller_user.social_auth.filter(provider='google-oauth2').first()
+            if social and 'picture' in social.extra_data:
+                seller_google_picture = social.extra_data['picture']
+    except Exception as e:
+        print(f"Error getting seller social auth data: {e}")
 
-from .forms import Book2Form
-from .models import Book2
-from django.shortcuts import redirect
+    related_books_query = Book2.objects.exclude(pk=pk).exclude(status__name__in=['已售出', '下架'])
+    related_books = []
 
-from django.http import JsonResponse
+    # 同分類 + 同系所
+    if book.category and book.department:
+        related_books.extend(related_books_query.filter(category=book.category, department=book.department)[:2])
 
+    # 同分類 + 同學制
+    if book.category and book.academic and len(related_books) < 6:
+        related_books.extend(related_books_query.filter(category=book.category, academic=book.academic)
+                             .exclude(pk__in=[b.pk for b in related_books])[:2])
+
+    # 同分類不同系所
+    if book.category and len(related_books) < 6:
+        related_books.extend(related_books_query.filter(category=book.category)
+                             .exclude(pk__in=[b.pk for b in related_books])[:2])
+
+    # 同系所不同分類
+    if book.department and len(related_books) < 6:
+        related_books.extend(related_books_query.filter(department=book.department)
+                             .exclude(pk__in=[b.pk for b in related_books])[:2])
+
+    # 同學制填滿
+    if book.academic and len(related_books) < 6:
+        remaining = 6 - len(related_books)
+        related_books.extend(related_books_query.filter(academic=book.academic)
+                             .exclude(pk__in=[b.pk for b in related_books]).order_by('-created_at')[:remaining])
+
+    # 隨機補齊
+    if len(related_books) < 6:
+        remaining = 6 - len(related_books)
+        related_books.extend(related_books_query.exclude(pk__in=[b.pk for b in related_books]).order_by('?')[:remaining])
+
+    return render(request, 'book_detail.html', {
+        'book': book,
+        'seller_user': seller_user,
+        'seller_google_picture': seller_google_picture,
+        'related_books': related_books[:6]
+    })
+
+def get_related_data(request):
+    """根據學制ID獲取對應的科系和年級"""
+    academic_id = request.GET.get("academic_id")
+    
+    # 添加調試資訊
+    print(f"收到請求，academic_id: {academic_id}")
+    
+    if not academic_id:
+        return JsonResponse({
+            "departments": [], 
+            "grades": [],
+            "debug": "沒有收到 academic_id"
+        })
+
+    try:
+        # 先檢查學制是否存在
+        try:
+            academic = Academic.objects.get(id=academic_id)
+            print(f"找到學制: {academic.name}")
+        except Academic.DoesNotExist:
+            print(f"學制 ID {academic_id} 不存在")
+            return JsonResponse({
+                "departments": [], 
+                "grades": [],
+                "error": f"學制 ID {academic_id} 不存在"
+            })
+
+        # 找科系：根據 academic_department 表找出該學制下的所有科系
+        print("開始查詢科系...")
+        academic_departments = AcadeDepart.objects.filter(
+            academica_id=academic_id
+        ).select_related("departmentd")
+        
+        print(f"找到 {academic_departments.count()} 個科系關聯")
+        
+        dept_list = []
+        for ad in academic_departments:
+            print(f"科系: {ad.departmentd.name}")
+            dept_list.append({
+                "id": ad.departmentd.id, 
+                "name": ad.departmentd.name
+            })
+
+        # 找年級：根據 academic_grade 表找出該學制下的所有年級
+        print("開始查詢年級...")
+        academic_grades = AcadeGrade.objects.filter(
+            academica_id=academic_id
+        ).order_by('id')
+        
+        print(f"找到 {academic_grades.count()} 個年級")
+        
+        grade_list = []
+        for ag in academic_grades:
+            print(f"年級: {ag.grade_level}")
+            grade_list.append({
+                "id": ag.id, 
+                "grade_level": ag.grade_level
+            })
+
+        result = {
+            "departments": dept_list,
+            "grades": grade_list,
+            "debug": f"成功載入 {len(dept_list)} 個科系和 {len(grade_list)} 個年級"
+        }
+        
+        print(f"返回結果: {result}")
+        return JsonResponse(result)
+        
+    except Exception as e:
+        error_msg = f"Error in get_related_data: {str(e)}"
+        print(error_msg)
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            "departments": [], 
+            "grades": [],
+            "error": error_msg
+        }, status=500)
+
+@login_required
 def upload_book2(request):
-    from .models import AcademicGrade
-    academic_grades = AcademicGrade.objects.all()
-    if request.method == 'POST':
+    if request.method == "POST":
         form = Book2Form(request.POST, request.FILES)
         if form.is_valid():
             book = form.save(commit=False)
-            book.contact = request.user
             book.seller = request.user
-            from .models import Status
-            if not book.status:
-                book.status = Status.objects.get(name='在售')
+            book.contact = request.user
+            if 'cover_image' in request.FILES:
+                book.cover_image = request.FILES['cover_image']
             book.save()
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': '書籍上架成功'})
-            return redirect('book')
+            return JsonResponse({'success': True, 'message': '書籍上架成功！', 'book_id': book.pk})
         else:
-            print('Book2Form errors:', form.errors)
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-            return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
-    else:
-        form = Book2Form()
-        return render(request, 'book_upload_form2.html', {'form': form, 'academic_grades': academic_grades})
+            return JsonResponse({'success': False, 'message': str(form.errors)}, status=400)
+
+    form = Book2Form()
+    academics = Academic.objects.all()
+
+    return render(request, 'book.html', {
+        'form': form,
+        'books': Book2.objects.all(),
+        'academics': academics,
+    })
 
 def ask_page(request):
     return render(request, "ask.html")
-    
 
-
-############################################################
 from django.urls import reverse, NoReverseMatch
 from django.db.models import Count, Q
 
@@ -295,7 +411,7 @@ def index(request):
         'dlg_mobile': dlg_mobile,
     })
 
-
+############################################################
 # views.py — 課程評論「列表頁」產 JSON 給前端，顯示熱門評論的頭貼與姓名
 from django.conf import settings
 from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef
@@ -431,7 +547,7 @@ def _google_avatar_and_name_by_emails(emails: set[str]) -> tuple[dict, dict]:
 # 列表頁（含動態統計 + 熱門評論頭貼/姓名）
 # =========================
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef, F
+from django.db.models import Avg, Count, Max, Q, Subquery, OuterRef, F, Value, BooleanField, Case, When
 from django.db.models.functions import Coalesce
 
 @ensure_csrf_cookie
@@ -453,80 +569,80 @@ def comment(request):
             .values_list('grade_level', flat=True).distinct()
         )
 
-    # 子查詢：每門課「讚數最多（同讚取最新）」的評論
-    top_base = (
-        CourseReview.objects
-        .filter(course_id=OuterRef('pk'))
-        .annotate(likes=Count('review_likes'))
-        .order_by('-likes', '-created_at')
-    )
-
-    # 一次把統計與熱門評論核心欄位拉回來
+    # 一次抓所有課程
     qs = (
         Course.objects
         .select_related('departmentd', 'academica')
         .annotate(
-            avg_rating   = Coalesce(Avg('reviews__rating'), 0.0),
-            rating_count = Coalesce(Count('reviews__id'), 0),
-            review_count = Coalesce(
-                Count('reviews__id', filter=~Q(reviews__content__isnull=True) & ~Q(reviews__content__exact='')),
-                0
+            avg_rating=Coalesce(
+                Avg('reviews__rating', filter=Q(reviews__is_rating_only=True)), 0.0
             ),
-            last_dt      = Max('reviews__created_at'),
-            top_review_id      = Subquery(top_base.values('id')[:1]),
-            top_review_likes   = Subquery(top_base.values('likes')[:1]),
-            top_review_created = Subquery(top_base.values('created_at')[:1]),
-            top_review_content = Subquery(top_base.values('content')[:1]),
-            top_review_user    = Subquery(top_base.values('user_id')[:1]),
-            top_review_anony   = Subquery(top_base.values('is_anonymous')[:1]),
+            rating_count=Coalesce(
+                Count('reviews__id', filter=Q(reviews__is_rating_only=True)), 0
+            ),
+            comment_count=Coalesce(
+                Count('reviews__id', filter=Q(reviews__is_rating_only=False)), 0
+            ),
+            last_dt=Max('reviews__created_at', filter=Q(reviews__is_rating_only=False)),
+
+            # 新增欄位：是否有評分或評論
+            has_activity=Case(
+                When(Q(rating_count__gt=0) | Q(comment_count__gt=0), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
         )
-        # ✅ 熱門度：評分數 +（有文字的）評論數
-        .annotate(
-            popularity = Coalesce(F('rating_count'), 0) + Coalesce(F('review_count'), 0)
-        )
-        # ✅ 預設用熱門度排序（越熱門越前），再用讚數/最近互動/平均分/ID 穩定排序
-        .order_by('-popularity', '-top_review_likes', '-last_dt', '-avg_rating', '-id')
+        .order_by('-has_activity', 'course_name')  # 有活動的課先排前面，再按課程名稱
     )
 
-    # 先把需要查頭貼的 email 蒐集起來：只收「實名」的熱門評論
-    email_needed = set()
-    user_id_to_email = {}
-    for c in qs:
-        if c.top_review_id and not bool(c.top_review_anony):
-            # 用你的 User 表：user_id → mail
-            u = LegacyUser.objects.filter(user_id=c.top_review_user).only("mail").first()
-            if u and u.mail:
-                user_id_to_email[int(c.top_review_user)] = u.mail
-                email_needed.add(u.mail)
+    course_ids = [c.id for c in qs]
 
-    # 一次把 email → (avatar, display_name) 查好
+    # 批量抓每門課熱門評論（按讚數+時間）
+    top_reviews_qs = (
+        CourseReview.objects
+        .filter(course_id__in=course_ids, is_rating_only=False)
+        .annotate(likes=Count('review_likes'))
+        .order_by('course_id', '-likes', '-created_at')
+    )
+
+    # 只保留每門課一條熱門評論
+    top_review_map = {}
+    for tr in top_reviews_qs:
+        if tr.course_id not in top_review_map:
+            top_review_map[tr.course_id] = tr
+
+    # 批量抓使用者 email
+    user_ids = [tr.user_id for tr in top_review_map.values() if not tr.is_anonymous]
+    users = LegacyUser.objects.filter(user_id__in=user_ids).only('user_id', 'mail')
+    user_id_to_email = {u.user_id: u.mail for u in users if u.mail}
+
+    # 批量查 avatar/name
+    email_needed = set(user_id_to_email.values())
     pics_by_email, names_by_email = _google_avatar_and_name_by_emails(email_needed)
 
-    # 組裝 payload（可選：把 popularity 放進去以利除錯/顯示）
+    # 組裝 payload
     payload = []
     for c in qs:
-        summary = (c.top_review_content or '').strip()
-        if summary and len(summary) > 80:
-            summary = summary[:80] + "…"
-
+        top_review = top_review_map.get(c.id)
         course_summary = None
-        if c.top_review_id:
-            # 頭貼/姓名
-            is_anonymous = bool(c.top_review_anony)
+        if top_review:
+            summary = (top_review.content or '').strip()
+            if len(summary) > 80:
+                summary = summary[:80] + "…"
+
             avatar_url = "/static/image/anonymous.png"
             display_name = "匿名"
-
-            if not is_anonymous:
-                em = user_id_to_email.get(int(c.top_review_user))
+            if not top_review.is_anonymous:
+                em = user_id_to_email.get(top_review.user_id)
                 if em:
                     avatar_url = pics_by_email.get(em) or "/static/image/anonymous.png"
                     display_name = names_by_email.get(em) or em.split("@")[0]
 
             course_summary = {
-                "review_id": int(c.top_review_id),
-                "likes": int(c.top_review_likes or 0),
+                "review_id": top_review.id,
+                "likes": getattr(top_review, "likes", 0),
                 "summary": summary,
-                "created": _humanize(c.top_review_created) if c.top_review_created else "",
+                "created": _humanize(top_review.created_at),
                 "avatar_url": avatar_url,
                 "display_name": display_name,
             }
@@ -541,11 +657,9 @@ def comment(request):
             "department_id": c.departmentd_id,
             "department_name": c.departmentd.name if c.departmentd else "",
             "grade_level": c.grade_level,
-
             "avg_rating": round(float(c.avg_rating or 0), 1),
-            "rating_count": int(c.rating_count or 0),     # 幾則評分（含純評分）
-            "review_count": int(c.review_count or 0),     # 幾則評論（有文字）
-            "popularity": int(getattr(c, 'popularity', 0) or 0),  # ✅ 新增：熱門度
+            "rating_count": int(c.rating_count or 0),
+            "review_count": int(c.comment_count or 0),
             "last_date": _humanize(c.last_dt) if c.last_dt else "",
             "course_summary": course_summary,
         }
@@ -561,6 +675,44 @@ def comment(request):
     })
 
 
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def submit_rating_only(request, course_id):
+    """
+    純評分功能 - 一個使用者對一門課只能有一個評分
+    """
+    try:
+        course = get_object_or_404(Course, id=int(course_id))
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({"error": "無法找到對應的使用者"}, status=403)
+
+        data = json.loads(request.body.decode("utf-8"))
+        rating = int(data.get("rating", 0))
+        
+        if rating < 1 or rating > 5:
+            return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
+
+        rating_record, created = CourseReview.objects.update_or_create(
+            user_id=legacy_uid,
+            course=course,
+            is_rating_only=True,
+            defaults={
+                "rating": rating,
+                "content": "",
+                "is_anonymous": False,
+            },
+        )
+
+        return JsonResponse({
+            "ok": True,
+            "created": created,
+            "rating": rating,
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 from django.db.models import Avg, Count, Max, Q
 from django.contrib.auth import get_user_model
@@ -857,70 +1009,46 @@ def add_comment_page(request, course_id):
     return render(request, "add_comment.html", context)
 
 
+from django.db import transaction, IntegrityError
+
 @login_required
 @require_http_methods(["POST"])
 @transaction.atomic
 def add_comment_submit(request, course_id):
     """
-    建立/更新使用者對該課程的「評論 + 評分」。
-    - 一律以「你家的 user_id」為準（由 email 對應），不接受前端 user_id。
-    - 允許只有評分（content 可為空字串）
-    - 以 (user_id, course_id) 做 upsert
+    新增評論 - 一個使用者可以有多個評論，不包含評分
     """
     try:
         course = get_object_or_404(Course, id=int(course_id))
-    except (ValueError, TypeError):
-        return JsonResponse({"error": "無效的課程代號"}, status=400)
+        legacy_uid = get_legacy_user_id(request)
+        if legacy_uid is None:
+            return JsonResponse({"error": "無法找到對應的使用者"}, status=403)
 
-    # ★ 取得你家的 user_id
-    legacy_uid = get_legacy_user_id(request)
-    if legacy_uid is None:
-        return JsonResponse({"error": "無法找到對應的使用者（email 未綁定你家的 User）"}, status=403)
-
-    try:
         data = json.loads(request.body.decode("utf-8"))
-    except Exception:
-        return JsonResponse({"error": "無效的請求內容"}, status=400)
+        content = (data.get("content") or "").strip()
+        
+        if not content:
+            return JsonResponse({"error": "評論內容不能為空"}, status=400)
 
-    content = (data.get("content") or "").trim() if hasattr(str, 'trim') else (data.get("content") or "").strip()
-    rating = data.get("rating", 5)
+        is_anonymous = bool(data.get("anonymous", True))
 
-    try:
-        rating = int(rating)
-        if rating < 1 or rating > 5:
-            raise ValueError
-    except Exception:
-        return JsonResponse({"error": "評分必須是 1-5 的整數"}, status=400)
+        comment = CourseReview.objects.create(
+            user_id=legacy_uid,
+            course=course,
+            content=content,
+            rating=None,  # 不包含評分
+            is_anonymous=is_anonymous,
+            is_rating_only=False,
+        )
 
-    anon_raw = data.get("anonymous", True)
-    if isinstance(anon_raw, str):
-        anon_norm = anon_raw.strip().lower()
-        is_anonymous = anon_norm in ("true", "1", "yes", "y", "on", "匿名")
-    else:
-        is_anonymous = bool(anon_raw)
+        return JsonResponse({
+            "ok": True,
+            "comment_id": comment.id,
+            "created_at": comment.created_at.isoformat(),
+        })
 
-    review, created_review = CourseReview.objects.update_or_create(
-        user_id=legacy_uid,            # ★ 用你家的 user_id
-        course=course,
-        defaults={
-            "content": content,
-            "rating": rating,
-            "is_anonymous": is_anonymous,
-        },
-    )
-
-    return JsonResponse({
-        "ok": True,
-        "created_review": created_review,
-        "course_id": course.id,
-        "user_id": legacy_uid,         # ★ 回傳你家的 user_id
-        "rating": rating,
-        "review_id": review.id,
-        "display": {
-            "is_anonymous": is_anonymous,
-            "user_name": getattr(request.user, "username", f"使用者{legacy_uid}"),
-        },
-    })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 
 @csrf_exempt
@@ -1069,8 +1197,9 @@ def comment_review_delete(request, id):
 @require_http_methods(["POST"])
 def create_course_review(request, course_id):
     """
-    新增/更新一筆「評論 + 評分」記錄（僅 CourseReview；允許 content 空字串）。
+    新增一筆「評論 + 評分」記錄（允許 content 空字串）。
     一律使用你家的 user_id。
+    ✅ 不再 update_or_create；每次呼叫都新增一筆。
     """
     try:
         # 支援 course_id 或 URL 上傳入的 DB 主鍵
@@ -1086,7 +1215,6 @@ def create_course_review(request, course_id):
         if not course:
             return JsonResponse({'error': f'找不到 ID 為 {course_id} 的課程'}, status=404)
 
-        # ★ 你家的 user_id
         legacy_uid = get_legacy_user_id(request)
         if legacy_uid is None:
             return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
@@ -1097,23 +1225,30 @@ def create_course_review(request, course_id):
         if not (1 <= rating <= 5):
             return JsonResponse({'error': '評分必須是 1-5 的整數'}, status=400)
 
-        review, created = CourseReview.objects.update_or_create(
-            user_id=legacy_uid,              # ★
+        # ✅ 改為 create：每次都新增一筆
+        review = CourseReview.objects.create(
+            user_id=legacy_uid,
             course_id=course.id,
-            defaults={'content': content, 'rating': rating}
+            content=content,
+            rating=rating
         )
 
         return JsonResponse({
             'success': True,
-            'is_new': created,
+            'is_new': True,
             'review': {
                 'id': review.id,
                 'content': review.content,
                 'rating': review.rating,
-                'user_id': legacy_uid,      # ★
+                'user_id': legacy_uid,
             },
         }, status=201)
 
+    except IntegrityError as e:
+        return JsonResponse({
+            'error': '新增失敗：資料庫仍有 (course_id, user_id) 的唯一約束，請先移除該唯一索引後再試。',
+            'detail': str(e),
+        }, status=409)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
@@ -1266,13 +1401,14 @@ def _clean_input(text: str) -> str:
     return text.strip()
 
 SYSTEM_PROMPT = (
-    "你是一位課程評論的文字編輯器。請將使用者原始評論改寫為可直接提交的中性、具參考價值的內容："
-    "1) 維持使用者觀點，避免命令口吻與對話式語氣；"
-    "2) 去除粗話、人身攻擊與過度情緒用語；"
-    "3) 盡量具體（內容、節奏、作業/評分、互動、資源等面向）；"
-    "4) 允許提出期望或改進方向，但以描述式語句表達（如「希望能提供更多實作範例」），"
-    "5) 僅輸出最終評論文本，不要加入任何標題、註解、道歉或教學性提示。"
-    "6) 繁體中文輸出。"
+    "你是一位課程評論的文字潤飾助手。請在保留使用者原始意思的前提下，"
+    "僅針對用詞與語氣進行優化，讓文字更中性、禮貌且具參考價值："
+    "1) 嚴禁新增使用者未提及的內容或細節；"
+    "2) 僅調整表達方式，使語句更流暢與委婉；"
+    "3) 移除粗話、人身攻擊或過度情緒化字眼，但保留原本要表達的核心觀點；"
+    "4) 若有期望或建議，保持為描述式語氣（如「希望能有更多實作範例」），"
+    "5) 僅輸出最終潤飾後的評論文字，不要附加任何解釋或標題；"
+    "6) 請使用繁體中文輸出。"
 )
 
 @csrf_exempt

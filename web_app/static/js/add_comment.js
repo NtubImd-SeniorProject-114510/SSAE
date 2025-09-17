@@ -206,7 +206,6 @@
     const grade = el('grade');
     const course = el('course');
     const comment = el('comment_text');
-    const ratingInput = el('rating-input');
     const btnPreview = el('preview-btn');
     const btnSubmit = el('submit-btn');
     const preview = el('preview');
@@ -327,11 +326,10 @@
     });
 
     // 送出（一律以預覽內容為準；禁止送出原始 comment_text）
-    btnSubmit?.addEventListener('click', async (e)=>{
+    btnSubmit?.addEventListener('click', async (e) => {
       e.preventDefault();
 
       const cId = course?.value;
-      const star = parseInt(ratingInput?.value || '0', 10);
       const isAnonymous = (el('anonymous_yes')?.checked === true) || false;
 
       // 取「轉換後」的內容（優先 #comment-preview，其次 #preview_text）
@@ -340,7 +338,6 @@
 
       // 基本檢查
       if(!cId){ CommentToast?.toastError?.('請先選擇課程'); return; }
-      if(!(star >= 1 && star <= 5)){ CommentToast?.toastInfo?.('評分必須是 1–5'); return; }
 
       // 必須先按「轉換」產生預覽
       if(!previewVal){
@@ -373,7 +370,6 @@
           },
           body: JSON.stringify({
             content: previewVal,        // ★ 只送轉換後的內容
-            rating: star,
             anonymous: isAnonymous
           })
         });
