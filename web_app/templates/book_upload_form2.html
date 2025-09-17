@@ -68,7 +68,62 @@
                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
                    style="display: none;"
                    onchange="handleFileSelect(this)">
-            
+
+            <!-- 影像辨識（OCR）區：不會影響你原本欄位 -->
+            <div class="card" style="margin-top:12px;border:1px solid #eee;border-radius:12px;padding:12px;">
+            <div class="flex items-center justify-between" style="display:flex;align-items:center;justify-content:space-between;">
+                <h4 style="margin:0;font-weight:600;">拍照／上傳圖片，自動辨識書籍資訊（選用）</h4>
+                <small id="ocr-status" style="opacity:.7"></small>
+            </div>
+
+            <!-- 行動裝置會直接開相機；桌機開檔案選擇器 -->
+            <div style="margin-top:8px;">
+                <input id="bookImage" type="file" accept="image/*" capture="environment" />
+                <button type="button" id="recognizeBtn" class="btn btn-secondary" style="margin-left:8px;">辨識照片文字</button>
+            </div>
+
+            <!-- 圖片預覽 -->
+            <div id="previewWrap" style="margin-top:10px;display:none;">
+                <img id="previewImg" alt="預覽" style="max-width:100%;height:auto;border:1px dashed #ccc;border-radius:8px;" />
+            </div>
+
+            <!-- 進度條 -->
+            <div id="ocrProgressWrap" style="display:none;margin-top:10px;">
+                <div style="height:8px;background:#eee;border-radius:8px;overflow:hidden;">
+                <div id="ocrProgressBar" style="height:8px;width:0%;background:#4b9cff;"></div>
+                </div>
+            </div>
+
+            <!-- 新增欄位（可選，不會刪你的原本欄位） -->
+            <div style="margin-top:14px;display:grid;gap:10px;">
+                <!-- 書名（會嘗試自動填到你原有的書名欄位：id=book_title） -->
+                <!-- 若你原本的書名 input id/ name 不同，請在 JS 內把 #book_title 改掉即可 -->
+                <div>
+                <label class="form-label">書名（自動帶入，可手動修改）</label>
+                <input id="book_title" name="book_title" type="text" class="form-control" placeholder="例如：行政法（第X版）" />
+                </div>
+
+                <div>
+                <label class="form-label">作者（自動帶入，可手動修改）</label>
+                <input id="book_author" name="book_author" type="text" class="form-control" placeholder="例如：盛子龍" />
+                </div>
+
+                <div>
+                <label class="form-label">出版社（可選）</label>
+                <input id="book_publisher" name="book_publisher" type="text" class="form-control" placeholder="例如：元照" />
+                </div>
+
+                <div>
+                <label class="form-label">參考連結（可選，會自動帶「博客來」搜尋）</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input id="book_link" name="book_link" type="url" class="form-control" placeholder="https://..." />
+                    <a id="open_link" href="#" target="_blank" class="btn btn-outline-secondary" style="white-space:nowrap;">開啟</a>
+                </div>
+                <small class="text-muted">辨識出書名/作者後，會自動產生博客來搜尋連結（可改）。</small>
+                </div>
+            </div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label required" for="id_title">書名</label>
                 <input type="text" 
@@ -79,7 +134,8 @@
                        placeholder="請輸入書名" 
                        required>
             </div>
-            
+
+
             <div class="form-group">
                 <label class="form-label required" for="id_price">價格</label>
                 <input type="number" 
@@ -171,6 +227,11 @@
     </div>
   </div>
 </div>
+
+
+<!-- 這行放在頁尾（或你的資源載入區） -->
+<script src="{% static 'tesseract/tesseract.min.js' %}"></script>
+<script src="{% static 'js/book_uploadFormModal2_ocr.js' %}"></script>
 
 <script>
 let selectedFile = null;
@@ -515,4 +576,5 @@ window.addEventListener('beforeunload', function(e) {
         return '您有未保存的內容，確定要離開嗎？';
     }
 });
+
 </script>
