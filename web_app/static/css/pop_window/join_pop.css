@@ -1,5 +1,62 @@
 /* join_pop.css - 發起揪團彈跳視窗樣式 */
 
+/* 參加人數加減數字輸入區塊 */
+.number-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+.number-input-group .number-input {
+    width: 60px;
+    text-align: center;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 1.5px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    padding: 6px 0;
+    margin: 0 4px;
+}
+
+.number-input-group .number-input:focus {
+    border-color: #6F557D;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(111,85,125,0.12);
+}
+
+.num-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #6F557D;
+    color: #fff;
+    border: none;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+    margin: 0 2px;
+}
+
+.num-btn:hover {
+    background: #9e8c9d;
+    color: #e7c21b;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+.num-btn:active {
+    background: #6F557D;
+    color: #fff;
+    transform: scale(0.95);
+}
+
+
 /* 上傳按鈕 */
 .upload-btn {
     position: fixed;
@@ -199,11 +256,121 @@
 }
 
 .preview-card {
-    background-color: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 15px;
+    background-color: rgba(170, 157, 169, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.2s, background-color 0.2s;
+    margin-bottom: 16px;
+    overflow: hidden;
+    position: relative;
+}
+.preview-card:hover {
+    transform: translateY(-8px);
+    background-color: rgba(209, 197, 209, 0.5);
+}
+
+.preview-image {
+    height: 220px;
+    background-color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.preview-card:hover .preview-image img {
+    transform: scale(1.08);
+}
+
+.preview-tag {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    min-width: 70px;
+    min-height: 32px;
+    padding: 5px 18px;
+    border-radius: 20px;
+    background-color: #6F557D;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    letter-spacing: 0.05em;
+}
+
+.preview-content {
+    padding: 28px 32px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    background: transparent;
+}
+
+.preview-activity-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: #6F557D;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.preview-location, .preview-time {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: #635c63;
+}
+
+.location-icon, .time-icon {
+    font-size: 18px;
+}
+
+.preview-description {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.6;
+    text-align: center;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    max-height: 72px;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+#preview-map {
+    width: 100%;
+    height: 200px;
+    margin-top: 14px;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: none;
 }
+
 
 .preview-image {
     height: 150px;

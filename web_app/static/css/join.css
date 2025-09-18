@@ -106,6 +106,7 @@ body {
  }
 
 .filter-item {
+  margin: 0px 10px 0px 10px;
   padding: 12px 25px;
   border-radius: 50px;
   background-color: white;
@@ -130,6 +131,7 @@ body {
 }
 
 .search-box {
+  margin: 0px 10px 0px 10px;
   padding: 12px 25px;
   border-radius: 50px;
   background-color: white;
@@ -185,6 +187,35 @@ body {
   transition: all 0.4s ease;
   opacity: 0;
   transform: translateY(30px);
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.activity-content {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  min-height: 290px;
+  max-height: 320px;
+  height: 320px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 400px) {
+  .activity-card {
+    width: 98vw;
+    min-width: 0;
+    max-width: 100vw;
+  }
+  .activity-content {
+    min-height: 220px;
+    max-height: none;
+    height: auto;
+  }
 }
 
 .activity-card.visible {
@@ -303,6 +334,7 @@ body {
   text-align: center;
   padding-bottom: 20px;
   border-bottom: 1px solid #f0f0f0;
+
   height: 60px;
   overflow: hidden;
   display: -webkit-box;
@@ -319,6 +351,7 @@ body {
 .activity-info {
   display: flex;
   flex-direction: column;
+
   justify-content: center;
   /* margin-bottom: 30px; */
 }
@@ -741,6 +774,7 @@ body {
 
 /* 新增清除篩選按鈕樣式 */
 .clear-filters-btn {
+  margin: 0px 10px 0px 10px;
     padding: 12px 25px;
     border-radius: 50px;
     background-color: #f5f5f5;
