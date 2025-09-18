@@ -372,17 +372,7 @@ h1, h2, h3 {
 }
 
 
-.progress-bar {
-    width: 150px;
-    height: 16px;
-    background-color: #dbdfe4;
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    clear: both;
-    margin-top: 8px;
-}
+
 
 .progress-segment {
     height: 100%;
