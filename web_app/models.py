@@ -100,15 +100,14 @@ class Course(models.Model):
 # ===== 評論（user → 你家的 User.user_id）=====
 class CourseReview(models.Model):
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='reviews')
-    user   = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', to_field='user_id')
-
-    content = models.TextField()
-    rating  = models.PositiveSmallIntegerField(
+    user = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', to_field='user_id')
+    content = models.TextField(blank=True, null=True)  # 評論可以為空
+    rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=False, blank=False,
+        blank=True, null=True  # 評分可以為空
     )
     is_anonymous = models.BooleanField(default=True)
-
+    is_rating_only = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -116,13 +115,6 @@ class CourseReview(models.Model):
         db_table = 'web_app_coursereview'
         managed = False
         ordering = ['-created_at']
-        # 注意：managed=False 下 constraints 只作為文件；實際約束請在 DB 裡維護
-        constraints = [
-            models.UniqueConstraint(
-                fields=['course', 'user'],
-                name='web_app_coursereview_course_id_user_id_e646b5c0_uniq',
-            ),
-        ]
 
     def __str__(self):
         return f"Review(user_id={getattr(self.user, 'user_id', None)}, course_id={getattr(self.course, 'id', None)})"
@@ -164,17 +156,50 @@ class Category(models.Model):
         return self.name
 
 class Status(models.Model):
-    name = models.CharField(max_length=20)
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20)  # 例如：可購買、已售完
+
     def __str__(self):
         return self.name
+
 
 class Book2(models.Model):
     book_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
-    academic = models.ForeignKey(Academic, to_field='id', db_column='academic_id', on_delete=models.PROTECT, blank=True, null=True)
-    department = models.ForeignKey(Department, to_field='id', db_column='department_id', on_delete=models.PROTECT, blank=True, null=True)
-    grade = models.ForeignKey('AcademicGrade', on_delete=models.PROTECT, blank=True, null=True)
-    category = models.ForeignKey(Category, to_field='id', db_column='category_id', on_delete=models.PROTECT, blank=True, null=True)
+    
+    academic = models.ForeignKey(
+        'Academic', 
+        to_field='id', 
+        db_column='academic_id', 
+        on_delete=models.PROTECT, 
+        blank=True, 
+        null=True
+    )
+    department = models.ForeignKey(
+        'Department', 
+        to_field='id', 
+        db_column='department_id', 
+        on_delete=models.PROTECT, 
+        blank=True, 
+        null=True
+    )
+    grade = models.ForeignKey(
+        'AcademicGrade', 
+        to_field='id', 
+        db_column='grade_id', 
+        on_delete=models.PROTECT, 
+        blank=True, 
+        null=True
+    )
+    category = models.ForeignKey(
+        'Category', 
+        to_field='id', 
+        db_column='category_id', 
+        on_delete=models.PROTECT, 
+        blank=True, 
+        null=True
+    )
+    
     CONDITION_CHOICES = [
         ('new', '全新'),
         ('good', '良好'),
@@ -183,13 +208,33 @@ class Book2(models.Model):
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, blank=True, null=True)
 
     price = models.IntegerField()
-    contact = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='book2_contact')
     description = models.TextField(blank=True)
-    seller = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='book2_seller')
-
-    status = models.ForeignKey(Status, on_delete=models.PROTECT, blank=True, null=True)
     cover_image = models.ImageField(upload_to='book2_covers/', blank=True, null=True)
+    
+    contact = models.ForeignKey(
+        'auth.User', 
+        on_delete=models.PROTECT, 
+        related_name='book2_contact'
+    )
+    seller = models.ForeignKey(
+        'auth.User', 
+        on_delete=models.PROTECT, 
+        related_name='book2_seller'
+    )
+
+    status = models.ForeignKey(
+        'Status', 
+        on_delete=models.PROTECT, 
+        blank=True, 
+        null=True, 
+        default=1,  # 預設為可購買
+        db_column='status_id'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'web_app_book2'
 
     def __str__(self):
         return self.title

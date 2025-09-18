@@ -715,6 +715,7 @@ body.sidebar-collapsed .input-container {
     border-radius: 4px 18px 18px 18px;
     max-width: 70%;
     margin-bottom: 0;  /* 確保沒有額外的下邊距 */
+    
 }
 
 /* 確保編號列表和內容正確顯示 */
@@ -858,8 +859,8 @@ body.sidebar-collapsed .input-container {
 
 .source-btn {
     position: absolute;
-    right: -3px;
-    top: -10px;
+    right: -10px;
+    top: -15px;
     width: 20px;
     height: 20px;
     background: linear-gradient(45deg, #b37392 0%, #e3a5d0 50%, #fecfef 100%);

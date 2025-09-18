@@ -94,92 +94,94 @@
                     <div class="activity-content">
                         <h3 class="activity-title">{{ a.title }}</h3>
                         <p class="activity-description">
-                            {{ a.description|truncatechars:60 }}
-                            {% if a.description|length > 60 %}
+                            {{ a.description|truncatechars:19 }}
+                            {% if a.description|length > 19 %}
                                 <a href="{{ detail_url }}" class="read-more">更多</a>
                             {% endif %}
                         </p>
 
-                        <div class="activity-info">
-                            <!-- 地點 -->
-                            <div class="activity-location">
-                                <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                                <p class="info-value">
-                                    {% if a.location_type == 'on_campus' and a.classroom %}
-                                        {{ a.classroom }}
-                                    {% else %}
-                                        {{ a.location_short }}
-                                    {% endif %}
-                                </p>
-                            </div>
-
-                            <!-- 時間 -->
-                            <div class="activity-time">
-                                <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                                <p class="info-value">{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</p>
-                            </div>
-                        </div>
-
-                        <div class="activity-footer">
-                            <div class="participants">
-                                <div class="participant-avatars">
-                                    <!-- 發起人 -->
-                                    <div class="participant-avatar" title="{{ a.user.username }} (發起人)">
-                                        {% if a.user.profile.avatar %}
-                                            <img src="{{ a.user.profile.avatar.url }}" alt="{{ a.user.username }}">
-                                        {% elif a.user.social_auth.all.0.extra_data.picture %}
-                                            <img src="{{ a.user.social_auth.all.0.extra_data.picture }}" alt="{{ a.user.username }}">
+                        <div class="activity-text">
+                            <div class="activity-info">
+                                <!-- 地點 -->
+                                <div class="activity-location">
+                                    <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
+                                    <p class="info-value">
+                                        {% if a.location_type == 'on_campus' and a.classroom %}
+                                            {{ a.classroom }}
                                         {% else %}
-                                            <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                                            {{ a.location_short }}
                                         {% endif %}
-                                    </div>
+                                    </p>
+                                </div>
 
-                                    <!-- 顯示參加者（最多 3 位） -->
-                                    {% for participant in a.cleaned_participants|slice:":3" %}
-                                        <div class="participant-avatar" title="{{ participant.user.username }}">
-                                            {% if participant.user.profile.avatar %}
-                                                <img src="{{ participant.user.profile.avatar.url }}" alt="{{ participant.user.username }}">
-                                            {% elif participant.user.social_auth.all.0.extra_data.picture %}
-                                                <img src="{{ participant.user.social_auth.all.0.extra_data.picture }}" alt="{{ participant.user.username }}">
+                                <!-- 時間 -->
+                                <div class="activity-time">
+                                    <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
+                                    <p class="info-value">{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="activity-footer">
+                                <div class="participants">
+                                    <div class="participant-avatars">
+                                        <!-- 發起人 -->
+                                        <div class="participant-avatar" title="{{ a.user.username }} (發起人)">
+                                            {% if a.user.profile.avatar %}
+                                                <img src="{{ a.user.profile.avatar.url }}" alt="{{ a.user.username }}">
+                                            {% elif a.user.social_auth.all.0.extra_data.picture %}
+                                                <img src="{{ a.user.social_auth.all.0.extra_data.picture }}" alt="{{ a.user.username }}">
                                             {% else %}
                                                 <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
                                             {% endif %}
                                         </div>
-                                    {% endfor %}
 
-                                    {% if a.participants_count > 3 %}
-                                        <div class="participant-avatar more">+{{ a.participants_count|add:"-3" }}</div>
-                                    {% endif %}
+                                        <!-- 顯示參加者（最多 3 位） -->
+                                        {% for participant in a.cleaned_participants|slice:":3" %}
+                                            <div class="participant-avatar" title="{{ participant.user.username }}">
+                                                {% if participant.user.profile.avatar %}
+                                                    <img src="{{ participant.user.profile.avatar.url }}" alt="{{ participant.user.username }}">
+                                                {% elif participant.user.social_auth.all.0.extra_data.picture %}
+                                                    <img src="{{ participant.user.social_auth.all.0.extra_data.picture }}" alt="{{ participant.user.username }}">
+                                                {% else %}
+                                                    <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+
+                                        {% if a.participants_count > 3 %}
+                                            <div class="participant-avatar more">+{{ a.participants_count|add:"-3" }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="participant-count">
+                                        {{ a.total_count }}/{{ a.max_participants }} 人
+                                    </div>
                                 </div>
-
-                                <div class="participant-count">
-                                    {{ a.total_count }}/{{ a.max_participants }} 人
-                                </div>
-                            </div>
-
-                            <div>
-                                {% if a.is_full or a.is_deadline_passed %}
-                                    <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">已額滿/截止</a>
-                                {% elif not request.user.is_authenticated %}
-                                    <button class="join-btn dropdown-item" onclick="event.stopPropagation(); triggerNavbarLogin();">登入即可參加</button>
-                                {% elif a.pk and a.id in created_ids %}
-                                    <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">您是發起人</a>
-                                {% elif a.pk and a.id in joined_ids %}
-                                    <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
-                                        {% csrf_token %}
-                                        <button class="join-btn" type="submit">取消參加</button>
-                                    </form>
-                                {% elif a.pk %}
-                                    <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
-                                        {% csrf_token %}
-                                        <button class="join-btn" type="submit">我要參加</button>
-                                    </form>
-                                {% else %}
-                                    <button class="join-btn disabled" onclick="event.stopPropagation();return false;">無法參加</button>
-                                {% endif %}
                             </div>
                         </div>
+                        
 
+                        <div>
+                            {% if a.is_full or a.is_deadline_passed %}
+                                <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">已額滿/截止</a>
+                            {% elif not request.user.is_authenticated %}
+                                <button class="join-btn dropdown-item" onclick="event.stopPropagation(); triggerNavbarLogin();">登入即可參加</button>
+                            {% elif a.pk and a.id in created_ids %}
+                                <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">您是發起人</a>
+                            {% elif a.pk and a.id in joined_ids %}
+                                <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
+                                    {% csrf_token %}
+                                    <button class="join-btn" type="submit">取消參加</button>
+                                </form>
+                            {% elif a.pk %}
+                                <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
+                                    {% csrf_token %}
+                                    <button class="join-btn" type="submit">我要參加</button>
+                                </form>
+                            {% else %}
+                                <button class="join-btn disabled" onclick="event.stopPropagation();return false;">無法參加</button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             {% empty %}

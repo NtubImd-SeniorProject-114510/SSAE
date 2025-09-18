@@ -295,6 +295,7 @@ background: var(--cr-2);
 .send-icon {
     display: inline-block;
     transform: rotate(-30deg);
+    padding: 0 0 3px 3px;
 }
 
 .send-button:hover {
@@ -1170,22 +1171,10 @@ to {
 .feature-container {
     position: relative;
     top: 100px;
-    z-index: 3;
+    z-index: -1;
     margin-bottom: 100px;
     
 }
-
-/* 
-.feature-title::before {
-    content: "";
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    margin-right: 10px;
-    background-color: #e0d3e0;
-    border-radius: 50%;
-} */
-
 
 
 /*內容*/

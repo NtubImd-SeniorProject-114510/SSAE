@@ -54,6 +54,7 @@ body {
 /* Book content layout */
 .book-content-layout {
     display: flex;
+    align-items: center;
     gap: 30px;
 }
 
@@ -1226,7 +1227,6 @@ body {
 .book-image-container {
     float: left;
     margin-right: 5%;
-    margin-bottom: 20px;
 }
 
 .book-image {
