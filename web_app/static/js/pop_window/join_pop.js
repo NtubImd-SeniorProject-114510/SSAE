@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePreview();
     initializePreviewMap();
     initializeLocationAutocomplete();
+    initializeNumberInputButtons();
     initializeContactTypeHandler();
 });
 

@@ -298,6 +298,7 @@ def upload_book2(request):
 def ask_page(request):
     return render(request, "ask.html")
 
+
 from django.urls import reverse, NoReverseMatch
 from django.db.models import Count, Q
 
@@ -543,6 +544,26 @@ def _google_avatar_and_name_by_emails(emails: set[str]) -> tuple[dict, dict]:
     return pics, names
 
 
+
+# ========= 工具函式 =========
+
+def _clean_teacher_name(val: str) -> str:
+    """
+    把前綴代號（數字/字母/符號）去掉，只留下老師姓名。
+    假設格式大多為「1982 蔡宗儒」→ 取最後一段。
+    """
+    if not val:
+        return ""
+    s = str(val).strip()
+    return s.split()[-1]  # 直接取最後一個詞，去掉代號
+
+
+def _humanize(dt):
+    """簡單的時間轉文字，可依需求擴充"""
+    if not dt:
+        return ""
+    return dt.strftime("%Y-%m-%d %H:%M")
+
 # =========================
 # 列表頁（含動態統計 + 熱門評論頭貼/姓名）
 # =========================
@@ -651,7 +672,7 @@ def comment(request):
             "id": c.id,
             "course_id": c.course_id,
             "course_name": c.course_name,
-            "course_teacher": c.course_teacher,
+            "course_teacher": _clean_teacher_name(c.course_teacher),
             "academic_id": c.academica_id,
             "academic_name": c.academica.name if c.academica else "",
             "department_id": c.departmentd_id,
@@ -848,7 +869,7 @@ def get_courses(request):
             "id": c.id,
             "course_id": c.course_id,
             "course_name": c.course_name,
-            "course_teacher": c.course_teacher,
+            "course_teacher": _clean_teacher_name(c.course_teacher),
             "academic_id": c.academica_id,
             "academic_name": c.academica.name if c.academica else "",
             "department_id": c.departmentd_id,
@@ -910,7 +931,7 @@ def add_comment_blank(request):
         'id': c.id,
         'course_id': c.course_id,
         'course_name': c.course_name,
-        'course_teacher': c.course_teacher,
+        "course_teacher": _clean_teacher_name(c.course_teacher),
         'academic_id': c.academica_id,
         'academic_name': c.academica.name if c.academica else '',
         'department_id': c.departmentd_id,
@@ -979,7 +1000,7 @@ def add_comment_page(request, course_id):
         "department_id": course.departmentd_id,
         "course_id": course.course_id,
         "course_name": course.course_name,
-        "course_teacher": course.course_teacher or "",
+        "course_teacher": _clean_teacher_name(course.course_teacher) or "",
         "grade_level": selected_grade,
     }]
 
@@ -1001,7 +1022,7 @@ def add_comment_page(request, course_id):
         "review": user_review,
         "google_picture": _google_picture(request.user),
         "selected_course": course,
-        "selected_teacher": course.course_teacher or "",
+        "selected_teacher": _clean_teacher_name(course.course_teacher) or "",
         "selected_academic": academics.first() if academics.exists() else None,
         "selected_department": departments.first() if departments.exists() else None,
         "selected_grade": selected_grade,
@@ -1165,6 +1186,7 @@ def comment_detail(request, id=None):
         'department': course.departmentd,
         'star_distribution': star_distribution,
         'last_review_human': _humanize(display_list[0].created_at) if display_list else "",
+        "course_teacher": _clean_teacher_name(course.course_teacher),
     }
     return render(request, "comment_detail.html", context)
 

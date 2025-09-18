@@ -20,6 +20,7 @@
                 <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
                 <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
             </div>
+            
 
             <div class="form-group">
                 <label for="activity-title" class="form-label" style="margin-top: 20px;">活動標題*</label>
@@ -144,20 +145,49 @@
             <div class="form-row">
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="min-participants" class="form-label">最少參加人數*</label>
-                        <input type="number" id="min-participants" name="min_participants" class="form-input" min="2" value="2" required>
+                        <label for="min-participants" class="form-label">最少參加人數</label>
+                        <div class="number-input-group">
+                            <button type="button" class="num-btn minus-btn" data-target="min-participants">-</button>
+                            <input type="number" id="min-participants" name="min_participants" class="form-input number-input" min="2" value="2" required>
+                            <button type="button" class="num-btn plus-btn" data-target="min-participants">+</button>
+                        </div>
+
+                        <!--<label for="min-participants" class="form-label">最少參加人數*</label>
+                        <input type="number" id="min-participants" name="min_participants" class="form-input" min="2" value="2" required> -->
+
                     </div>
                 </div>
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="max-participants" class="form-label">最多參加人數*</label>
-                        <input type="number" id="max-participants" name="max_participants" class="form-input" min="2" value="10" required>
+                        <label for="max-participants" class="form-label">最多參加人數</label>
+                        <div class="number-input-group">
+                            <button type="button" class="num-btn minus-btn" data-target="max-participants">-</button>
+                            <input type="number" id="max-participants" name="max_participants" class="form-input number-input" min="2" value="10" required>
+                            <button type="button" class="num-btn plus-btn" data-target="max-participants">+</button>
+                        </div>
+                       <!-- <label for="max-participants" class="form-label">最多參加人數*</label>
+                        <input type="number" id="max-participants" name="max_participants" class="form-input" min="2" value="10" required>-->
                     </div>
                 </div>
             </div> 
             {% endcomment %}
             
+       
+            <div class="form-group">
+                <label for="activity-deadline" class="form-label">報名截止日期</label>
+                <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="contact-info" class="form-label">聯絡方式（選填）</label>
+                <input type="text" id="contact-info" name="contact_info" class="form-input" placeholder="LINE ID、IG、電話等">
+            </div>
+
             
+            
+    
+
+           <!-- <!-- 預覽區域 --> -->
             <div class="preview-section">
                 <div class="preview-title">
                     <span class="preview-icon">👁</span>
@@ -184,10 +214,7 @@
                         <div id="preview-map" style="width:100%; height:200px; margin-top:10px; border-radius:8px; overflow:hidden; display:none;"></div>
                     </div>
                 </div>
-                <input type="file" id="activity-cover" name="cover_image" accept="image/*" style="display: none;">
-                <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
             </div>
-            
 
             <div class="buttons-container">
                 <button type="button" class="cancel-btn" id="cancel-create-btn">取消</button>
