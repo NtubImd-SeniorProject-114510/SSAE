@@ -1,42 +1,58 @@
-document.addEventListener('DOMContentLoaded', function () {
-  // 如果頁面上不只一支影片，建議加 class 再改成 querySelector('video.welcome-mobile-video')
-  const video = document.querySelector('video');
 
-  const REDIRECT_DELAY_AFTER_LOAD = 4200;   // 影片可播放後延遲跳轉（毫秒）
-  const HARD_TIMEOUT              = 6000;  // 不管是否載入成功，6 秒後強制跳轉（保險）
-  const FALLBACK_DELAY            = 5000;  // 找不到 <video> 節點時，5 秒後跳轉
-  const redirect = () => window.location.replace('/index/');
+document.addEventListener('DOMContentLoaded', function () {
+  const video =
+    document.querySelector('video.welcome-mobile-video') ||
+    document.querySelector('video');
+
+  const TO_INDEX = '/index/';
+  const REDIRECT_DELAY_AFTER_LOAD = 4200; // 影片可播後延遲跳
+  const HARD_TIMEOUT = 6000;              // 最長等待
+  const FALLBACK_DELAY = 5000;            // 找不到 <video> 的保險
 
   let redirected = false;
-  const tryRedirect = () => {
-    if (!redirected) {
-      redirected = true;
-      console.log('Redirecting to /index/');
-      redirect();
-    }
+  let delayTimer = null;
+  const redirectOnce = () => {
+    if (redirected) return;
+    redirected = true;
+    clearTimeout(delayTimer);
+    window.location.replace(TO_INDEX);
   };
 
-  if (video) {
-    // 影片「可播放」後，稍等一下就跳（避免畫面黑一瞬間）
-    const scheduleAfterLoad = () => setTimeout(tryRedirect, REDIRECT_DELAY_AFTER_LOAD);
-    video.addEventListener('loadeddata', scheduleAfterLoad, { once: true });
-    video.addEventListener('canplay',    scheduleAfterLoad, { once: true });
+  const scheduleAfterLoad = () => {
+    if (redirected) return;
+    clearTimeout(delayTimer);
+    delayTimer = setTimeout(redirectOnce, REDIRECT_DELAY_AFTER_LOAD);
+  };
 
-    // 影片載入失敗就直接跳
-    video.addEventListener('error', tryRedirect, { once: true });
-
-    // 無論如何，6 秒到就強制跳
-    setTimeout(tryRedirect, HARD_TIMEOUT);
-
-    // 點一下螢幕（或觸控）立刻跳
-    const skipNow = () => tryRedirect();
-    document.addEventListener('click', skipNow, { once: true });
-    document.addEventListener('touchstart', skipNow, { once: true, passive: true });
-  } else {
-    console.error('video element not found, fallback redirect in 5s.');
-    setTimeout(tryRedirect, FALLBACK_DELAY);
+  if (!video) {
+    console.warn('[welcome] no <video> element found; fallback redirect.');
+    setTimeout(redirectOnce, FALLBACK_DELAY);
+    document.addEventListener('click', redirectOnce, { once: true });
+    document.addEventListener('touchstart', redirectOnce, { once: true, passive: true });
+    return;
   }
+
+  // 嘗試啟播（有些瀏覽器需要這步驟來觸發 playing/canplay）
+  try { video.play().catch(() => {}); } catch (_) {}
+
+  // 任何一個「可播放」信號來了就排程跳轉
+  video.addEventListener('playing',    scheduleAfterLoad, { once: true });
+  video.addEventListener('canplay',    scheduleAfterLoad, { once: true });
+  video.addEventListener('loadeddata', scheduleAfterLoad, { once: true });
+
+  // 影片錯誤 → 立刻跳
+  video.addEventListener('error', redirectOnce, { once: true });
+
+  // 硬性超時（不管影片狀態）
+  setTimeout(redirectOnce, HARD_TIMEOUT);
+
+  // 點一下立即跳（桌機 + 行動）
+  const skip = () => redirectOnce();
+  document.addEventListener('click', skip, { once: true });
+  document.addEventListener('touchstart', skip, { once: true, passive: true });
 });
+
+
 
 // document.addEventListener('DOMContentLoaded', function () {
 //   const viewer = document.querySelector('spline-viewer');
