@@ -401,9 +401,9 @@ def index(request):
 
     # 手機：3 個（只顯示最新：課程／二手書／活動）
     dlg_mobile = [
-        activity_new_item or {"title": "最新！活動︰暫無資料", "url": _safe_reverse("activity_list", fallback="/activities/")},
-        book_new_item    or {"title": "最新上架！二手書︰暫無資料",   "url": _safe_reverse("book", fallback="/book/")},
         comment_new_item or {"title": "最新！課程評論︰暫無資料", "url": "/comment/"},
+        book_new_item    or {"title": "最新上架！二手書︰暫無資料",   "url": _safe_reverse("book", fallback="/book/")},
+        activity_new_item or {"title": "最新！活動︰暫無資料", "url": _safe_reverse("activity_list", fallback="/activities/")},
     ] 
 
     return render(request, 'index.html', {
@@ -595,25 +595,29 @@ def comment(request):
         Course.objects
         .select_related('departmentd', 'academica')
         .annotate(
+            # 平均星等：包含所有評分（純評分 + 有評論且有評分）
             avg_rating=Coalesce(
-                Avg('reviews__rating', filter=Q(reviews__is_rating_only=True)), 0.0
+                Avg('reviews__rating'), 0.0
             ),
+            # 評分筆數：所有有評分的評論都算
             rating_count=Coalesce(
-                Count('reviews__id', filter=Q(reviews__is_rating_only=True)), 0
+                Count('reviews__id', filter=Q(reviews__rating__isnull=False)), 0
             ),
+            # 有文字的評論筆數：content 不為空字串且不是 None
             comment_count=Coalesce(
-                Count('reviews__id', filter=Q(reviews__is_rating_only=False)), 0
+                Count('reviews__id', filter=(~Q(reviews__content="") & ~Q(reviews__content=None))), 0
             ),
-            last_dt=Max('reviews__created_at', filter=Q(reviews__is_rating_only=False)),
+            # 最近一則有文字的評論時間
+            last_dt=Max('reviews__created_at', filter=(~Q(reviews__content="") & ~Q(reviews__content=None))),
 
-            # 新增欄位：是否有評分或評論
+            # 其餘欄位（原本就有）
             has_activity=Case(
                 When(Q(rating_count__gt=0) | Q(comment_count__gt=0), then=Value(True)),
                 default=Value(False),
                 output_field=BooleanField(),
             )
         )
-        .order_by('-has_activity', 'course_name')  # 有活動的課先排前面，再按課程名稱
+        .order_by('-has_activity', 'course_name')
     )
 
     course_ids = [c.id for c in qs]
