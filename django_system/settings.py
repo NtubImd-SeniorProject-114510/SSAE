@@ -236,6 +236,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
+# 這東西是幫助網頁不要變成不安全網頁
+# SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 ##########
 # 確保在 http://127.0.0.1:8000 下 cookie 會被送出
