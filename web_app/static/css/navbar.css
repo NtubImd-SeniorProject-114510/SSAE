@@ -244,14 +244,13 @@ a.logo img.Logo {
         top: 0;
         right: -50%;
         width: 50%;
-        height: 100vh;
         background-color: #333;
-        padding: 80px 20px 20px 20px;
+        padding: 80px 20px 80px 20px;
         z-index: 1001;
         display: flex;
         flex-direction: column;
         transition: right 0.3s ease;
-        overflow-y: auto;
+        overflow-y: scroll;
     }
 
     .phone-dropdown.show {
