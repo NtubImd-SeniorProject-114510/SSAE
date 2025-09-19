@@ -10,6 +10,7 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/book.css' %}">
+<link rel="stylesheet" href="{% static 'css/join.css' %}">
 <!-- 原有的 style 保持不變 -->
 <style>
 /* ===== 基本書卡動畫 ===== */
@@ -71,28 +72,9 @@
     opacity: 0.6;
 }
 
-/* ===== 每行顯示按鈕 ===== */
-.items-per-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.items-per-row span { color: #6F557D; font-weight: 500; font-size: 14px; }
-.layout-buttons { display: flex; gap: 5px; }
-.layout-btn { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 5px 10px; cursor: pointer; }
-.layout-btn:hover { background: #f0f0f0; border-color: #9e8c9d; }
-.layout-btn.active { background: #6F557D; color: white; border-color: #6F557D; }
+/* ===== 每行顯示按鈕 - 已移除，使用 join.css 中的新樣式 ===== */
 
-/* ===== 書卡 Grid ===== */
-.books-grid { display: grid; gap: 1.5rem; justify-content: center; width: 100%; max-width: 100%; margin: 0 auto; padding: 1rem 0; }
-
-/* 每行書卡數量對應寬度 */
-.books-grid.grid-1 { grid-template-columns: 1fr; max-width: 700px; }
-.books-grid.grid-2 { grid-template-columns: repeat(2, minmax(250px, 1fr)); max-width: 800px; }
-.books-grid.grid-3 { grid-template-columns: repeat(3, minmax(200px, 1fr)); max-width: 1200px; }
-.books-grid.grid-4 { grid-template-columns: repeat(4, minmax(180px, 1fr)); max-width: 1400px; }
-.books-grid.grid-5 { grid-template-columns: repeat(5, minmax(160px, 1fr)); max-width: 1600px; }
-
-/* 響應式調整 */
-@media (max-width: 1200px) { .books-grid.grid-4,.books-grid.grid-5 { grid-template-columns: repeat(3, minmax(200px, 1fr)); max-width: 1200px; } }
-@media (max-width: 800px) { .books-grid.grid-3,.books-grid.grid-4,.books-grid.grid-5 { grid-template-columns: repeat(2, minmax(200px, 1fr)); max-width: 800px; } }
-@media (max-width: 500px) { .books-grid.grid-2,.books-grid.grid-3,.books-grid.grid-4,.books-grid.grid-5 { grid-template-columns: 1fr; max-width: 400px; } }
+/* ===== 書卡 Grid - 已移除，使用 book.css 中的新樣式 ===== */
 
 /* ===== 書卡樣式 ===== */
 .book-card {
@@ -183,24 +165,30 @@
       </div>
     </div>
 
-    <div class="items-per-row">
-      <span>每行顯示：</span>
-      <div class="layout-buttons">
-        <button class="layout-btn" data-cols="1">1</button>
-        <button class="layout-btn" data-cols="2">2</button>
-        <button class="layout-btn" data-cols="3">3</button>
-        <button class="layout-btn active" data-cols="4">4</button>
-        <button class="layout-btn" data-cols="5">5</button>
+    <!-- 顯示控制器 -->
+    <div class="display-controls">
+        <div class="control-group">
+            <label for="items-per-row-select">每行顯示</label>
+            <select id="items-per-row-select" class="items-selector">
+                <option value="1">1個</option>
+                <option value="2">2個</option>
+                <option value="3">3個</option>
+                <option value="4" selected>4個</option>
+                <option value="5">5個</option>
+            </select>
+        </div>
+        
+
+        <div class="total-count">
+          共 <span id="total-activities">{{ books.paginator.count }}</span> 本書
+          <span class="page-info">(第 <span id="current-page">1</span> 頁，共 <span id="total-pages">1</span> 頁)</span>
       </div>
     </div>
   </div>
 
   <!-- Books Grid -->
-  <div id="filterResult" style="margin-top:10px;color:#6F557D;font-size:18px;">
-    共搜尋到 {{ books.paginator.count }} 本書
-  </div>
 
-  <div class="books-grid grid-{{ items_per_row }}" id="booksGrid">
+  <div class="books-grid items-per-row-4" id="booksGrid">
     {% for book in books %}
     <a href="{% url 'book_detail' book.pk %}" class="book-card" 
        data-academic-id="{% if book.academic %}{{ book.academic.id }}{% endif %}"
@@ -535,6 +523,40 @@
 
     // 初次計算書籍數量
     filterBooks();
+    
+    // 每行顯示控制器
+    const itemsPerRowSelect = document.getElementById('items-per-row-select');
+    const booksGridElement = document.getElementById('booksGrid');
+    
+    // 初始設定
+    let currentItemsPerRow = 4;
+    
+    // 監聽選擇器變化
+    itemsPerRowSelect.addEventListener('change', function() {
+        const newItemsPerRow = parseInt(this.value);
+        
+        // 移除舊的類別
+        booksGridElement.classList.remove(`items-per-row-${currentItemsPerRow}`);
+        
+        // 添加新的類別
+        booksGridElement.classList.add(`items-per-row-${newItemsPerRow}`);
+        
+        // 更新當前值
+        currentItemsPerRow = newItemsPerRow;
+        
+        // 儲存用戶選擇
+        localStorage.setItem('bookItemsPerRow', newItemsPerRow);
+    });
+    
+    // 恢復用戶設定
+    const savedItemsPerRow = localStorage.getItem('bookItemsPerRow');
+    if (savedItemsPerRow) {
+        const itemsPerRow = parseInt(savedItemsPerRow);
+        itemsPerRowSelect.value = itemsPerRow;
+        booksGridElement.classList.remove('items-per-row-4');
+        booksGridElement.classList.add(`items-per-row-${itemsPerRow}`);
+        currentItemsPerRow = itemsPerRow;
+    }
   });
 
   // 設為全域函數
@@ -546,4 +568,5 @@
 <script src="{% static 'js/book.js' %}"></script>
 <script src="{% static 'js/book_image_upload.js' %}"></script>
 <script src="{% static 'js/book_image_rectangle.js' %}"></script>
+<script src="{% static 'js/book-marquee.js' %}"></script>
 {% endblock %}
