@@ -1,49 +1,39 @@
-const MOBILE_MAX = 768;
-function maybeRedirectToMobile() {
-  if (window.innerWidth <= MOBILE_MAX && !window.location.pathname.includes('welcome_mo')) {
-    window.location.replace('/welcome_mo/');
+
+(function () {
+  const MOBILE_MAX = 768;
+  const toMobile = '/welcome_mo/';  // 確認實際路由（有無斜線）
+  const toIndex  = '/index/';
+
+  // 安全取得目前路徑（兼容末尾斜線）
+  function isOnMobilePage() {
+    const p = window.location.pathname.replace(/\/+$/, '');
+    return p === '/welcome_mo';
   }
-}
-maybeRedirectToMobile();
-window.addEventListener('resize', () => {
-  maybeRedirectToMobile();
-});
 
-document.addEventListener('DOMContentLoaded', function () {
-  const viewer = document.querySelector('spline-viewer');
-  const REDIRECT_DELAY = 800; // 毫秒延遲
-  const FALLBACK_DELAY = 2000; // 如果未載入 spline-viewer，5 秒後跳轉
-  const redirect = () => window.location.replace('/index/');
-  let redirected = false;
-
-  const tryRedirect = () => {
-    if (!redirected) {
-      redirected = true;
-      console.log('Redirecting to /index/');
-      redirect();
+  // 防抖 + 螢幕寬度偵測
+  let rAF;
+  function maybeRedirectToMobile() {
+    if (window.innerWidth <= MOBILE_MAX && !isOnMobilePage()) {
+      console.log('[welcome] redirecting to mobile:', toMobile);
+      window.location.replace(toMobile);
     }
-  };
-
-  if (viewer) {
-    // 設定保險機制：載入後不管如何都要跳轉
-    viewer.addEventListener('load', () => {
-      console.log('Spline viewer loaded.');
-      setTimeout(tryRedirect, REDIRECT_DELAY);
-    });
-
-    // 確保即使 load 事件未觸發，也能在 10 秒後跳轉（保險計時器）
-    setTimeout(() => {
-      console.warn('Fallback timeout reached, forcing redirect.');
-      tryRedirect();
-    }, 7000);
-
-    // 點擊立即跳轉
-    viewer.addEventListener('click', () => {
-      console.log('User clicked, skipping animation.');
-      tryRedirect();
-    });
-  } else {
-    console.error('spline-viewer not found, fallback redirect in 5s.');
-    setTimeout(tryRedirect, FALLBACK_DELAY);
   }
-});
+
+  // 首次判斷
+  maybeRedirectToMobile();
+
+  // resize 時再判斷（用 rAF 防抖）
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(rAF);
+    rAF = requestAnimationFrame(maybeRedirectToMobile);
+  });
+
+  // 點一下就去 index（桌機與手機都能用）
+  function goIndex() {
+    window.location.href = toIndex;
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('click', goIndex, { once: true });
+    document.addEventListener('touchstart', goIndex, { once: true, passive: true });
+  });
+})();

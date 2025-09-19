@@ -327,10 +327,5 @@ function initializeInteractions() {
         fallback.style.display = 'flex';
       }
     }
-
-    // ★ 打開彈窗後，若彈窗內也有 <select>，補綁一次可見搜尋泡泡（用 class="searchable" 更保險）
-    if (typeof window.initVisibleSearchableSelects === 'function') {
-      window.initVisibleSearchableSelects(); // 掃描 class="searchable" 的 select
-    }
   });
 }
