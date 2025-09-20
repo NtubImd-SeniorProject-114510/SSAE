@@ -232,9 +232,9 @@ body {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 15px center;
+  background-position: right 10px center;
   background-size: 1em;
-  padding-right: 35px;
+  padding-right: 30px;
 }
 
 .filter-item:hover {
@@ -398,6 +398,9 @@ body {
   color: #6F557D;
 }
 .image-upload-rectangle .image-upload-text {
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
 }
 .image-upload-rectangle img {
   border-radius: 12px;
@@ -709,28 +712,63 @@ body {
   flex-wrap: nowrap;
   font-size: 0.9rem;
   color: #666;
-  overflow-x: auto;
-  overflow-y: hidden;
-  text-overflow: ellipsis;
+  overflow: hidden;
   white-space: nowrap;
   max-width: 180px;
   align-items: center;
-  scrollbar-width: thin;
-  scrollbar-color: #d1c4e9 #f3eef7;
+  position: relative;
 }
+
+/* 跑馬燈容器 */
+.book-meta-marquee {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: bookMarquee 15s linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
+}
+
+/* 滑鼠懸停卡片時啟動跑馬燈 */
+.book-card:hover .book-meta-marquee {
+  animation-play-state: running;
+}
+
+/* 保留原本的懸停效果作為備用 */
+.book-meta:hover .book-meta-marquee {
+  animation-play-state: running;
+}
+
+/* 跑馬燈動畫 - 單向滾動 */
+@keyframes bookMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* 游標效果 - 只在有跑馬燈時使用 */
+.book-meta.has-marquee {
+  mask: linear-gradient(90deg, transparent 0%, white 8%, white 92%, transparent 100%);
+  -webkit-mask: linear-gradient(90deg, transparent 0%, white 8%, white 92%, transparent 100%);
+}
+
+/* 卡片懸停效果 - 移除背景提示 */
+
+/* 滑鼠懸停效果 */
+.book-meta:hover {
+  cursor: pointer;
+}
+/* 移除舊的滾動條樣式，因為現在使用跑馬燈 */
 .book-meta::-webkit-scrollbar {
   display: none;
-  width: 0;
-  height: 0;
-  background: transparent;
 }
-.book-meta::-webkit-scrollbar-thumb {
-  display: none;
-  background: transparent;
-}
+
 .book-meta {
-  -ms-overflow-style: none; 
-  scrollbar-width: none;   
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 
@@ -757,17 +795,30 @@ body {
   color: #6F557D;
 }
 
-.book-meta-tag.book-condition-new {
-  background: #e3fbe8;
-  color: #1aaf4b;
+/* 書籍狀態標籤顏色 */
+.book-meta-tag.book-condition {
+  font-weight: 600;
 }
-.book-meta-tag.book-condition-good {
-  background: #fff9e1;
-  color: #b48a00;
+
+/* 全新 - 綠色 */
+.book-meta-tag.condition-new {
+  background: #e8f5e8 !important;
+  color: #2e7d32 !important;
+  border: 1px solid #4caf50 !important;
 }
-.book-meta-tag.book-condition-fair {
-  background: #ffeaea;
-  color: #e14a4a;
+
+/* 良好 - 黃色 */
+.book-meta-tag.condition-good {
+  background: #fff8e1 !important;
+  color: #f57f17 !important;
+  border: 1px solid #ffeb3b !important;
+}
+
+/* 尚可 - 紅色 */
+.book-meta-tag.condition-fair {
+  background: #ffebee !important;
+  color: #d32f2f !important;
+  border: 1px solid #f44336 !important;
 }
 
 .book-tag {
@@ -1232,4 +1283,75 @@ body {
 .book-card .book-header,
 .book-card .book-tag {
     text-decoration: none;
+}
+
+/* 書籍網格樣式 - 跟活動頁面一樣 */
+.books-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  gap: 20px !important;
+  margin-bottom: 80px !important;
+  transition: all 0.3s ease !important;
+  grid-template-columns: none !important;
+  max-width: none !important;
+}
+
+/* 每行顯示數量的網格樣式 - 1到5個 */
+.books-grid.items-per-row-1 {
+  gap: 30px !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.books-grid.items-per-row-2 {
+  gap: 40px !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+}
+
+.books-grid.items-per-row-3 {
+  gap: 30px !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+}
+
+.books-grid.items-per-row-4 {
+  gap: 20px !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+}
+
+.books-grid.items-per-row-5 {
+  gap: 15px !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+}
+
+/* 書籍卡片寬度控制 */
+.books-grid.items-per-row-1 .book-card {
+  width: 360px !important;
+  max-width: 360px !important;
+}
+
+.books-grid.items-per-row-2 .book-card {
+  width: calc(50% - 20px) !important;
+  max-width: 400px !important;
+}
+
+.books-grid.items-per-row-3 .book-card {
+  width: calc(33.333% - 20px) !important;
+  max-width: 350px !important;
+}
+
+.books-grid.items-per-row-4 .book-card {
+  width: calc(25% - 15px) !important;
+  max-width: 300px !important;
+}
+
+.books-grid.items-per-row-5 .book-card {
+  width: calc(20% - 12px) !important;
+  max-width: 250px !important;
 }

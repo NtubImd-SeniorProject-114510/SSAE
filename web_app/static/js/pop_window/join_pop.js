@@ -8,28 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeContactTypeHandler();
 });
 
-// 加減按鈕功能
-function initializeNumberInputButtons() {
-    document.querySelectorAll('.num-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const targetId = btn.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            if (!input) return;
-            let min = parseInt(input.getAttribute('min')) || 2;
-            let max = parseInt(input.getAttribute('max')) || 100;
-            let step = parseInt(input.getAttribute('step')) || 1;
-            let value = parseInt(input.value) || min;
-            if (btn.classList.contains('plus-btn')) {
-                if (value < max) input.value = value + step;
-            } else if (btn.classList.contains('minus-btn')) {
-                if (value > min) input.value = value - step;
-            }
-            input.dispatchEvent(new Event('input'));
-        });
-    });
-}
-
-
 let previewMap;
 let previewMarker;
 
