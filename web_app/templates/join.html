@@ -108,9 +108,10 @@
                         </div>
                         
                         {# 浮動日期標籤 #}
-                        <div class="floating-date">
-                            <div class="month">{{ a.date|date:"n" }} 月</div>
-                            <div class="day">{{ a.date|date:"j" }}</div>
+                        <div class="floating-date status-deadline">
+                            <div class="label" style="font-size: 12px;">截止日</div>
+                            <div class="month">{{ a.deadline|date:"n" }} 月</div>
+                            <div class="day">{{ a.deadline|date:"j" }}</div>
                         </div>
                     </div>
 
