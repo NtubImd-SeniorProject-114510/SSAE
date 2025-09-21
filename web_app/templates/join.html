@@ -65,13 +65,23 @@
     <div class="display-controls">
         <div class="control-group">
             <label for="items-per-row">每行顯示：</label>
-            <select id="items-per-row" class="items-selector">
+            <select id="items-per-row" class="items-selector desktop-selector">
                 <option value="1">1 個</option>
                 <option value="2">2 個</option>
-                <option value="3" selected>3 個</option>
-                <option value="4">4 個</option>
+                <option value="3">3 個</option>
+                <option value="4" selected>4 個</option>
                 <option value="5">5 個</option>
             </select>
+            
+            <!-- 手機版按鈕選擇器 (480px以下) -->
+            <div class="mobile-grid-buttons">
+                <button type="button" class="grid-btn active" data-value="1">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button type="button" class="grid-btn" data-value="2">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
         </div>
         <div class="total-count">
             共 <span id="total-activities">{{ activities|length }}</span> 個活動
@@ -109,7 +119,7 @@
                         
                         {# 浮動日期標籤 #}
                         <div class="floating-date status-deadline">
-                            <div class="label" style="font-size: 12px;">截止日</div>
+                            <div class="label">截止日</div>
                             <div class="month">{{ a.deadline|date:"n" }} 月</div>
                             <div class="day">{{ a.deadline|date:"j" }}</div>
                         </div>
@@ -310,7 +320,15 @@ document.addEventListener('DOMContentLoaded', function() {
             currentPage = parseInt(savedCurrentPage);
         }
         
+        // 立即應用卡片尺寸，確保樣式生效
+        updateGridLayout(itemsPerRow);
+        
         updateLayout();
+        
+        // 強制重新渲染，確保所有樣式都被應用
+        setTimeout(() => {
+            updateGridLayout(itemsPerRow);
+        }, 50);
     }
     
     // 更新佈局
@@ -351,6 +369,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 更新網格佈局
     function updateGridLayout(itemsPerRow) {
+        console.log('Updating grid layout for', itemsPerRow, 'items per row');
+        
         // 移除所有現有的 items-per-row 類別
         activityGrid.className = activityGrid.className.replace(/items-per-row-\d+/g, '');
         
@@ -363,7 +383,15 @@ document.addEventListener('DOMContentLoaded', function() {
             card.className = card.className.replace(/card-size-\d+/g, '');
             // 添加新的類別
             card.classList.add(`card-size-${itemsPerRow}`);
+            
+            // 調試信息
+            if (index === 0) {
+                console.log('First card classes:', card.className);
+            }
         });
+        
+        // 強制重新計算樣式
+        activityGrid.offsetHeight;
         
         // 觸發重新計算佈局
         setTimeout(() => {
