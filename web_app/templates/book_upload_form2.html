@@ -53,9 +53,23 @@
     </div>
 
     <div class="form-container">
+
         <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book2' %}">
             {% csrf_token %}
             
+            <div class="upload-area" id="uploadArea" onclick="triggerFileInput()">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">點擊上傳書籍封面圖片</div>
+                <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
+            </div>
+
+            <input type="file" 
+                   name="cover_image" 
+                   id="id_cover_image" 
+                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                   style="display: none;"
+                   onchange="handleFileSelect(this)">
+
             <div class="form-group">
                 <label class="form-label required" for="id_title">書名</label>
                 <input type="text" 
