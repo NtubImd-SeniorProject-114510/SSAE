@@ -93,6 +93,31 @@ def join_create(request):
 def join_detail(request):
     return render(request, 'join_detail.html')
 
+
+import json
+import logging
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
+from .models import GroupActivity, ActivityComment
+from .utils.content_filter import contains_banned_content
+
+logger = logging.getLogger(__name__)
+
+def _parse_request_data(request):
+    """同時支援 JSON 與 x-www-form-urlencoded"""
+    if request.content_type and 'application/json' in request.content_type.lower():
+        try:
+            return json.loads(request.body or '{}')
+        except Exception as e:
+            logger.warning("add_comment bad json: %s", e)
+            return None  # 讓呼叫端回 400
+    # fallback: 表單
+    return request.POST
+
+
 from .models import ActivityComment, Book2
 from .models import Department, Category
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -271,11 +296,21 @@ def get_related_data(request):
             "error": error_msg
         }, status=500)
 
+from .utils.content_filter import contains_banned_content
+
 @login_required
 def upload_book2(request):
     if request.method == "POST":
         form = Book2Form(request.POST, request.FILES)
         if form.is_valid():
+            # 不當詞過濾（掃所有文字欄位）
+            has_banned = any(
+                isinstance(v, str) and v.strip() and contains_banned_content(v)
+                for v in form.cleaned_data.values()
+            )
+            if has_banned:
+                return JsonResponse({'success': False, 'message': '輸入內容包含禁止詞彙，請重新編輯。'}, status=400)
+
             book = form.save(commit=False)
             book.seller = request.user
             book.contact = request.user
@@ -284,16 +319,17 @@ def upload_book2(request):
             book.save()
             return JsonResponse({'success': True, 'message': '書籍上架成功！', 'book_id': book.pk})
         else:
+            # 前端若有逐欄位顯示需求可回 form.errors；否則維持 message
             return JsonResponse({'success': False, 'message': str(form.errors)}, status=400)
 
     form = Book2Form()
     academics = Academic.objects.all()
-
     return render(request, 'book.html', {
         'form': form,
         'books': Book2.objects.all(),
         'academics': academics,
     })
+
 
 def ask_page(request):
     return render(request, "ask.html")
@@ -2104,6 +2140,8 @@ def cancel_activity(request, pk):
 # -----------------------
 # 建立活動
 # -----------------------
+from .utils.content_filter import contains_banned_content  # 確保已建立並匯入
+
 @csrf_exempt
 @login_required
 def create_activity(request):
@@ -2113,29 +2151,41 @@ def create_activity(request):
     
     elif request.method == 'POST':
         form = ActivityForm(request.POST, request.FILES)
+
         if form.is_valid():
+            # ---- 禁用詞檢查 ----
+            has_banned = any(
+                isinstance(value, str) and contains_banned_content(value)
+                for value in form.cleaned_data.values()
+            )
+            if has_banned:
+                msg = '輸入內容包含禁止詞彙，請重新編輯。'
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'ok': False, 'errors': {'general': [msg]}})
+                messages.error(request, msg)
+                return render(request, 'join_create.html', {'form': form})
+
+            # ---- 真的落盤 ----
             try:
                 activity = form.save(commit=False)
-                activity.user = request.user  # ← auth_user
+                activity.user = request.user
                 activity.save()
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'ok': True, 'message': '活動創建成功！', 'activity_id': activity.id})
-                else:
-                    messages.success(request, '活動創建成功！')
-                    return redirect('activity_list')
+                messages.success(request, '活動創建成功！')
+                return redirect('activity_list')
             except Exception as e:
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'ok': False, 'errors': {'general': [f'創建活動時發生錯誤: {str(e)}']}})
-                else:
-                    messages.error(request, f'創建活動時發生錯誤: {str(e)}')
+                messages.error(request, f'創建活動時發生錯誤: {str(e)}')
         else:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'ok': False, 'errors': form.errors})
-            else:
-                messages.error(request, '表單填寫有誤，請檢查後重試')
+            messages.error(request, '表單填寫有誤，請檢查後重試')
         return render(request, 'join_create.html', {'form': form})
     
     return JsonResponse({'ok': False, 'errors': {'general': ['僅接受 GET 和 POST 請求']}})
+
 
 # -----------------------
 # 用戶參與的活動列表
@@ -2183,27 +2233,56 @@ def activity_participants(request, pk):
 # -----------------------
 # 新增活動留言（不是課程評論）
 # -----------------------
+from .utils.content_filter import contains_banned_content
+
 @csrf_exempt
 @login_required
 def add_comment(request, activity_id):
-    """
-    AJAX：新增一則活動留言（支援 parent_id 做子留言）
-    """
     if request.method != 'POST':
-        return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+        return JsonResponse(
+            {'success': False, 'ok': False, 'message': '僅支援 POST 請求', 'errors': {'general': ['僅支援 POST 請求']}},
+            status=405
+        )
 
     a = get_object_or_404(GroupActivity, id=activity_id)
 
-    try:
-        data = json.loads(request.body or "{}")
-    except Exception:
-        return JsonResponse({'error': '無效的請求內容'}, status=400)
+    if request.content_type and 'application/json' in request.content_type.lower():
+        try:
+            data = json.loads(request.body or '{}')
+        except Exception:
+            return JsonResponse(
+                {
+                    'success': False, 'ok': False,
+                    'message': '無效的請求內容（JSON 解析失敗）',
+                    'errors': {'general': ['無效的請求內容（JSON 解析失敗）']}
+                },
+                status=400
+            )
+    else:
+        data = request.POST
 
     content   = (data.get('content') or '').strip()
     parent_id = data.get('parent_id')
 
     if not content:
-        return JsonResponse({'error': '留言內容不能為空'}, status=400)
+        return JsonResponse(
+            {
+                'success': False, 'ok': False,
+                'message': '留言內容不能為空',
+                'errors': {'general': ['留言內容不能為空']}
+            },
+            status=400
+        )
+
+    if contains_banned_content(content):
+        return JsonResponse(
+            {
+                'success': False, 'ok': False,
+                'message': '留言內容包含禁止詞彙，請重新編輯。',
+                'errors': {'general': ['留言內容包含禁止詞彙，請重新編輯。']}
+            },
+            status=400
+        )
 
     parent = None
     if parent_id:
@@ -2211,28 +2290,19 @@ def add_comment(request, activity_id):
 
     comment = ActivityComment.objects.create(
         activity=a,
-        user=request.user,   # ← auth_user
+        user=request.user,
         content=content,
         parent=parent
     )
 
-    # 嘗試取 Google 頭像（若你有 social_auth）
     user_avatar = '/static/image/avatar24-01.jpg'
-    try:
-        social = getattr(request.user, 'social_auth', None)
-        if social:
-            sa = social.filter(provider__icontains='google').first()
-            if sa and isinstance(sa.extra_data, dict):
-                user_avatar = sa.extra_data.get('picture') or user_avatar
-    except Exception:
-        pass
-
     display_name = (getattr(request.user, 'last_name', '') or '') + (getattr(request.user, 'first_name', '') or '')
     if not display_name:
         display_name = getattr(request.user, 'username', '') or '使用者'
 
     return JsonResponse({
         'success': True,
+        'ok': True,
         'comment': {
             'id': comment.id,
             'content': comment.content,
@@ -2242,7 +2312,7 @@ def add_comment(request, activity_id):
             'likes_count': 0,
             'is_liked': False
         }
-    })
+    }, status=200)
 
 # -----------------------
 # 切換按讚（活動留言）
@@ -2267,3 +2337,7 @@ def toggle_like(request, comment_id):
         'is_liked': is_liked,
         'likes_count': comment.likes.count()
     })
+
+
+
+

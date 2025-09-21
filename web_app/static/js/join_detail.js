@@ -254,22 +254,42 @@ function toggleLike(commentId, button) {
 }
 
 function submitComment(activityId, content, textarea, parentId = null) {
-    fetch(`/api/activities/${activityId}/comments/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ content, parent_id: parentId })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            textarea.value = '';
-            location.reload();
-        }
-    })
-    .catch(err => console.error('Comment error:', err));
+  // 前端先檢查空白
+  if (!content || !content.trim()) {
+    showCommentMsg('留言內容不能為空', false);
+    return;
+  }
+
+  fetch(`/api/activities/${activityId}/comments/`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({ content, parent_id: parentId })
+  })
+  .then(async (r) => {
+      let data = {};
+      try { data = await r.json(); } catch (e) {}
+      const failed = !r.ok || data.success === false || data.ok === false;
+
+      if (failed) {
+        const msg = pickMessage(data) || '留言送出失敗，請檢查內容後再試。';
+        showCommentMsg(msg, false);           // 🔴 顯示後端錯誤（含禁用詞）
+        return;
+      }
+
+      // ✅ 成功
+      showCommentMsg('留言成功！', true);
+      if (textarea) textarea.value = '';
+      // 你也可以在這裡直接把新留言插入 DOM；先沿用原本行為：
+      location.reload();
+  })
+  .catch(err => {
+      console.error('Comment error:', err);
+      showCommentMsg('網路或系統錯誤，請稍後再試', false);
+  });
 }
 
 function getCookie(name) {
@@ -306,3 +326,33 @@ function isUserAuthenticated() {
 
 // 設為全域函數，確保模板中的 onclick 可以調用
 window.triggerNavbarLogin = triggerNavbarLogin;
+
+
+// 顯示留言錯誤/成功訊息（沒有容器就自動建一個）
+function showCommentMsg(text, ok = false) {
+  let box = document.getElementById('commentMsg');
+  if (!box) {
+    // 優先插在討論區頂部；找不到就插在 body 內
+    const host = document.querySelector('.discussion-section') || document.body;
+    box = document.createElement('div');
+    box.id = 'commentMsg';
+    box.style.margin = '8px 0';
+    box.style.fontSize = '14px';
+    host.prepend(box);
+  }
+  box.textContent = text;
+  box.style.color = ok ? '#0a0' : '#c00';
+}
+
+// 從各種回傳格式萃取訊息：支援 {success/message} 與 {ok/errors.general[0]}
+function pickMessage(data) {
+  if (!data || typeof data !== 'object') return '';
+  if (data.message) return data.message;
+  if (data.errors) {
+    if (Array.isArray(data.errors)) return data.errors[0] || '';
+    if (data.errors.general && Array.isArray(data.errors.general)) return data.errors.general[0] || '';
+    const k = Object.keys(data.errors)[0];
+    if (k && Array.isArray(data.errors[k])) return data.errors[k][0] || '';
+  }
+  return '';
+}

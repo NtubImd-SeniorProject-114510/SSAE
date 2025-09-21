@@ -1,9 +1,16 @@
-# forms.py
 from django import forms
 import os
-from .models import GroupActivity, Book, Book2
+from .models import ActivityComment, GroupActivity, Book, Book2
+from django.core.exceptions import ValidationError
 
-class ActivityForm(forms.ModelForm):
+# ★ 加上這行：導入表單過濾 Mixin
+from .forms_mixins import SafeContentFormMixin
+
+
+# ---------------------------
+# 活動建立表單：掛上 Mixin
+# ---------------------------
+class ActivityForm(SafeContentFormMixin, forms.ModelForm):
     class Meta:
         model = GroupActivity
         fields = [
@@ -21,7 +28,7 @@ class ActivityForm(forms.ModelForm):
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
             'place_id': forms.HiddenInput(),
-            'location_type': forms.RadioSelect(),  # 使用單選按鈕
+            'location_type': forms.RadioSelect(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -34,7 +41,7 @@ class ActivityForm(forms.ModelForm):
         self.fields['contact_info'].required = False
         
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean()  # ★ 會先跑 SafeContentFormMixin.clean()
         location_type = cleaned_data.get('location_type')
         location = cleaned_data.get('location')
         min_participants = cleaned_data.get('min_participants')
@@ -42,11 +49,9 @@ class ActivityForm(forms.ModelForm):
         date = cleaned_data.get('date')
         deadline = cleaned_data.get('deadline')
 
-        # 校內校外驗證（改成只檢查 location）
         if location_type == 'off_campus' and (not location or not location.strip()):
             self.add_error('location', '校外活動必須填寫地點')
 
-        # 原有驗證
         if min_participants and max_participants and min_participants >= max_participants:
             self.add_error('max_participants', '最多參加人數必須大於最少參加人數')
 
@@ -54,12 +59,14 @@ class ActivityForm(forms.ModelForm):
             self.add_error('deadline', '報名截止日期必須早於活動日期')
 
         return cleaned_data
-    
-from django import forms
-from django.core.exceptions import ValidationError
+
+
+# ---------------------------
+# 二手書上傳表單：掛上 Mixin
+# ---------------------------
 from .models import Book2, Department
 
-class Book2Form(forms.ModelForm):
+class Book2Form(SafeContentFormMixin, forms.ModelForm):
     department = forms.ModelChoiceField(
         queryset=Department.objects.all(),
         required=False,
@@ -75,13 +82,6 @@ class Book2Form(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows':3,'placeholder':'請描述書籍狀況、購買原因等...'}),
         }
-    
-    def clean_price(self):
-        price = self.cleaned_data.get('price')
-        if price is not None and price < 0:
-            raise ValidationError('價格不能為負數')
-        return price
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -107,6 +107,7 @@ class Book2Form(forms.ModelForm):
             raise ValidationError('書名為必填欄位')
         return title.strip()
 
+    # ★ 只保留一個 clean_price（避免重複定義被覆蓋）
     def clean_price(self):
         price = self.cleaned_data.get('price')
         if price in [None, '']:
@@ -118,22 +119,16 @@ class Book2Form(forms.ModelForm):
     def clean_cover_image(self):
         cover_image = self.cleaned_data.get('cover_image')
         if cover_image:
-            # 檢查文件大小 (5MB限制)
             if cover_image.size > 5 * 1024 * 1024:
                 raise ValidationError('圖片大小不能超過5MB')
-
-            # 檢查文件格式
             allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
             ext = os.path.splitext(cover_image.name)[1].lower()
             if ext not in allowed_extensions:
                 raise ValidationError(f'不支援的圖片格式。支援的格式：{", ".join(allowed_extensions)}')
-
-            # 檢查是否為圖片文件
             if not cover_image.content_type.startswith('image/'):
                 raise ValidationError('請上傳有效的圖片文件')
-
         return cover_image
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean()  # ★ 會先跑 SafeContentFormMixin.clean()
         return cleaned_data

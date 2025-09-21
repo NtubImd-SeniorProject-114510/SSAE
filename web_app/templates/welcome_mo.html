@@ -20,7 +20,7 @@
 <body>
   
   <div class="video-wrap">
-    <video playsinline muted autoplay preload="auto"
+    <video playsinline webkit-playsinline muted autoplay preload="auto"
            poster="{% static 'image/welco_mo_img.jpg' %}">
       <source src="{% static 'image/welcome_mo.mp4' %}" type="video/mp4">
     </video>
@@ -37,6 +37,25 @@
     
   </body>
   <script src="{% static 'js/welcome_mo.js' %}"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const v = document.querySelector('video.welcome-mobile-video') || document.querySelector('video');
+    if (!v) return;
+
+    // 再次保險把屬性與屬性節點都設上（iOS 有時靠這個才認定為靜音）
+    v.muted = true;
+    v.defaultMuted = true;
+    v.setAttribute('muted', '');
+    v.playsInline = true;               // JS 屬性（駝峰）
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+
+    // 主動嘗試播放（若被擋，catch 掉即可）
+    try { v.play().catch(() => {}); } catch (_) {}
+
+    // 你原本的跳轉/點擊跳轉保留在這段之後就好
+  });
+</script>
 
   </html>
 
