@@ -1,6 +1,6 @@
-<!-- join_pop.html - 發起揪團彈跳視窗 -->
+{% load static %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="/static/css/join_pop.css">
+<link rel="stylesheet" href="{% static 'css/pop_window/join_pop.css' %}">
 
 <div class="upload-form" id="uploadForm">
     <div class="upload-container">
@@ -10,7 +10,7 @@
         </div>
         
         <form id="create-group-form" enctype="multipart/form-data">
-            <!-- 預覽區域 -->
+            <!-- 活動封面 -->
             <div class="form-group">
                 <label class="form-label">活動封面圖片（選填）</label>
                 <div class="image-upload-container" id="image-upload-area">
@@ -21,12 +21,13 @@
                 <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
             </div>
             
-
+            <!-- 標題 -->
             <div class="form-group">
                 <label for="activity-title" class="form-label" style="margin-top: 20px;">活動標題*</label>
                 <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
             </div>
             
+            <!-- 活動類型 & 地點類型 -->
             <div class="form-row">
                 <div class="form-col">
                     <div class="form-group">
@@ -43,7 +44,6 @@
                     </div>
                 </div>
                 <div class="form-col">
-                    <!-- 校內校外選擇 -->
                     <div class="form-group">
                         <label class="form-label">地點類型*</label>
                         <div class="radio-group">
@@ -60,13 +60,13 @@
                 </div>
             </div>
 
-            <!-- 校內教室欄位 -->
+            <!-- 校內教室 -->
             <div class="form-group" id="classroom-field" style="display:none;">
                 <label for="classroom" class="form-label">教室*</label>
                 <input type="text" id="classroom" class="form-input" placeholder="例如：承曦樓505、圖書館討論室1">
             </div>
 
-            <!-- 校外地點欄位 -->
+            <!-- 校外地點 -->
             <div class="form-group" id="location-field" style="display:none;">
                 <label for="activity-location" class="form-label">活動地點*</label>
                 <div class="location-input-container">
@@ -75,19 +75,19 @@
                 </div>
             </div>
             
-            <!-- 隱藏欄位存儲地理位置資訊 -->
+            <!-- 隱藏欄位 -->
             <input type="hidden" id="selected-address" name="location">
             <input type="hidden" name="latitude" id="selected-latitude">
             <input type="hidden" name="longitude" id="selected-longitude">
             <input type="hidden" name="place_id" id="selected-place-id">
 
-            
+            <!-- 活動說明 -->
             <div class="form-group">
                 <label for="activity-description" class="form-label">活動說明*</label>
                 <textarea id="activity-description" name="description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
             </div>
             
-            
+            <!-- 日期時間 -->
             <div class="form-row">
                 <div class="form-col">
                     <div class="form-group">
@@ -102,92 +102,44 @@
                     </div>
                 </div>
             </div>
-            <div class="form-col">
-                <div class="form-group">
-                    <label for="activity-deadline" class="form-label">報名截止日期*</label>
-                    <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
-                </div>
-            </div>
 
-            <!-- 根據選擇顯示不同的輸入欄位 -->
-            {% comment %} 
+            <!-- 報名截止 -->
             <div class="form-group">
-                <label class="form-label">聯絡方式*</label>
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="contact_type" value="line">
-                        <span>Line</span>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="contact_type" value="instagram">
-                        <span>Instagram</span>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="contact_type" value="phone">
-                        <span>電話</span>
-                    </label>
-                </div>
+                <label for="activity-deadline" class="form-label">報名截止日期*</label>
+                <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
             </div>
 
-            <div class="contact-input-group" id="line-input">
-                <input type="text" class="form-input" name="line_id" placeholder="請輸入 Line ID">
-                <div class="help-text">請輸入您的 Line ID</div>
-            </div>
-            <div class="contact-input-group" id="instagram-input">
-                <input type="text" class="form-input" name="instagram_id" placeholder="請輸入 Instagram 帳號">
-                <div class="help-text">請輸入您的 Instagram 帳號</div>
-            </div>
-            <div class="contact-input-group" id="phone-input">
-                <input type="tel" class="form-input" name="phone_number" placeholder="請輸入手機號碼">
-                <div class="help-text">請輸入您的手機號碼</div>
-            </div>
-            
+            <!-- 人數 -->
             <div class="form-row">
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="min-participants" class="form-label">最少參加人數</label>
+                        <label for="min-participants" class="form-label">最少參加人數*</label>
                         <div class="number-input-group">
                             <button type="button" class="num-btn minus-btn" data-target="min-participants">-</button>
-                            <input type="number" id="min-participants" name="min_participants" class="form-input number-input" min="2" value="2" required>
+                            <input type="number" id="min-participants" name="min_participants" class="form-input number-input" min="2" max="50" value="2" required>
                             <button type="button" class="num-btn plus-btn" data-target="min-participants">+</button>
                         </div>
-
-                        <!--<label for="min-participants" class="form-label">最少參加人數*</label>
-                        <input type="number" id="min-participants" name="min_participants" class="form-input" min="2" value="2" required> -->
-
                     </div>
                 </div>
                 <div class="form-col">
                     <div class="form-group">
-                        <label for="max-participants" class="form-label">最多參加人數</label>
+                        <label for="max-participants" class="form-label">最多參加人數*</label>
                         <div class="number-input-group">
                             <button type="button" class="num-btn minus-btn" data-target="max-participants">-</button>
                             <input type="number" id="max-participants" name="max_participants" class="form-input number-input" min="2" value="10" required>
                             <button type="button" class="num-btn plus-btn" data-target="max-participants">+</button>
                         </div>
-                       <!-- <label for="max-participants" class="form-label">最多參加人數*</label>
-                        <input type="number" id="max-participants" name="max_participants" class="form-input" min="2" value="10" required>-->
                     </div>
                 </div>
-            </div> 
-            {% endcomment %}
-            
-       
-            <div class="form-group">
-                <label for="activity-deadline" class="form-label">報名截止日期</label>
-                <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
             </div>
 
+            <!-- 聯絡方式 -->
             <div class="form-group">
                 <label for="contact-info" class="form-label">聯絡方式（選填）</label>
                 <input type="text" id="contact-info" name="contact_info" class="form-input" placeholder="LINE ID、IG、電話等">
             </div>
 
-            
-            
-    
-
-           <!-- <!-- 預覽區域 --> -->
+            <!-- 預覽 -->
             <div class="preview-section">
                 <div class="preview-title">
                     <span class="preview-icon">👁</span>
@@ -225,4 +177,4 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/js/join_pop.js"></script>
+<script src="{% static 'js/pop_window/join_pop.js' %}"></script>
