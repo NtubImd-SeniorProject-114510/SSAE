@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeParallax();
     initializeRandomClouds();
     initializeActivityCards();
+    initializeMobileGridButtons();
 });
 
 // 按照活動狀態排序功能
@@ -338,3 +339,95 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 設為全域函數
 window.triggerNavbarLogin = triggerNavbarLogin;
+
+// 初始化手機版網格按鈕功能
+function initializeMobileGridButtons() {
+    const mobileButtons = document.querySelectorAll('.grid-btn');
+    const desktopSelector = document.getElementById('items-per-row');
+    
+    if (mobileButtons.length === 0) return;
+    
+    // 為每個按鈕添加點擊事件
+    mobileButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            
+            // 移除所有按鈕的 active 類
+            mobileButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // 添加 active 類到當前按鈕
+            this.classList.add('active');
+            
+            // 同步更新桌面版選擇器的值
+            if (desktopSelector) {
+                desktopSelector.value = value;
+                
+                // 觸發桌面版選擇器的 change 事件
+                const changeEvent = new Event('change', { bubbles: true });
+                desktopSelector.dispatchEvent(changeEvent);
+            }
+            
+            console.log(`手機版選擇：每行 ${value} 個`);
+        });
+    });
+    
+    // 監聽桌面版選擇器變化，同步到手機版按鈕
+    if (desktopSelector) {
+        desktopSelector.addEventListener('change', function() {
+            const value = this.value;
+            
+            // 更新手機版按鈕狀態
+            mobileButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-value') === value) {
+                    btn.classList.add('active');
+                }
+            });
+        });
+    }
+    
+    // 檢查螢幕尺寸，在480px以下時限制選項並預設為1行
+    function checkScreenSize() {
+        if (window.innerWidth <= 480) {
+            // 只在初次載入或從大螢幕切換到小螢幕時設定預設值
+            if (desktopSelector && parseInt(desktopSelector.value) > 2) {
+                desktopSelector.value = '1';
+                const changeEvent = new Event('change', { bubbles: true });
+                desktopSelector.dispatchEvent(changeEvent);
+                
+                // 同步手機版按鈕狀態
+                mobileButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-value') === '1') {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        }
+    }
+    
+    // 初始化手機版按鈕狀態
+    if (window.innerWidth <= 480) {
+        // 如果桌面版選擇器值大於2，設定為1，否則保持當前值
+        const currentValue = desktopSelector ? desktopSelector.value : '1';
+        const targetValue = parseInt(currentValue) > 2 ? '1' : currentValue;
+        
+        if (desktopSelector && parseInt(currentValue) > 2) {
+            desktopSelector.value = targetValue;
+        }
+        
+        // 同步按鈕狀態
+        mobileButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-value') === targetValue) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    
+    // 初始檢查和監聽窗口大小變化
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    console.log('手機版網格按鈕已初始化');
+}

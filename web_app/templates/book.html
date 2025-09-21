@@ -11,7 +11,6 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/book.css' %}">
 <link rel="stylesheet" href="{% static 'css/join.css' %}">
-<!-- 原有的 style 保持不變 -->
 <style>
 /* ===== 基本書卡動畫 ===== */
 .book-card { opacity: 0; transform: translateY(20px); transition: all 0.5s ease; }
@@ -24,6 +23,13 @@
   flex-wrap: wrap;         /* 超過寬度換行 */
   gap: 15px;
   margin-bottom: 15px;
+}
+
+.filter-grid-2 {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
 }
 
 .filter-group {
@@ -44,6 +50,7 @@
 .search-container {
   flex: 1 1 200px; /* 搜尋欄比其他略寬 */
   position: relative;
+  height: 44px;
 }
 .search-input { padding-left: 40px; }
 .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6F557D; }
@@ -72,9 +79,7 @@
     opacity: 0.6;
 }
 
-/* ===== 每行顯示按鈕 - 已移除，使用 join.css 中的新樣式 ===== */
 
-/* ===== 書卡 Grid - 已移除，使用 book.css 中的新樣式 ===== */
 
 /* ===== 書卡樣式 ===== */
 .book-card {
@@ -154,6 +159,8 @@
           <option value="800-99999">$800以上</option>
         </select>
       </div>
+    </div>
+    <div class="filter-grid-2">
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
         <input type="text" id="searchInput" class="search-input" placeholder="搜尋書名或關鍵字...">
@@ -168,7 +175,7 @@
     <!-- 顯示控制器 -->
     <div class="display-controls">
         <div class="control-group">
-            <label for="items-per-row-select">每行顯示</label>
+            <label for="items-per-row-select">顯示方式</label>
             <select id="items-per-row-select" class="items-selector">
                 <option value="1">1個</option>
                 <option value="2">2個</option>
@@ -176,6 +183,16 @@
                 <option value="4" selected>4個</option>
                 <option value="5">5個</option>
             </select>
+            
+            <!-- 手機版按鈕選擇器 (480px以下) -->
+            <div class="mobile-book-buttons">
+                <button type="button" class="book-grid-btn active" data-value="1">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button type="button" class="book-grid-btn" data-value="2">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
         </div>
         
 
@@ -247,7 +264,7 @@
       <div class="circular-text">
         <svg viewBox="0 0 100 100">
           <path id="curve" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" fill="transparent"/>
-          <text><textPath href="#curve" textLength="250">search by life classification •</textPath></text>
+          <text><textPath href="#curve" textLength="250">add your second-hand books•</textPath></text>
         </svg>
       </div>
       <div class="upload-btn-center" id="centerUploadBtn"><span>＋</span></div>
@@ -310,19 +327,125 @@
 
   // 初始化頁面
   document.addEventListener('DOMContentLoaded', function() {
-    const booksGrid = document.getElementById('booksGrid');
-    const layoutButtons = document.querySelectorAll('.layout-btn');
-
-    // 每行顯示按鈕功能
-    layoutButtons.forEach(btn => {
-      btn.addEventListener('click', function() {
-        const cols = this.getAttribute('data-cols');
-        [...booksGrid.classList].forEach(cls => { if(/^grid-\d$/.test(cls)) booksGrid.classList.remove(cls); });
-        booksGrid.classList.add(`grid-${cols}`);
-        layoutButtons.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
+    
+    // ===== 每行顯示控制器 - 優先初始化 =====
+    const itemsPerRowSelect = document.getElementById('items-per-row-select');
+    const booksGridElement = document.getElementById('booksGrid');
+    
+    console.log('=== 每行顯示初始化 ===');
+    console.log('選擇器元素:', itemsPerRowSelect);
+    console.log('網格元素:', booksGridElement);
+    
+    if (itemsPerRowSelect && booksGridElement) {
+        // 初始設定
+        let currentItemsPerRow = 4;
+        
+        // 監聽選擇器變化
+        itemsPerRowSelect.addEventListener('change', function() {
+            const newItemsPerRow = parseInt(this.value);
+            
+            console.log('=== 切換每行顯示 ===');
+            console.log('新值:', newItemsPerRow);
+            console.log('舊值:', currentItemsPerRow);
+            
+            // 移除所有可能的類別
+            for (let i = 1; i <= 5; i++) {
+                booksGridElement.classList.remove(`items-per-row-${i}`);
+            }
+            
+            // 添加新的類別
+            booksGridElement.classList.add(`items-per-row-${newItemsPerRow}`);
+            
+            console.log('當前類別:', booksGridElement.className);
+            
+            // 更新當前值
+            currentItemsPerRow = newItemsPerRow;
+            
+            // 儲存用戶選擇
+            localStorage.setItem('bookItemsPerRow', newItemsPerRow);
+            
+            // 強制重新渲染
+            booksGridElement.style.display = 'none';
+            booksGridElement.offsetHeight; // 觸發重排
+            booksGridElement.style.display = 'flex';
+            
+            console.log('=== 切換完成 ===');
+        });
+        
+        // 恢復用戶設定
+        const savedItemsPerRow = localStorage.getItem('bookItemsPerRow');
+        if (savedItemsPerRow) {
+            const itemsPerRow = parseInt(savedItemsPerRow);
+            itemsPerRowSelect.value = itemsPerRow;
+            
+            // 移除所有類別
+            for (let i = 1; i <= 5; i++) {
+                booksGridElement.classList.remove(`items-per-row-${i}`);
+            }
+            
+            booksGridElement.classList.add(`items-per-row-${itemsPerRow}`);
+            currentItemsPerRow = itemsPerRow;
+            
+            console.log('恢復設定:', itemsPerRow);
+        }
+        
+        console.log('每行顯示控制器初始化完成');
+        
+        // 手機版按鈕功能
+        const mobileButtons = document.querySelectorAll('.book-grid-btn');
+        
+        mobileButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                
+                console.log('手機版按鈕點擊:', value);
+                
+                // 移除所有active狀態
+                mobileButtons.forEach(b => b.classList.remove('active'));
+                
+                // 添加active狀態到當前按鈕
+                this.classList.add('active');
+                
+                // 同步桌面版選擇器
+                itemsPerRowSelect.value = value;
+                
+                // 觸發桌面版選擇器的change事件
+                const changeEvent = new Event('change', { bubbles: true });
+                itemsPerRowSelect.dispatchEvent(changeEvent);
+            });
+        });
+        
+        // 檢查螢幕尺寸，在480px以下時限制選項並預設為1行
+        function checkScreenSize() {
+            if (window.innerWidth <= 480) {
+                // 480px以下預設為1行顯示
+                if (parseInt(itemsPerRowSelect.value) > 2) {
+                    itemsPerRowSelect.value = '1';
+                    const changeEvent = new Event('change', { bubbles: true });
+                    itemsPerRowSelect.dispatchEvent(changeEvent);
+                }
+                
+                // 同步手機版按鈕狀態
+                mobileButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-value') === itemsPerRowSelect.value) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        }
+        
+        // 初始檢查和監聽窗口大小變化
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        
+        console.log('手機版按鈕已初始化');
+        
+    } else {
+        console.error('每行顯示控制器初始化失敗');
+        if (!itemsPerRowSelect) console.error('找不到選擇器');
+        if (!booksGridElement) console.error('找不到網格元素');
+    }
 
     // 篩選功能變數
     const searchInput = document.getElementById('searchInput');
@@ -523,40 +646,6 @@
 
     // 初次計算書籍數量
     filterBooks();
-    
-    // 每行顯示控制器
-    const itemsPerRowSelect = document.getElementById('items-per-row-select');
-    const booksGridElement = document.getElementById('booksGrid');
-    
-    // 初始設定
-    let currentItemsPerRow = 4;
-    
-    // 監聽選擇器變化
-    itemsPerRowSelect.addEventListener('change', function() {
-        const newItemsPerRow = parseInt(this.value);
-        
-        // 移除舊的類別
-        booksGridElement.classList.remove(`items-per-row-${currentItemsPerRow}`);
-        
-        // 添加新的類別
-        booksGridElement.classList.add(`items-per-row-${newItemsPerRow}`);
-        
-        // 更新當前值
-        currentItemsPerRow = newItemsPerRow;
-        
-        // 儲存用戶選擇
-        localStorage.setItem('bookItemsPerRow', newItemsPerRow);
-    });
-    
-    // 恢復用戶設定
-    const savedItemsPerRow = localStorage.getItem('bookItemsPerRow');
-    if (savedItemsPerRow) {
-        const itemsPerRow = parseInt(savedItemsPerRow);
-        itemsPerRowSelect.value = itemsPerRow;
-        booksGridElement.classList.remove('items-per-row-4');
-        booksGridElement.classList.add(`items-per-row-${itemsPerRow}`);
-        currentItemsPerRow = itemsPerRow;
-    }
   });
 
   // 設為全域函數
@@ -564,7 +653,6 @@
   window.triggerNavbarLogin = triggerNavbarLogin;
 </script>
 
-<script src="{% static 'js/book2.js' %}"></script>
 <script src="{% static 'js/book.js' %}"></script>
 <script src="{% static 'js/book_image_upload.js' %}"></script>
 <script src="{% static 'js/book_image_rectangle.js' %}"></script>
