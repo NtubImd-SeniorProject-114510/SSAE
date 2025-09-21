@@ -37,7 +37,7 @@ body {
 }
 
 .page-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 30px 20px 0;
   position: relative;
@@ -645,12 +645,12 @@ body {
   z-index: 2;
 }
 
-.books-grid {
+/* .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 25px;
   margin-bottom: 50px;
-}
+} */
 
 
 .book-tag, .book-academic, .book-department, .book-grade {
@@ -1213,9 +1213,9 @@ body {
 
 /* 響應式設計 */
 @media (max-width: 900px) {
-  .books-grid {
+  /* .books-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
+  } */
   
   .site-title {
     font-size: 42px;
@@ -1237,9 +1237,9 @@ body {
 }
 
 @media (max-width: 600px) {
-  .books-grid {
+  /* .books-grid {
     grid-template-columns: 1fr;
-  }
+  } */
   
   .circular-logo {
     width: 80px;
@@ -1285,17 +1285,47 @@ body {
     text-decoration: none;
 }
 
+/* 顯示控制器樣式 */
+.display-controls {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 20px 25px !important;
+  margin: 30px 0 !important;
+  border-radius: 15px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.control-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.control-group label {
+  font-weight: 500 !important;
+  color: #333 !important;
+  font-size: 14px !important;
+}
+
+.items-selector {
+  padding: 8px 12px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 8px !important;
+  background: white !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+}
+
 /* 書籍網格樣式 - 跟活動頁面一樣 */
 .books-grid {
   display: flex !important;
   flex-wrap: wrap !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
   align-items: flex-start !important;
-  gap: 20px !important;
+  gap: 25px !important;
   margin-bottom: 80px !important;
   transition: all 0.3s ease !important;
-  grid-template-columns: none !important;
-  max-width: none !important;
 }
 
 /* 每行顯示數量的網格樣式 - 1到5個 */
@@ -1315,19 +1345,19 @@ body {
 .books-grid.items-per-row-3 {
   gap: 30px !important;
   flex-direction: row !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
 }
 
 .books-grid.items-per-row-4 {
   gap: 20px !important;
   flex-direction: row !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
 }
 
 .books-grid.items-per-row-5 {
   gap: 15px !important;
   flex-direction: row !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
 }
 
 /* 書籍卡片寬度控制 */
