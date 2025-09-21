@@ -86,9 +86,7 @@ body {
 .circular-logo {
   width: 82px;
   height: 82px;
-  background: #fff;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(111,85,125,0.13);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1317,6 +1315,11 @@ body {
   cursor: pointer !important;
 }
 
+/* 手機版按鈕預設隱藏 */
+.mobile-book-buttons {
+  display: none;
+}
+
 /* 書籍網格樣式 - 跟活動頁面一樣 */
 .books-grid {
   display: flex !important;
@@ -1384,4 +1387,189 @@ body {
 .books-grid.items-per-row-5 .book-card {
   width: calc(20% - 12px) !important;
   max-width: 250px !important;
+}
+
+
+/* ===== 480px以下手機版設定 ===== */
+@media (max-width: 480px) {
+  .filter-box {
+    padding: 0px !important;
+  }
+  
+  /* 隱藏桌面版選擇器 */
+  .items-selector {
+    display: none !important;
+  }
+  
+  /* 顯示手機版按鈕 */
+  .mobile-book-buttons {
+    display: flex !important;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .book-grid-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 60px;
+    font-size: 11px;
+    color: #666;
+  }
+  
+  .book-grid-btn i {
+    font-size: 16px;
+    margin-bottom: 4px;
+    color: #9e8c9d;
+  }
+  
+  .book-grid-btn.active {
+    border-color: #9e8c9d;
+    background: #f8f6f4;
+    color: #9e8c9d;
+  }
+  
+  .book-grid-btn.active i {
+    color: #9e8c9d;
+  }
+  
+  .book-grid-btn:hover {
+    border-color: #9e8c9d;
+    transform: translateY(-1px);
+  }
+  
+  /* 顯示控制器手機版調整 */
+  .display-controls {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 15px !important;
+    margin: 15px 0 !important;
+    text-align: center;
+  }
+  
+  .control-group {
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .control-group label {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #9e8c9d !important;
+  }
+  
+  /* 書卡footer跑馬燈效果 */
+  .book-footer {
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  
+  .book-meta {
+    display: flex !important;
+    animation: marquee 15s linear infinite !important;
+    white-space: nowrap !important;
+    gap: 8px !important;
+  }
+  
+  /* 跑馬燈動畫 */
+  @keyframes marquee {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+  /* 暫停動畫當懸停時 */
+  .book-card:hover .book-meta {
+    animation-play-state: paused !important;
+  }
+  
+  /* 書卡整體調整 */
+  .book-card {
+    border-radius: 12px !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1) !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .book-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15) !important;
+  }
+  
+
+  
+  /* 書籍信息區域 */
+  .book-info {
+    padding: 0.5rem !important;
+
+  }
+  
+  .page-subtitle {
+    margin-bottom: 40px !important;
+  }
+  /* 書籍標題 */
+  .book-header {
+    font-size: 1rem !important;
+}
+
+  .book-image-container {
+    height: 240px !important;
+  }
+  
+  /* 每行顯示1個時圖片更高 */
+  .books-grid.items-per-row-1 .book-image-container {
+    height: 400px !important;
+  }
+  
+  .books-grid.items-per-row-1 .book-image {
+    height: 400px !important;
+    object-fit: cover !important;
+    width: 100% !important;
+  }
+  
+  /* 標籤樣式調整 */
+  .book-meta-tag {
+    flex-shrink: 0 !important;
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+    margin: 0 4px 0 0 !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    font-weight: 500 !important;
+  }
+  
+
+  /* 價格固定在右側 */
+  .book-price {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: linear-gradient(135deg, #9e8c9d, #7d6c7c) !important;
+    color: white !important;
+    padding: 4px 10px !important;
+    border-radius: 15px !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    z-index: 2 !important;
+    box-shadow: 0 2px 6px rgba(158, 140, 157, 0.3) !important;
+    min-width: 50px !important;
+    text-align: center !important;
+  }
+}
+
+.pagination {
+  flex-direction: row !important;
+  gap: 12px !important;
 }

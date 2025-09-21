@@ -175,7 +175,7 @@
     <!-- 顯示控制器 -->
     <div class="display-controls">
         <div class="control-group">
-            <label for="items-per-row-select">每行顯示</label>
+            <label for="items-per-row-select">顯示方式</label>
             <select id="items-per-row-select" class="items-selector">
                 <option value="1">1個</option>
                 <option value="2">2個</option>
@@ -183,6 +183,16 @@
                 <option value="4" selected>4個</option>
                 <option value="5">5個</option>
             </select>
+            
+            <!-- 手機版按鈕選擇器 (480px以下) -->
+            <div class="mobile-book-buttons">
+                <button type="button" class="book-grid-btn active" data-value="1">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button type="button" class="book-grid-btn" data-value="2">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
         </div>
         
 
@@ -254,7 +264,7 @@
       <div class="circular-text">
         <svg viewBox="0 0 100 100">
           <path id="curve" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" fill="transparent"/>
-          <text><textPath href="#curve" textLength="250">search by life classification •</textPath></text>
+          <text><textPath href="#curve" textLength="250">add your second-hand books•</textPath></text>
         </svg>
       </div>
       <div class="upload-btn-center" id="centerUploadBtn"><span>＋</span></div>
@@ -380,6 +390,57 @@
         }
         
         console.log('每行顯示控制器初始化完成');
+        
+        // 手機版按鈕功能
+        const mobileButtons = document.querySelectorAll('.book-grid-btn');
+        
+        mobileButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                
+                console.log('手機版按鈕點擊:', value);
+                
+                // 移除所有active狀態
+                mobileButtons.forEach(b => b.classList.remove('active'));
+                
+                // 添加active狀態到當前按鈕
+                this.classList.add('active');
+                
+                // 同步桌面版選擇器
+                itemsPerRowSelect.value = value;
+                
+                // 觸發桌面版選擇器的change事件
+                const changeEvent = new Event('change', { bubbles: true });
+                itemsPerRowSelect.dispatchEvent(changeEvent);
+            });
+        });
+        
+        // 檢查螢幕尺寸，在480px以下時限制選項並預設為1行
+        function checkScreenSize() {
+            if (window.innerWidth <= 480) {
+                // 480px以下預設為1行顯示
+                if (parseInt(itemsPerRowSelect.value) > 2) {
+                    itemsPerRowSelect.value = '1';
+                    const changeEvent = new Event('change', { bubbles: true });
+                    itemsPerRowSelect.dispatchEvent(changeEvent);
+                }
+                
+                // 同步手機版按鈕狀態
+                mobileButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-value') === itemsPerRowSelect.value) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        }
+        
+        // 初始檢查和監聽窗口大小變化
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        
+        console.log('手機版按鈕已初始化');
+        
     } else {
         console.error('每行顯示控制器初始化失敗');
         if (!itemsPerRowSelect) console.error('找不到選擇器');
