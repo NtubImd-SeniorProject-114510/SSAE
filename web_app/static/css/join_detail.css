@@ -718,12 +718,11 @@ h2.section-title:first-of-type::before {
 
 .related-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    justify-content: space-between;
 }
 
 .related-card {
-    width: calc(33.333% - 20px);
+    width: 48%;
     background: #fff;
     border-radius: 12px;
     overflow: hidden;

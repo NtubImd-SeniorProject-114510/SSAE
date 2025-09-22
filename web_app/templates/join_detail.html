@@ -295,7 +295,7 @@
         <div class="section">
             <h2 class="section-title">相關活動推薦</h2>
             <div class="related-grid">
-                {% for activity in related_activities %}
+                {% for activity in related_activities|slice:":2" %}
                     <a href="{% url 'join_detail' activity.id %}" class="related-card">
                         <div class="related-image">
                             {% if activity.cover_image %}
@@ -314,10 +314,11 @@
                         </div>
                     </a>
                 {% empty %}
-                <div class="no-related">
-                    <p>暫無相關活動推薦</p>
-                </div>
-                {% endfor %}
+<div class="no-related">
+    <p>暫無相關活動推薦</p>
+</div>
+{% endfor %}
+
             </div>
         </div>
         <div class="block-haha" style="height: 100px;">
