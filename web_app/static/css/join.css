@@ -398,9 +398,9 @@ body {
   border-radius: 2100px !important;
 }
 
-.activity-grid .activity-card.card-size-1 .floating-date {
+/* .activity-grid .activity-card.card-size-1 .floating-date {
   padding: 14px 18px !important;
-}
+} */
 
 .activity-grid .activity-card.card-size-1 .floating-date .day {
   font-size: 24px !important;
@@ -418,11 +418,11 @@ body {
   padding: 18px !important;
   /* min-height: 140px !important; */
 }
-
+/* 
 .activity-grid .activity-card.card-size-2 .bottom-section {
   padding: 18px 22px !important;
   margin: 0 -18px -18px !important;
-}
+} */
 
 
 .activity-grid .activity-card.card-size-2 .activity-description {
@@ -1272,10 +1272,10 @@ body {
     order: 2;
   }
 
-  .join-button {
-    height: 67px !important;
+  /* .join-button {
+    height: 47px !important;
   }
-  
+   */
   /* 其他篩選項目 */
   .filter-item {
     flex: 0 0 auto;
@@ -1357,6 +1357,93 @@ body {
     font-size: 14px;
     color: #333;
   }
+
+
+  .activity-card .bottom-section {
+    margin: 0 -8px -8px !important;
+    /* height: 20px !important; */
+    flex-shrink: 0;
+    font-size: 12px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  
+  /* 每行兩個卡片時 */
+  .activity-grid.items-per-row-2 .activity-card .bottom-section {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  
+  .activity-grid.items-per-row-2 .activity-card .avatars-section {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  
+  .activity-grid.items-per-row-2 .activity-card .count-display {
+    flex-shrink: 0 !important;
+  }
+  
+  .activity-grid.items-per-row-2 .activity-card .organizer-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    margin-right: -6px;
+  }
+
+  .activity-grid.items-per-row-2 .activity-card .count-text {
+    font-size: 12px;
+  }
+  
+  .activity-grid .activity-card.card-size-2 .floating-date {
+    padding: 4px 6px !important;
+    width: 50px !important;
+    font-size: 8px !important;
+  }
+  
+  
+  .activity-grid .activity-card.card-size-2 .floating-date .day {
+    font-size: 14px !important;
+  }
+  
+  .activity-grid .activity-card.card-size-2 .floating-date .month {
+    font-size: 8px !important;
+  }
+  
+  .activity-grid .activity-card.card-size-2 .activity-tag {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+  }
+
+  /* 每行一個卡片時 */
+  .activity-grid.items-per-row-1 .activity-card .bottom-section {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .activity-grid.items-per-row-1 .activity-card .organizer-avatar {
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 16px !important;
+    margin-right: -6px !important;
+  }
+
+  /* .activity-grid.items-per-row-1 .activity-card .bottom-section {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  
   
   .activity-grid .activity-card.card-size-1 .activity-image {
     height: 40% !important;
@@ -1387,22 +1474,31 @@ body {
   }
   
   .activity-grid .activity-card.card-size-1 .floating-date {
-    padding: 4px 6px !important;
+    padding: 14px 18px !important;
   }
   
+  
   .activity-grid .activity-card.card-size-1 .floating-date .day {
-    font-size: 14px !important;
+    font-size: 24px !important;
   }
   
   .activity-grid .activity-card.card-size-1 .floating-date .month {
-    font-size: 8px !important;
+    font-size: 14px !important;
   }
   
   .activity-grid .activity-card.card-size-1 .bottom-section {
     padding: 6px 8px !important;
     margin: 0 -8px -8px !important;
-    min-height: 30px !important;
+    min-height: 40px !important;
   }
+
+  .activity-grid .activity-card.card-size-1 .floating-date status-deadline{
+    width: 80px;
+  }
+
+
+
+
   
   .activity-grid .activity-card.card-size-2 .activity-image {
     height: 35% !important;
@@ -1427,29 +1523,31 @@ body {
   }
   
   .activity-grid .activity-card.card-size-2 .activity-tag {
-    padding: 8px 12px !important;
-    font-size: 9px !important;
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
   }
   
   .activity-grid .activity-card.card-size-2 .floating-date {
     padding: 3px 5px !important;
     font-size: 6px !important;
     border-radius: 8px;
+    width:40px !important;
   }
   
   .activity-grid .activity-card.card-size-2 .floating-date .day {
-    font-size: 7px !important;
+    font-size: 12px !important;
   }
   
   .activity-grid .activity-card.card-size-2 .floating-date .month {
-    font-size: 4px !important;
+    font-size: 8px !important;
   }
   
-  .activity-grid .activity-card.card-size-2 .bottom-section {
+  /* .activity-grid .activity-card.card-size-2 .bottom-section {
     padding: 5px 6px !important;
     margin: 0 -6px -6px !important;
-    min-height: 28px !important;
-  }
+    min-height: 40px !important;
+  } */
   
   /* 小螢幕上的卡片布局修正 */
   .activity-grid {
@@ -1486,13 +1584,13 @@ body {
     min-height: 0 !important;
   }
   
-  .activity-card .bottom-section {
+  /* .activity-card .bottom-section {
     padding: 5px 7px !important;
     margin: 0 -7px -7px !important;
     min-height: 28px !important;
     flex-shrink: 0;
     font-size: 11px !important;
-  }
+  } */
 }
 /* 手機版的在上 -----------------------------------------------------------*/ 
 
@@ -1792,14 +1890,14 @@ body {
     min-height: 0 !important;
   }
   
-  .activity-card .bottom-section {
+  /* .activity-card .bottom-section {
     padding: 6px 8px !important;
     margin: 0 -8px -8px !important;
-    min-height: 30px !important;
+    min-height: 40px !important;
     flex-shrink: 0;
     font-size: 12px !important;
   }
-  
+   */
   /* 極小螢幕卡片尺寸縮放規則 - 大幅縮小內容
   .activity-grid .activity-card.card-size-1 .activity-title {
     font-size: 16px !important;
@@ -1945,16 +2043,16 @@ body {
     flex-shrink: 0;
     min-height: 60px;
   }
-  .avatars-section {
+  /* .avatars-section {
     justify-content: center;
     padding-left: 0;
-  }
-  .organizer-avatar {
+  } */
+  /* .organizer-avatar {
     width: 40px;
     height: 40px;
     font-size: 16px;
     margin-right: -6px;
-  }
+  } */
   .participant-avatar {
     width: 32px;
     height: 32px;
