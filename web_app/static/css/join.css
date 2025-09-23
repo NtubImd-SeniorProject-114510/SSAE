@@ -2361,9 +2361,7 @@ body {
 .avatars-section {
   display: flex;
   align-items: center;
-  gap: -12px;
-  flex: 1;
-  padding-bottom: 8px;
+  padding: 0 0 10px 10px;
 }
 
 /* 人數統計顯示 */
