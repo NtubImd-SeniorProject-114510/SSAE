@@ -28,10 +28,7 @@ function initCreateActivity() {
         uploadBtn.addEventListener('click', () => {
             uploadForm.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            // 若地圖已初始化，重新計算尺寸
-            setTimeout(() => {
-                if (previewMap) previewMap.invalidateSize();
-            }, 120);
+            setTimeout(() => { if (previewMap) previewMap.invalidateSize(); }, 120);
         });
     }
 
@@ -41,7 +38,6 @@ function initCreateActivity() {
         if (createGroupForm) {
             createGroupForm.reset();
             resetPreview();
-            // 隱藏地圖容器
             const mapEl = document.getElementById('preview-map');
             if (mapEl) mapEl.style.display = 'none';
         }
@@ -50,6 +46,55 @@ function initCreateActivity() {
     closeUploadBtn?.addEventListener('click', closeForm);
     cancelCreateBtn?.addEventListener('click', closeForm);
     uploadForm?.addEventListener('click', e => { if (e.target === uploadForm) closeForm(); });
+
+    // ====== 安全通知（showNotification 失敗就退回 alert）======
+    function safeNotify(type, msg) {
+        try {
+            if (typeof window.showNotification === 'function') {
+                window.showNotification(type, msg);
+            } else {
+                alert(msg);
+            }
+        } catch (e) {
+            console.warn('showNotification failed, fallback to alert:', e);
+            alert(msg);
+        }
+    }
+
+    // ====== 審查相關：錯誤抽取 + 從模板讀禁用詞 ======
+    function extractOneMessage(data, raw='') {
+        let msg = data?.message || '';
+        if (!msg && data?.errors) {
+            const v = Array.isArray(data.errors)
+                ? data.errors[0]
+                : (data.errors.general && data.errors.general[0]) ||
+                  (Object.values(data.errors)[0] && Object.values(data.errors)[0][0]);
+            if (v) msg = v;
+        }
+        if (!msg && raw) {
+            msg = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        if (/禁止|不當|禁用/.test(msg)) {
+            msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+        } else if (/csrf|forbidden|禁止存取|驗證/i.test(msg)) {
+            msg = '驗證逾時或未登入，請重新登入後再試。';
+        }
+        return msg;
+    }
+
+    const BANNED_WORDS = (() => {
+        try {
+            const el = document.getElementById('bannedWords');
+            return el ? JSON.parse(el.textContent) : [];
+        } catch (_) {
+            return [];
+        }
+    })();
+
+    const hitBanned = (text='') => {
+        const t = String(text).toLowerCase();
+        return BANNED_WORDS.some(w => t.includes(String(w).toLowerCase()));
+    };
 
     // 圖片上傳、拖放
     if (imageUploadArea) {
@@ -74,6 +119,14 @@ function initCreateActivity() {
         e.preventDefault();
         if (!validateForm()) return;
 
+        // ★★★ 前端禁用詞審查：命中就顯示一句話並停止送出
+        const title = document.getElementById('activity-title')?.value || '';
+        const desc  = document.getElementById('activity-description')?.value || '';
+        if (hitBanned(`${title}\n${desc}`)) {
+            safeNotify('error', '輸入內容包含禁止或不當詞彙，請重新編輯。');
+            return;
+        }
+
         // 若選校內，統一填 selected-address 為教室
         const locationRadio = document.querySelector('input[name="location_type"]:checked');
         const selectedAddress = document.getElementById('selected-address');
@@ -83,23 +136,36 @@ function initCreateActivity() {
         }
 
         const formData = new FormData(createGroupForm);
+
         try {
             const res = await fetch('/activities/create/', {
                 method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCookie('csrftoken') },
-                body: formData
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: formData,
+                credentials: 'same-origin' // 帶 cookie，避免 CSRF 失敗
             });
-            const data = await res.json();
-            console.log('後端回傳:', data);
-            if (data.ok) {
-                showSuccessMessage();
-                setTimeout(() => window.location.href = '/activities/', 1200);
-            } else {
-                alert('建立失敗：' + JSON.stringify(data.errors));
+
+            let data = null;
+            let rawText = '';
+            try { data = await res.json(); } catch { try { rawText = await res.text(); } catch {} }
+
+            // 失敗分支：只顯示一句話（統一處理）
+            if (!res.ok || !(data?.success ?? data?.ok)) {
+                let msg = extractOneMessage(data, rawText) || '輸入內容包含禁止或不當詞彙，請重新編輯。';
+                safeNotify('error', msg);
+                return;
             }
+
+            // 成功分支
+            showSuccessMessage();
+            setTimeout(() => { window.location.href = '/activities/'; }, 1200);
+
         } catch (err) {
             console.error(err);
-            alert('建立失敗，請稍後再試');
+            safeNotify('error', '網路或系統異常，請稍後再試');
         }
     });
 
