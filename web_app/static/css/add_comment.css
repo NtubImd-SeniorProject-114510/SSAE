@@ -36,6 +36,30 @@
     --accent-color: rgb(170, 157, 169);
 }
 
+/* 讓右側框以 data-state 切換樣式 */
+#preview.is-error, #preview[data-state="error"] {
+  border-color: #e11d48;
+  background: #fff1f2;
+}
+#preview.is-ok, #preview[data-state="ok"] {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+#preview.is-empty, #preview[data-state="empty"] {
+  opacity: .9;
+}
+
+/* 鎖住送出按鈕的視覺提示 */
+#submit-btn.is-disabled[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* 小小的震動動畫 */
+@keyframes btn-shake { 10%, 90% {transform: translateX(-1px);} 20%, 80% {transform: translateX(2px);} 30%, 50%, 70% {transform: translateX(-4px);} 40%, 60% {transform: translateX(4px);} }
+#submit-btn.shake { animation: btn-shake .45s linear; }
+
 /* Add loading spinner for dropdowns */
 .loading {
     position: relative;
