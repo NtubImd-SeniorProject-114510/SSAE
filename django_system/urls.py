@@ -71,7 +71,7 @@ urlpatterns = [
     path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
     path("api/reviews/<int:review_id>/toggle-like/", views.toggle_review_like, name="toggle_review_like"),
-   
+    path('api/rating/<int:course_id>/', views.submit_rating_only, name='submit_rating_only'),
     path("api/comment/optimize_ai", views.optimize_comment_ai, name="optimize_comment_ai"),
     #####
 

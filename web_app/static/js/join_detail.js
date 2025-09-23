@@ -254,22 +254,66 @@ function toggleLike(commentId, button) {
 }
 
 function submitComment(activityId, content, textarea, parentId = null) {
-    fetch(`/api/activities/${activityId}/comments/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ content, parent_id: parentId })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            textarea.value = '';
-            location.reload();
-        }
-    })
-    .catch(err => console.error('Comment error:', err));
+  if (!content || !content.trim()) {
+    showCommentMsg('留言內容不能為空', false);
+    return;
+  }
+
+  // ✅ 建議從模板塞一個 data-api-comment-url 來避免路徑不一致
+  const urlFromDom = document.getElementById('submitComment')?.dataset.apiCommentUrl;
+  const apiUrl = urlFromDom || `/api/activities/${activityId}/comment/`; // ← 單數
+
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({ content, parent_id: parentId }),
+    credentials: 'same-origin'          // ★ 帶上 cookie（不同子網域時很重要）
+  })
+  .then(async (r) => {
+    let data = null, raw = '';
+    try { data = await r.json(); } catch { try { raw = await r.text(); } catch {} }
+
+    const failed = !r.ok || data?.success === false || data?.ok === false;
+
+    if (failed) {
+      // 從各種格式中萃取一句話
+      let msg = (data && (data.message)) || '';
+      if (!msg && data && data.errors) {
+        const first = Array.isArray(data.errors) ? data.errors[0]
+                    : (data.errors.general && data.errors.general[0]) ||
+                      (Object.values(data.errors)[0] && Object.values(data.errors)[0][0]);
+        if (first) msg = first;
+      }
+      if (!msg && raw) {
+        // 伺服器可能回了 HTML/純文字（如 CSRF 失敗頁），剝標籤後取一句
+        msg = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+      // 明確處理禁用詞與 CSRF 常見字眼
+      if (/禁止|不當|禁用/.test(msg)) {
+        msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+      } else if (/csrf|forbidden|禁止存取|驗證/i.test(msg)) {
+        msg = '驗證逾時或未登入，請重新登入後再試。';
+      }
+      if (!msg) msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+
+      showCommentMsg(msg, false);
+      return;
+    }
+
+    // ✅ 成功
+    showCommentMsg(data?.message || '留言成功！', true);
+    if (textarea) textarea.value = '';
+    // 你可以直接把 data.comment 插入 DOM；暫時沿用 reload：
+    location.reload();
+  })
+  .catch(err => {
+    console.error('Comment error:', err);
+    showCommentMsg('網路或系統錯誤，請稍後再試', false);
+  });
 }
 
 function getCookie(name) {
@@ -306,3 +350,33 @@ function isUserAuthenticated() {
 
 // 設為全域函數，確保模板中的 onclick 可以調用
 window.triggerNavbarLogin = triggerNavbarLogin;
+
+
+// 顯示留言錯誤/成功訊息（沒有容器就自動建一個）
+function showCommentMsg(text, ok = false) {
+  let box = document.getElementById('commentMsg');
+  if (!box) {
+    // 優先插在討論區頂部；找不到就插在 body 內
+    const host = document.querySelector('.discussion-section') || document.body;
+    box = document.createElement('div');
+    box.id = 'commentMsg';
+    box.style.margin = '8px 0';
+    box.style.fontSize = '14px';
+    host.prepend(box);
+  }
+  box.textContent = text;
+  box.style.color = ok ? '#0a0' : '#c00';
+}
+
+// 從各種回傳格式萃取訊息：支援 {success/message} 與 {ok/errors.general[0]}
+function pickMessage(data) {
+  if (!data || typeof data !== 'object') return '';
+  if (data.message) return data.message;
+  if (data.errors) {
+    if (Array.isArray(data.errors)) return data.errors[0] || '';
+    if (data.errors.general && Array.isArray(data.errors.general)) return data.errors.general[0] || '';
+    const k = Object.keys(data.errors)[0];
+    if (k && Array.isArray(data.errors[k])) return data.errors[k][0] || '';
+  }
+  return '';
+}

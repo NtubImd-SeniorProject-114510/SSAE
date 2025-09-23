@@ -78,7 +78,7 @@
     <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
     <div class="course-item" data-course-id="{{ course.id }}" style="display: none;">
         <div class="course-name">{{ course.course_name }}</div>
-        <div class="course-teacher">{{ course.course_teacher }}</div>
+        <div class="course-teacher">{{ course_teacher }}</div>
         <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
         <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
     </div>
@@ -127,7 +127,7 @@
             <div class="course-meta">
                 <span class="course-academic">{{ academic.name }}</span>
                 <span class="course-department">{{ department.name }}</span>
-                <span class="course-teacher">授課教師：{{ course.course_teacher }}</span>
+                <span class="course-teacher">授課教師：{{ course_teacher }}</span>
             </div>
         </div>
         
@@ -150,15 +150,6 @@
                   <div class="user-info">
                     <span class="user-name">{{ r.display_name|default:'匿名學生' }}</span>
                     <div class="comment-meta">
-                      <div class="stars" data-rating="{{ r.rating }}">
-                        {% for i in "12345"|make_list %}
-                          {% if forloop.counter <= r.rating %}
-                            <i class="fas fa-star"></i>
-                          {% else %}
-                            <i class="far fa-star"></i>
-                          {% endif %}
-                        {% endfor %}
-                      </div>
                       <span class="comment-date">{{ r.created_at|date:"Y/m/d" }}</span>
                     </div>
                   </div>

@@ -28,10 +28,7 @@
 .upload-modal2 { background: none; min-height: unset; padding: 0; display: block; }
 .upload-modal2 .container {
   height: 800px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #6F557D #f1f1f1;
+  overflow: hidden;
   background: rgba(255,255,255,0.97);
   backdrop-filter: blur(10px);
   border-radius: 24px;
@@ -39,10 +36,9 @@
   max-width: 800px;
   width: 100%;
   animation: fadeInUp 0.6s ease-out;
+  display: flex;
+  flex-direction: column;
 }
-.upload-modal2 .container::-webkit-scrollbar { width: 10px; }
-.upload-modal2 .container::-webkit-scrollbar-thumb { background: #6F557D; border-radius: 8px; }
-.upload-modal2 .container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: none; }
@@ -54,6 +50,8 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
+  z-index: 10;
 }
 .upload-modal2 .close-btn {
   position: absolute;
@@ -77,7 +75,9 @@
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
-.upload-modal2 .close-btn:active { transform: scale(0.95); }
+.upload-modal2 .close-btn:active { 
+  transform: scale(0.95); 
+}
 .upload-modal2 .header::before {
   content: '';
   position: absolute;
@@ -94,7 +94,17 @@
 }
 .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; position: relative; z-index: 2; }
 .header p { opacity: 0.9; font-size: 1rem; position: relative; z-index: 2; }
-.form-container { padding: 2.5rem; }
+.form-container { 
+  padding: 2.5rem; 
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #6F557D #f1f1f1;
+}
+.form-container::-webkit-scrollbar { width: 10px; }
+.form-container::-webkit-scrollbar-thumb { background: #6F557D; border-radius: 8px; }
+.form-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
 .upload-area {
   border: 3px dashed #e5e7eb;
   border-radius: 16px;
@@ -233,33 +243,6 @@
     overflow: hidden;
 }
 
-.upload-modal2 .close-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    transition: all 0.3s ease;
-    z-index: 10;
-}
-
-.upload-modal2 .close-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
-
-.upload-modal2 .close-btn:active {
-    transform: scale(0.95);
-}
 
 .upload-modal2 .header::before {
     content: '';
@@ -495,54 +478,59 @@
 }
 
 .submit-container {
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
     margin-top: 2rem;
     margin-bottom: 2rem;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
 }
 
 .submit-btn, .cancel-btn {
-    border: none;
-    padding: 1rem 3rem;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    min-width: 140px;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
 }
 
 .submit-btn {
-    background: linear-gradient(135deg, #afa0b9, #b0a6c1);
-    color: white;
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+  background: linear-gradient(135deg, #6F557D, #8B7A9A);
+  color: white;
+  box-shadow: 0 4px 15px rgba(111, 85, 125, 0.3);
+}
+
+.submit-btn:disabled {
+  background: #ccc !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .cancel-btn {
-    background: linear-gradient(135deg, #c7c7c7, #9e9e9e);
-    color: white;
-    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+  background: linear-gradient(135deg, #c7c7c7, #9e9e9e);
+  color: white;
+  box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
 }
 
 .submit-btn:hover, .cancel-btn:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .submit-btn:hover {
-    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 8px 25px rgba(111, 85, 125, 0.4);
 }
 
 .cancel-btn:hover {
-    box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
 }
 
 .submit-btn:active, .cancel-btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .floating-elements {
@@ -560,6 +548,89 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     animation: float 6s ease-in-out infinite;
+}
+
+/* 成功提示方塊樣式 */
+.success-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.success-modal.show {
+    opacity: 1;
+}
+
+.success-content {
+    background: white;
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+    animation: successBounce 0.5s ease-out forwards;
+}
+
+.success-modal.show .success-content {
+    transform: scale(1);
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.success-icon {
+    font-size: 3rem;
+    animation: successPulse 0.6s ease-out;
+}
+
+.success-text {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2d5a2d;
+    margin: 0;
+}
+
+@keyframes successBounce {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .floating-element:nth-child(1) {

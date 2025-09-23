@@ -67,7 +67,6 @@ body {
 /* 討論區整體 */
 .discussion-section {
     background: #fdfdfd;
-    border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
@@ -719,12 +718,11 @@ h2.section-title:first-of-type::before {
 
 .related-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    justify-content: space-between;
 }
 
 .related-card {
-    width: calc(33.333% - 20px);
+    width: 48%;
     background: #fff;
     border-radius: 12px;
     overflow: hidden;
@@ -959,7 +957,6 @@ h2.section-title:first-of-type::before {
 
 /* Add Comment Form */
 .add-comment-form {
-    margin: 30px 0;
     background: white;
     border-radius: 8px;
     padding: 20px;
@@ -980,6 +977,12 @@ h2.section-title:first-of-type::before {
     transform: translateY(-2px);
 }
 
+.add-comment-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
 .add-comment-form .submit-comment-btn {
     background-color: #6F557D;
     color: white;
@@ -989,8 +992,8 @@ h2.section-title:first-of-type::before {
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
-    display: block;
-    margin-top: 15px;
+    display: inline-block;
+    margin-top: 0;
 }
 
 .add-comment-form .submit-comment-btn:hover {

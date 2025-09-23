@@ -98,46 +98,56 @@ window.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submitBtn');
     // 上傳表單 submit 攔截
     if (uploadFormEl) {
-        uploadFormEl.addEventListener('submit', function(e) {
+        uploadFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            console.log('submit 攔截成功');
-            const formData = new FormData(uploadFormEl);
-            fetch(uploadFormEl.action, {
+            showBookMsg('上傳中...', true);
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '上傳中...'; }
+
+            try {
+            const fd = new FormData(uploadFormEl);  // 自動包含檔案與所有欄位
+            const resp = await fetch(uploadFormEl.action, {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken'),
                 },
+                body: fd,
                 credentials: 'same-origin',
-            })
-            .then(response => response.json().then(data => ({status: response.status, body: data})))
-            .then(({status, body}) => {
-                if (status === 200 && body.success) {
-                    // 關閉彈窗
-                    document.getElementById('uploadForm').classList.remove('show');
-                    // 清空表單
-                    uploadFormEl.reset();
-                    console.log('上架成功，自動刷新');
-                    location.reload();
-                } else {
-                    let msg = '';
-                    if (body.errors) {
-                        for (const [field, errors] of Object.entries(body.errors)) {
-                            msg += field + ': ' + errors.join(', ') + '\n';
-                        }
-                    } else if (body.message) {
-                        msg = body.message;
-                    } else {
-                        msg = '上傳失敗，請檢查欄位';
-                    }
-                    alert(msg);
-                }
-            })
-            .catch((err) => {
-                alert('上傳失敗，請稍後再試');
             });
+
+            let data = {};
+            try { data = await resp.json(); } catch (e) {}
+
+            if (resp.ok && data && data.success) {
+                // ✅ 成功
+                showBookMsg(data.message || '書籍上架成功！', true);
+                uploadFormEl.reset();
+                if (previewImage && previewPlaceholder) {
+                previewImage.src = '';
+                previewImage.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+                }
+                setTimeout(() => {
+                uploadFormModal.classList.remove('show');
+                document.body.style.overflow = '';
+                document.body.style.height   = '';
+                location.reload();
+                }, 500);
+            } else {
+                // ❌ 失敗（包含禁用詞）
+                const msg = (data && (data.message ||
+                        (data.errors && JSON.stringify(data.errors)))) ||
+                        '上傳失敗，請檢查欄位內容';
+                showBookMsg(msg, false);   // 🔴 在表單上方顯示紅字
+            }
+            } catch (err) {
+            console.error('[upload_book2] error:', err);
+            showBookMsg('網路或系統錯誤，請稍後再試', false);
+            } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '上傳書籍'; }
+            }
         });
-    }
+        }
     // 關閉上傳表單
     if (closeFormBtn && uploadFormEl) {
         closeFormBtn.addEventListener('click', function() {

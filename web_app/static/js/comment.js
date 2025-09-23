@@ -222,7 +222,7 @@ function renderCourses(courses) {
           <span class="username">${course.course_summary.display_name || '使用者'}</span>
         </div>
         <p>${course.course_summary.summary}</p>
-        <div class="likes">👍 ${course.course_summary.likes}　${course.course_summary.created}</div>
+        <div class="likes"><i class="fa-solid fa-thumbs-up"></i> ${course.course_summary.likes}　${course.course_summary.created}</div>
       `;
     }
 
@@ -242,7 +242,7 @@ function renderCourses(courses) {
         <div class="course-rating">
           <div class="stars" data-rating="${avgRating}">
             <span class="rating-text">${avgRating}</span>
-            <i class="fas fa-star"></i>
+            <i class="fa-solid fa-thumbs-up"></i>
           </div>
           <div class="rating-count">${ratingCount} 則評分</div>
         </div>
@@ -326,11 +326,6 @@ function initializeInteractions() {
         fallback.classList.add('active');
         fallback.style.display = 'flex';
       }
-    }
-
-    // ★ 打開彈窗後，若彈窗內也有 <select>，補綁一次可見搜尋泡泡（用 class="searchable" 更保險）
-    if (typeof window.initVisibleSearchableSelects === 'function') {
-      window.initVisibleSearchableSelects(); // 掃描 class="searchable" 的 select
     }
   });
 }

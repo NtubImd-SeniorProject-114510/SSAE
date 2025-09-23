@@ -6,6 +6,7 @@
 {% block lang %}zh-Hant{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
 {% endblock %}
 
@@ -60,16 +61,42 @@
         </form>
     </div>
         
+    <!-- 每頁顯示數量選擇器 -->
+    <div class="display-controls">
+        <div class="control-group">
+            <label for="items-per-row">每行顯示：</label>
+            <select id="items-per-row" class="items-selector desktop-selector">
+                <option value="1">1 個</option>
+                <option value="2">2 個</option>
+                <option value="3">3 個</option>
+                <option value="4" selected>4 個</option>
+                <option value="5">5 個</option>
+            </select>
+            
+            <!-- 手機版按鈕選擇器 (480px以下) -->
+            <div class="mobile-grid-buttons">
+                <button type="button" class="grid-btn active" data-value="1">
+                    <i class="fas fa-square"></i>
+                </button>
+                <button type="button" class="grid-btn" data-value="2">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
+        </div>
+        <div class="total-count">
+            共 <span id="total-activities">{{ activities|length }}</span> 個活動
+            <span class="page-info">(第 <span id="current-page">1</span> 頁，共 <span id="total-pages">1</span> 頁)</span>
+        </div>
+    </div>
+
     <section class="activities-container">
-        <div class="activity-grid">
+        <div class="activity-grid" id="activity-grid">
             {% for a in activities %}
                 {% if a.pk %}
                     {% url 'join_detail' a.pk as detail_url %}
                 {% endif %}
                 <div class="activity-card" 
                      {% if a.pk %} onclick="window.location.href='{{ detail_url }}'" {% else %} style="cursor: default;" {% endif %}>
-                    
-                    <div class="activity-header">{{ a.title }}</div>
 
                     <div class="activity-image">
                         {% if a.cover_image %}
@@ -85,102 +112,107 @@
                             <div class="activity-status status-full">已額滿</div>
                         {% endif %}
 
-                        {# 分類標籤 #}
+                        {# 分類標籤 - 新樣式 #}
                         <div class="activity-tag {{ a.type|lower }}">
-                            {{ a.get_type_display }}  <!-- 這裡會顯示中文 -->
+                            {{ a.get_type_display }}
+                        </div>
+                        
+                        {# 浮動日期標籤 #}
+                        <div class="floating-date status-deadline">
+                            <div class="label">截止日</div>
+                            <div class="month">{{ a.deadline|date:"n" }} 月</div>
+                            <div class="day">{{ a.deadline|date:"j" }}</div>
                         </div>
                     </div>
 
-                    <div class="activity-content">
-                        <h3 class="activity-title">{{ a.title }}</h3>
+                    <!-- 新的活動卡片結構 -->
+                    <div class="content-wrapper">
+                        <h2 class="activity-title">{{ a.title }}</h2>
                         <p class="activity-description">
                             {{ a.description|truncatechars:60 }}
                             {% if a.description|length > 60 %}
                                 <a href="{{ detail_url }}" class="read-more">更多</a>
                             {% endif %}
                         </p>
-
-                        <div class="activity-info">
-                            <!-- 地點 -->
-                            <div class="activity-location">
-                                <span class="icon"><i class="fa-solid fa-map-pin iconMap"></i></span>
-                                <p class="info-value">
+                        
+                        <div class="event-details">
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="fa-regular fa-clock"></i></div>
+                                <div class="detail-text">{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="fa-solid fa-location-dot" style="color: #6F557D;"></i></div>
+                                <div class="detail-text">
                                     {% if a.location_type == 'on_campus' and a.classroom %}
                                         {{ a.classroom }}
                                     {% else %}
                                         {{ a.location_short }}
                                     {% endif %}
-                                </p>
-                            </div>
-
-                            <!-- 時間 -->
-                            <div class="activity-time">
-                                <span class="icon"><i class="fa-solid fa-clock iconTime"></i></span>
-                                <p class="info-value">{{ a.date|date:"n/j" }} {{ a.time|time:"H:i" }}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="activity-footer">
-                            <div class="participants">
-                                <div class="participant-avatars">
-                                    <!-- 發起人 -->
-                                    <div class="participant-avatar" title="{{ a.user.username }} (發起人)">
-                                        {% if a.user.profile.avatar %}
-                                            <img src="{{ a.user.profile.avatar.url }}" alt="{{ a.user.username }}">
-                                        {% elif a.user.social_auth.all.0.extra_data.picture %}
-                                            <img src="{{ a.user.social_auth.all.0.extra_data.picture }}" alt="{{ a.user.username }}">
-                                        {% else %}
-                                            <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- 顯示參加者（最多 3 位） -->
-                                    {% for participant in a.cleaned_participants|slice:":3" %}
-                                        <div class="participant-avatar" title="{{ participant.user.username }}">
-                                            {% if participant.user.profile.avatar %}
-                                                <img src="{{ participant.user.profile.avatar.url }}" alt="{{ participant.user.username }}">
-                                            {% elif participant.user.social_auth.all.0.extra_data.picture %}
-                                                <img src="{{ participant.user.social_auth.all.0.extra_data.picture }}" alt="{{ participant.user.username }}">
-                                            {% else %}
-                                                <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-
-                                    {% if a.participants_count > 3 %}
-                                        <div class="participant-avatar more">+{{ a.participants_count|add:"-3" }}</div>
-                                    {% endif %}
-                                </div>
-
-                                <div class="participant-count">
-                                    {{ a.total_count }}/{{ a.max_participants }} 人
-                                </div>
-                            </div>
-
-                            <div>
-                                {% if a.is_full or a.is_deadline_passed %}
-                                    <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">已額滿/截止</a>
-                                {% elif not request.user.is_authenticated %}
-                                    <button class="join-btn dropdown-item" onclick="event.stopPropagation(); triggerNavbarLogin();">登入即可參加</button>
-                                {% elif a.pk and a.id in created_ids %}
-                                    <a href="#" class="join-btn disabled" onclick="event.stopPropagation();return false;">您是發起人</a>
-                                {% elif a.pk and a.id in joined_ids %}
-                                    <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
-                                        {% csrf_token %}
-                                        <button class="join-btn" type="submit">取消參加</button>
-                                    </form>
-                                {% elif a.pk %}
-                                    <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
-                                        {% csrf_token %}
-                                        <button class="join-btn" type="submit">我要參加</button>
-                                    </form>
-                                {% else %}
-                                    <button class="join-btn disabled" onclick="event.stopPropagation();return false;">無法參加</button>
-                                {% endif %}
-                            </div>
-                        </div>
 
                     </div>
+                    
+                    <div class="bottom-section">
+                        <!-- 頭像區域 -->
+                        <div class="avatars-section">
+                            <!-- 發起人頭像 -->
+                            <div class="organizer-avatar" title="{{ a.user.username }} (發起人)">
+                                {% if a.user.profile.avatar %}
+                                    <img src="{{ a.user.profile.avatar.url }}" alt="{{ a.user.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                {% elif a.user.social_auth.all.0.extra_data.picture %}
+                                    <img src="{{ a.user.social_auth.all.0.extra_data.picture }}" alt="{{ a.user.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                {% else %}
+                                    {{ a.user.username|first|upper }}
+                                {% endif %}
+                            </div>
+                            
+                            <!-- 已參加的人頭像 -->
+                            {% for participant in a.cleaned_participants|slice:":3" %}
+                                <div class="participant-avatar" title="{{ participant.user.username }}">
+                                    {% if participant.user.profile.avatar %}
+                                        <img src="{{ participant.user.profile.avatar.url }}" alt="{{ participant.user.username }}">
+                                    {% elif participant.user.social_auth.all.0.extra_data.picture %}
+                                        <img src="{{ participant.user.social_auth.all.0.extra_data.picture }}" alt="{{ participant.user.username }}">
+                                    {% else %}
+                                        <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            
+                            {% if a.participants_count > 3 %}
+                                <div class="participant-avatar more">+{{ a.participants_count|add:"-3" }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 人數統計 -->
+                        <div class="count-display">
+                            <span class="count-text">{{ a.total_count }}/{{ a.max_participants }}人</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 浮動按鈕 -->
+                    {% if a.is_full or a.is_deadline_passed %}
+                        <button class="join-button disabled" onclick="event.stopPropagation();return false;">已額滿/截止</button>
+                    {% elif not request.user.is_authenticated %}
+                        <button class="join-button" onclick="event.stopPropagation(); triggerNavbarLogin();">登入即可參加 ✨</button>
+                    {% elif a.pk and a.id in created_ids %}
+                        <button class="join-button disabled" onclick="event.stopPropagation();return false;">您是發起人</button>
+                    {% elif a.pk and a.id in joined_ids %}
+                        <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();" style="position: absolute; bottom: 24px; right: 24px; z-index: 10;">
+                            {% csrf_token %}
+                            <button class="join-button" type="submit">取消參加 <i class="fa-regular fa-calendar-xmark"></i></button>
+                        </form>
+                    {% elif a.pk %}
+                        <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();" style="position: absolute; bottom: 24px; right: 24px; z-index: 10;">
+                            {% csrf_token %}
+                            <button class="join-button" type="submit">立即參加 <i class="fa-solid fa-bolt"></i></button>
+                        </form>
+                    {% else %}
+                        <button class="join-button disabled" onclick="event.stopPropagation();return false;">無法參加</button>
+                    {% endif %}
                 </div>
             {% empty %}
                 <p>
@@ -194,6 +226,29 @@
             {% endfor %}
         </div>
     </section>
+
+    <!-- 分頁控制器 -->
+    <div class="pagination-container" id="pagination-container">
+        <div class="pagination">
+            <button class="pagination-btn prev-btn" id="prev-btn" disabled>
+                <i class="fas fa-chevron-left"></i>
+                <span>上一頁</span>
+            </button>
+            
+            <div class="pagination-numbers" id="pagination-numbers">
+                <!-- 頁碼按鈕將由 JavaScript 動態生成 -->
+            </div>
+            
+            <button class="pagination-btn next-btn" id="next-btn">
+                <span>下一頁</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        
+        <div class="pagination-info">
+            <span>每頁顯示 <span id="items-per-page-display">18</span> 個，共 <span id="total-items">{{ activities|length }}</span> 個活動</span>
+        </div>
+    </div>
 
     <div class="floating-action-button">
         <div class="circular-logo">
@@ -229,4 +284,242 @@
 {% block body_js %}
 <script src="{% static 'js/pop_window/join_pop.js' %}"></script>
 <script src="{% static 'js/join.js' %}"></script>
+<script>
+// 分頁和顯示控制功能
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsPerRowSelect = document.getElementById('items-per-row');
+    const activityGrid = document.getElementById('activity-grid');
+    const paginationContainer = document.getElementById('pagination-container');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const paginationNumbers = document.getElementById('pagination-numbers');
+    const currentPageSpan = document.getElementById('current-page');
+    const totalPagesSpan = document.getElementById('total-pages');
+    const itemsPerPageDisplay = document.getElementById('items-per-page-display');
+    
+    let currentPage = 1;
+    let itemsPerRow = 3;
+    let itemsPerPage = 18; // 預設每頁 18 個 (3行 × 6行)
+    let allCards = [];
+    let totalPages = 1;
+    
+    // 初始化
+    function init() {
+        allCards = Array.from(activityGrid.querySelectorAll('.activity-card'));
+        
+        // 恢復用戶設定
+        const savedItemsPerRow = localStorage.getItem('itemsPerRow');
+        const savedCurrentPage = localStorage.getItem('currentPage');
+        
+        if (savedItemsPerRow) {
+            itemsPerRow = parseInt(savedItemsPerRow);
+            itemsPerRowSelect.value = savedItemsPerRow;
+        }
+        
+        if (savedCurrentPage) {
+            currentPage = parseInt(savedCurrentPage);
+        }
+        
+        // 立即應用卡片尺寸，確保樣式生效
+        updateGridLayout(itemsPerRow);
+        
+        updateLayout();
+        
+        // 強制重新渲染，確保所有樣式都被應用
+        setTimeout(() => {
+            updateGridLayout(itemsPerRow);
+        }, 50);
+    }
+    
+    // 更新佈局
+    function updateLayout() {
+        calculateItemsPerPage();
+        updateGridLayout(itemsPerRow);
+        updatePagination();
+        showCurrentPage();
+    }
+    
+    // 計算每頁顯示數量
+    function calculateItemsPerPage() {
+        // 根據每行數量計算每頁顯示數量
+        const rowsPerPage = 6; // 每頁顯示 6 行
+        itemsPerPage = itemsPerRow * rowsPerPage;
+        itemsPerPageDisplay.textContent = itemsPerPage;
+        
+        totalPages = Math.ceil(allCards.length / itemsPerPage);
+        totalPagesSpan.textContent = totalPages;
+        
+        // 確保當前頁碼不超過總頁數
+        if (currentPage > totalPages) {
+            currentPage = Math.max(1, totalPages);
+        }
+    }
+    
+    // 監聽選擇器變化
+    itemsPerRowSelect.addEventListener('change', function() {
+        itemsPerRow = parseInt(this.value);
+        currentPage = 1; // 重設到第一頁
+        
+        // 儲存用戶選擇
+        localStorage.setItem('itemsPerRow', itemsPerRow);
+        localStorage.setItem('currentPage', currentPage);
+        
+        updateLayout();
+    });
+    
+    // 更新網格佈局
+    function updateGridLayout(itemsPerRow) {
+        console.log('Updating grid layout for', itemsPerRow, 'items per row');
+        
+        // 移除所有現有的 items-per-row 類別
+        activityGrid.className = activityGrid.className.replace(/items-per-row-\d+/g, '');
+        
+        // 添加新的類別
+        activityGrid.classList.add(`items-per-row-${itemsPerRow}`);
+        
+        // 更新所有卡片的類別
+        allCards.forEach((card, index) => {
+            // 移除所有現有的 card-size 類別
+            card.className = card.className.replace(/card-size-\d+/g, '');
+            // 添加新的類別
+            card.classList.add(`card-size-${itemsPerRow}`);
+            
+            // 調試信息
+            if (index === 0) {
+                console.log('First card classes:', card.className);
+            }
+        });
+        
+        // 強制重新計算樣式
+        activityGrid.offsetHeight;
+        
+        // 觸發重新計算佈局
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+    
+    // 顯示當前頁的卡片
+    function showCurrentPage() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        
+        allCards.forEach((card, index) => {
+            if (index >= startIndex && index < endIndex) {
+                card.style.display = 'flex';
+                // 添加動畫效果
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 50);
+            } else {
+                card.style.display = 'none';
+                card.classList.remove('visible');
+            }
+        });
+        
+        currentPageSpan.textContent = currentPage;
+        
+        // 更新按鈕狀態
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+        
+        // 儲存當前頁碼
+        localStorage.setItem('currentPage', currentPage);
+    }
+    
+    // 更新分頁按鈕
+    function updatePagination() {
+        paginationNumbers.innerHTML = '';
+        
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        paginationContainer.style.display = 'block';
+        
+        // 計算顯示的頁碼範圍
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        // 調整範圍以顯示 5 個頁碼
+        if (endPage - startPage < 4) {
+            if (startPage === 1) {
+                endPage = Math.min(totalPages, startPage + 4);
+            } else {
+                startPage = Math.max(1, endPage - 4);
+            }
+        }
+        
+        // 第一頁
+        if (startPage > 1) {
+            createPageButton(1);
+            if (startPage > 2) {
+                createEllipsis();
+            }
+        }
+        
+        // 中間頁碼
+        for (let i = startPage; i <= endPage; i++) {
+            createPageButton(i);
+        }
+        
+        // 最後一頁
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                createEllipsis();
+            }
+            createPageButton(totalPages);
+        }
+    }
+    
+    // 創建頁碼按鈕
+    function createPageButton(pageNum) {
+        const button = document.createElement('button');
+        button.className = 'pagination-number';
+        button.textContent = pageNum;
+        
+        if (pageNum === currentPage) {
+            button.classList.add('active');
+        }
+        
+        button.addEventListener('click', () => {
+            currentPage = pageNum;
+            updatePagination();
+            showCurrentPage();
+        });
+        
+        paginationNumbers.appendChild(button);
+    }
+    
+    // 創建省略號
+    function createEllipsis() {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'pagination-ellipsis';
+        ellipsis.textContent = '...';
+        paginationNumbers.appendChild(ellipsis);
+    }
+    
+    // 上一頁按鈕
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+            showCurrentPage();
+        }
+    });
+    
+    // 下一頁按鈕
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+            showCurrentPage();
+        }
+    });
+    
+    // 初始化
+    init();
+});
+</script>
 {% endblock %}

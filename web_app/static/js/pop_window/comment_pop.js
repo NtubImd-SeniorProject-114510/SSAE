@@ -496,17 +496,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     try {
-      const res = await fetch(`/api/courses/${courseId}/reviews/`, {   // ← 修正路徑
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRFToken': getCSRFToken() || ''
-        },
-        body: JSON.stringify({
-          rating,
-          content: (window.currentCommentText || '').trim() || '',
-        })
+      const res = await fetch(`/api/rating/${courseId}/`, {  // 改為新的評分端點
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': getCSRFToken() || ''
+          },
+          body: JSON.stringify({
+              rating,
+          })
       });
 
       const data = await res.json().catch(() => ({}));

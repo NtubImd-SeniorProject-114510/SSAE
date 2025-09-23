@@ -42,6 +42,19 @@
 .error-option {
     color: #dc3545;
 }
+
+/* ★ 新增：欄位下方的純文字錯誤樣式 */
+.field-error {
+    display: none;
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #b91c1c; /* 深紅 */
+}
+.form-input[aria-invalid="true"] {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.08);
+}
 </style>
 
 <div id="uploadFormModal2" class="upload-modal2" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3500;align-items:center;justify-content:center;background:rgba(111,85,125,0.13);">
@@ -53,6 +66,7 @@
     </div>
 
     <div class="form-container">
+
         <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book2' %}">
             {% csrf_token %}
             
@@ -68,7 +82,7 @@
                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
                    style="display: none;"
                    onchange="handleFileSelect(this)">
-            
+
             <div class="form-group">
                 <label class="form-label required" for="id_title">書名</label>
                 <input type="text" 
@@ -78,8 +92,10 @@
                        id="id_title" 
                        placeholder="請輸入書名" 
                        required>
+                <!-- ★ 新增：只顯示純文字錯誤 -->
+                <div id="id_title_error_text" class="field-error" role="alert" aria-live="polite"></div>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label required" for="id_price">價格</label>
                 <input type="number" 
@@ -172,11 +188,86 @@
   </div>
 </div>
 
+<!-- 成功提示方塊 -->
+<div id="successModal" class="success-modal" style="display: none;">
+    <div class="success-content">
+        <div class="success-message">
+            <span class="success-icon">✅</span>
+            <span class="success-text">上架成功！</span>
+        </div>
+    </div>
+</div>
+
 <script>
 let selectedFile = null;
 let isLoadingData = false;
+let isSubmitting = false; // 防止重複提交
+
+/* ★ 新增：禁用詞清單與工具 */
+const BANNED_WORDS = [
+  // 依你的後端清單對齊；這裡放範例
+  '違禁','仿冒','成人','武器','毒品','菸草','賭博'
+];
+function normalizeText(s){ return (s||'').toLowerCase().trim(); }
+function containsBannedTitle(s){
+  const t = normalizeText(s);
+  for (const w of BANNED_WORDS){ if (w && t.includes(normalizeText(w))) return true; }
+  return false;
+}
+/* ★ 新增：欄位錯誤顯示/清除 */
+function setTitleError(msg){
+  const input = document.getElementById('id_title');
+  const box = document.getElementById('id_title_error_text');
+  if (!box || !input) return;
+  if (msg){
+    box.textContent = msg;
+    box.style.display = 'block';
+    input.setAttribute('aria-invalid','true');
+  }else{
+    box.textContent = '';
+    box.style.display = 'none';
+    input.removeAttribute('aria-invalid');
+  }
+}
+// 使用者一輸入就清掉錯誤
+document.addEventListener('input', function(e){
+  if (e.target && e.target.id === 'id_title'){ setTitleError(''); }
+});
 
 document.addEventListener('DOMContentLoaded', function() {
+    // 確保關閉按鈕事件正常工作
+    const closeBtn = document.querySelector('.upload-modal2 .close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('叉叉按鈕被點擊');
+            closeForm2();
+        });
+    }
+    
+    // 點擊模態框背景也能關閉
+    const modal = document.getElementById('uploadFormModal2');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                console.log('點擊背景關閉表單');
+                closeForm2();
+            }
+        });
+    }
+    
+    // ESC鍵關閉表單
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('uploadFormModal2');
+            if (modal && modal.style.display === 'flex') {
+                console.log('ESC鍵關閉表單');
+                closeForm2();
+            }
+        }
+    });
+    
     const academicSelect = document.getElementById('id_academic');
     const deptSelect = document.getElementById('id_department');
     const gradeSelect = document.getElementById('id_grade');
@@ -190,17 +281,14 @@ document.addEventListener('DOMContentLoaded', function() {
             resetDepartmentAndGrade();
 
             if (!academicId) {
-                // 如果沒有選擇學制，禁用科系和年級
                 deptSelect.disabled = true;
                 gradeSelect.disabled = true;
                 return;
             }
 
-            // 顯示載入中
             showLoadingState();
             isLoadingData = true;
 
-            // 發送AJAX請求
             fetch(`/get-related-data/?academic_id=${academicId}`, {
                 method: 'GET',
                 headers: {
@@ -217,21 +305,11 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 console.log('收到資料:', data);
-                
-                // 更新科系選項
                 updateDepartmentOptions(data.departments);
-                
-                // 更新年級選項
                 updateGradeOptions(data.grades);
-                
-                // 啟用選單
                 deptSelect.disabled = false;
                 gradeSelect.disabled = false;
-                
-                // 顯示除錯資訊（開發用）
-                if (data.debug) {
-                    console.log('除錯資訊:', data.debug);
-                }
+                if (data.debug) { console.log('除錯資訊:', data.debug); }
             })
             .catch(error => {
                 console.error('載入失敗:', error);
@@ -241,6 +319,114 @@ document.addEventListener('DOMContentLoaded', function() {
                 isLoadingData = false;
             });
         });
+    }
+    
+    const bookForm = document.getElementById('bookForm2');
+    console.log('尋找表單元素 bookForm2:', bookForm);
+    
+    if (bookForm) {
+        console.log('✅ 找到表單元素，綁定提交事件');
+        console.log('表單action:', bookForm.action);
+        console.log('表單method:', bookForm.method);
+        
+        bookForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('🚀 表單提交事件被觸發！');
+
+            // ★ 先做「前端」禁用詞檢查（只檢查 title）
+            const titleVal = (document.getElementById('id_title')?.value || '').trim();
+            if (!titleVal){
+                setTitleError('請輸入書名');
+                return;
+            }
+            if (containsBannedTitle(titleVal)){
+                setTitleError('輸入內容包含禁止或不當詞彙，請重新編輯。');
+                return; // 阻擋送出
+            }
+            
+            if (isLoadingData) { alert('正在載入資料，請稍候再提交'); return; }
+            if (isSubmitting)   { console.log('表單正在提交中，請勿重複點擊'); return; }
+            isSubmitting = true;
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            // 基本驗證
+            const price = formData.get('price');
+            if (!price || parseFloat(price) < 0) {
+                setTitleError(''); // 不要影響 title 的錯誤
+                alert('請輸入有效的價格');
+                isSubmitting = false;
+                return;
+            }
+            
+            submitBtn.textContent = '上架中...';
+            submitBtn.disabled = true;
+            
+            let uploadSuccess = false;
+        
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                // 嘗試解析 JSON；若不是 JSON 再抓文字
+                let data = null, rawText = '';
+                try { data = await response.json(); }
+                catch { try { rawText = await response.text(); } catch(_){} }
+
+                if (response.ok && data && data.success) {
+                    uploadSuccess = true;
+                    console.log('書籍上架成功，準備顯示成功訊息');
+                    showSuccessModal();
+                    closeForm2();
+                    setTimeout(() => { hideSuccessModal(); window.location.reload(); }, 2000);
+                } else {
+                    // ★ 後端失敗（含 400 禁用詞）：只顯示純文字錯誤
+                    let msg = (data && (data.message || data.error)) || '';
+                    if (!msg && rawText) {
+                        // 若後端回傳 Django 預設 <ul class="errorlist">，把 HTML 去掉並只保留訊息
+                        msg = rawText
+                                .replace(/<[^>]+>/g, ' ')   // 去標籤
+                                .replace(/\s+/g,' ')        // 正規化空白
+                                .replace(/^title\s*/i,'')   // 去掉欄位名
+                                .trim();
+                    }
+                    if (!msg) msg = '上架失敗，請重試';
+
+                    // 如果是禁用詞訊息，不顯示其它包裝
+                    if (/禁止|不當|禁用/.test(msg)) {
+                        msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+                    }
+                    setTitleError(msg);
+                    console.error('上架失敗:', data || rawText || response.status);
+                }
+                
+            } catch (error) {
+                console.error('網路錯誤:', error);
+                setTitleError('網路錯誤，請稍後再試');
+            } finally {
+                if (!uploadSuccess) {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    isSubmitting = false;
+                }
+            }
+        });
+        
+        const submitBtn = bookForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            console.log('✅ 找到上架按鈕，添加點擊事件');
+            submitBtn.addEventListener('click', function(){ /* 調試用途 */ });
+        } else {
+            console.error('❌ 找不到上架按鈕');
+        }
+        
+    } else {
+        console.error('❌ 找不到表單元素 bookForm2');
     }
 });
 
@@ -302,8 +488,6 @@ function showErrorState(errorMessage) {
     
     deptSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
     gradeSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
-    
-    // 可以選擇是否顯示具體錯誤
     console.error('資料載入錯誤:', errorMessage);
 }
 
@@ -362,17 +546,12 @@ function toggleTag(btn, text) {
     let tags = textarea.value ? textarea.value.split('、').map(t => t.trim()).filter(t => t) : [];
 
     if (btn.classList.contains('selected')) {
-        // 移除標籤
         tags = tags.filter(t => t !== text);
         btn.classList.remove('selected');
     } else {
-        // 添加標籤
-        if (!tags.includes(text)) {
-            tags.push(text);
-        }
+        if (!tags.includes(text)) { tags.push(text); }
         btn.classList.add('selected');
     }
-    
     textarea.value = tags.join('、');
 }
 
@@ -384,132 +563,87 @@ function clearSelectedTags() {
 }
 
 function closeForm2() {
-    const modal = document.getElementById('uploadFormModal2');
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-    
-    // 重置表單
-    const form = document.getElementById('bookForm2');
-    form.reset();
-    
-    selectedFile = null;
-    
-    // 重置上傳區域
-    const uploadArea = document.getElementById('uploadArea');
-    uploadArea.innerHTML = `
-        <div class="upload-icon">📷</div>
-        <div class="upload-text">點擊上傳書籍封面圖片</div>
-        <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
-    `;
-    
-    // 清除標籤
-    clearSelectedTags();
-    
-    // 重置級聯選擇
-    resetDepartmentAndGrade();
+    try {
+        console.log('關閉表單函數被調用');
+        
+        const modal = document.getElementById('uploadFormModal2');
+        const form = document.getElementById('bookForm2');
+        
+        if (!modal) {
+            console.error('找不到模態框元素');
+            return;
+        }
+        
+        if (form) {
+            form.reset();
+            console.log('表單已重置');
+        }
+        
+        selectedFile = null;
+        isLoadingData = false;
+        isSubmitting = false;
+
+        // 同步把 title 的錯誤清掉
+        setTitleError('');
+        
+        const uploadArea = document.getElementById('uploadArea');
+        if (uploadArea) {
+            uploadArea.innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">點擊上傳書籍封面圖片</div>
+                <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
+            `;
+        }
+        
+        if (typeof clearSelectedTags === 'function') { clearSelectedTags(); }
+        if (typeof resetDepartmentAndGrade === 'function') { resetDepartmentAndGrade(); }
+        
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        console.log('表單已成功關閉並重置');
+        
+    } catch (error) {
+        console.error('關閉表單時發生錯誤:', error);
+        const modal = document.getElementById('uploadFormModal2');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
 }
 
 function openBookUploadModal2() {
     const modal = document.getElementById('uploadFormModal2');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    
-    // 確保表單是乾淨的狀態
     resetDepartmentAndGrade();
+    setTitleError('');
 }
 
-// 表單提交處理
-document.getElementById('bookForm2').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // 防止重複提交
-    if (isLoadingData) {
-        alert('正在載入資料，請稍候再提交');
-        return;
+// 顯示成功方塊
+function showSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => { modal.classList.add('show'); }, 10);
+        console.log('顯示成功方塊');
     }
-    
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    
-    // 基本驗證
-    const title = formData.get('title');
-    const price = formData.get('price');
-    
-    if (!title || !title.trim()) {
-        alert('請輸入書名');
-        return;
+}
+
+// 隱藏成功方塊
+function hideSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+        console.log('隱藏成功方塊');
     }
-    
-    if (!price || parseFloat(price) < 0) {
-        alert('請輸入有效的價格');
-        return;
-    }
-    
-    submitBtn.textContent = '上架中...';
-    submitBtn.disabled = true;
-    
-    try {
-        const response = await fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success || response.ok) {
-            // 使用 showNotification 如果存在，否則使用 alert
-            if (typeof showNotification === 'function') {
-                showNotification('success', '書籍上架成功！');
-            } else {
-                alert('書籍上架成功！');
-            }
-            
-            closeForm2();
-            
-            // 重新載入頁面或更新書籍列表
-            setTimeout(() => {
-                if (typeof updateBooksList === 'function') {
-                    updateBooksList();
-                } else {
-                    location.reload();
-                }
-            }, 1500);
-        } else {
-            const errorMessage = data.message || data.error || '上架失敗，請重試';
-            
-            if (typeof showNotification === 'function') {
-                showNotification('error', errorMessage);
-            } else {
-                alert(errorMessage);
-            }
-            
-            console.error('上架失敗:', data);
-        }
-        
-    } catch (error) {
-        console.error('網路錯誤:', error);
-        
-        if (typeof showNotification === 'function') {
-            showNotification('error', '網路錯誤，請檢查連線後重試');
-        } else {
-            alert('網路錯誤，請檢查連線後重試');
-        }
-    } finally {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    }
-});
+}
 
 // 頁面關閉前的警告（如果有未保存的內容）
 window.addEventListener('beforeunload', function(e) {
-    const form = document.getElementById('bookForm2');
     const modal = document.getElementById('uploadFormModal2');
-    
-    if (modal.style.display === 'flex' && form.checkValidity && selectedFile) {
+    if (modal && modal.style.display === 'flex' && selectedFile) {
         e.preventDefault();
         e.returnValue = '您有未保存的內容，確定要離開嗎？';
         return '您有未保存的內容，確定要離開嗎？';
