@@ -254,41 +254,65 @@ function toggleLike(commentId, button) {
 }
 
 function submitComment(activityId, content, textarea, parentId = null) {
-  // 前端先檢查空白
   if (!content || !content.trim()) {
     showCommentMsg('留言內容不能為空', false);
     return;
   }
 
-  fetch(`/api/activities/${activityId}/comments/`, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'),
-          'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ content, parent_id: parentId })
+  // ✅ 建議從模板塞一個 data-api-comment-url 來避免路徑不一致
+  const urlFromDom = document.getElementById('submitComment')?.dataset.apiCommentUrl;
+  const apiUrl = urlFromDom || `/api/activities/${activityId}/comment/`; // ← 單數
+
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({ content, parent_id: parentId }),
+    credentials: 'same-origin'          // ★ 帶上 cookie（不同子網域時很重要）
   })
   .then(async (r) => {
-      let data = {};
-      try { data = await r.json(); } catch (e) {}
-      const failed = !r.ok || data.success === false || data.ok === false;
+    let data = null, raw = '';
+    try { data = await r.json(); } catch { try { raw = await r.text(); } catch {} }
 
-      if (failed) {
-        const msg = pickMessage(data) || '留言送出失敗，請檢查內容後再試。';
-        showCommentMsg(msg, false);           // 🔴 顯示後端錯誤（含禁用詞）
-        return;
+    const failed = !r.ok || data?.success === false || data?.ok === false;
+
+    if (failed) {
+      // 從各種格式中萃取一句話
+      let msg = (data && (data.message)) || '';
+      if (!msg && data && data.errors) {
+        const first = Array.isArray(data.errors) ? data.errors[0]
+                    : (data.errors.general && data.errors.general[0]) ||
+                      (Object.values(data.errors)[0] && Object.values(data.errors)[0][0]);
+        if (first) msg = first;
       }
+      if (!msg && raw) {
+        // 伺服器可能回了 HTML/純文字（如 CSRF 失敗頁），剝標籤後取一句
+        msg = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+      // 明確處理禁用詞與 CSRF 常見字眼
+      if (/禁止|不當|禁用/.test(msg)) {
+        msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+      } else if (/csrf|forbidden|禁止存取|驗證/i.test(msg)) {
+        msg = '驗證逾時或未登入，請重新登入後再試。';
+      }
+      if (!msg) msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
 
-      // ✅ 成功
-      showCommentMsg('留言成功！', true);
-      if (textarea) textarea.value = '';
-      // 你也可以在這裡直接把新留言插入 DOM；先沿用原本行為：
-      location.reload();
+      showCommentMsg(msg, false);
+      return;
+    }
+
+    // ✅ 成功
+    showCommentMsg(data?.message || '留言成功！', true);
+    if (textarea) textarea.value = '';
+    // 你可以直接把 data.comment 插入 DOM；暫時沿用 reload：
+    location.reload();
   })
   .catch(err => {
-      console.error('Comment error:', err);
-      showCommentMsg('網路或系統錯誤，請稍後再試', false);
+    console.error('Comment error:', err);
+    showCommentMsg('網路或系統錯誤，請稍後再試', false);
   });
 }
 

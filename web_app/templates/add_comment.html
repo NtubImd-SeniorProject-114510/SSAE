@@ -21,6 +21,9 @@
   </div>
   
   <form id="comment-form" class="comment-form" onsubmit="return false;">
+    <!-- add_comment.html 內建議在 <form> 裡加兩個隱藏欄位（沒有就補上）： -->
+    <input type="hidden" name="use_converted" id="use_converted" value="0">
+    <input type="hidden" name="converted_text" id="converted_text" value="">
     <div class="form-row">
       <div class="form-col-left">
         <div class="form-group">

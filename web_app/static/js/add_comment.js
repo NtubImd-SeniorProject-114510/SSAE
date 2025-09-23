@@ -1,4 +1,4 @@
-// static/js/add_comment.js — robust version
+// static/js/add_comment.js — robust version（含：轉換錯誤時禁止送出）
 // 功能：頂端顯示同步 / 中文可見搜尋泡泡 / Toast 提示 / 匿名或實名顯示切換 & 上傳 / 保證 user_id 由後端以 request.user 儲存
 
 (function(){
@@ -9,14 +9,21 @@
   function el(id){ return document.getElementById(id); }
 
   function getCSRFToken() {
-  // 先從 cookie 拿
-  const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
-  if (m) return decodeURIComponent(m[1]);
-  // 退而求其次：從頁面上的 hidden input / meta 拿
-  return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value
-      || document.querySelector('meta[name="csrf-token"]')?.content
-      || '';
+    // 先從 cookie 拿
+    const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
+    if (m) return decodeURIComponent(m[1]);
+    // 退而求其次：從頁面上的 hidden input / meta 拿
+    return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value
+        || document.querySelector('meta[name="csrf-token"]')?.content
+        || '';
   }
+
+  // ===== 新增：轉換/送出的狀態控制常數 =====
+  const GUARD = {
+    MIN_LEN: 20,                             // 你可依規則調整
+    ERROR_TEXT: '轉換失敗，請稍後重試',        // 轉換器回傳的失敗訊息
+    SHORT_HINT: '（內容過短）請補充具體細節。' // 你現有在右框顯示的「過短」提示
+  };
 
   // 嘗試多種來源取得目前使用者資訊（供「實名」顯示）
   function getCurrentUserInfo(){
@@ -74,7 +81,6 @@
       if (nameEl) nameEl.textContent = isAnonymous ? ANON_NAME : REAL_NAME;
     }
 
-    // 依目前 radio 狀態套用（容錯：有些模板預設 checked 在匿名）
     const initialAnonymous = !!(radioAnon?.checked); // radioAnon 代表匿名
     applyDisplay(initialAnonymous);
 
@@ -90,43 +96,43 @@
 
     // === 強化：預覽區僅允許「刪除/剪下」，中英/注音都無法新增 ===
     (function enforceDeleteOnlyOnPreview_hard(){
-      const el = document.getElementById('comment-preview') || document.getElementById('preview_text');
-      if (!el) return;
+      const elp = document.getElementById('comment-preview') || document.getElementById('preview_text');
+      if (!elp) return;
 
-      const isTextarea = el.tagName === 'TEXTAREA';
+      const isTextarea = elp.tagName === 'TEXTAREA';
 
       // 關閉系統自動更正，避免自動插入
       if (isTextarea) {
-        el.setAttribute('autocomplete', 'off');
-        el.setAttribute('autocorrect', 'off');
-        el.setAttribute('autocapitalize', 'off');
-        el.setAttribute('spellcheck', 'false');
+        elp.setAttribute('autocomplete', 'off');
+        elp.setAttribute('autocorrect', 'off');
+        elp.setAttribute('autocapitalize', 'off');
+        elp.setAttribute('spellcheck', 'false');
       }
 
       // 取值/設值封裝，兼容 div / textarea
-      const getVal = () => ('value' in el ? el.value : el.textContent || '');
+      const getVal = () => ('value' in elp ? elp.value : elp.textContent || '');
       const setVal = (v) => {
-        if ('value' in el) el.value = v;
-        else el.textContent = v;
+        if ('value' in elp) elp.value = v;
+        else elp.textContent = v;
       };
 
       // 快照（含游標）
       let prev = getVal();
-      let selStart = isTextarea ? (el.selectionStart ?? prev.length) : null;
-      let selEnd   = isTextarea ? (el.selectionEnd   ?? prev.length) : null;
+      let selStart = isTextarea ? (elp.selectionStart ?? prev.length) : null;
+      let selEnd   = isTextarea ? (elp.selectionEnd   ?? prev.length) : null;
 
       function snapshot() {
         prev = getVal();
         if (isTextarea) {
-          selStart = el.selectionStart ?? prev.length;
-          selEnd   = el.selectionEnd   ?? prev.length;
+          selStart = elp.selectionStart ?? prev.length;
+          selEnd   = elp.selectionEnd   ?? prev.length;
         }
       }
       function restore() {
         setVal(prev);
         if (isTextarea) {
           try {
-            el.setSelectionRange(selStart, selEnd);
+            elp.setSelectionRange(selStart, selEnd);
           } catch(_){}
         }
       }
@@ -141,35 +147,31 @@
       ]);
 
       // 1) 先用 beforeinput 擋（可攔 New text / Paste / IME 插入）
-      el.addEventListener('beforeinput', (e) => {
+      elp.addEventListener('beforeinput', (e) => {
         const t = e.inputType || '';
         if (!ALLOWED.has(t)) {
-          // 禁止任何插入/貼上/IME 組字造成的插入
           e.preventDefault();
         } else {
-          // 刪除動作 → 先存快照（刪除後若瀏覽器有奇怪行為可回滾）
           snapshot();
         }
       });
 
       // 2) 後盾：input 事件上做「差異比對」，若偵測到有新增 → 立刻回滾
-      el.addEventListener('input', () => {
+      elp.addEventListener('input', () => {
         const cur = getVal();
         if (cur.length > prev.length) {
-          // 有新增字（中/英/注音都會落在這）→ 回滾
           restore();
         } else {
-          // 沒新增（相等或變短）：視為刪除或無變化 → 接受並更新快照
           snapshot();
         }
       });
 
       // 3) 禁止貼上、拖放插入
-      el.addEventListener('paste', (e) => e.preventDefault());
-      el.addEventListener('drop',  (e) => e.preventDefault());
+      elp.addEventListener('paste', (e) => e.preventDefault());
+      elp.addEventListener('drop',  (e) => e.preventDefault());
 
-      // 4) 鍵盤層限制：允許刪除/導航/複製/剪下；禁止可見字元與貼上/Undo/Redo
-      el.addEventListener('keydown', (e) => {
+      // 4) 鍵盤層限制
+      elp.addEventListener('keydown', (e) => {
         const NAV = new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Tab','Escape','Shift','Control','Alt','Meta']);
         if (NAV.has(e.key)) return;
         if (e.key === 'Backspace' || e.key === 'Delete') { snapshot(); return; }
@@ -177,7 +179,7 @@
         if (e.ctrlKey || e.metaKey) {
           const k = e.key.toLowerCase();
           if (k === 'a' || k === 'c' || k === 'x') { snapshot(); return; } // 全選/複製/剪下
-          if (k === 'v' || k === 'z' || k === 'y') { e.preventDefault(); return; } // 貼上/Undo/Redo 可能造成插入 → 禁
+          if (k === 'v' || k === 'z' || k === 'y') { e.preventDefault(); return; } // 貼上/Undo/Redo 禁止
         }
 
         if (e.key.length === 1) { // 任何可見字元
@@ -185,10 +187,10 @@
         }
       });
 
-      // 5) 部分瀏覽器的 IME 組字事件不可取消，這裡仍記快照並在 input 後回滾
-      el.addEventListener('compositionstart', () => snapshot());
-      el.addEventListener('compositionupdate', () => {/* 先不處理，交給 input 後台回滾 */});
-      el.addEventListener('compositionend', () => {/* 交給 input 事件差異比對 */});
+      // 5) IME 組字
+      elp.addEventListener('compositionstart', () => snapshot());
+      elp.addEventListener('compositionupdate', () => {});
+      elp.addEventListener('compositionend', () => {});
     })();
 
 
@@ -206,16 +208,43 @@
     const grade = el('grade');
     const course = el('course');
     const comment = el('comment_text');
-    const btnPreview = el('preview-btn');
+    const btnPreview = el('preview-btn');   // 你現有的「轉換/預覽」按鈕
     const btnSubmit = el('submit-btn');
-    const preview = el('preview');
-    const previewText = el('preview_text');
+    const preview = el('preview');          // 右側框外層
+    const previewText = el('preview_text'); // 右側實際文字（或 #comment-preview）
+
+    // ===== 新增：預覽框狀態與送出鎖定工具 =====
+    function setPreviewState(kind, msg) {
+      // kind: 'ok' | 'error' | 'empty'
+      if (!preview) return;
+      preview.dataset.state = kind;
+      preview.classList.remove('is-error', 'is-ok', 'is-empty');
+      if (kind === 'error') preview.classList.add('is-error');
+      if (kind === 'ok')    preview.classList.add('is-ok');
+      if (kind === 'empty') preview.classList.add('is-empty');
+      if (typeof msg === 'string' && previewText) previewText.textContent = msg;
+    }
+
+    function lockSubmit(lock, reason='') {
+      if (!btnSubmit) return;
+      btnSubmit.disabled = !!lock;
+      btnSubmit.setAttribute('aria-disabled', lock ? 'true' : 'false');
+      btnSubmit.classList.toggle('is-disabled', !!lock);
+      if (lock && reason) btnSubmit.title = reason; else btnSubmit.removeAttribute('title');
+    }
+
+    function hasBlockingError() {
+      if (!preview) return false;
+      const stateErr = preview.dataset.state === 'error';
+      const txt = (previewText ? ('value' in previewText ? previewText.value : previewText.textContent) : '')?.trim() || '';
+      const isErrorText = txt === GUARD.ERROR_TEXT || txt.startsWith('（內容過短）') || txt.startsWith(GUARD.SHORT_HINT);
+      return stateErr || isErrorText;
+    }
 
     // 頂端顯示區塊
     const courseNameEl = el('course-name-display');
     const courseTeacherEl = el('course-teacher-display');
 
-    // 依課程下拉目前選項更新頂端顯示
     function updateCourseHeaderFromSelect() {
       if (!course) return;
       const opt = course.selectedOptions && course.selectedOptions[0];
@@ -270,7 +299,6 @@
 
       filtered.forEach(c=>{
         const opt = document.createElement('option');
-        // value 使用資料表主鍵 id
         opt.value = c.id;
         opt.textContent = `${c.course_name}（${c.course_teacher || '未填寫教師'}）`;
         opt.dataset.name = c.course_name || '';
@@ -316,38 +344,81 @@
     // 綁定匿名/實名切換與視覺
     bindAnonymousToggle();
 
-    // 預覽
+    // ===== 修改：預覽/轉換按鈕流程 =====
     btnPreview?.addEventListener('click', ()=>{
-      const val = (comment?.value || '').trim();
-      if(!val){ CommentToast?.toastInfo?.('請先輸入評論內容'); return; }
+      const raw = (comment?.value || '').trim();
+
+      // 先清空既有狀態
+      if (raw.length === 0) {
+        setPreviewState('empty', '');
+        lockSubmit(false);
+        CommentToast?.toastInfo?.('請先輸入評論內容');
+        return;
+      }
+
+      // 基本門檻（字數不足 → 右側框顯示提示 + 鎖送出）
+      if (raw.length < GUARD.MIN_LEN) {
+        setPreviewState('error', GUARD.SHORT_HINT);
+        lockSubmit(true, '評論內容太短，請補充後再送出');
+        preview?.classList.remove('d-none');
+        preview?.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+
+      // 一般情況：此處可接你的「語意優化 API」；目前先直接顯示原文當預覽
+      setPreviewState('ok', raw);
+      lockSubmit(false);
       preview?.classList.remove('d-none');
-      if (previewText) previewText.textContent = val;
       preview?.scrollIntoView({behavior:'smooth', block:'center'});
     });
 
-    // 送出（一律以預覽內容為準；禁止送出原始 comment_text）
+    // 任何輸入變更 → 清掉錯誤，解鎖（讓使用者可以再按一次轉換）
+    comment?.addEventListener('input', ()=>{
+      if (!comment) return;
+      // 只有在原先是 error 時才重置，避免干擾正常狀態
+      if (preview?.dataset.state === 'error') {
+        setPreviewState('empty', '');
+        lockSubmit(false);
+      }
+    });
+
+    // ===== 修改：送出前的最終把關（轉換失敗/過短一律擋掉） =====
     btnSubmit?.addEventListener('click', async (e) => {
       e.preventDefault();
 
       const cId = course?.value;
       const isAnonymous = (el('anonymous_yes')?.checked === true) || false;
 
-      // 取「轉換後」的內容（優先 #comment-preview，其次 #preview_text）
       const previewBox = el('comment-preview') || el('preview_text');
       const previewVal = (previewBox ? ('value' in previewBox ? previewBox.value : previewBox.textContent) : '').trim();
 
-      // 基本檢查
       if(!cId){ CommentToast?.toastError?.('請先選擇課程'); return; }
 
-      // 必須先按「轉換」產生預覽
+      // 需要先「轉換/預覽」
       if(!previewVal){
         CommentToast?.toastInfo?.('請先按「轉換」，產生可提交的評論內容，再送出。');
         return;
       }
 
-      // 後端的「過短」提示，禁止送出
-      if(previewVal.startsWith('（內容過短）')){
+      // 一律擋掉錯誤狀態或錯誤訊息
+      if (hasBlockingError()) {
+        CommentToast?.toastError?.('目前預覽內容無法提交，請修正後再試。');
+        return;
+      }
+
+      // 防呆：再次檢查字數
+      if (previewVal.length < GUARD.MIN_LEN) {
+        setPreviewState('error', GUARD.SHORT_HINT);
+        lockSubmit(true, '評論內容太短');
         CommentToast?.toastInfo?.('評論內容過短，請補充具體細節後再送出。');
+        return;
+      }
+
+      // 再擋一次「轉換失敗」這句話
+      if (previewVal === GUARD.ERROR_TEXT) {
+        setPreviewState('error', GUARD.ERROR_TEXT);
+        lockSubmit(true, '轉換失敗，請稍後重試');
+        CommentToast?.toastError?.('轉換失敗提示不可作為評論內容。');
         return;
       }
 
@@ -369,7 +440,7 @@
             'X-CSRFToken': getCSRFToken(),
           },
           body: JSON.stringify({
-            content: previewVal,        // ★ 只送轉換後的內容
+            content: previewVal,        // ★ 只送轉換/預覽後的內容
             anonymous: isAnonymous
           })
         });
@@ -385,7 +456,6 @@
       }catch(err){
         console.error(err);
         CommentToast?.toastError?.(err.message || '送出失敗，請稍後再試');
-        // 送出失敗也保持 disabled 狀態，避免重複送出
         btnSubmit.innerHTML = '送出失敗';
       }
     });
@@ -477,4 +547,3 @@
 
   document.addEventListener('DOMContentLoaded', initAddCommentStars);
 })();
-
