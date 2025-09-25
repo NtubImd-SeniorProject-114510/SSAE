@@ -342,5 +342,12 @@
 {% block body_js %}
 <script src="{% static 'js/index.js' %}"></script>
 <script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
+{% if messages %}
+  <script>
+    {% for message in messages %}
+      alert("{{ message }}");
+    {% endfor %}
+  </script>
+{% endif %}
 
 {% endblock %}

@@ -74,16 +74,13 @@ def generate_random_password(length=12):
     return ''.join(random.choices(characters, k=length))
 
 
-def check_school_email(backend, user=None, response=None, *args, **kwargs):
-    print("[DEBUG] 進入 check_school_email 函數")  # 添加調試信息
-    print(f"[DEBUG] response: {response}")  # 打印 response 內容
+def check_school_email(strategy, backend, user=None, response=None, *args, **kwargs):
     email = response.get("email") if response else None
-    print(f"[DEBUG] 獲取到的 email: {email}")  # 打印 email
     if email and not email.endswith("@ntub.edu.tw"):
-        error_msg = f"拒絕登入：{email} 非北商大帳號"
-        print(f"[ERROR] {error_msg}")  # 在終端機輸出錯誤
-        if user:  # 刪除不合法帳號
+        if user:
             user.delete()
-        # 拋出 AuthForbidden 異常，並顯示自定義錯誤訊息
-        raise AuthForbidden(backend, '請使用學校帳號 (@ntub.edu.tw) 登入')
-    return None  # 檢查通過，返回 None 繼續執行下一個 pipeline
+        # 設定錯誤訊息
+        request = strategy.request
+        messages.error(request, "請使用學校帳號 (@ntub.edu.tw) 登入")
+        return redirect('/index/')   # 直接導回首頁
+    return None
