@@ -743,3 +743,7 @@ body {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
 }
+
+.course-summary p {
+  white-space: pre-wrap; /* 保留換行符號 (\n) */
+}

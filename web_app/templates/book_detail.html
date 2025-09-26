@@ -130,9 +130,33 @@
     </div>
     
     <!-- 固定在下方的購買按鈕 -->
-    <a href="mailto:{{ seller_user.email }}?subject=我想購買您的書籍《{{ book.title }}》&body=您好，我想購買您的書籍《{{ book.title }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri }}" class="fixed-cta">
+    <a href="#" id="buyNowBtn" class="fixed-cta">
     立即購買 <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
-</a>
+    </a>
+
+    <script>
+    document.getElementById("buyNowBtn").addEventListener("click", function(e) {
+        e.preventDefault();
+        
+        const email = "{{ seller_user.email }}";
+        const subject = "我想購買您的書籍《{{ book.title }}》";
+        const body = `您好，我想購買您的書籍《{{ book.title }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri }}`;
+
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+        // 📱 手機 → 使用 mailto
+        window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        } else {
+        // 💻 電腦 → 使用 Gmail 網頁版
+        window.open(
+            `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+            "_blank"
+        );
+        }
+    });
+    </script>
+
     
     <!-- 聯絡賣家彈出視窗 -->
     <div id="contactSellerModal" class="modal">
