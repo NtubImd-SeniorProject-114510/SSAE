@@ -345,4 +345,78 @@
 {% block body_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{% static 'js/join_detail.js' %}"></script>
+
+<script>
+    function submitComment(activityId, content, textarea, parentId = null) {
+  if (!content || !content.trim()) {
+    showCommentMsg('留言內容不能為空', false);
+    return;
+  }
+
+  const urlFromDom = document.getElementById('submitComment')?.dataset.apiCommentUrl;
+  const apiUrl = urlFromDom || `/api/activities/${activityId}/comments/`;
+
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({ content, parent_id: parentId }),
+    credentials: 'same-origin'
+  })
+  .then(async (r) => {
+    let data = null, raw = '';
+    try { data = await r.json(); } catch { try { raw = await r.text(); } catch {} }
+
+    // 只把「非 2xx」或明確 success=false 視為失敗
+    const failed = !r.ok || data?.success === false || data?.ok === false;
+
+    if (failed) {
+      // 取一段可讀訊息
+      let msg =
+        (data && data.message) ||
+        (data && data.errors && (
+          (Array.isArray(data.errors) && data.errors[0]) ||
+          (Array.isArray(data.errors.general) && data.errors.general[0]) ||
+          (Object.values(data.errors)[0] && Object.values(data.errors)[0][0])
+        )) ||
+        (raw && raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) ||
+        '';
+
+      // 只在「明確命中」時才顯示禁用詞訊息
+      const msgLower = (msg || '').toLowerCase();
+      const looksLikeBanned =
+        // 你的後端固定字樣
+        /禁止|不當|禁用/.test(msg) ||
+        // 若你在後端有加上自訂代碼，這裡也判斷（可選）
+        data?.code === 'BANNED' || data?.errors?.code === 'BANNED';
+
+      if (looksLikeBanned) {
+        msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+      } else if (/csrf|forbidden|禁止存取|驗證/.test(msgLower)) {
+        msg = '驗證逾時或未登入，請重新登入後再試。';
+      }
+
+      // 如果最後還是拿不到文字，就顯示「一般錯誤」
+      if (!msg) msg = '留言送出失敗，請檢查內容後再試。';
+
+      showCommentMsg(msg, false);
+      return;
+    }
+
+    // ✅ 成功
+    showCommentMsg(data?.message || '留言成功！', true);
+    if (textarea) textarea.value = '';
+    location.reload();
+  })
+  .catch(err => {
+    console.error('Comment error:', err);
+    showCommentMsg('網路或系統錯誤，請稍後再試', false);
+  });
+}
+
+</script>
+
 {% endblock %}
