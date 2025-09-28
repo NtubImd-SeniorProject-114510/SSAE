@@ -168,12 +168,14 @@
                     <div class="profile-content">
                         <div class="profile-image">
                             {% if google_picture %}
-                                <img src="{{ google_picture }}" alt="{{ user.last_name }}{{ user.first_name }}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
+                                <img src="{{ google_picture }}" alt="{% if user_data and user_data.name %}{{ user_data.name }}{% else %}{{ user.last_name }}{{ user.first_name }}{% endif %}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
                             {% else %}
-                                <img src="{% static 'image/me1.png' %}" alt="{{ user.last_name }}{{ user.first_name }}">
+                                <img src="{% static 'image/me1.png' %}" alt="{% if user_data and user_data.name %}{{ user_data.name }}{% else %}{{ user.last_name }}{{ user.first_name }}{% endif %}">
                             {% endif %}
                             <div class="user-name">
-                                {% if user_data and user_data.name %}
+                                {% if user_data and user_data.anonymous %}
+                                    {{ user_data.anonymous }}
+                                {% elif user_data and user_data.name %}
                                     {{ user_data.name }}
                                 {% else %}
                                     {{ user.last_name }}{{ user.first_name }}
@@ -184,21 +186,52 @@
                         <div class="profile-details">
                             <div class="profile-item">
                                 <div class="label">姓名</div>
-                                <div class="value">{{ user.last_name }}{{ user.first_name }}</div>
+                                <div class="value">
+                                    {% if user_data and user_data.name %}
+                                        {{ user_data.name }}
+                                    {% else %}
+                                        {{ user.last_name }}{{ user.first_name }}
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="profile-item">
                                 <div class="label">學號</div>
-                                <div class="value">{{ user.username }}</div>
+                                <div class="value">
+                                    {% if user_data and user_data.student_id %}
+                                        {{ user_data.student_id }}
+                                    {% else %}
+                                        {{ user.username }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if user_data and user_data.academic %}
+                            <div class="profile-item">
+                                <div class="label">學制</div>
+                                <div class="value">{{ user_data.academic }}</div>
+                            </div>
+                            {% endif %}
+                            <div class="profile-item">
+                                <div class="label">班級</div>
+                                <div class="value">
+                                    {% if user_data and user_data.course %}
+                                        {{ user_data.course }}
+                                    {% else %}
+                                        資訊管理科
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="profile-item">
-                                <div class="label">系所</div>
-                                <div class="value">資訊管理科</div>
+                                <div class="label">Email</div>
+                                <div class="value">
+                                    {% if user_data and user_data.mail %}
+                                        {{ user_data.mail }}
+                                    {% else %}
+                                        {{ user.email }}
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="profile-item">
-                                <div class="label">年級</div>
-                                <div class="value">五專四年級</div>
-                            </div>
-                            <div class="profile-item">
+                                <!--
                                 <div class="label">學分</div>
                                 <div class="value-with-progress">
                                     <div class="value">已修196 /220</div>
@@ -218,6 +251,7 @@
                                     </div>
                                     <div class="tooltip" id="tooltip"></div>
                                 </div>
+                                -->
                             </div>
                             
                         </div>
