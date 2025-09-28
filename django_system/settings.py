@@ -1,17 +1,20 @@
+# django_system/settings.py
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ========================
+# 🔑 基本設定
+# ========================
 SECRET_KEY = 'django-insecure-$fdia7icb&ji2k_6aof1b)s#ozo^kvo9%9@#o@23z+x(ki+r)j'
+DEBUG = True
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*']
 
-# 開發用建議用 True，部署時改 False
-DEBUG = True  # DEBUG=False 在本地測試容易 500，可以先 True
-
-# ALLOWED_HOSTS 建議保留具體域名，'*' 也可以暫時測試
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'b5bd1f1cffd38137455bf0672b7a89c2.serveo.net', '*']
-
+# ========================
+# 📦 Installed Apps
+# ========================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -23,30 +26,32 @@ INSTALLED_APPS = [
     "web_app",
 ]
 
+# ========================
+# ⚙️ Middleware
+# ========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # 靜態檔中間件要在 CommonMiddleware 前面
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # 靜態檔壓縮
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "social_django.middleware.SocialAuthExceptionMiddleware",  # 處理登入錯誤
+    "social_django.middleware.SocialAuthExceptionMiddleware",  # Google 登入錯誤處理
 ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = 'django_system.urls'
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
-    'prompt': 'select_account',
-}
-
+# ========================
+# 🎨 Templates
+# ========================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'web_app', 'templates')],  # 確保模板路徑正確
+        'DIRS': [os.path.join(BASE_DIR, 'web_app', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -63,6 +68,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_system.wsgi.application'
 
+# ========================
+# 🗄️ Database (MySQL)
+# ========================
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -72,12 +80,15 @@ DATABASES = {
         'HOST': '140.131.114.242',
         'PORT': '3306',
         'OPTIONS': {
-            'charset': 'utf8mb4',  # 這行是關鍵
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",  # 可選，避免一些嚴格模式問題
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
 
+# ========================
+# 🔐 Password Validators
+# ========================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
@@ -85,6 +96,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
+# ========================
+# 👤 Authentication
+# ========================
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
@@ -98,13 +112,10 @@ SOCIAL_AUTH_RAISE_EXCEPTIONS = False
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '37270199093-k1doq535f74tl3423amrrqv9dincdeb4.apps.googleusercontent.com'
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
-# SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = ['ntub.edu.tw']
-# SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/auth/complete/google-oauth2/'
 
-# 確保 cookie 正確發送
-CSRF_COOKIE_SECURE = False  # 本地測試改 False
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
@@ -132,6 +143,9 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.user_details',
 )
 
+# ========================
+# 🌍 CSRF / Locale
+# ========================
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
@@ -142,6 +156,9 @@ TIME_ZONE = 'Asia/Taipei'
 USE_I18N = True
 USE_TZ = True
 
+# ========================
+# 📂 Static & Media
+# ========================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "web_app", "static")]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -151,16 +168,66 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 載入 .env
-# 載入 .env
+# ========================
+# 🔑 環境變數
+# ========================
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 
 # ========================
-# 🔑 Azure OpenAI 設定
+# 🤖 Azure OpenAI
 # ========================
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-06-01")
 AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
+
+# ========================
+# 👁️ Google Vision API
+# ========================
+GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, "vision_api_key.json")
+
+# ========================
+# ⚡ Redis Cache
+# ========================
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
+OCR_CACHE_TIMEOUT = 3600  # 1 小時
+
+# ========================
+# 🖼️ Image Upload
+# ========================
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_IMAGE_FORMATS = ['JPEG', 'PNG', 'WebP']
+
+# ========================
+# 📝 Logging
+# ========================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/vision_api.log'),
+        },
+    },
+    'loggers': {
+        'web_app.utils.google_vision_service': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'web_app.utils.enhanced_vision_utils_v2': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
