@@ -264,7 +264,40 @@
                         <h2>我的活動</h2>
                     </div>
                     <div class="activities-list">
-                        {% if joined_activities %}
+                        {% if created_activities or joined_activities %}
+                            {# 先顯示我發起的活動 #}
+                            {% for a in created_activities %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    {% with a.type as t %}
+                                        {% if t == 'sport' %}
+                                            <i class="fas fa-running"></i>
+                                        {% elif t == 'food' %}
+                                            <i class="fas fa-utensils"></i>
+                                        {% elif t == 'movie' %}
+                                            <i class="fas fa-film"></i>
+                                        {% elif t == 'study' %}
+                                            <i class="fas fa-book"></i>
+                                        {% elif t == 'travel' %}
+                                            <i class="fas fa-plane"></i>
+                                        {% else %}
+                                            <i class="fas fa-users"></i>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">
+                                        <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
+                                        <span style="margin-left:8px; font-size:12px; color:#fff; background:#6c63ff; padding:2px 8px; border-radius:12px;">我發起</span>
+                                    </div>
+                                    <div class="activity-details">
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
+                                        <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {# 再顯示我參加的活動 #}
                             {% for a in joined_activities %}
                             <div class="activity-item">
                                 <div class="activity-icon">

@@ -74,12 +74,20 @@ def personal(request):
 
     # 讀取「我已參加的活動」（顯示於個人中心）
     joined_activities = []
+    created_activities = []
     try:
         from django.db.models import Count, Q
         # 僅取最近建立的 6 筆（或依日期時間排序）
         joined_activities = (
             GroupActivity.objects
             .filter(participants__user=request.user, participants__status='joined')
+            .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
+            .order_by('-created_at')[:6]
+        )
+        # 我發起的活動（同樣顯示於個人中心）
+        created_activities = (
+            GroupActivity.objects
+            .filter(user=request.user)
             .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
             .order_by('-created_at')[:6]
         )
@@ -91,6 +99,7 @@ def personal(request):
         'user': request.user,  # 保留原始的 user 對象以確保向後兼容
         'google_picture': google_picture,  # 添加 Google 照片 URL
         'joined_activities': joined_activities,
+        'created_activities': created_activities,
     })
 
 def chat(request):
