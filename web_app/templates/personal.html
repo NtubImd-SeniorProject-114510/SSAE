@@ -264,37 +264,48 @@
                         <h2>我的活動</h2>
                     </div>
                     <div class="activities-list">
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-running"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-title">週末慢跑團，一起來同樂！</div>
-                                <div class="activity-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> 大安森林公園</span>
-                                    <span><i class="far fa-clock"></i> 4/6 下午2:00</span>
+                        {% if joined_activities %}
+                            {% for a in joined_activities %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    {% with a.type as t %}
+                                        {% if t == 'sport' %}
+                                            <i class="fas fa-running"></i>
+                                        {% elif t == 'food' %}
+                                            <i class="fas fa-utensils"></i>
+                                        {% elif t == 'movie' %}
+                                            <i class="fas fa-film"></i>
+                                        {% elif t == 'study' %}
+                                            <i class="fas fa-book"></i>
+                                        {% elif t == 'travel' %}
+                                            <i class="fas fa-plane"></i>
+                                        {% else %}
+                                            <i class="fas fa-users"></i>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">
+                                        <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
+                                    </div>
+                                    <div class="activity-details">
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
+                                        <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-utensils"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-title">會計學期中考讀書會</div>
-                                <div class="activity-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> 圖書館3樓讀書室</span>
-                                    <span><i class="far fa-clock"></i> 4/5 晚上7:00</span>
+                            {% endfor %}
+                        {% else %}
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-info-circle"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-title">尚未參加任何活動</div>
+                                    <div class="activity-details">
+                                        <a href="{% url 'activity_list' %}" class="btn-link">前往活動召集</a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-film"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-title">漫威電影馬拉松</div>
-                                <div class="activity-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> 多媒體教室</span>
-                                    <span><i class="far fa-clock"></i> 4/8 上午10:00</span>
-                                </div>
-                            </div>
-                        </div>
-                        
+                        {% endif %}
                     </div>
                 </div>
             </div>

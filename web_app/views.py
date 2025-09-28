@@ -71,11 +71,26 @@ def personal(request):
             print("Google picture URL:", google_picture)  # 調試日誌
     except Exception as e:
         print(f"Error getting social auth data: {e}")  # 調試日誌
+
+    # 讀取「我已參加的活動」（顯示於個人中心）
+    joined_activities = []
+    try:
+        from django.db.models import Count, Q
+        # 僅取最近建立的 6 筆（或依日期時間排序）
+        joined_activities = (
+            GroupActivity.objects
+            .filter(participants__user=request.user, participants__status='joined')
+            .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
+            .order_by('-created_at')[:6]
+        )
+    except Exception as e:
+        print(f"Error fetching joined activities: {e}")
     
     return render(request, "personal.html", {
         'user_data': user_data,
         'user': request.user,  # 保留原始的 user 對象以確保向後兼容
-        'google_picture': google_picture  # 添加 Google 照片 URL
+        'google_picture': google_picture,  # 添加 Google 照片 URL
+        'joined_activities': joined_activities,
     })
 
 def chat(request):
