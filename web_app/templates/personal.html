@@ -525,5 +525,14 @@
 {% endblock %}
 
 {% block body_js %}
+<script id="calendar-events" type="application/json">{{ calendar_events_json|default:'[]'|safe }}</script>
+<script>
+  (function(){
+    try {
+      var node = document.getElementById('calendar-events');
+      window.calendarEventsData = node ? JSON.parse(node.textContent || '[]') : [];
+    } catch (e) { window.calendarEventsData = []; }
+  })();
+  </script>
 <script src="{% static 'js/personal.js' %}"></script>
 {% endblock %}

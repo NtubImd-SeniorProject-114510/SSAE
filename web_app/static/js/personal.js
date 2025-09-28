@@ -635,9 +635,48 @@ window.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 導後端傳來的活動事件注入行事曆（需在 initCalendarPage 之前）
+    try {
+        var evs = (window.calendarEventsData || []);
+        console.log('[personal] calendarEventsData:', evs);
+        evs.forEach(function(e){
+            if (!e || !e.date) return;
+            var d = new Date(e.date);
+            if (isNaN(d)) return;
+            todoEvents.push({
+                year: d.getFullYear(),
+                month: d.getMonth() + 1,
+                day: d.getDate(),
+                text: e.title || '活動',
+                title: e.title || '活動',
+                completed: false
+            });
+        });
+        console.log('[personal] todoEvents after inject:', todoEvents);
+
+        // 若本月沒有任何事件，則自動切換到最近的一筆活動月份
+        if (todoEvents.length > 0) {
+            var hasInCurrentMonth = todoEvents.some(function(ev){
+                return ev.year === calendarYear && ev.month === calendarMonth;
+            });
+            if (!hasInCurrentMonth) {
+                // 選擇未來最近的活動，若都在過去則取第一筆
+                var now = new Date();
+                var upcoming = todoEvents
+                    .map(function(ev){ return new Date(ev.year, ev.month - 1, ev.day); })
+                    .sort(function(a, b){ return a - b; })
+                    .find(function(d){ return d >= new Date(now.getFullYear(), now.getMonth(), 1); }) ||
+                    new Date(todoEvents[0].year, todoEvents[0].month - 1, todoEvents[0].day);
+                calendarYear = upcoming.getFullYear();
+                calendarMonth = upcoming.getMonth() + 1;
+                console.log('[personal] switch calendar to', calendarYear, calendarMonth);
+            }
+        }
+    } catch (err) { console.warn('[personal] inject events error:', err); }
+
     initCalendarPage();
 
-// User name edit logic (no HTML change, pure JS)
+});
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
         const userNameDiv = document.querySelector('.profile-image .user-name');
@@ -680,14 +719,3 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     });
 })();
-});
-
-
-function updateTaskCompletion(taskText, completed) {
-    for (let ev of todoEvents) {
-        if (ev.text === taskText) {
-            ev.completed = completed;
-            break;
-        }
-    }
-}

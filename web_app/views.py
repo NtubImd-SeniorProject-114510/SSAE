@@ -77,22 +77,57 @@ def personal(request):
     created_activities = []
     try:
         from django.db.models import Count, Q
-        # 僅取最近建立的 6 筆（或依日期時間排序）
+        from django.utils import timezone
+        # 僅顯示「尚未結束」的活動（日期在未來，或今天且時間未到），並依日期時間由近到遠排序
+        now_date = timezone.localdate()
+        now_time = timezone.localtime().time()
+        upcoming_q = Q(date__gt=now_date) | (Q(date=now_date) & Q(time__gte=now_time))
+
         joined_activities = (
             GroupActivity.objects
             .filter(participants__user=request.user, participants__status='joined')
+            .filter(upcoming_q)
             .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
-            .order_by('-created_at')[:6]
+            .order_by('date', 'time')
         )
         # 我發起的活動（同樣顯示於個人中心）
         created_activities = (
             GroupActivity.objects
             .filter(user=request.user)
+            .filter(upcoming_q)
             .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
-            .order_by('-created_at')[:6]
+            .order_by('date', 'time')
         )
     except Exception as e:
         print(f"Error fetching joined activities: {e}")
+
+    # 準備行事曆事件（顯示「所有」我發起與我參加過的活動，包含已過去）
+    calendar_events = []
+    try:
+        from django.db.models import Q
+        def to_event(a):
+            return {
+                "date": getattr(a, 'date', None),
+                "title": getattr(a, 'title', ''),
+                "id": getattr(a, 'pk', None),
+            }
+        # 重新查詢：不套用 upcoming 過濾
+        all_created = GroupActivity.objects.filter(user=request.user)
+        all_joined = GroupActivity.objects.filter(
+            participants__user=request.user,
+            participants__status='joined'
+        )
+        # 合併 + 去重
+        seen = set()
+        for a in list(all_created) + list(all_joined):
+            if not getattr(a, 'date', None):
+                continue
+            if a.pk in seen:
+                continue
+            seen.add(a.pk)
+            calendar_events.append(to_event(a))
+    except Exception as e:
+        print(f"Error building calendar events: {e}")
     
     return render(request, "personal.html", {
         'user_data': user_data,
@@ -100,6 +135,14 @@ def personal(request):
         'google_picture': google_picture,  # 添加 Google 照片 URL
         'joined_activities': joined_activities,
         'created_activities': created_activities,
+        'calendar_events_json': json.dumps([
+            {
+                'date': (e['date'].isoformat() if hasattr(e['date'], 'isoformat') else str(e['date'])),
+                'title': e['title'],
+                'id': e['id'],
+            }
+            for e in calendar_events
+        ], ensure_ascii=False),
     })
 
 def chat(request):
