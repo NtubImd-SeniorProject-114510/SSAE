@@ -76,11 +76,37 @@ class Book2Form(SafeContentFormMixin, forms.ModelForm):
     class Meta:
         model = Book2
         fields = [
-            'title', 'academic', 'grade', 'category', 'department',
-            'condition', 'price', 'description', 'cover_image'
+            'title', 'author', 'publisher', 'isbn', 
+            'price', 'academic', 'department', 'grade', 
+            'category', 'condition', 'description', 'cover_image'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows':3,'placeholder':'請描述書籍狀況、購買原因等...'}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': '請輸入書名'
+            }),
+            'author': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': '請輸入作者'
+            }),
+            'publisher': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': '請輸入出版社'
+            }),
+            'isbn': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': '請輸入 ISBN'
+            }),
+            'price': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'placeholder': '請輸入價格',
+                'min': '0'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-textarea',
+                'rows': 3,
+                'placeholder': '請描述書籍狀況、購買原因等...'
+            }),
         }
 
     def __init__(self, *args, **kwargs):

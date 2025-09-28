@@ -1,3 +1,4 @@
+//book_image_upload.js
 // 書籍封面圖片上傳區塊互動（仿活動召集）
 document.addEventListener('DOMContentLoaded', function() {
   const uploadArea = document.getElementById('book-image-upload-area');

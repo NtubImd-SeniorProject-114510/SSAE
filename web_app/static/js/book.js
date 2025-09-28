@@ -1,4 +1,4 @@
-//index
+//book.js
 window.addEventListener('DOMContentLoaded', () => {
     const popupId = sessionStorage.getItem('openPopup');
     if (popupId) {

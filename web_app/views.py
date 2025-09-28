@@ -15,6 +15,8 @@ from .views_rag import ask_question, create_vector_store, load_pdf_documents, sp
 from django.contrib.auth.decorators import login_required
 from django.db import connection, transaction
 
+def ttt(request):
+    return render(request, 'ttt.html')
 
 def base(request):
     return render(request, 'base.html')
@@ -334,6 +336,148 @@ def upload_book2(request):
 def ask_page(request):
     return render(request, "ask.html")
 
+# 新增到 views.py 的內容
+import json
+import base64
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from .utils.vision_utils import book_recognition_service
+
+@login_required
+@require_http_methods(["POST"])
+def recognize_book(request):
+    """書籍圖片識別 API"""
+    try:
+        # 檢查是否有圖片檔案
+        if 'image' not in request.FILES:
+            return JsonResponse({
+                'success': False,
+                'error': '未找到圖片檔案'
+            }, status=400)
+        
+        image_file = request.FILES['image']
+        
+        # 驗證檔案類型
+        if not image_file.content_type.startswith('image/'):
+            return JsonResponse({
+                'success': False,
+                'error': '檔案格式不正確，請上傳圖片'
+            }, status=400)
+        
+        # 檢查檔案大小 (限制 10MB)
+        if image_file.size > 10 * 1024 * 1024:
+            return JsonResponse({
+                'success': False,
+                'error': '圖片檔案過大，請上傳小於 10MB 的圖片'
+            }, status=400)
+        
+        # 讀取圖片內容
+        image_content = image_file.read()
+        
+        # 處理書籍識別
+        result = book_recognition_service.process_book_image(image_content)
+        
+        if result['success']:
+            # 格式化資料以符合前端需要
+            book_info = result['book_info']
+            
+            response_data = {
+                'success': True,
+                'data': {
+                    'title': book_info.get('title', ''),
+                    'author': ', '.join(book_info.get('authors', [])) if book_info.get('authors') else '',
+                    'publisher': book_info.get('publisher', ''),
+                    'isbn': book_info.get('isbn', ''),
+                    'description': book_info.get('description', ''),
+                    'published_date': book_info.get('published_date', ''),
+                    'page_count': book_info.get('page_count', 0),
+                    'thumbnail': book_info.get('thumbnail', ''),
+                    'categories': book_info.get('categories', []),
+                    'source': book_info.get('source', 'unknown')
+                },
+                'ocr_text': result.get('ocr_text', ''),
+                'message': '書籍識別成功'
+            }
+            
+            return JsonResponse(response_data)
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': result.get('error', '識別失敗'),
+                'ocr_text': result.get('ocr_text', '')
+            }, status=400)
+            
+    except Exception as e:
+        logger.error(f"書籍識別錯誤: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'系統錯誤: {str(e)}'
+        }, status=500)
+
+@login_required  
+@require_http_methods(["POST"])
+def search_book_manual(request):
+    """手動搜尋書籍資訊"""
+    try:
+        data = json.loads(request.body)
+        search_query = data.get('query', '').strip()
+        search_type = data.get('type', 'title')  # title 或 isbn
+        
+        if not search_query:
+            return JsonResponse({
+                'success': False,
+                'error': '請輸入搜尋關鍵字'
+            }, status=400)
+        
+        if search_type == 'isbn':
+            # 清理 ISBN 格式
+            isbn = re.sub(r'[-\s]', '', search_query)
+            if not (len(isbn) in [10, 13] and isbn.isdigit()):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'ISBN 格式不正確'
+                }, status=400)
+            
+            result = book_recognition_service.search_book_by_isbn(isbn)
+        else:
+            result = book_recognition_service.search_book_by_title(search_query)
+        
+        if result['success']:
+            book_info = result['data']
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'title': book_info.get('title', ''),
+                    'author': ', '.join(book_info.get('authors', [])) if book_info.get('authors') else '',
+                    'publisher': book_info.get('publisher', ''),
+                    'isbn': book_info.get('isbn', ''),
+                    'description': book_info.get('description', ''),
+                    'published_date': book_info.get('published_date', ''),
+                    'thumbnail': book_info.get('thumbnail', ''),
+                    'categories': book_info.get('categories', [])
+                },
+                'message': '書籍查詢成功'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': result.get('error', '查詢失敗')
+            }, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': '請求格式錯誤'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"手動搜尋錯誤: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'搜尋失敗: {str(e)}'
+        }, status=500)
+#===================================
 
 from django.urls import reverse, NoReverseMatch
 from django.db.models import Count, Q
