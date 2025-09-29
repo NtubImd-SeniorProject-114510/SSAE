@@ -112,6 +112,8 @@ def personal(request):
                 "date": getattr(a, 'date', None),
                 "title": getattr(a, 'title', ''),
                 "id": getattr(a, 'pk', None),
+                "created_at": getattr(a, 'created_at', None),
+                "time": getattr(a, 'time', None),
             }
         # 重新查詢：不套用 upcoming 過濾
         all_created = GroupActivity.objects.filter(user=request.user)
@@ -142,6 +144,8 @@ def personal(request):
                 'date': (e['date'].isoformat() if hasattr(e['date'], 'isoformat') else str(e['date'])),
                 'title': e['title'],
                 'id': e['id'],
+                'created_at': (e['created_at'].isoformat() if hasattr(e['created_at'], 'isoformat') else str(e['created_at'])),
+                'time': (e['time'].strftime('%H:%M') if hasattr(e['time'], 'strftime') else str(e['time'])),
             }
             for e in calendar_events
         ], ensure_ascii=False),
@@ -410,7 +414,13 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
-from .utils.vision_utils import book_recognition_service
+
+# 嘗試導入 vision_utils，如果失敗則設為 None
+try:
+    from .utils.vision_utils import book_recognition_service
+except ImportError as e:
+    print(f"Warning: Google Cloud Vision not available: {e}")
+    book_recognition_service = None
 
 @login_required
 @require_http_methods(["POST"])
@@ -442,6 +452,13 @@ def recognize_book(request):
         
         # 讀取圖片內容
         image_content = image_file.read()
+        
+        # 檢查 Vision 服務是否可用
+        if book_recognition_service is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Google Cloud Vision 服務未啟用，請聯繫管理員'
+            }, status=503)
         
         # 處理書籍識別
         result = book_recognition_service.process_book_image(image_content)
@@ -497,6 +514,13 @@ def search_book_manual(request):
                 'success': False,
                 'error': '請輸入搜尋關鍵字'
             }, status=400)
+        
+        # 檢查 Vision 服務是否可用
+        if book_recognition_service is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Google Cloud Vision 服務未啟用，請聯繫管理員'
+            }, status=503)
         
         if search_type == 'isbn':
             # 清理 ISBN 格式

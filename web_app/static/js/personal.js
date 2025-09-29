@@ -66,6 +66,140 @@ document.addEventListener('DOMContentLoaded', function() {
 let calendarYear, calendarMonth;
 let todoEvents = [];
 
+// ===== API 工具函數 =====
+function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return null;
+}
+
+async function apiCall(url, options = {}) {
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken() || ''
+        }
+    };
+    
+    const mergedOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+        }
+    };
+    
+    try {
+        const response = await fetch(url, mergedOptions);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP ${response.status}`);
+        }
+        return data;
+    } catch (error) {
+        console.error('API call failed:', error);
+        throw error;
+    }
+}
+
+// ===== Todo API 函數 =====
+async function loadTodos() {
+    try {
+        const data = await apiCall('/api/todos/');
+        
+        // 保留活動事件，只更新待辦事項
+        const activityEvents = todoEvents.filter(ev => ev.source === 'activity');
+        const todoEventsFromAPI = data.todos.map(todo => ({
+            id: todo.id,
+            year: new Date(todo.date).getFullYear(),
+            month: new Date(todo.date).getMonth() + 1,
+            day: new Date(todo.date).getDate(),
+            text: todo.title,
+            title: todo.title,
+            description: todo.description,
+            completed: todo.completed,
+            source: 'todo',
+            created_at: todo.created_at
+        }));
+        
+        // 合併活動和待辦事項，並按時間排序
+        todoEvents = [...activityEvents, ...todoEventsFromAPI];
+        
+        // 按日期和時間排序
+        todoEvents.sort((a, b) => {
+            if (a.year !== b.year) return a.year - b.year;
+            if (a.month !== b.month) return a.month - b.month;
+            if (a.day !== b.day) return a.day - b.day;
+            
+            // 同一天內，如果有時間資訊就按時間排序
+            if (a.time && b.time) {
+                return a.time.localeCompare(b.time);
+            }
+            
+            // 如果有創建時間就按創建時間排序
+            if (a.created_at && b.created_at) {
+                return new Date(a.created_at) - new Date(b.created_at);
+            }
+            
+            return 0;
+        });
+        
+        // 重新渲染
+        updateTodoList();
+        renderCalendarEvents();
+        console.log('[personal] Loaded todos from API:', todoEvents);
+    } catch (error) {
+        console.error('[personal] Failed to load todos:', error);
+        alert('載入待辦事項失敗：' + error.message);
+    }
+}
+
+async function createTodoAPI(title, description, date) {
+    try {
+        const data = await apiCall('/api/todos/create/', {
+            method: 'POST',
+            body: JSON.stringify({ title, description, date })
+        });
+        console.log('[personal] Created todo:', data.todo);
+        return data.todo;
+    } catch (error) {
+        console.error('[personal] Failed to create todo:', error);
+        throw error;
+    }
+}
+
+async function updateTodoAPI(todoId, updates) {
+    try {
+        const data = await apiCall(`/api/todos/${todoId}/update/`, {
+            method: 'PUT',
+            body: JSON.stringify(updates)
+        });
+        console.log('[personal] Updated todo:', data.todo);
+        return data.todo;
+    } catch (error) {
+        console.error('[personal] Failed to update todo:', error);
+        throw error;
+    }
+}
+
+async function deleteTodoAPI(todoId) {
+    try {
+        await apiCall(`/api/todos/${todoId}/delete/`, {
+            method: 'DELETE'
+        });
+        console.log('[personal] Deleted todo:', todoId);
+    } catch (error) {
+        console.error('[personal] Failed to delete todo:', error);
+        throw error;
+    }
+}
+
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
 function getCurrentMonthYearObj() {
@@ -164,10 +298,15 @@ function renderCalendarEvents() {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'event';
             eventDiv.textContent = ev.text;
-            // 勾選完成的任務加 event-completed
-            const todoCheckbox = Array.from(document.querySelectorAll('.todo-list label')).find(label => label.textContent === ev.text)?.previousElementSibling;
-            if (todoCheckbox && todoCheckbox.checked) {
-                eventDiv.classList.add('event-completed');
+            
+            // 活動和待辦事項使用不同的樣式
+            if (ev.source === 'activity') {
+                eventDiv.classList.add('event-activity');
+            } else {
+                // 待辦事項：檢查是否已完成
+                if (ev.completed) {
+                    eventDiv.classList.add('event-completed');
+                }
             }
             td.appendChild(eventDiv);
         });
@@ -296,6 +435,21 @@ function showDetailCard() {
     if (ul) {
         ul.innerHTML = '';
         const events = todoEvents.filter(ev => ev.year === calendarYear && ev.month === calendarMonth && ev.day === selectedDay);
+        
+        // 按類型和時間排序：活動在前，待辦事項在後，同類型內按創建時間排序
+        events.sort((a, b) => {
+            // 活動優先顯示
+            if (a.source === 'activity' && b.source !== 'activity') return -1;
+            if (a.source !== 'activity' && b.source === 'activity') return 1;
+            
+            // 同類型按創建時間排序（如果有的話）
+            if (a.created_at && b.created_at) {
+                return new Date(a.created_at) - new Date(b.created_at);
+            }
+            
+            // 預設按標題排序
+            return (a.title || a.text || '').localeCompare(b.title || b.text || '');
+        });
         if (events.length === 0) {
             ul.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">尚無事項</li>';
         } else {
@@ -305,12 +459,23 @@ function showDetailCard() {
             // 建立 li 待辦項目
             const li = document.createElement('li');
             li.className = 'todo-item';
-            li.innerHTML = `
-                <input type="checkbox" id="${taskId}">
-                <label for="${taskId}">${ev.title || ev.text}</label>
-                <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
-                <button class="delete-task-btn" title="刪除事項">×</button>
-            `;
+            
+            // 活動項目不能勾選完成或刪除
+            if (ev.source === 'activity') {
+                li.innerHTML = `
+                    <span class="activity-indicator">📅</span>
+                    <label class="activity-label">${ev.title || ev.text}</label>
+                    <span class="todo-status activity-status">${ev.month}/${ev.day}</span>
+                `;
+                li.classList.add('activity-item');
+            } else {
+                li.innerHTML = `
+                    <input type="checkbox" id="${taskId}">
+                    <label for="${taskId}">${ev.title || ev.text}</label>
+                    <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
+                    <button class="delete-task-btn" title="刪除事項">×</button>
+                `;
+            }
             ul.appendChild(li);
 
             // 建立說明容器（分開 append）
@@ -337,44 +502,78 @@ function showDetailCard() {
                 });
             }
 
-            const checkbox = li.querySelector('input[type="checkbox"]');
-            const statusSpan = li.querySelector('.todo-status');
-            const deleteBtn = li.querySelector('.delete-task-btn');
+            // 只有待辦事項才有互動功能，活動項目只是顯示
+            if (ev.source !== 'activity') {
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                const statusSpan = li.querySelector('.todo-status');
+                const deleteBtn = li.querySelector('.delete-task-btn');
 
-            deleteBtn.addEventListener('click', function () {
-                if (confirm('確定要刪除此待辦事項嗎？')) {
-                    todoEvents = todoEvents.filter(item => item !== ev);
-                    showDetailCard();
-                    updateTodoList();
-                    renderCalendarEvents();
-                }
-            });
-
-            if (ev.completed) {
-                li.classList.add('completed');
-                checkbox.checked = true;
-                statusSpan.textContent = '已完成';
-            }
-
-            checkbox.addEventListener('change', function () {
-                if (this.checked) {
-                    li.classList.add('completed');
-                    statusSpan.textContent = '已完成';
-                    markCalendarEventCompleted(ev.text, true);
-                    updateTaskCompletion(ev.text, true);
-
-                    // 自動收起詳細說明（如存在）
-                    if (detailDiv) {
-                        detailDiv.classList.add('collapsed');
+                deleteBtn.addEventListener('click', async function () {
+                    if (confirm('確定要刪除此待辦事項嗎？')) {
+                        try {
+                            await deleteTodoAPI(ev.id);
+                            await loadTodos();
+                            showDetailCard();
+                        } catch (error) {
+                            alert('刪除待辦事項失敗：' + error.message);
+                        }
                     }
+                });
 
-                } else {
-                    li.classList.remove('completed');
-                    statusSpan.textContent = statusSpan.getAttribute('data-original');
-                    markCalendarEventCompleted(ev.text, false);
-                    updateTaskCompletion(ev.text, false);
+                if (ev.completed) {
+                    li.classList.add('completed');
+                    checkbox.checked = true;
+                    statusSpan.textContent = '已完成';
                 }
-            });
+
+                checkbox.addEventListener('change', async function () {
+                    const completed = this.checked;
+                    try {
+                        await updateTodoAPI(ev.id, { completed });
+                        
+                        if (completed) {
+                            // 更新資料
+                            updateTaskCompletion(ev.text, true);
+                            renderCalendarEvents();
+                            
+                            // 添加完成動畫
+                            li.classList.add('completing');
+                            
+                            // 為其他項目添加向上移動動畫
+                            const allItems = Array.from(ul.querySelectorAll('.todo-item'));
+                            const currentIndex = allItems.indexOf(li);
+                            
+                            // 為當前項目之後的所有項目添加向上移動動畫
+                            allItems.slice(currentIndex + 1).forEach((item, index) => {
+                                setTimeout(() => {
+                                    item.classList.add('slide-up');
+                                    // 移除動畫類別，以便下次使用
+                                    setTimeout(() => {
+                                        item.classList.remove('slide-up');
+                                    }, 400);
+                                }, 100 + index * 50); // 錯開動畫時間
+                            });
+                            
+                            // 動畫結束後重新載入詳細卡片
+                            setTimeout(() => {
+                                loadTodos().then(() => {
+                                    showDetailCard();
+                                });
+                            }, 600);
+                            
+                        } else {
+                            li.classList.remove('completed');
+                            statusSpan.textContent = statusSpan.getAttribute('data-original');
+                            updateTaskCompletion(ev.text, false);
+                            renderCalendarEvents();
+                        }
+                    } catch (error) {
+                        // 回復 checkbox 狀態
+                        this.checked = !completed;
+                        alert('更新待辦事項失敗：' + error.message);
+                    }
+                });
+            }
         });
 
         }
@@ -397,6 +596,10 @@ function updateTodoList() {
     const isTodayOrFuture = (ev) => {
         // 無日期的項目不顯示在待辦
         if (!ev || !ev.year || !ev.month || !ev.day) return false;
+        
+        // 已完成的待辦事項不顯示（但活動仍然顯示）
+        if (ev.source === 'todo' && ev.completed) return false;
+        
         if (ev.year > y) return true;
         if (ev.year < y) return false;
         if (ev.month > m) return true;
@@ -405,6 +608,25 @@ function updateTodoList() {
     };
 
     const list = (todoEvents || []).filter(isTodayOrFuture);
+    
+    // 按日期和時間排序（最近的在前面）
+    list.sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        if (a.month !== b.month) return a.month - b.month;
+        if (a.day !== b.day) return a.day - b.day;
+        
+        // 同一天內，如果有時間資訊就按時間排序
+        if (a.time && b.time) {
+            return a.time.localeCompare(b.time);
+        }
+        
+        // 如果有創建時間就按創建時間排序
+        if (a.created_at && b.created_at) {
+            return new Date(a.created_at) - new Date(b.created_at);
+        }
+        
+        return 0;
+    });
 
     if (list.length === 0) {
         todoUl.innerHTML = '<li class="todo-item" style="padding: 20px; text-align: center; color: #999;">尚無待辦事項</li>';
@@ -415,47 +637,94 @@ function updateTodoList() {
         const taskId = 'task' + (idx + 1);
         const li = document.createElement('li');
         li.className = 'todo-item';
-        li.innerHTML = `
-            <input type="checkbox" id="${taskId}">
-            <label for="${taskId}">${ev.text}</label>
-            <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
-            <button class="delete-task-btn" title="刪除事項">×</button>
-        `;
+        
+        // 活動項目不能勾選完成或刪除
+        if (ev.source === 'activity') {
+            li.innerHTML = `
+                <span class="activity-indicator">📅</span>
+                <label class="activity-label">${ev.text}</label>
+                <span class="todo-status activity-status">${ev.month}/${ev.day}</span>
+            `;
+            li.classList.add('activity-item');
+        } else {
+            li.innerHTML = `
+                <input type="checkbox" id="${taskId}">
+                <label for="${taskId}">${ev.text}</label>
+                <span class="todo-status" data-original="${ev.month}/${ev.day}">${ev.month}/${ev.day}</span>
+                <button class="delete-task-btn" title="刪除事項">×</button>
+            `;
+        }
         todoUl.appendChild(li);
 
-        const checkbox = li.querySelector('input[type="checkbox"]');
-        const statusSpan = li.querySelector('.todo-status');
-        const deleteBtn = li.querySelector('.delete-task-btn');
+        // 只有待辦事項才有互動功能，活動項目只是顯示
+        if (ev.source !== 'activity') {
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const statusSpan = li.querySelector('.todo-status');
+            const deleteBtn = li.querySelector('.delete-task-btn');
 
-        deleteBtn.addEventListener('click', function () {
-            if (confirm('確定要刪除此待辦事項嗎？')) {
-                // 從陣列中移除
-                todoEvents = todoEvents.filter(item => item !== ev);
-                updateTodoList();
-                renderCalendarEvents();
-            }
-        });
+            deleteBtn.addEventListener('click', async function () {
+                if (confirm('確定要刪除此待辦事項嗎？')) {
+                    try {
+                        await deleteTodoAPI(ev.id);
+                        await loadTodos();
+                    } catch (error) {
+                        alert('刪除待辦事項失敗：' + error.message);
+                    }
+                }
+            });
 
-        if (ev.completed) {
-            li.classList.add('completed');
-            checkbox.checked = true;
-            statusSpan.textContent = '已完成';
-        }
-
-        checkbox.addEventListener('change', function () {
-            if (checkbox.checked) {
+            if (ev.completed) {
                 li.classList.add('completed');
+                checkbox.checked = true;
                 statusSpan.textContent = '已完成';
-                markCalendarEventCompleted(ev.text, true);
-                updateTaskCompletion(ev.text, true);
-            } else {
-                li.classList.remove('completed');
-                statusSpan.textContent = statusSpan.getAttribute('data-original');
-                markCalendarEventCompleted(ev.text, false);
-                updateTaskCompletion(ev.text, false);
             }
-            renderCalendarEvents();
-        });
+
+            checkbox.addEventListener('change', async function () {
+                const completed = this.checked;
+                try {
+                    await updateTodoAPI(ev.id, { completed });
+                    
+                    if (completed) {
+                        // 更新資料
+                        updateTaskCompletion(ev.text, true);
+                        renderCalendarEvents();
+                        
+                        // 添加完成動畫
+                        li.classList.add('completing');
+                        
+                        // 為其他項目添加向上移動動畫
+                        const allItems = Array.from(todoUl.querySelectorAll('.todo-item'));
+                        const currentIndex = allItems.indexOf(li);
+                        
+                        // 為當前項目之後的所有項目添加向上移動動畫
+                        allItems.slice(currentIndex + 1).forEach((item, index) => {
+                            setTimeout(() => {
+                                item.classList.add('slide-up');
+                                // 移除動畫類別，以便下次使用
+                                setTimeout(() => {
+                                    item.classList.remove('slide-up');
+                                }, 400);
+                            }, 100 + index * 50); // 錯開動畫時間
+                        });
+                        
+                        // 動畫結束後重新載入列表
+                        setTimeout(() => {
+                            loadTodos();
+                        }, 600);
+                        
+                    } else {
+                        li.classList.remove('completed');
+                        statusSpan.textContent = statusSpan.getAttribute('data-original');
+                        updateTaskCompletion(ev.text, false);
+                        renderCalendarEvents();
+                    }
+                } catch (error) {
+                    // 回復 checkbox 狀態
+                    this.checked = !completed;
+                    alert('更新待辦事項失敗：' + error.message);
+                }
+            });
+        }
     });
 }
 
@@ -503,7 +772,7 @@ function updateSelectedDateDisplay() {
 
 
 // 待辦事項相關函數
-function addNewTask() {
+async function addNewTask() {
     const newTaskInput = document.getElementById('newTask');
     if (!newTaskInput) return;
 
@@ -514,38 +783,15 @@ function addNewTask() {
     }
     if (taskText === '') return;
 
-    let dueDateStr = `${calendarMonth}/${selectedDay}`;
-
-    todoEvents.push({
-        year: calendarYear,
-        month: calendarMonth,
-        day: selectedDay,
-        text: taskText,
-        completed: false
-    });
-
-    newTaskInput.value = '';
-    renderCalendarEvents();
-    updateTodoList();
-
-
-    // 添加任務完成事件監聽
-    const checkbox = li.querySelector('input[type="checkbox"]');
-    const statusSpan = li.querySelector('.todo-status');
-    checkbox.addEventListener('change', function() {
-        if (this.checked) {
-            li.classList.add('completed');
-            statusSpan.textContent = '已完成';
-            updateTaskCompletion(ev.text, true);
-            // 行事曆該事件變灰底
-            markCalendarEventCompleted(taskText, true);
-        } else {
-            li.classList.remove('completed');
-            statusSpan.textContent = statusSpan.getAttribute('data-original') || dueDateStr;
-            updateTaskCompletion(ev.text, false);
-            markCalendarEventCompleted(taskText, false);
-        }
-    });
+    const dateStr = `${calendarYear}-${String(calendarMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+    
+    try {
+        await createTodoAPI(taskText, '', dateStr);
+        newTaskInput.value = '';
+        await loadTodos(); // 重新載入所有待辦事項
+    } catch (error) {
+        alert('新增待辦事項失敗：' + error.message);
+    }
 }
 
 // 新增詳細資訊卡片的待辦事項
@@ -553,7 +799,7 @@ function addNewTask() {
 window.addEventListener('DOMContentLoaded', function () {
     const addDetailBtn = document.getElementById('addDetailTask');
     if (addDetailBtn) {
-        addDetailBtn.addEventListener('click', function () {
+        addDetailBtn.addEventListener('click', async function () {
             // 新增：點擊新增事項後滾動回行事曆
             setTimeout(function() {
                 const calendarCard = document.querySelector('.calendar-card');
@@ -584,21 +830,17 @@ window.addEventListener('DOMContentLoaded', function () {
 
             let taskText = title;
 
-            todoEvents.push({
-                year: calendarYear,
-                month: calendarMonth,
-                day: selectedDay,
-                text: taskText,
-                title: title,
-                description: description,
-                completed: false
-            });
-
-            titleInput.value = '';
-            if (descriptionInput) descriptionInput.value = '';
-
-            showDetailCard();
-            renderCalendarEvents();
+            const dateStr = `${calendarYear}-${String(calendarMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+            
+            try {
+                await createTodoAPI(title, description, dateStr);
+                titleInput.value = '';
+                if (descriptionInput) descriptionInput.value = '';
+                await loadTodos(); // 重新載入
+                showDetailCard(); // 重新顯示詳細卡片
+            } catch (error) {
+                alert('新增待辦事項失敗：' + error.message);
+            }
         });
     }
 
@@ -664,8 +906,30 @@ window.addEventListener('DOMContentLoaded', function () {
                 text: e.title || '活動',
                 title: e.title || '活動',
                 completed: false,
-                source: 'activity'
+                source: 'activity',
+                activityId: e.id, // 保存活動 ID
+                created_at: e.created_at || new Date().toISOString(), // 活動創建時間
+                time: e.time || null // 活動時間
             });
+        });
+        
+        // 注入後立即排序（按日期和時間）
+        todoEvents.sort((a, b) => {
+            if (a.year !== b.year) return a.year - b.year;
+            if (a.month !== b.month) return a.month - b.month;
+            if (a.day !== b.day) return a.day - b.day;
+            
+            // 同一天內，如果有時間資訊就按時間排序
+            if (a.time && b.time) {
+                return a.time.localeCompare(b.time);
+            }
+            
+            // 如果有創建時間就按創建時間排序
+            if (a.created_at && b.created_at) {
+                return new Date(a.created_at) - new Date(b.created_at);
+            }
+            
+            return 0;
         });
         console.log('[personal] todoEvents after inject:', todoEvents);
 
@@ -689,8 +953,12 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     } catch (err) { console.warn('[personal] inject events error:', err); }
 
-    // 進入頁面時就把目前的 todoEvents 渲染到待辦清單
-    try { updateTodoList(); } catch (e) {}
+    // 載入後端待辦事項（會保留已注入的活動事件）
+    loadTodos().then(() => {
+        console.log('[personal] Initial todos loaded');
+    }).catch(error => {
+        console.error('[personal] Failed to load initial todos:', error);
+    });
 
     initCalendarPage();
 
