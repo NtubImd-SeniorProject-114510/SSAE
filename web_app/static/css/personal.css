@@ -1201,11 +1201,115 @@ h1, h2, h3 {
 }
 
 .event-completed {
-    background-color: #e2dfe9;
-    color: #999;
+    background-color: #e2dfe9 !important;
+    color: #999 !important;
     text-decoration: line-through;
+    opacity: 0.6;
+    position: relative;
+}
+
+.event-completed::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #666;
+    transform: translateY(-50%);
+    z-index: 1;
 }
 
 .todo-item.completed .todo-status {
     color: white;
+}
+
+/* 活動事件樣式 */
+.event-activity {
+    background-color: #AA9DA9 !important;
+    color: white !important;
+    border-left: 3px solid #8a7788;
+    position: relative;
+}
+
+.event-activity::before {
+    content: "📅";
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7em;
+}
+
+/* 活動項目在待辦清單中的樣式 */
+.activity-item {
+    background-color: #f5f3f6 !important;
+    border-left: 4px solid #AA9DA9;
+    opacity: 0.9;
+}
+
+.activity-item .activity-indicator {
+    color: #AA9DA9;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.activity-item .activity-label {
+    color: #8a7788;
+    font-weight: 500;
+}
+
+.activity-item .activity-status {
+    color: #AA9DA9;
+    font-weight: bold;
+    background-color: #e8e4e9;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8em;
+}
+
+/* 待辦事項完成動畫 */
+@keyframes fadeOutAndSlideUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 60px;
+        margin-bottom: 8px;
+        padding: 12px;
+    }
+    50% {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 60px;
+        margin-bottom: 8px;
+        padding: 12px;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+        margin-bottom: 0;
+        padding: 0;
+    }
+}
+
+.todo-item.completing {
+    animation: fadeOutAndSlideUp 0.6s ease-out forwards;
+    overflow: hidden;
+}
+
+/* 其他項目向上移動動畫 */
+@keyframes slideUp {
+    from {
+        transform: translateY(10px);
+        opacity: 0.8;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.todo-item.slide-up {
+    animation: slideUp 0.4s ease-out;
 }

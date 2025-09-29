@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" href="{% static 'image/logo.png' %}" type="image/png">
 {% endblock %}
 
 {% block css %}
@@ -168,12 +169,14 @@
                     <div class="profile-content">
                         <div class="profile-image">
                             {% if google_picture %}
-                                <img src="{{ google_picture }}" alt="{{ user.last_name }}{{ user.first_name }}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
+                                <img src="{{ google_picture }}" alt="{% if user_data and user_data.name %}{{ user_data.name }}{% else %}{{ user.last_name }}{{ user.first_name }}{% endif %}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
                             {% else %}
-                                <img src="{% static 'image/me1.png' %}" alt="{{ user.last_name }}{{ user.first_name }}">
+                                <img src="{% static 'image/me1.png' %}" alt="{% if user_data and user_data.name %}{{ user_data.name }}{% else %}{{ user.last_name }}{{ user.first_name }}{% endif %}">
                             {% endif %}
                             <div class="user-name">
-                                {% if user_data and user_data.name %}
+                                {% if user_data and user_data.anonymous %}
+                                    {{ user_data.anonymous }}
+                                {% elif user_data and user_data.name %}
                                     {{ user_data.name }}
                                 {% else %}
                                     {{ user.last_name }}{{ user.first_name }}
@@ -184,21 +187,52 @@
                         <div class="profile-details">
                             <div class="profile-item">
                                 <div class="label">姓名</div>
-                                <div class="value">{{ user.last_name }}{{ user.first_name }}</div>
+                                <div class="value">
+                                    {% if user_data and user_data.name %}
+                                        {{ user_data.name }}
+                                    {% else %}
+                                        {{ user.last_name }}{{ user.first_name }}
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="profile-item">
                                 <div class="label">學號</div>
-                                <div class="value">{{ user.username }}</div>
+                                <div class="value">
+                                    {% if user_data and user_data.student_id %}
+                                        {{ user_data.student_id }}
+                                    {% else %}
+                                        {{ user.username }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if user_data and user_data.academic %}
+                            <div class="profile-item">
+                                <div class="label">學制</div>
+                                <div class="value">{{ user_data.academic }}</div>
+                            </div>
+                            {% endif %}
+                            <div class="profile-item">
+                                <div class="label">班級</div>
+                                <div class="value">
+                                    {% if user_data and user_data.course %}
+                                        {{ user_data.course }}
+                                    {% else %}
+                                        資訊管理科
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="profile-item">
-                                <div class="label">系所</div>
-                                <div class="value">資訊管理科</div>
+                                <div class="label">Email</div>
+                                <div class="value">
+                                    {% if user_data and user_data.mail %}
+                                        {{ user_data.mail }}
+                                    {% else %}
+                                        {{ user.email }}
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="profile-item">
-                                <div class="label">年級</div>
-                                <div class="value">五專四年級</div>
-                            </div>
-                            <div class="profile-item">
+                                <!--
                                 <div class="label">學分</div>
                                 <div class="value-with-progress">
                                     <div class="value">已修196 /220</div>
@@ -218,6 +252,7 @@
                                     </div>
                                     <div class="tooltip" id="tooltip"></div>
                                 </div>
+                                -->
                             </div>
                             
                         </div>
@@ -230,37 +265,81 @@
                         <h2>我的活動</h2>
                     </div>
                     <div class="activities-list">
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-running"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-title">週末慢跑團，一起來同樂！</div>
-                                <div class="activity-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> 大安森林公園</span>
-                                    <span><i class="far fa-clock"></i> 4/6 下午2:00</span>
+                        {% if created_activities or joined_activities %}
+                            {# 先顯示我發起的活動 #}
+                            {% for a in created_activities %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    {% with a.type as t %}
+                                        {% if t == 'sport' %}
+                                            <i class="fas fa-running"></i>
+                                        {% elif t == 'food' %}
+                                            <i class="fas fa-utensils"></i>
+                                        {% elif t == 'movie' %}
+                                            <i class="fas fa-film"></i>
+                                        {% elif t == 'study' %}
+                                            <i class="fas fa-book"></i>
+                                        {% elif t == 'travel' %}
+                                            <i class="fas fa-plane"></i>
+                                        {% else %}
+                                            <i class="fas fa-users"></i>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">
+                                        <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
+                                        <span style="margin-left:8px; font-size:12px; color:#fff; background:#6c63ff; padding:2px 8px; border-radius:12px;">我發起</span>
+                                    </div>
+                                    <div class="activity-details">
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
+                                        <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-utensils"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-title">會計學期中考讀書會</div>
-                                <div class="activity-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> 圖書館3樓讀書室</span>
-                                    <span><i class="far fa-clock"></i> 4/5 晚上7:00</span>
+                            {% endfor %}
+                            {# 再顯示我參加的活動 #}
+                            {% for a in joined_activities %}
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    {% with a.type as t %}
+                                        {% if t == 'sport' %}
+                                            <i class="fas fa-running"></i>
+                                        {% elif t == 'food' %}
+                                            <i class="fas fa-utensils"></i>
+                                        {% elif t == 'movie' %}
+                                            <i class="fas fa-film"></i>
+                                        {% elif t == 'study' %}
+                                            <i class="fas fa-book"></i>
+                                        {% elif t == 'travel' %}
+                                            <i class="fas fa-plane"></i>
+                                        {% else %}
+                                            <i class="fas fa-users"></i>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">
+                                        <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
+                                    </div>
+                                    <div class="activity-details">
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
+                                        <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-film"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-title">漫威電影馬拉松</div>
-                                <div class="activity-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> 多媒體教室</span>
-                                    <span><i class="far fa-clock"></i> 4/8 上午10:00</span>
+                            {% endfor %}
+                        {% else %}
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-info-circle"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-title">尚未參加任何活動</div>
+                                    <div class="activity-details">
+                                        <a href="{% url 'activity_list' %}" class="btn-link">前往活動召集</a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -344,7 +423,7 @@
                                     <div class="event">統計期中考</div>
                                 </td>
                                 <td>22</td>
-                                <td>23</td>/9
+                                <td>23</td>
                                 <td>24
                                     <div class="event">行銷期中考</div>
                                 </td>
@@ -368,31 +447,10 @@
             <!-- 待辦事項卡片 -->
             <div class="card todo-card">
                 <div class="card-header">
-                    <h2>代辦事項</h2>
+                    <h2>待辦事項</h2>
                 </div>
                 <div class="todo-content">
-                    <ul class="todo-list">
-                        <li class="todo-item completed">
-                            <input type="checkbox" id="task1" checked>
-                            <label for="task1">完成統計學作業</label>
-                            <span class="todo-status">已完成</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task2">
-                            <label for="task2">準備行銷管理報告</label>
-                            <span class="todo-status">9/29</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task3">
-                            <label for="task3">預約圖書館讀書室</label>
-                            <span class="todo-status">9/30</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task4">
-                            <label for="task4">整理會計學筆記</label>
-                            <span class="todo-status">10/11</span>
-                        </li>
-                    </ul>
+                    <ul class="todo-list"></ul>
                     </div>
                 </div>
 
@@ -442,5 +500,14 @@
 {% endblock %}
 
 {% block body_js %}
-<script src="{% static 'js/personal.js' %}"></script>
+<script id="calendar-events" type="application/json">{{ calendar_events_json|default:'[]'|safe }}</script>
+<script>
+  (function(){
+    try {
+      var node = document.getElementById('calendar-events');
+      window.calendarEventsData = node ? JSON.parse(node.textContent || '[]') : [];
+    } catch (e) { window.calendarEventsData = []; }
+  })();
+  </script>
+<script src="{% static 'js/personal.js' %}?v=2"></script>
 {% endblock %}

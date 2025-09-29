@@ -456,9 +456,6 @@ class ActivityParticipant(models.Model):
             models.Index(fields=['status'], name='idx_part_status'),
         ]
 
-    def __str__(self):
-        return f'Participant(user={self.user_id}, activity={self.activity_id}, status={self.status})'
-
 
 class ActivityComment(models.Model):
     activity = models.ForeignKey(
@@ -510,3 +507,28 @@ class ActivityComment(models.Model):
             pass
         snippet = (self.content or '')[:20].replace('\n', ' ')
         return f'{uname or "user"}: {snippet}'
+
+
+# ====== 個人中心 Todo（持久化）=====
+class Todo(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='todos'
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    date = models.DateField()
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'created_at']
+        indexes = [
+            models.Index(fields=['user', 'date'], name='idx_todo_user_date'),
+            models.Index(fields=['user', 'completed'], name='idx_todo_user_completed'),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.date})"
