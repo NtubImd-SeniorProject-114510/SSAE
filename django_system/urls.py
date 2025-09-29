@@ -30,13 +30,13 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('base/' , views.base),
-
     path('ttt/' , views.ttt),
     path('login/' , views.login, name='login'),
     path('welcome/' , views.welcome),
     path('welcome_mo/' , views.welcome_mo, name='wel_mo'),
     path('' , views.welcome),
     path('index/' , views.index),
+
     # path('mobile/' , views.mobile, name='mobile'),
     path('personal/' , views.personal),
     path('chat/' , views.chat),
@@ -46,12 +46,10 @@ urlpatterns = [
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
     path('book/upload/', views.upload_book2, name='upload_book2'),
 
-
     # Dynamic Dropdowns API
     path('api/departments/', views.get_departments, name='get_departments'),
     path('api/grades/', views.get_grades, name='get_grades'),
     path('book_2/', views.book_2, name='book_2'),
-    path('test/', views.ask_page, name='ask_page'),
     path('test/', views.ask_page, name='ask_page'),
     path('navbar2/' , views.navbar2),
 
@@ -64,6 +62,8 @@ urlpatterns = [
     # 向後相容的 ZIP 上傳路由
     path('upload_zip/', views.upload_zip, name='upload_zip'),
 
+    # 課程評論 / Review 頁面與 API
+    path('comment/', views.comment, name='comment'),
     # 課程評論 / Review 頁面與 API
     path('comment/', views.comment, name='comment'),
     # 課程評論 / Review 頁面與 API
@@ -91,6 +91,10 @@ urlpatterns = [
     path('personal/', views.personal, name='personal'),
     # 對話/RAG/檔案
     path('personal/', views.personal, name='personal'),
+    path('api/rating/<int:course_id>/', views.submit_rating_only, name='submit_rating_only'),
+    path('api/comment/optimize_ai', views.optimize_comment_ai, name='optimize_comment_ai'),
+    # 對話/RAG/檔案
+    path('personal/', views.personal, name='personal'),
     path('api/conversations/', views.api_conversations),
     path('api/messages/<str:convo_id>/', views.api_messages),
     path('api/ask/', views.api_ask),
@@ -101,11 +105,8 @@ urlpatterns = [
     path('api/pdf/<str:filename>/', views.view_pdf, name='view_pdf'),
 
     # 活動系統
-
-    # 活動系統
     path('activities/', views.activity_list, name='activity_list'),
     path('activities/<int:pk>/', views.activity_detail, name='join_detail'),
-    path('activities/<int:pk>/', views.activity_detail, name='activity_detail'),
     path('activities/<int:pk>/', views.activity_detail, name='activity_detail'),
     path('activities/<int:pk>/join/', views.join_activity, name='join_activity'),
     path('activities/<int:pk>/cancel/', views.cancel_activity, name='cancel_activity'),
@@ -118,6 +119,7 @@ urlpatterns = [
     path('get-related-data/', views.get_related_data, name='get_related_data'),
     path('api/recognize-book/', views.recognize_book, name='recognize_book'),
     path('api/search-book/', views.search_book_manual, name='search_book_manual'),
+
     # Todo API（持久化）
     path('api/todos/', views_todo.get_todos, name='get_todos'),
     path('api/todos/create/', views_todo.create_todo, name='create_todo'),
