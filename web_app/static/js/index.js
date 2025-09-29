@@ -1,51 +1,23 @@
-// function handleResponsiveRedirect() {
-//     const isMobile = window.innerWidth <= 768;
-//     const onMobilePage = window.location.pathname.startsWith('/mobile');
-//     if (isMobile && !onMobilePage) {
-//         window.location.href = '/mobile/';
-//     } else if (!isMobile && onMobilePage) {
-//         // return to desktop version; assume desktop lives at /index/ or root
-//         window.location.href = '/index/';
+// // svg公告跑馬燈
+// document.querySelectorAll('.svg-mobile .dialog-text').forEach(el => {
+//   let first = true;
+
+//   el.addEventListener('animationiteration', () => {
+//     if (first) {
+//       // 暫停動畫，先換 offset
+//       el.style.animationPlayState = 'paused';
+//       el.style.setProperty('--offset', '130px');
+//       first = false;
+
+//       // 兩層 rAF 確保樣式重算後再啟動，避免同一幀就被繪製
+//       requestAnimationFrame(() => {
+//         requestAnimationFrame(() => {
+//           el.style.animationPlayState = 'running';
+//         });
+//       });
 //     }
-// }
-
-// // initial check (DOMContentLoaded may already be fired)
-// handleResponsiveRedirect();
-
-// // add resize listener with basic debounce
-// let resizeTimeout;
-// window.addEventListener('resize', () => {
-//     clearTimeout(resizeTimeout);
-//     resizeTimeout = setTimeout(handleResponsiveRedirect, 200);
+//   });
 // });
-
-// //loading
-// document.addEventListener("DOMContentLoaded", () => {
-//   const loadingScreen = document.getElementById("loading-screen");
-//   const finalText = document.getElementById("final-text");
-
-//   // 開始翻轉：Welcome 顯示 0.8 秒後
-//   setTimeout(() => {
-//     document.querySelector('.cube').style.animation = 'flip-up 0.4s ease forwards';
-//   }, 800);
-
-//   // 顯示「智能校事專家」0.3 秒後縮小 + 移動
-//   setTimeout(() => {
-//     finalText.classList.add("shrink-and-move");
-//   }, 1200); // 延遲讓動畫顯得更平滑
-
-//   // 整個 loading 淡出
-//   setTimeout(() => {
-//     loadingScreen.style.transition = "opacity 0.3s ease";
-//     loadingScreen.style.opacity = "0";
-
-//     setTimeout(() => {
-//       loadingScreen.style.display = "none";
-//     }, 300);
-//   }, 1500); // 1.5秒後開始淡出
-// });
-
-
 
 
 // //圓圈線條
@@ -116,6 +88,7 @@ const keywordMap = [
     { keywords: "會", intent: "event" },
     { keywords: "評", intent: "review" },
     { keywords: "寫", intent: "review" },
+    { keywords: "看", intent: "look" },
     { keywords: "課", intent: "course" },
     { keywords: "老師", intent: "course" }
 ];
@@ -160,7 +133,7 @@ const shortcuts = [
         action: "redirect",
         target: "/comment/",
         label: "新增課程評論",
-        popupToOpen: "rating-modal" 
+        popupToOpen: "simple-comment-modal" 
     },
     {
         intentSet: ["course"],
@@ -168,6 +141,13 @@ const shortcuts = [
         target: "/comment/",
         label: "課程評論區"
     },
+    {
+        intentSet: ["look", "course"],
+        action: "redirect",
+        target: "/comment/",
+        label: "課程評論區"
+    },
+    
     // {
     //     intentSet: ["event"],
     //     action: "form-fill",

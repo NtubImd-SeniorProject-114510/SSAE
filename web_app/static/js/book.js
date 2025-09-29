@@ -1,4 +1,4 @@
-//index
+//book.js
 window.addEventListener('DOMContentLoaded', () => {
     const popupId = sessionStorage.getItem('openPopup');
     if (popupId) {
@@ -98,46 +98,56 @@ window.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submitBtn');
     // 上傳表單 submit 攔截
     if (uploadFormEl) {
-        uploadFormEl.addEventListener('submit', function(e) {
+        uploadFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            console.log('submit 攔截成功');
-            const formData = new FormData(uploadFormEl);
-            fetch(uploadFormEl.action, {
+            showBookMsg('上傳中...', true);
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '上傳中...'; }
+
+            try {
+            const fd = new FormData(uploadFormEl);  // 自動包含檔案與所有欄位
+            const resp = await fetch(uploadFormEl.action, {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken'),
                 },
+                body: fd,
                 credentials: 'same-origin',
-            })
-            .then(response => response.json().then(data => ({status: response.status, body: data})))
-            .then(({status, body}) => {
-                if (status === 200 && body.success) {
-                    // 關閉彈窗
-                    document.getElementById('uploadForm').classList.remove('show');
-                    // 清空表單
-                    uploadFormEl.reset();
-                    console.log('上架成功，自動刷新');
-                    location.reload();
-                } else {
-                    let msg = '';
-                    if (body.errors) {
-                        for (const [field, errors] of Object.entries(body.errors)) {
-                            msg += field + ': ' + errors.join(', ') + '\n';
-                        }
-                    } else if (body.message) {
-                        msg = body.message;
-                    } else {
-                        msg = '上傳失敗，請檢查欄位';
-                    }
-                    alert(msg);
-                }
-            })
-            .catch((err) => {
-                alert('上傳失敗，請稍後再試');
             });
+
+            let data = {};
+            try { data = await resp.json(); } catch (e) {}
+
+            if (resp.ok && data && data.success) {
+                // ✅ 成功
+                showBookMsg(data.message || '書籍上架成功！', true);
+                uploadFormEl.reset();
+                if (previewImage && previewPlaceholder) {
+                previewImage.src = '';
+                previewImage.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+                }
+                setTimeout(() => {
+                uploadFormModal.classList.remove('show');
+                document.body.style.overflow = '';
+                document.body.style.height   = '';
+                location.reload();
+                }, 500);
+            } else {
+                // ❌ 失敗（包含禁用詞）
+                const msg = (data && (data.message ||
+                        (data.errors && JSON.stringify(data.errors)))) ||
+                        '上傳失敗，請檢查欄位內容';
+                showBookMsg(msg, false);   // 🔴 在表單上方顯示紅字
+            }
+            } catch (err) {
+            console.error('[upload_book2] error:', err);
+            showBookMsg('網路或系統錯誤，請稍後再試', false);
+            } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '上傳書籍'; }
+            }
         });
-    }
+        }
     // 關閉上傳表單
     if (closeFormBtn && uploadFormEl) {
         closeFormBtn.addEventListener('click', function() {
@@ -268,41 +278,48 @@ window.addEventListener('DOMContentLoaded', () => {
         // 其它提交行為（如表單驗證）
         // ...
         // 點擊提交時也可呼叫 filterBooks 以確保顯示正確
+        function filterBooks() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const department = departmentFilter.value;
+            const grade = gradeFilter.value;
+            const condition = conditionFilter.value;
+            const priceRange = priceFilter.value;
+            const academic = document.getElementById('academicFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+
+            const bookCards = document.querySelectorAll('.book-card');
+
+            bookCards.forEach(card => {
+                const title = card.querySelector('.book-header').textContent.toLowerCase();
+                const dept = card.querySelector('.book-department').textContent;
+                const bookGrade = card.querySelector('.book-grade').textContent;
+                const bookCondition = card.querySelector('.book-condition').textContent;
+                const price = parseInt(card.querySelector('.book-price').textContent.replace('$', ''));
+                const bookAcademic = card.querySelector('.book-academic').textContent;
+                const bookCategory = card.querySelector('.book-category') ? card.querySelector('.book-category').getAttribute('data-id') : '';
+
+                const matchesSearch = title.includes(searchTerm) || searchTerm === '';
+                const matchesDept = !department || dept === department;
+                const matchesGrade = !grade || bookGrade === grade;
+                const matchesCondition = !condition || bookCondition === condition;
+                const matchesAcademic = !academic || bookAcademic === academic;
+                const matchesCategory = !category || bookCategory === category;
+
+                let matchesPrice = true;
+                if (priceRange) {
+                    const [min, max] = priceRange.split('-').map(Number);
+                    matchesPrice = price >= min && price <= max;
+                }
+
+                if (matchesSearch && matchesDept && matchesGrade && matchesCondition && matchesPrice && matchesAcademic && matchesCategory) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
         filterBooks();
     });
-
-        // 獲取所有表單值
-        const bookTitle = document.getElementById('bookTitle').value;
-        const department = document.getElementById('department').value;
-        const grade = document.getElementById('grade').value;
-        const bookType = document.getElementById('bookType').value;
-        const price = document.getElementById('price').value;
-        const condition = document.getElementById('condition').value;
-        const bookDescription = document.getElementById('bookDescription').value;
-        const transactionMethods = document.querySelectorAll('input[name="transactionMethod"]:checked');
-        
-        // 驗證必填欄位
-        const bookTitleError = document.getElementById('bookTitleError');
-        const priceError = document.getElementById('priceError');
-        const transactionMethodError = document.getElementById('transactionMethodError');
-        
-        // 顯示錯誤訊息，只在點擊上傳按鈕後顯示
-        if (bookTitle.trim() === '') {
-            bookTitleError.style.display = 'block';
-        }
-        
-        if (price.trim() === '') {
-            priceError.style.display = 'block';
-        }
-        
-        if (transactionMethods.length === 0) {
-            transactionMethodError.style.display = 'block';
-        }
-        
-        // 如果有錯誤，不繼續提交
-        if (bookTitle.trim() === '' || price.trim() === '' || transactionMethods.length === 0) {
-            return;
-        }
         
         // 其他表單驗證
         if (!validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods)) {
@@ -432,7 +449,7 @@ window.addEventListener('DOMContentLoaded', () => {
         previewPlaceholder.style.display = 'block';
     }
     
-    // 模擬添加新卡片的函數 (未使用)
+    // 模擬添加新卡片的函數
     function addNewBookCard(bookTitle, bookDescription, bookType) {
         const booksGrid = document.querySelector('.books-grid');
         const newCard = document.createElement('div');

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>書籍辨識測試</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #2c3e50;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6F557D;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #6F557D;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #6F557D;
+            background: #f8f9ff;
+        }
+        
+        .file-upload-area.dragover {
+            border-color: #6F557D;
+            background: #e8f4ff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #bbb;
+        }
+        
+        .test-btn {
+            background: #6F557D;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        
+        .test-btn:hover {
+            background: #5a4465;
+        }
+        
+        .test-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .success-result {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .error-result {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6F557D;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .book-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            color: #333;
+            word-wrap: break-word;
+        }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .api-test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .api-test-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>📚 書籍辨識功能測試</h1>
+            <p>上傳書籍封面圖片來測試 OCR 辨識功能</p>
+        </div>
+        
+        <!-- API 連接測試 -->
+        <div class="test-section">
+            <h3>🔧 API 連接測試</h3>
+            <div class="api-test-grid">
+                <div class="api-test-card">
+                    <h4>Google Vision API</h4>
+                    <button class="test-btn" onclick="testGoogleVision()">測試連接</button>
+                    <div id="visionStatus" class="status-result"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 圖片上傳測試 -->
+        <div class="test-section">
+            <h3>📸 圖片辨識測試</h3>
+            
+            <div class="file-upload-area" id="uploadArea" onclick="document.getElementById('testImageInput').click()">
+                <div class="upload-icon">📷</div>
+                <div>
+                    <strong>點擊選擇圖片</strong>或拖放圖片到這裡
+                </div>
+                <div style="margin-top: 10px; color: #666;">
+                    支援 JPG, PNG, WebP 格式，檔案不超過 5MB
+                </div>
+            </div>
+            
+            <input type="file" id="testImageInput" accept="image/*" style="display: none;">
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="test-btn" id="recognizeBtn" onclick="recognizeImage()" disabled>
+                    🔍 開始辨識
+                </button>
+                <button class="test-btn" onclick="clearResults()" style="margin-left: 10px; background: #95a5a6;">
+                    🗑 清除結果
+                </button>
+            </div>
+        </div>
+        
+        <!-- 結果顯示區域 -->
+        <div id="resultsContainer" style="display: none;">
+            <div class="result-container" id="resultContent">
+                <!-- 結果將顯示在這裡 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('testImageInput');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            // 檔案選擇事件
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+            
+            // 拖放事件
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFileSelect(e.dataTransfer.files[0]);
+                }
+            });
+        });
+        
+        // 處理檔案選擇
+        function handleFileSelect(file) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            
+            if (!allowedTypes.includes(file.type)) {
+                alert('不支援的檔案格式！請選擇 JPG、PNG 或 WebP 格式的圖片。');
+                return;
+            }
+            
+            if (file.size > maxSize) {
+                alert('檔案大小不能超過 5MB！');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // 更新 UI
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML = `
+                <div class="upload-icon">✅</div>
+                <div><strong>已選擇：${file.name}</strong></div>
+                <div style="color: #666;">大小：${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                <div style="margin-top: 10px; font-size: 14px; color: #6F557D;">點擊重新選擇</div>
+            `;
+            
+            document.getElementById('recognizeBtn').disabled = false;
+        }
+        
+        // 測試 Google Vision API 連接
+        async function testGoogleVision() {
+            const statusDiv = document.getElementById('visionStatus');
+            statusDiv.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 10px auto;"></div>';
+            
+            try {
+                const response = await fetch('/test/google-vision/');
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusDiv.innerHTML = '<span class="status-indicator status-success">連接成功</span>';
+                } else {
+                    statusDiv.innerHTML = `<span class="status-indicator status-error">連接失敗</span><br><small>${data.error}</small>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="status-indicator status-error">測試失敗</span><br><small>${error.message}</small>`;
+            }
+        }
+        
+        // 辨識圖片
+        async function recognizeImage() {
+            if (!selectedFile) {
+                alert('請先選擇圖片！');
+                return;
+            }
+            
+            const btn = document.getElementById('recognizeBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '🔄 辨識中...';
+            btn.disabled = true;
+            
+            // 顯示載入狀態
+            showLoading();
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                
+                const response = await fetch('/api/recognize-book/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResults(data, true);
+                } else {
+                    showResults(data, false);
+                }
+                
+            } catch (error) {
+                showResults({ error: error.message }, false);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // 顯示載入狀態
+        function showLoading() {
+            const container = document.getElementById('resultsContainer');
+            const content = document.getElementById('resultContent');
+            
+            content.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>正在辨識書籍資訊...</div>
+                </div>
+            `;
+            
+            container.style.display = 'block';
+        }
+        
+        // 顯示結果
+        function showResults(data, isSuccess) {
+            const container = document.getElementById('resultsContainer');
+            const content = document.getElementById('resultContent');
+            
+            content.className = `result-container ${isSuccess ? 'success-result' : 'error-result'}`;
+            
+            if (isSuccess && data.book_info) {
+                const bookInfo = data.book_info;
+                content.innerHTML = `
+                    <h3>✅ 辨識成功！</h3>
+                    
+                    <div class="book-info-grid">
+                        <div class="info-item">
+                            <div class="info-label">書名</div>
+                            <div class="info-value">${bookInfo.title || '未辨識到'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">作者</div>
+                            <div class="info-value">${bookInfo.author || '未辨識到'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">出版社</div>
+                            <div class="info-value">${bookInfo.publisher || '未辨識到'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">ISBN</div>
+                            <div class="info-value">${bookInfo.isbn || '未辨識到'}</div>
+                        </div>
+                    </div>
+                    
+                    ${bookInfo.description ? `
+                        <div style="margin-top: 20px;">
+                            <div class="info-label">描述</div>
+                            <div class="info-value" style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                                ${bookInfo.description}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${bookInfo.categories && bookInfo.categories.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <div class="info-label">分類</div>
+                            <div style="margin-top: 10px;">
+                                ${bookInfo.categories.map(cat => `<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-right: 8px;">${cat}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${data.note ? `<div style="margin-top: 15px; padding: 10px; background: #fff3cd; color: #856404; border-radius: 6px; font-size: 14px;">⚠️ ${data.note}</div>` : ''}
+                    
+                    <div class="debug-info">
+                        <strong>除錯資訊：</strong><br>
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <h3>❌ 辨識失敗</h3>
+                    <div style="color: #e74c3c; margin: 15px 0;">
+                        ${data.error || '未知錯誤'}
+                    </div>
+                    
+                    <div class="debug-info">
+                        <strong>錯誤詳情：</strong><br>
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            }
+            
+            container.style.display = 'block';
+        }
+        
+        // 清除結果
+        function clearResults() {
+            document.getElementById('resultsContainer').style.display = 'none';
+            selectedFile = null;
+            
+            // 重置上傳區域
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div>
+                    <strong>點擊選擇圖片</strong>或拖放圖片到這裡
+                </div>
+                <div style="margin-top: 10px; color: #666;">
+                    支援 JPG, PNG, WebP 格式，檔案不超過 5MB
+                </div>
+            `;
+            
+            document.getElementById('recognizeBtn').disabled = true;
+        }
+        
+        // 獲取 CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

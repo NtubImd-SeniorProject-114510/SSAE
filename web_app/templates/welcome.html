@@ -5,26 +5,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>歡迎頁面</title>
-
-  <link
-      rel="stylesheet"
-      type="text/css"
-      href="{% static 'css/welcome.css' %}"
-    />
-
 </head>
+<style>
+    html,body{margin:0;padding:0}
+    .video-wrap{width:100%;height:100vh;overflow:hidden}
+    .video-wrap video{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+  </style>
+
 <body>
+  <div class="video-wrap">
+    <video class="welcome-mobile-video" playsinline  webkit-playsinline muted autoplay preload="auto"
+           poster="{% static 'image/welcome_img.jpg' %}">
+      <source src="{% static 'image/welcome.mp4' %}" type="video/mp4">
+    </video>
+  </div>
+
+
+    <!--  
     <div class="transition-page">
       <div class="spline-mask">
         <spline-viewer class="spline-box" url="https://prod.spline.design/GkbjjSNh32-DZhZJ/scene.splinecode"></spline-viewer>
       </div>
     </div>
 
-
-
       <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.93/build/spline-viewer.js"></script>
-   
+    -->
     
   </body>
   <script src="{% static 'js/welcome.js' %}"></script>
+
   </html>

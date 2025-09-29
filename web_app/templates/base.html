@@ -1,41 +1,86 @@
 <!DOCTYPE html>
 <html lang="{% block lang %}en{% endblock %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}智能校事專家{% endblock %}</title>
-    {% load static %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pop_window/login_pop.css' %}">
-    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
-    {% block css %}{% endblock %}
-    {% block head_js %}{% endblock %}
-</head>
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{% block title %}智能校事專家{% endblock %}</title>
+      {% load static %}
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+      <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+      <link rel="stylesheet" href="{% static 'css/pop_window/login_pop.css' %}">
+      <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+      <link rel="stylesheet" href="{% static 'css/loading.css' %}">
+      {% block css %}{% endblock %}
+      {% block head_js %}{% endblock %}
+  </head>
 
-<body>
-    {% include "navbar.html" %}
+  <body>
+      {% include "navbar.html" %}
 
-    <!-- 主要內容區域 -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-    
-    <!-- 頁腳 -->
-    {% block footer %}
-      {% include 'footer.html' %}
-    {% endblock %}
+      <!-- Loading -->
+      <div class="loader"></div>
+      <div class="loader-overlay"></div>
 
-    {% include 'pop_window/login_pop.html' %}
-    
-    <!-- JavaScript 文件 -->
-    <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
-    <script src="{% static 'js/navbar.js' %}"></script>
-    <script src="{% static 'js/footer.js' %}"></script>
-    {% block body_js %}{% endblock %}
-</body>
+      <!-- 主要內容區域 -->
+      <main>
+          {% block content %}{% endblock %}
+      </main>
+      
+      <!-- 頁腳 -->
+      {% block footer %}
+        {% include 'footer.html' %}
+      {% endblock %}
+
+      {% include 'pop_window/login_pop.html' %}
+      
+      <!-- JavaScript 文件 -->
+      <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
+      <script src="{% static 'js/navbar.js' %}"></script>
+      <script src="{% static 'js/footer.js' %}"></script>
+      <script src="{% static 'js/loading.js' %}"></script>
+      {% block body_js %}{% endblock %}
+      <script>
+        //開門
+        function showNotification(type, message, autoClose = true) {
+          const modal = document.getElementById('notificationModal');
+          const icon = document.getElementById('notificationIcon');
+          const messageEl = document.getElementById('notificationMessage');
+          
+          // 設置內容
+          messageEl.textContent = message;
+          
+          // 設置樣式和圖標
+          modal.className = `notification-modal notification-${type}`;
+          
+          if (type === 'success') {
+            icon.textContent = '✅';
+          } else if (type === 'error') {
+            icon.textContent = '❌';
+          }
+          
+          // 顯示彈窗
+          modal.style.display = 'flex';
+          
+          // 自動關閉
+          if (autoClose) {
+            setTimeout(() => {
+              closeNotification();
+            }, 3000);
+          }
+        }
+
+        function closeNotification() {
+          const modal = document.getElementById('notificationModal');
+          modal.style.display = 'none';
+        }
+
+        // 點擊背景關閉
+        document.addEventListener('click', function(e) {
+          const modal = document.getElementById('notificationModal');
+          if (e.target === modal) {
+            closeNotification();
+          }
+        });
+      </script>
+  </body>
 </html>
-
-
-
-

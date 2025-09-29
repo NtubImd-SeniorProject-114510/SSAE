@@ -33,15 +33,6 @@ def add_message(conversation_id, question, answer, sources=None):
         {"$push": {"messages": message_data}}
     )
 
-
-
-def get_conversations(user_id):
-    docs = col.find({"user_id": user_id}).sort("created_at", -1)
-    return [
-        {"id": str(d["_id"]), "title": d["title"]}
-        for d in docs
-    ]
-
 def get_messages(conversation_id):
     doc = col.find_one({"_id": ObjectId(conversation_id)})
     if not doc: return []
@@ -56,3 +47,18 @@ def update_conversation_title(conversation_id, new_title):
 
 def delete_conversation(conversation_id):
     col.delete_one({"_id": ObjectId(conversation_id)})
+
+def get_conversation_by_id(conversation_id):
+    """取得單一對話（用於權限檢查）"""
+    return col.find_one({"_id": ObjectId(conversation_id)})
+
+def get_conversations(user_id):
+    # 如果是訪客，不顯示歷史對話
+    if user_id == "guest":
+        return []
+    
+    docs = col.find({"user_id": user_id}).sort("created_at", -1)
+    return [
+        {"id": str(d["_id"]), "title": d["title"]}
+        for d in docs
+    ]

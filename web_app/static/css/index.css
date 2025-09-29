@@ -137,7 +137,7 @@ background: var(--cr-2);
 .marquee-track {
   display: inline-block;
   white-space: nowrap;
-  animation: scrollMarquee 10s linear infinite;
+  animation: scrollMarquee 12s linear infinite;
   will-change: transform;
 }
 
@@ -150,7 +150,6 @@ background: var(--cr-2);
   mix-blend-mode: overlay;
   white-space: nowrap;
   color: black;
-  padding-left: 100%; /* 讓它從右側開始進場 */
 }
 
 
@@ -677,14 +676,10 @@ to {
 /* 手機版：以 feature-item 為父元素定位（覆蓋桌機設定） */
 @media (max-width: 768px) {
   .slogan-3 {
-      top: 35%;
-      left: 3%;
       right: auto;
       transform: rotate(-12deg);
   }
   .slogan-4 {
-      top: 95%;
-      left: 18%;
       right: auto;
       transform: rotate(-8deg);
   }
@@ -741,6 +736,82 @@ to {
 }
 
 @media (max-width: 768px) {
+
+  .svg-mobile .dialog-group-l,
+  .svg-mobile .dialog-group-r {
+    overflow: hidden;
+  }
+
+  .svg-mobile .dialog-group-l:hover .dialog-text,
+  .svg-mobile .dialog-group-r:hover .dialog-text {
+    animation-name: text-scroll-rtl;
+    animation-duration: 6s;
+    animation-timing-function: linear;
+    animation-play-state: paused;
+  }
+
+  @keyframes text-scroll-rtl {
+    0%   { transform: translateX(0); }
+    99% { transform: translateX(-40%); }
+    100% { transform: translateX(40%); }
+  }
+
+  .svg-mobile .dialog-text{
+    animation-name: text-scroll-rtl;
+    animation-duration: 6s;
+    animation-timing-function: linear;
+    animation-play-state: paused;
+  }
+
+  .svg-mobile .dialog-group-l:active .dialog-text{
+    animation-play-state: running;
+  }
+}
+
+
+/* 自己跑的跑馬燈
+@media (max-width: 768px) {
+
+  .svg-mobile .dialog-group-l,
+  .svg-mobile .dialog-group-r {
+    overflow: hidden;
+  }
+
+  @keyframes text-scroll-rtl {
+    0%   { transform: translateX(var(--offset, 0)); opacity: 1; }
+    98%  { transform: translateX(-40%);           opacity: 0.8; }
+    99%  { transform: translateX(var(--offset, 0)); opacity: 0; }
+    100% { transform: translateX(var(--offset, 0)); opacity: 0; } 
+  }
+
+  .svg-mobile .dialog-text{
+    animation-name: text-scroll-rtl;
+    animation-duration: 6s;
+    animation-timing-function: linear;
+  }
+}
+  .svg-mobile .dialog-text,
+  .svg-mobile [class*="text-scroll-"],
+  .svg-mobile .text-scroll-l,
+  .svg-mobile .text-scroll-r {
+    animation-name: text-scroll-rtl;
+    animation-duration: 6s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-play-state: running;
+
+   
+    --offset: 28px;
+    will-change: transform, opacity;
+  }
+
+  .svg-mobile .dialog-text:nth-of-type(1) { animation-delay: 0s; }
+  .svg-mobile .dialog-text:nth-of-type(2) { animation-delay: 4s; }
+  .svg-mobile .dialog-text:nth-of-type(3) { animation-delay: 8s; }
+} */
+
+
+@media (max-width: 768px) {
   .circle-container {
     width: 350px;
     height: 350px;
@@ -748,6 +819,7 @@ to {
   .marquee-container{
     width: 340px;  
   }
+
   .circle-particles {
     width: 350px !important;
     height: 350px !important;
@@ -1072,7 +1144,7 @@ to {
   }
 
   .dialog-group-r:hover .dialog-text{
-    fill: #9479C1;
+    fill: #5A355A;
   }
 
   /* Path styles */
@@ -1094,24 +1166,58 @@ to {
   }
 
 
-  .dialog-group-l:hover .dialog-text {
-    animation: text-scroll 20s linear infinite;
+
+
+  .dialog-group-l:hover .dialog-text,
+  .dialog-group-r:hover .dialog-text {
+    animation: text-scroll 30s linear infinite;
   }
 
-  @keyframes text-scroll {
-    0% {
-      transform: translateX(0);
-    }
-    40% {
-      transform: translateX(calc(-100% + 320px));
-    }
-    60% {
-      transform: translateX(calc(-100% + 320px));
-    }
-    100% {
-      transform: translateX(0);
-    }
+@keyframes text-scroll {
+  0% {
+    transform: translateX(0);
   }
+  40% {
+    transform: translateX(calc(-100% + 300px)); /* 調整數字決定右邊留白 */
+  }
+  60% {
+    transform: translateX(calc(-100% + 300px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+
+/* 右邊固定多留空；左/右用不同停靠寬度 */
+.dialog-group-r .dialog-text { 
+  max-width: 280px;      /* 右邊文字可用寬度（比左邊小一點，形成右側留白） */
+}
+
+/* 左右用不同動畫（停止時的 x 位移不同） */
+.dialog-group-l:hover .dialog-text { 
+  animation: text-scroll-l 30s linear infinite; 
+}
+.dialog-group-r:hover .dialog-text { 
+  animation: text-scroll-r 30s linear infinite; 
+}
+
+/* 左側停在 320px（你原本的視覺寬度） */
+@keyframes text-scroll-l {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(calc(-100% + 320px)); }
+  60%  { transform: translateX(calc(-100% + 320px)); }
+  100% { transform: translateX(0); }
+}
+
+/* 右側停在 280px（可再依實際泡泡寬度微調 260~300） */
+@keyframes text-scroll-r {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(calc(-100% + 280px)); }
+  60%  { transform: translateX(calc(-100% + 280px)); }
+  100% { transform: translateX(0); }
+}
+
   
   .path-outline {
     transition: transform 0.3s ease;
@@ -1140,22 +1246,10 @@ to {
 .feature-container {
     position: relative;
     top: 100px;
-    z-index: 3;
+    z-index: -1;
     margin-bottom: 100px;
     
 }
-
-/* 
-.feature-title::before {
-    content: "";
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    margin-right: 10px;
-    background-color: #e0d3e0;
-    border-radius: 50%;
-} */
-
 
 
 /*內容*/
@@ -1520,6 +1614,10 @@ to {
     opacity: 1; /* 確保可見 */
   }
 
+  .dialog-text{
+    font-size: 10px;
+  }
+
 
   /* Fine-tune hover offset for scaled dialogs */
   .lsection .dialog-group-l:hover .path-outline {
@@ -1548,6 +1646,70 @@ to {
     transform: none;
   } */
 
+  .feature-item:nth-child(1) .feature-title {
+    top: 10%;
+    left: 35%;
+  }
+  .feature-item:nth-child(1) .feature-desc {
+    bottom: 10%;
+    left: 36%;
+  }
+
+  .feature-item:nth-child(2) .feature-title {
+    top: 23%;
+    left: 2%;
+}
+  .feature-item:nth-child(2) .feature-desc {
+    bottom: 0%;
+    left: 3%;
+}
+
+  .feature-item:nth-child(3) img {
+    top: 45%;
+    left: 80%;
+}
+.feature-item:nth-child(3) .feature-title {
+    top: 5%;
+    left: 52%;
+}
+.feature-item:nth-child(3) .feature-desc {
+    bottom: 18%;
+    left: 20%;
+}
+
+.feature-item:nth-child(4) .feature-title {
+    top: 3%;
+    left: 28%;
+}
+.feature-item:nth-child(4) .feature-desc {
+    bottom: 18%;
+    left: 29%;
+}
+
+
+.slogan-inner {
+    font-size: 16px;
+    font-weight: normal;
+    padding: 5px 10px;
+}
+
+.slogan-4 {
+    top: 90%;
+    left: 0%;
+}
+.slogan-3 {
+    top: 20%;
+    left: -8%;
+}
+.slogan-2 {
+    top: 65%;
+    right: -10%;
+}
+.slogan-1 {
+    top: -15%;
+    left: 0%;
+}
+
 
   /* Scale down feature section */
   .feature-box {
@@ -1560,29 +1722,20 @@ to {
   }
 
   .feature-item .feature-title h3 {
-    font-size: 5vw;
+    font-size: 7vw;
   }
 
   .feature-desc{
-    width: 40%;
+    width: 60%;
   }
 
   .feature-desc p {
-    font-size: 2vw;
+    font-size: 3.5vw;
   }
 
   .feature-title{
     width: 300px;
   }
 
-  .slogan-4{
-    top: 88%;
-    left: 12%;
-  }
-
-  .feature-item:nth-child(4) .feature-desc {
-    bottom: 40%;
-    left: 29%;
-  }
 
 }

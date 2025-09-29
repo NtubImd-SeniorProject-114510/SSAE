@@ -1,258 +1,1243 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/book_upload_form.css' %}">
+<style>
+.quick-tag {
+    background: #f3f4f6;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.quick-tag.selected {
+    background: #6F557D;
+    color: white;
+    border-color: #6F557D;
+}
+.upload-modal2 {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3500;
+    display: flex;
+    justify-content: center;
+    background: rgba(111,85,125,0.13);
+    overflow-y: auto;
+}
+
+.upload-modal2 .container {
+    background: #fff;
+    border-radius: 12px;
+    margin-top: 200px;
+    margin-bottom: 50px;
+}
+
+.loading-option {
+    color: #999;
+    font-style: italic;
+}
+
+.error-option {
+    color: #dc3545;
+}
+
+/* ★ 新增：欄位下方的純文字錯誤樣式 */
+.field-error {
+    display: none;
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #b91c1c; /* 深紅 */
+}
+.form-input[aria-invalid="true"] {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.08);
+}
+
+/* 新增：相機和上傳選擇按鈕樣式 */
+.camera-upload-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.camera-option-btn, .upload-option-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.camera-option-btn:hover, .upload-option-btn:hover {
+    border-color: #6F557D;
+    color: #6F557D;
+}
+
+.camera-option-btn.active, .upload-option-btn.active {
+    border-color: #6F557D;
+    background: #6F557D;
+    color: white;
+}
+
+.camera-preview {
+    display: none;
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.camera-video {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    background: #000;
+}
+
+.camera-controls {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.capture-btn, .switch-camera-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #6F557D;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.capture-btn:hover, .switch-camera-btn:hover {
+    background: #5a4469;
+}
+
+.recognition-status {
+    display: none;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.recognition-status.loading {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+.recognition-status.success {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.recognition-status.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.auto-fill-info {
+    display: none;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    font-size: 13px;
+}
+
+.auto-fill-info .info-item {
+    margin-bottom: 8px;
+}
+
+.auto-fill-info .info-label {
+    font-weight: bold;
+    color: #495057;
+}
+
+.manual-search {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.manual-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.manual-search-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.manual-search-btn {
+    padding: 6px 12px;
+    border: 1px solid #6F557D;
+    background: #6F557D;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.manual-search-type {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+}
+</style>
 
 <div id="uploadFormModal2" class="upload-modal2" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:3500;align-items:center;justify-content:center;background:rgba(111,85,125,0.13);">
   <div class="container">
     <div class="header">
         <button class="close-btn" type="button" onclick="closeForm2()">&times;</button>
-        <h1>（到時候換好看的圖）</h1><p>分享你的知識，讓書籍找到新的歸宿</p>
+        <h1>上傳二手書</h1>
+        <p>分享你的知識，讓書籍找到新的歸宿</p>
     </div>
 
     <div class="form-container">
-        <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book' %}">
-        {% csrf_token %}
-            <div class="upload-area" onclick="document.getElementById('id_cover_image').click()">
+        <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book2' %}">
+            {% csrf_token %}
+            
+            <!-- 相機/上傳選擇按鈕 -->
+            <div class="camera-upload-options">
+                <button type="button" class="camera-option-btn" id="cameraOptionBtn">
+                    📷 拍照識別
+                </button>
+                <button type="button" class="upload-option-btn active" id="uploadOptionBtn">
+                    📁 上傳圖片
+                </button>
+            </div>
+
+            <!-- 相機預覽區域 -->
+            <div class="camera-preview" id="cameraPreview">
+                <video id="cameraVideo" class="camera-video" autoplay muted></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <div class="camera-controls">
+                    <button type="button" class="capture-btn" id="captureBtn">拍照</button>
+                    <button type="button" class="switch-camera-btn" id="switchCameraBtn">切換鏡頭</button>
+                </div>
+            </div>
+
+            <!-- 原有的上傳區域 -->
+            <div class="upload-area" id="uploadArea" onclick="triggerFileInput()">
                 <div class="upload-icon">📷</div>
                 <div class="upload-text">點擊上傳書籍封面圖片</div>
                 <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
-                {{ form.cover_image }}
-                
             </div>
+
+            <input type="file" 
+                   name="cover_image" 
+                   id="id_cover_image" 
+                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                   style="display: none;"
+                   onchange="handleFileSelect(this)">
+
+            <!-- 識別狀態顯示 -->
+            <div class="recognition-status" id="recognitionStatus"></div>
+
+            <!-- 自動填入資訊顯示 -->
+            <div class="auto-fill-info" id="autoFillInfo">
+                <div class="info-item">
+                    <span class="info-label">識別結果：</span>
+                    <span id="recognitionResult"></span>
+                </div>
+            </div>
+
+            <!-- 手動搜尋區域 -->
+            <div class="manual-search">
+                <div style="margin-bottom: 8px; font-weight: bold; color: #495057;">手動搜尋書籍資訊</div>
+                <input type="text" 
+                       class="manual-search-input" 
+                       id="manualSearchInput" 
+                       placeholder="輸入書名或 ISBN 搜尋">
+                <div class="manual-search-controls">
+                    <select class="manual-search-type" id="manualSearchType">
+                        <option value="title">書名搜尋</option>
+                        <option value="isbn">ISBN 搜尋</option>
+                    </select>
+                    <button type="button" class="manual-search-btn" onclick="manualSearchBook()">搜尋</button>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label required" for="id_title">書名</label>
-                <input type="text" name="title" maxlength="100" class="form-input" id="id_title" placeholder="請輸入書名" value="{{ form.title.value|default_if_none:'' }}">
-                {% if form.title.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.title.errors.0 }}</div>
-                {% endif %}
+                <input type="text" 
+                       name="title" 
+                       maxlength="255" 
+                       class="form-input" 
+                       id="id_title" 
+                       placeholder="請輸入書名" 
+                       required>
+                <!-- ★ 新增：只顯示純文字錯誤 -->
+                <div id="id_title_error_text" class="field-error" role="alert" aria-live="polite"></div>
             </div>
+
+            <!-- 新增作者欄位 -->
+            <div class="form-group">
+                <label class="form-label" for="id_author">作者</label>
+                <input type="text" 
+                       name="author" 
+                       maxlength="255" 
+                       class="form-input" 
+                       id="id_author" 
+                       placeholder="請輸入作者">
+            </div>
+
+            <!-- 新增出版社欄位 -->
+            <div class="form-group">
+                <label class="form-label" for="id_publisher">出版社</label>
+                <input type="text" 
+                       name="publisher" 
+                       maxlength="255" 
+                       class="form-input" 
+                       id="id_publisher" 
+                       placeholder="請輸入出版社">
+            </div>
+
+            <!-- 新增 ISBN 欄位 -->
+            <div class="form-group">
+                <label class="form-label" for="id_isbn">ISBN</label>
+                <input type="text" 
+                       name="isbn" 
+                       maxlength="20" 
+                       class="form-input" 
+                       id="id_isbn" 
+                       placeholder="請輸入 ISBN">
+            </div>
+
             <div class="form-group">
                 <label class="form-label required" for="id_price">價格</label>
-                <div class="price-input">
-                    <input type="number" name="price" class="form-input" id="id_price" placeholder="請輸入價格" value="{{ form.price.value|default_if_none:'' }}">
+                <input type="number" 
+                       name="price" 
+                       class="form-input" 
+                       id="id_price" 
+                       placeholder="請輸入價格" 
+                       min="0"
+                       required>
             </div>
-            {% if form.price.errors %}
-                <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.price.errors.0 }}</div>
-            {% endif %}
-        </div>
-        <div class="form-row-three">
+            
+            <div class="form-row-three">
+                <div class="form-group">
+                    <label class="form-label" for="id_academic">學制</label>
+                    <select name="academic" class="form-select" id="id_academic">
+                        <option value="">請選擇學制</option>
+                        {% for academic in academics %}
+                            <option value="{{ academic.pk }}">{{ academic.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="id_department">科系</label>
+                    <select name="department" class="form-select" id="id_department" disabled>
+                        <option value="">請先選擇學制</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="id_grade">年級</label>
+                    <select name="grade" class="form-select" id="id_grade" disabled>
+                        <option value="">請先選擇學制</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="id_category">分類</label>
+                    <select name="category" class="form-select" id="id_category">
+                        <option value="">請選擇分類</option>
+                        {% for category in categories %}
+                            <option value="{{ category.pk }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="id_condition">書況</label>
+                    <select name="condition" class="form-select" id="id_condition">
+                        <option value="">請選擇書況</option>
+                        <option value="new">全新</option>
+                        <option value="good">良好</option>
+                        <option value="used">尚可</option>
+                    </select>
+                </div>
+            </div>
+            
             <div class="form-group">
-                <label class="form-label" for="id_academic">學制</label>
-                <select name="academic" class="form-select" id="id_academic">
-                    <option value="">請選擇學制</option>
-                    {% for academic in form.academic.field.queryset %}
-                        <option value="{{ academic.pk }}" {% if form.academic.value|stringformat:'s' == academic.pk|stringformat:'s' %}selected{% endif %}>{{ academic.name }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.academic.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.academic.errors.0 }}</div>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="id_department">科系</label>
-                <select name="department" class="form-select" id="id_department">
-                    <option value="">請選擇科系</option>
-                    {% for department in form.department.field.queryset %}
-                        <option value="{{ department.pk }}" {% if form.department.value|stringformat:'s' == department.pk|stringformat:'s' %}selected{% endif %}>{{ department.name }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.department.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.department.errors.0 }}</div>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="id_grade">年級</label>
-                <select name="grade" class="form-select" id="id_grade   ">
-                    <option value="">請選擇年級</option>    
-                    {% for i in "12345" %}
-                        <option value="{{ forloop.counter }}" {% if form.grade.value|stringformat:'s' == forloop.counter|stringformat:'s' %}selected{% endif %}>{{ forloop.counter }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.grade.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.grade.errors.0 }}</di    v>
-                {% endif %}
-            </div>
-        </div>
-        <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="id_category">分類</label>
-                <select name="category" class="form-select" id="id_category">
-                    <option value="">請選擇分類</option>
-                    {% for category in form.category.field.queryset %}
-                        <option value="{{ category.pk }}" {% if form.category.value|stringformat:'s' == category.pk|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.category.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.category.errors.0 }}</div>
-                {% endif %}
-                {% if form.errors %}
-    <div class="form-error" style="color:#b71c1c; font-size:15px; margin-top:8px;">
-        {% for field, errors in form.errors.items %}
-            <div><strong>{{ field|capfirst }}</strong>: {{ errors.0 }}</div>
-        {% endfor %}
-    </div>
-{% endif %}
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="id_condition">書況</label>
-                <select name="condition" class="form-select" id="id_condition">
-                    <option value="">請選擇書況</option>
-                    {% for val, label in form.condition.field.choices %}
-                        {% if val %}
-                            <option value="{{ val }}" {% if form.condition.value|stringformat:'s' == val|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                {% if form.condition.errors %}
-                    <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.condition.errors.0 }}</div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="form-group">
-            描述：
+                <label class="form-label">描述</label>
                 <div class="description-label">
-                <button type="button" class="clear-tags-btn" onclick="clearSelectedTags()">清除標籤</button>
+                    <button type="button" class="clear-tags-btn" onclick="clearSelectedTags()">清除標籤</button>
+                </div>
+                <div class="quick-tags">
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '有筆記')">📝 有筆記</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '有摺痕')">📄 有摺痕</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '有破損')">💥 有破損</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '有劃線')">✏️ 有劃線</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '書況良好')">✨ 書況良好</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '含原包裝')">📦 含原包裝</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '急售')">🔥 急售</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '可議價')">💬 可議價</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '面交佳')">🤝 面交佳</button>
+                    <button type="button" class="quick-tag" onclick="toggleTag(this, '已絕版')">⭐ 已絕版</button>
+                </div>
+                <textarea name="description" 
+                          id="description" 
+                          class="form-textarea" 
+                          rows="3" 
+                          placeholder="請描述書籍狀況、購買原因等..."></textarea>
             </div>
-            <div class="quick-tags">
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '有筆記')">📝 有筆記</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '有摺痕')">📄 有摺痕</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '有破損')">💥 有破損</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '有劃線')  ">✏️ 有劃線</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '書況良好')">✨ 書況良好</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '含原包裝')">📦 含原包裝</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '急售')">🔥 急售</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '可議價')">💬 可議價</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '面交佳')">🤝 面交佳</button>
-                <button type="button" class="quick-tag" onclick="toggleTag(this, '已絕版')">⭐ 已絕版</button>
-            </div>
-            <textarea name="description" id="description" class="form-textarea" rows="3">{{ form.description.value|default_if_none:'' }}</textarea>
-            {% if form.description.errors %}
-                <div class="form-error" style="color:#b71c1c; font-size:13px; margin-top:2px;">{{ form.description.errors.0 }}</div>
-            {% endif %}
-            </div>
-        </div>
 
-        <div class="submit-container">
-            <button type="button" class="cancel-btn" onclick="cancelForm()">取消</button>
-            <button type="submit" class="submit-btn">上架</button>
-        </div>
-        <script>
-    document.getElementById('bookForm2').addEventListener('submit', function(e) {
-        let valid = true;
-        // 移除舊的錯誤提示
-        document.querySelectorAll('.form-error.js-error').forEach(el => el.remove());
-        const titleInput = document.getElementById('id_title');
-        const priceInput = document.getElementById('id_price');
-        // 書名驗證
-        if (!titleInput.value.trim()) {
-            valid = false;
-            titleInput.scrollIntoView({behavior: 'smooth', block: 'center'});
-            const err = document.createElement('div');
-            err.className = 'form-error js-error';
-            err.style = 'color:#b71c1c; font-size:13px; margin-top:2px;';
-            err.innerText = '請輸入書名';
-            titleInput.parentNode.appendChild(err);
-            titleInput.focus();
-        }
-        // 價格驗證
-        else if (!priceInput.value) {
-            valid = false;
-            priceInput.scrollIntoView({behavior: 'smooth', block: 'center'});
-            const err = document.createElement('div');
-            err.className = 'form-error js-error';
-            err.style = 'color:#b71c1c; font-size:13px; margin-top:2px;';
-            err.innerText = '請輸入價格';
-            priceInput.parentNode.appendChild(err);
-            priceInput.focus();
-        }
-        if (!valid) e.preventDefault();
-    });
-    // 輸入時移除錯誤提示
-    document.getElementById('id_title').addEventListener('input', function() {
-        const err = this.parentNode.querySelector('.js-error');
-        if (err) err.remove();
-    });
-    document.getElementById('id_price').addEventListener('input', function() {
-        const err = this.parentNode.querySelector('.js-error');
-        if (err) err.remove();
-    });
-    </script>
-</form>
+            <div class="submit-container">
+                <button type="button" class="cancel-btn" onclick="closeForm2()">取消</button>
+                <button type="submit" class="submit-btn">上架</button>
+            </div>
+        </form>
+    </div>
+  </div>
 </div>
 
-{% if form.errors %}
-<div class="form-errors" style="color: #b71c1c; background: #fff3f3; border-radius: 8px; padding: 15px; margin-top: 18px; font-size: 15px;">
-    <strong>表單錯誤：</strong>
-    <ul style="margin:0; padding-left: 18px;">
-        {% for field, errors in form.errors.items %}
-            <li><strong>{{ field }}：</strong> {{ errors|striptags }}</li>
-        {% endfor %}
-    </ul>
+<!-- 成功提示方塊 -->
+<div id="successModal" class="success-modal" style="display: none;">
+    <div class="success-content">
+        <div class="success-message">
+            <span class="success-icon">✅</span>
+            <span class="success-text">上架成功！</span>
         </div>
-        {% endif %}
     </div>
+</div>
 
-
-<script src="{% static 'js/book_tag_helper.js' %}"></script>
 <script>
-// 關閉表單功能
-function closeForm() {
-    if (confirm('確定要關閉表單嗎？未儲存的資料將會遺失。')) {
-        document.querySelector('.container').style.animation = 'fadeOutDown 0.5s ease-out forwards';
-        setTimeout(() => {
-            alert('表單已關閉');
-        }, 500);
-    }
+let selectedFile = null;
+let isLoadingData = false;
+let isSubmitting = false; // 防止重複提交
+let cameraStream = null;
+let currentCameraMode = 'user'; // 'user' 前鏡頭, 'environment' 後鏡頭
+
+/* ★ 新增：禁用詞清單與工具 */
+const BANNED_WORDS = [
+  // 依你的後端清單對齊；這裡放範例
+  '違禁','仿冒','成人','武器','毒品','菸草','賭博'
+];
+function normalizeText(s){ return (s||'').toLowerCase().trim(); }
+function containsBannedTitle(s){
+  const t = normalizeText(s);
+  for (const w of BANNED_WORDS){ if (w && t.includes(normalizeText(w))) return true; }
+  return false;
 }
 
-// 取消功能
-function cancelForm() {
-    if (confirm('確定要取消嗎？已填寫的資料將會清空。')) {
-        document.getElementById('bookForm2').reset();
-        // 重置圖片上傳區域
-        const uploadArea = document.querySelector('.upload-area');
-        uploadArea.innerHTML = `
-            <div class="upload-icon">📷</div>
-            <div class="upload-text">點擊上傳書籍封面圖片</div>
-            <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
-        `;
-        // 清除所有選中的標籤
-        clearSelectedTags();
-    }
+/* ★ 新增：欄位錯誤顯示/清除 */
+function setTitleError(msg){
+  const input = document.getElementById('id_title');
+  const box = document.getElementById('id_title_error_text');
+  if (!box || !input) return;
+  if (msg){
+    box.textContent = msg;
+    box.style.display = 'block';
+    input.setAttribute('aria-invalid','true');
+  }else{
+    box.textContent = '';
+    box.style.display = 'none';
+    input.removeAttribute('aria-invalid');
+  }
 }
 
+// 使用者一輸入就清掉錯誤
+document.addEventListener('input', function(e){
+  if (e.target && e.target.id === 'id_title'){ setTitleError(''); }
+});
 
-// 圖片上傳預覽
-const bookImageInput = document.getElementById('id_cover_image');
-if (bookImageInput) {
-    bookImageInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const uploadArea = document.querySelector('.upload-area');
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            uploadArea.innerHTML = `
-                <img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 1rem;">
-                <div class="upload-text">圖片已選擇：${file.name}</div>
-                <div class="upload-subtext">點擊重新選擇圖片</div>
-            `;
+/* ★ 新增：相機相關函數 */
+async function initCamera() {
+    try {
+        const constraints = {
+            video: { 
+                facingMode: currentCameraMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
         };
         
-        reader.readAsDataURL(file);
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = cameraStream;
+        
+        console.log('相機初始化成功');
+        return true;
+    } catch (error) {
+        console.error('相機初始化失敗:', error);
+        showRecognitionStatus('無法開啟相機：' + error.message, 'error');
+        return false;
     }
-});}
+}
 
-// 添加輸入動畫效果
-const animatedInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
-if (animatedInputs && animatedInputs.length > 0) {
-    animatedInputs.forEach(element => {
-        element.addEventListener('focus', function() {
-            this.style.transform = 'translateY(-1px)';
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+        console.log('相機已關閉');
+    }
+}
+
+async function switchCamera() {
+    currentCameraMode = currentCameraMode === 'user' ? 'environment' : 'user';
+    stopCamera();
+    
+    const success = await initCamera();
+    if (!success) {
+        // 如果切換失敗，恢復原來的模式
+        currentCameraMode = currentCameraMode === 'user' ? 'environment' : 'user';
+        await initCamera();
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 設定 canvas 尺寸
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // 繪製當前視頻畫面到 canvas
+    ctx.drawImage(video, 0, 0);
+    
+    // 轉換為 blob 並處理
+    canvas.toBlob(async (blob) => {
+        if (blob) {
+            console.log('照片拍攝成功，開始識別...');
+            
+            // 顯示拍攝的照片在上傳區域
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.innerHTML = `
+                    <img src="${e.target.result}" 
+                         style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:1rem;object-fit:cover;"
+                         alt="拍攝照片">
+                    <div class="upload-text">照片已拍攝</div>
+                    <div class="upload-subtext">點擊重新拍攝</div>
+                `;
+            };
+            reader.readAsDataURL(blob);
+            
+            // 建立 File 物件
+            const file = new File([blob], 'captured_photo.jpg', { type: 'image/jpeg' });
+            selectedFile = file;
+            
+            // 關閉相機並切換到上傳模式
+            stopCamera();
+            switchToUploadMode();
+            
+            // 開始識別
+            await recognizeBookFromFile(file);
+        }
+    }, 'image/jpeg', 0.8);
+}
+
+function switchToCameraMode() {
+    document.getElementById('cameraOptionBtn').classList.add('active');
+    document.getElementById('uploadOptionBtn').classList.remove('active');
+    
+    document.getElementById('cameraPreview').style.display = 'block';
+    document.getElementById('uploadArea').style.display = 'none';
+    
+    initCamera();
+}
+
+function switchToUploadMode() {
+    document.getElementById('uploadOptionBtn').classList.add('active');
+    document.getElementById('cameraOptionBtn').classList.remove('active');
+    
+    document.getElementById('cameraPreview').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+    
+    stopCamera();
+}
+
+function showRecognitionStatus(message, type) {
+    const statusElement = document.getElementById('recognitionStatus');
+    statusElement.textContent = message;
+    statusElement.className = `recognition-status ${type}`;
+    statusElement.style.display = 'block';
+    
+    if (type === 'loading') {
+        setTimeout(() => {
+            if (statusElement.className.includes('loading')) {
+                statusElement.style.display = 'none';
+            }
+        }, 10000); // 10秒後自動隱藏載入訊息
+    }
+}
+
+function hideRecognitionStatus() {
+    document.getElementById('recognitionStatus').style.display = 'none';
+}
+
+async function recognizeBookFromFile(file) {
+    try {
+        showRecognitionStatus('正在識別書籍資訊...', 'loading');
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch('/api/recognize-book/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
         });
-        element.addEventListener('blur', function() {
-            this.style.transform = 'translateY(0)';
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showRecognitionStatus('識別成功！正在自動填入資訊...', 'success');
+            
+            // 自動填入識別到的資訊
+            fillBookInfo(data.data);
+            
+            // 顯示識別結果
+            showAutoFillInfo(data.data, data.ocr_text);
+            
+            setTimeout(hideRecognitionStatus, 3000);
+        } else {
+            showRecognitionStatus('識別失敗：' + data.error, 'error');
+            console.error('識別失敗：', data.error);
+            
+            // 如果有 OCR 文字但查詢失敗，仍然顯示
+            if (data.ocr_text) {
+                showAutoFillInfo({}, data.ocr_text);
+            }
+        }
+        
+    } catch (error) {
+        console.error('識別請求錯誤：', error);
+        showRecognitionStatus('識別請求失敗，請稍後再試', 'error');
+    }
+}
+
+async function manualSearchBook() {
+    const query = document.getElementById('manualSearchInput').value.trim();
+    const type = document.getElementById('manualSearchType').value;
+    
+    if (!query) {
+        alert('請輸入搜尋關鍵字');
+        return;
+    }
+    
+    try {
+        showRecognitionStatus(`正在搜尋${type === 'isbn' ? 'ISBN' : '書名'}...`, 'loading');
+        
+        const response = await fetch('/api/search-book/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                query: query,
+                type: type
+            })
         });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showRecognitionStatus('搜尋成功！正在填入資訊...', 'success');
+            fillBookInfo(data.data);
+            showAutoFillInfo(data.data, '');
+            setTimeout(hideRecognitionStatus, 3000);
+        } else {
+            showRecognitionStatus('搜尋失敗：' + data.error, 'error');
+        }
+        
+    } catch (error) {
+        console.error('搜尋錯誤：', error);
+        showRecognitionStatus('搜尋請求失敗，請稍後再試', 'error');
+    }
+}
+
+function fillBookInfo(bookData) {
+    // 填入基本資訊
+    if (bookData.title) {
+        document.getElementById('id_title').value = bookData.title;
+    }
+    if (bookData.author) {
+        document.getElementById('id_author').value = bookData.author;
+    }
+    if (bookData.publisher) {
+        document.getElementById('id_publisher').value = bookData.publisher;
+    }
+    if (bookData.isbn) {
+        document.getElementById('id_isbn').value = bookData.isbn;
+    }
+    
+    // 如果有描述，添加到描述欄位
+    if (bookData.description) {
+        const descTextarea = document.getElementById('description');
+        const currentDesc = descTextarea.value;
+        const newDesc = bookData.description.substring(0, 200) + '...'; // 限制長度
+        
+        if (currentDesc) {
+            descTextarea.value = currentDesc + '\n\n自動識別描述：' + newDesc;
+        } else {
+            descTextarea.value = '自動識別描述：' + newDesc;
+        }
+    }
+    
+    // 嘗試自動選擇分類（基於 categories）
+    if (bookData.categories && bookData.categories.length > 0) {
+        autoSelectCategory(bookData.categories);
+    }
+}
+
+function autoSelectCategory(categories) {
+    const categorySelect = document.getElementById('id_category');
+    const categoryOptions = Array.from(categorySelect.options);
+    
+    // 建立關鍵字對應表
+    const categoryMapping = {
+        '教育': ['education', 'textbook', '教科書', '教材'],
+        '文學': ['fiction', 'literature', '小說', '文學'],
+        '科學': ['science', 'technology', '科學', '技術'],
+        '歷史': ['history', '歷史'],
+        '藝術': ['art', 'design', '藝術', '設計'],
+        '商業': ['business', 'economics', '商業', '經濟'],
+        '計算機': ['computer', 'programming', '電腦', '程式'],
+        '語言': ['language', 'linguistics', '語言', '語文']
+    };
+    
+    for (const category of categories) {
+        const lowerCategory = category.toLowerCase();
+        
+        for (const [key, keywords] of Object.entries(categoryMapping)) {
+            if (keywords.some(keyword => lowerCategory.includes(keyword.toLowerCase()))) {
+                const option = categoryOptions.find(opt => opt.textContent.includes(key));
+                if (option) {
+                    categorySelect.value = option.value;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+function showAutoFillInfo(bookData, ocrText) {
+    const infoElement = document.getElementById('autoFillInfo');
+    const resultElement = document.getElementById('recognitionResult');
+    
+    let infoHtml = '';
+    
+    if (bookData.title) infoHtml += `<strong>書名：</strong> ${bookData.title}<br>`;
+    if (bookData.author) infoHtml += `<strong>作者：</strong> ${bookData.author}<br>`;
+    if (bookData.publisher) infoHtml += `<strong>出版社：</strong> ${bookData.publisher}<br>`;
+    if (bookData.isbn) infoHtml += `<strong>ISBN：</strong> ${bookData.isbn}<br>`;
+    if (bookData.source) infoHtml += `<strong>資料來源：</strong> ${bookData.source}<br>`;
+    
+    if (ocrText) {
+        const shortText = ocrText.substring(0, 100) + (ocrText.length > 100 ? '...' : '');
+        infoHtml += `<strong>識別文字：</strong> ${shortText}<br>`;
+    }
+    
+    if (infoHtml) {
+        resultElement.innerHTML = infoHtml;
+        infoElement.style.display = 'block';
+    }
+}
+
+// 獲取 CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 相機/上傳切換事件
+    document.getElementById('cameraOptionBtn').addEventListener('click', switchToCameraMode);
+    document.getElementById('uploadOptionBtn').addEventListener('click', switchToUploadMode);
+    
+    // 相機控制事件
+    document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+    document.getElementById('switchCameraBtn').addEventListener('click', switchCamera);
+    
+    // 確保關閉按鈕事件正常工作
+    const closeBtn = document.querySelector('.upload-modal2 .close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('叉叉按鈕被點擊');
+            closeForm2();
+        });
+    }
+    
+    // 點擊模態框背景也能關閉
+    const modal = document.getElementById('uploadFormModal2');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                console.log('點擊背景關閉表單');
+                closeForm2();
+            }
+        });
+    }
+    
+    // ESC鍵關閉表單
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('uploadFormModal2');
+            if (modal && modal.style.display === 'flex') {
+                console.log('ESC鍵關閉表單');
+                closeForm2();
+            }
+        }
+    });
+    
+    const academicSelect = document.getElementById('id_academic');
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+
+    if (academicSelect) {
+        academicSelect.addEventListener('change', function() {
+            const academicId = this.value;
+            console.log('學制選擇變更:', academicId);
+
+            // 重置科系和年級選項
+            resetDepartmentAndGrade();
+
+            if (!academicId) {
+                deptSelect.disabled = true;
+                gradeSelect.disabled = true;
+                return;
+            }
+
+            showLoadingState();
+            isLoadingData = true;
+
+            fetch(`/get-related-data/?academic_id=${academicId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                console.log('響應狀態:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('收到資料:', data);
+                updateDepartmentOptions(data.departments);
+                updateGradeOptions(data.grades);
+                deptSelect.disabled = false;
+                gradeSelect.disabled = false;
+                if (data.debug) { console.log('除錯資訊:', data.debug); }
+            })
+            .catch(error => {
+                console.error('載入失敗:', error);
+                showErrorState(error.message);
+            })
+            .finally(() => {
+                isLoadingData = false;
+            });
+        });
+    }
+    
+    const bookForm = document.getElementById('bookForm2');
+    console.log('尋找表單元素 bookForm2:', bookForm);
+    
+    if (bookForm) {
+        console.log('✅ 找到表單元素，綁定提交事件');
+        console.log('表單action:', bookForm.action);
+        console.log('表單method:', bookForm.method);
+        
+        bookForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('🚀 表單提交事件被觸發！');
+
+            // ★ 先做「前端」禁用詞檢查（只檢查 title）
+            const titleVal = (document.getElementById('id_title')?.value || '').trim();
+            if (!titleVal){
+                setTitleError('請輸入書名');
+                return;
+            }
+            if (containsBannedTitle(titleVal)){
+                setTitleError('輸入內容包含禁止或不當詞彙，請重新編輯。');
+                return; // 阻擋送出
+            }
+            
+            if (isLoadingData) { alert('正在載入資料，請稍候再提交'); return; }
+            if (isSubmitting)   { console.log('表單正在提交中，請勿重複點擊'); return; }
+            isSubmitting = true;
+            
+            const formData = new FormData(this);
+            
+            // 如果有選中的檔案，確保添加到 formData
+            if (selectedFile) {
+                formData.set('cover_image', selectedFile);
+            }
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            // 基本驗證
+            const price = formData.get('price');
+            if (!price || parseFloat(price) < 0) {
+                setTitleError(''); // 不要影響 title 的錯誤
+                alert('請輸入有效的價格');
+                isSubmitting = false;
+                return;
+            }
+            
+            submitBtn.textContent = '上架中...';
+            submitBtn.disabled = true;
+            
+            let uploadSuccess = false;
+        
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                // 嘗試解析 JSON；若不是 JSON 再抓文字
+                let data = null, rawText = '';
+                try { data = await response.json(); }
+                catch { try { rawText = await response.text(); } catch(_){} }
+
+                if (response.ok && data && data.success) {
+                    uploadSuccess = true;
+                    console.log('書籍上架成功，準備顯示成功訊息');
+                    showSuccessModal();
+                    closeForm2();
+                    setTimeout(() => { hideSuccessModal(); window.location.reload(); }, 2000);
+                } else {
+                    // ★ 後端失敗（含 400 禁用詞）：只顯示純文字錯誤
+                    let msg = (data && (data.message || data.error)) || '';
+                    if (!msg && rawText) {
+                        // 若後端回傳 Django 預設 <ul class="errorlist">，把 HTML 去掉並只保留訊息
+                        msg = rawText
+                                .replace(/<[^>]+>/g, ' ')   // 去標籤
+                                .replace(/\s+/g,' ')        // 正規化空白
+                                .replace(/^title\s*/i,'')   // 去掉欄位名
+                                .trim();
+                    }
+                    if (!msg) msg = '上架失敗，請重試';
+
+                    // 如果是禁用詞訊息，不顯示其它包裝
+                    if (/禁止|不當|禁用/.test(msg)) {
+                        msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
+                    }
+                    setTitleError(msg);
+                    console.error('上架失敗:', data || rawText || response.status);
+                }
+                
+            } catch (error) {
+                console.error('網路錯誤:', error);
+                setTitleError('網路錯誤，請稍後再試');
+            } finally {
+                if (!uploadSuccess) {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    isSubmitting = false;
+                }
+            }
+        });
+        
+        const submitBtn = bookForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            console.log('✅ 找到上架按鈕，添加點擊事件');
+            submitBtn.addEventListener('click', function(){ /* 調試用途 */ });
+        } else {
+            console.error('❌ 找不到上架按鈕');
+        }
+        
+    } else {
+        console.error('❌ 找不到表單元素 bookForm2');
+    }
+});
+
+function resetDepartmentAndGrade() {
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+    
+    deptSelect.innerHTML = '<option value="">請先選擇學制</option>';
+    gradeSelect.innerHTML = '<option value="">請先選擇學制</option>';
+    deptSelect.disabled = true;
+    gradeSelect.disabled = true;
+}
+
+function showLoadingState() {
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+    
+    deptSelect.innerHTML = '<option value="" class="loading-option">載入中...</option>';
+    gradeSelect.innerHTML = '<option value="" class="loading-option">載入中...</option>';
+    deptSelect.disabled = true;
+    gradeSelect.disabled = true;
+}
+
+function updateDepartmentOptions(departments) {
+    const deptSelect = document.getElementById('id_department');
+    
+    if (departments && departments.length > 0) {
+        deptSelect.innerHTML = '<option value="">請選擇科系</option>';
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept.id;
+            option.textContent = dept.name;
+            deptSelect.appendChild(option);
+        });
+    } else {
+        deptSelect.innerHTML = '<option value="">此學制無科系資料</option>';
+    }
+}
+
+function updateGradeOptions(grades) {
+    const gradeSelect = document.getElementById('id_grade');
+    
+    if (grades && grades.length > 0) {
+        gradeSelect.innerHTML = '<option value="">請選擇年級</option>';
+        grades.forEach(grade => {
+            const option = document.createElement('option');
+            option.value = grade.id;
+            option.textContent = grade.grade_level;
+            gradeSelect.appendChild(option);
+        });
+    } else {
+        gradeSelect.innerHTML = '<option value="">此學制無年級資料</option>';
+    }
+}
+
+function showErrorState(errorMessage) {
+    const deptSelect = document.getElementById('id_department');
+    const gradeSelect = document.getElementById('id_grade');
+    
+    deptSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
+    gradeSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
+    console.error('資料載入錯誤:', errorMessage);
+}
+
+function triggerFileInput() { 
+    document.getElementById('id_cover_image').click(); 
+}
+
+async function handleFileSelect(input) {
+    const file = input.files[0];
+    const uploadArea = document.getElementById('uploadArea');
+    
+    if (!file) { 
+        selectedFile = null; 
+        return; 
+    }
+
+    const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
+    if (!allowedTypes.includes(file.type)) { 
+        alert('不支援的格式，請上傳 JPG、PNG、GIF 或 WebP 格式的圖片'); 
+        input.value = ''; 
+        selectedFile = null; 
+        return; 
+    }
+
+    if (file.size > 5 * 1024 * 1024) { 
+        alert('圖片大小不能超過 5MB'); 
+        input.value = ''; 
+        selectedFile = null; 
+        return; 
+    }
+
+    if (file.size < 100) { 
+        alert('圖片檔案過小，請選擇有效的圖片'); 
+        input.value = ''; 
+        selectedFile = null; 
+        return; 
+    }
+
+    selectedFile = file;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadArea.innerHTML = `
+            <img src="${e.target.result}" 
+                 style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:1rem;object-fit:cover;"
+                 alt="預覽圖片">
+            <div class="upload-text">圖片已選擇：${file.name}</div>
+            <div class="upload-subtext">大小：${(file.size/1024).toFixed(1)}KB | 點擊重新選擇</div>
+        `;
+    };
+    reader.readAsDataURL(file);
+    
+    // 自動進行書籍識別
+    await recognizeBookFromFile(file);
+}
+
+function toggleTag(btn, text) {
+    const textarea = document.getElementById('description');
+    let tags = textarea.value ? textarea.value.split('、').map(t => t.trim()).filter(t => t) : [];
+
+    if (btn.classList.contains('selected')) {
+        tags = tags.filter(t => t !== text);
+        btn.classList.remove('selected');
+    } else {
+        if (!tags.includes(text)) { tags.push(text); }
+        btn.classList.add('selected');
+    }
+    textarea.value = tags.join('、');
+}
+
+function clearSelectedTags() {
+    document.getElementById('description').value = '';
+    document.querySelectorAll('.quick-tag.selected').forEach(tag => {
+        tag.classList.remove('selected');
     });
 }
 
+function closeForm2() {
+    try {
+        console.log('關閉表單函數被調用');
+        
+        const modal = document.getElementById('uploadFormModal2');
+        const form = document.getElementById('bookForm2');
+        
+        if (!modal) {
+            console.error('找不到模態框元素');
+            return;
+        }
+        
+        // 關閉相機
+        stopCamera();
+        
+        if (form) {
+            form.reset();
+            console.log('表單已重置');
+        }
+        
+        selectedFile = null;
+        isLoadingData = false;
+        isSubmitting = false;
+
+        // 同步把 title 的錯誤清掉
+        setTitleError('');
+        
+        // 隱藏識別狀態和自動填入資訊
+        hideRecognitionStatus();
+        document.getElementById('autoFillInfo').style.display = 'none';
+        
+        const uploadArea = document.getElementById('uploadArea');
+        if (uploadArea) {
+            uploadArea.innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">點擊上傳書籍封面圖片</div>
+                <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
+            `;
+        }
+        
+        // 重置為上傳模式
+        switchToUploadMode();
+        
+        if (typeof clearSelectedTags === 'function') { clearSelectedTags(); }
+        if (typeof resetDepartmentAndGrade === 'function') { resetDepartmentAndGrade(); }
+        
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        console.log('表單已成功關閉並重置');
+        
+    } catch (error) {
+        console.error('關閉表單時發生錯誤:', error);
+        const modal = document.getElementById('uploadFormModal2');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        // 確保相機被關閉
+        stopCamera();
+    }
+}
+
+function openBookUploadModal2() {
+    const modal = document.getElementById('uploadFormModal2');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    resetDepartmentAndGrade();
+    setTitleError('');
+    
+    // 重置為上傳模式
+    switchToUploadMode();
+    
+    // 隱藏所有狀態訊息
+    hideRecognitionStatus();
+    document.getElementById('autoFillInfo').style.display = 'none';
+}
+
+// 顯示成功方塊
+function showSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => { modal.classList.add('show'); }, 10);
+        console.log('顯示成功方塊');
+    }
+}
+
+// 隱藏成功方塊
+function hideSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+        console.log('隱藏成功方塊');
+    }
+}
+
+// 頁面關閉前的警告（如果有未保存的內容）
+window.addEventListener('beforeunload', function(e) {
+    const modal = document.getElementById('uploadFormModal2');
+    if (modal && modal.style.display === 'flex' && (selectedFile || cameraStream)) {
+        // 關閉相機流
+        stopCamera();
+        e.preventDefault();
+        e.returnValue = '您有未保存的內容，確定要離開嗎？';
+        return '您有未保存的內容，確定要離開嗎？';
+    }
+});
 </script>

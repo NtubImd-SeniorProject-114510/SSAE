@@ -12,228 +12,184 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/comment_detail.css' %}">
 <link rel="stylesheet" href="{% static 'css/pop_window/comment_pop.css' %}">
+<link rel="stylesheet" href="{% static 'css/pop_window/comment_toast.css' %}">
 {% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+/* 精準平均星（0.1 顆精度），保證對齊 + 黃色 */
+.stars-avg{
+  --size: 22px;
+  --gap:  6px;
+  --bg:   #e2e8f0;
+  --fg:   #f5a623;
+  --p:    0%;
+  position: relative;
+  display: inline-block;
+  font-size: var(--size);
+  line-height: 1;
+}
+.stars-avg .row{
+  display: flex;
+  gap: var(--gap);
+  letter-spacing: 0;
+}
+.stars-avg .star-bg{ color: var(--bg);}
+.stars-avg .star-fg{
+  color: var(--fg);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--p);
+  overflow: hidden;
+  pointer-events: none;
+}
+.comment-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:flex-start;
+}
+.review-delete-btn{
+  background:none;
+  border:0;
+  cursor:pointer;
+  color:#dc2626;
+  padding:6px 8px;
+  border-radius:8px;
+}
+.review-delete-btn:hover{
+  background: rgba(220,38,38,.08);
+  color:#b91c1c;
+}
+</style>
+
 <body>
-    <!-- 隱藏的課程資料容器 (供 comment_pop.js 使用) -->
-    <div class="course-item" data-course-id="1" style="display: none;">
-        <div class="course-name">計算機概論</div>
-        <div class="course-teacher">王大明教授</div>
-        <!-- 隱藏的新增評論按鈕，讓 comment_pop.js 能找到 -->
-        <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
-    </div>
-    
-    <!-- Fixed Add Comment Button -->
-    <a href="#" class="fixed-add-comment-btn" id="add-comment-btn">＋ 新增評論</a>
-    
-    <!-- Background text -->
-    <div class="bg-text">COURSE REVIEWS</div>
-    
-    <!-- Cloud decorations -->
-    <div class="cloud-shape" style="width: 200px; height: 200px; top: 150px; left: 10%; opacity: 0.2;"></div>
-    <div class="cloud-shape" style="width: 150px; height: 150px; top: 400px; right: 15%; opacity: 0.2;"></div>
-    <div class="cloud-shape" style="width: 250px; height: 250px; top: 800px; left: 20%; opacity: 0.2;"></div>
-    
-    <div class="main-container">
-        <div class="back-button" onclick="history.back()">
-            <a href="#">返回</a>
-        </div>
-        <!-- 課程資訊區塊 -->
-        <div class="course-info">
-            <div class="course-header">
-                <h1 class="course-title">計算機概論</h1>
-                <div class="course-rating">
-                    <div class="stars" data-rating="4.5">
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <span class="rating-text">4.5/5.0 (24則評論)</span>
-                    </div>
-                </div>
-            </div>
-            <div class="course-meta">
-                <span class="course-semester">112 學年度 第 2 學期</span>
-                <span class="course-department">資訊管理系</span>
-                <span class="course-teacher">授課教師：王大明 教授</span>
-            </div>
-        </div>
-        
-        <!-- 評論區塊 -->
-        <section class="comments-section">
-            <h2 class="section-title">課程評論 <span class="comment-count">(24則評論)</span></h2>
-            
-            <!-- 評論 1 -->
-            <article class="comment-card">
-                <div class="comment-header">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">匿名學生</span>
-                        <div class="comment-meta">
-                            <div class="stars" data-rating="4.5">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                            </div>
-                            <span class="comment-date">2024/04/10</span>
-                        </div>
-                    </div>
-                    <button class="like-btn small">
-                        <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
-                        <span class="like-count">12</span>
-                    </button>
-                </div>
-                <div class="comment-content">
-                    <p>老師上課很認真，教材準備充分，會用很多生活化的例子來解釋計算機科學的概念，讓非本科系的學生也能輕鬆理解。</p>
-                </div>
-                <div class="comment-actions">
-                    <button class="reply-btn">回覆</button>
-                </div>
-                
-                <!-- 回覆表單 (預設隱藏) -->
-                <div class="reply-form" style="display: none;">
-                    <div class="form-group">
-                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button class="cancel-reply-btn">取消</button>
-                        <button class="submit-reply-btn">發送</button>
-                    </div>
-                </div>
-                
-                <!-- 回覆區塊 -->
-                <div class="replies-container">
-                    <div class="reply">
-                        <div class="user-avatar small">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                        </div>
-                        <div class="reply-content">
-                            <div class="reply-header">
-                                <span class="user-name">助教小幫手</span>
-                                <span class="reply-date">2024/04/11</span>
-                            </div>
-                            <p>謝謝您的回饋！老師確實很用心準備教材，有任何問題也歡迎隨時在課堂上發問喔！</p>
-                            <div class="reply-actions">
-                                <button class="reply-to-reply">回覆</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </article>
+<div class="course-item" data-course-id="{{ course.id }}" style="display: none;">
+    <div class="course-name">{{ course.course_name }}</div>
+    <div class="course-teacher">{{ course_teacher }}</div>
+    <a href="#" class="create-btn hidden-create-btn" style="display: none;">新增評論</a>
+</div>
 
-            <!-- 評論 2 -->
-            <article class="comment-card">
-                <div class="comment-header">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">資管系學生</span>
-                        <div class="comment-meta">
-                            <div class="stars" data-rating="4.0">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                            </div>
-                            <span class="comment-date">2024/04/05</span>
-                        </div>
-                    </div>
-                    <button class="like-btn small">
-                        <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
-                        <span class="like-count">8</span>
-                    </button>
-                </div>
-                <div class="comment-content">
-                    <p>課程內容豐富，但節奏有點快，建議可以多一點實作時間。老師很親切，下課後問問題都會耐心解答。</p>
-                </div>
-                <div class="comment-actions">
-                    <button class="reply-btn">回覆</button>
-                </div>
-                
-                <!-- 回覆表單 (預設隱藏) -->
-                <div class="reply-form" style="display: none;">
-                    <div class="form-group">
-                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button class="cancel-reply-btn">取消</button>
-                        <button class="submit-reply-btn">發送</button>
-                    </div>
-                </div>
-                
-                <!-- 回覆區塊 -->
-                <div class="replies-container"></div>
-            </article>
+<a href="#" class="fixed-add-comment-btn" id="add-comment-btn">＋ 新增評論</a>
+<div class="bg-text">COURSE REVIEWS</div>
+<div class="cloud-shape" style="width: 200px; height: 200px; top: 150px; left: 10%; opacity: 0.2;"></div>
+<div class="cloud-shape" style="width: 150px; height: 150px; top: 400px; right: 15%; opacity: 0.2;"></div>
+<div class="cloud-shape" style="width: 250px; height: 250px; top: 800px; left: 20%; opacity: 0.2;"></div>
 
-            <!-- 評論 3 -->
-            <article class="comment-card">
-                <div class="comment-header">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="使用者頭像">
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">匿名</span>
-                        <div class="comment-meta">
-                            <div class="stars" data-rating="5.0">
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                                <i class="fa-regular fa-star"></i>
-                            </div>
-                            <span class="comment-date">2024/03/28</span>
-                        </div>
-                    </div>
-                    <button class="like-btn small">
-                        <span class="like-icon"><i class="fa-regular fa-thumbs-up"></i></span>
-                        <span class="like-count">15</span>
-                    </button>
-                </div>
-                <div class="comment-content">
-                    <p>作業量適中，但考試難度較高，建議要認真聽講並複習課本內容。老師上課會補充很多實用的業界知識，收穫很多！</p>
-                </div>
-                <div class="comment-actions">
-                    <button class="reply-btn">回覆</button>
-                </div>
-                
-                <!-- 回覆表單 (預設隱藏) -->
-                <div class="reply-form" style="display: none;">
-                    <div class="form-group">
-                        <textarea class="form-control" rows="3" placeholder="撰寫回覆..."></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button class="cancel-reply-btn">取消</button>
-                        <button class="submit-reply-btn">發送</button>
-                    </div>
-                </div>
-                
-                <!-- 回覆區塊 -->
-                <div class="replies-container"></div>
-            </article>
-        </section>
+<div class="main-container">
+    <div class="back-button" onclick="history.back()">
+        <a href="#">返回</a>
     </div>
-    
+
+    <div class="course-info">
+        <div class="course-header">
+            <h1 class="course-title">{{ course.course_name }}</h1>
+            <div class="course-rating">
+                <div class="stars-avg" style="--p: {{ avg_fill_percent }}%;">
+                    <div class="row star-bg" aria-hidden="true">
+                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="row star-fg" aria-label="平均 {{ avg_rating }} 顆星">
+                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+                <span class="rating-text">{{ avg_rating|floatformat:1 }}/5（{{ total_ratings }} 則評分）</span>
+            </div> 
+        </div>
+        <div class="course-meta">
+            <span class="course-academic">{{ academic.name }}</span>
+            <span class="course-department">{{ department.name }}</span>
+            <span class="course-teacher">授課教師：{{ course_teacher }}</span>
+        </div>
+    </div>
+
+    <section class="comments-section">
+      <div class="comment-header">
+        <h2 class="section-title">課程評論 <span class="comment-count">({{ review_count }}則評論)</span></h2>
+      </div>
+
+      {% if review_items %}
+        {% for r in review_items %}
+          <article class="comment-card" id="review-{{ r.id }}">
+            <div class="comment-header">
+              <div class="user-avatar">
+                <img src="{{ r.avatar_url }}" alt="{{ r.display_name }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+              </div>
+              <div class="user-info">
+                <span class="user-name">{{ r.display_name|default:'匿名學生' }}</span>
+                <div class="comment-meta">
+                  <span class="comment-date">{{ r.created_at|date:"Y/m/d" }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="comment-content">
+              <p>{{ r.content|linebreaksbr }}</p>
+            </div>
+
+            {% if r.replies %}
+            <div class="replies-container">
+              {% for reply in r.replies %}
+                <div class="reply">
+                  <div class="user-avatar small">
+                    <img src="{{ reply.avatar_url }}" alt="{{ reply.display_name }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+                  </div>
+                  <div class="reply-content">
+                    <div class="reply-header">
+                      <span class="user-name">{{ reply.display_name|default:'匿名學生' }}</span>
+                      <span class="reply-date">{{ reply.created_at|date:"Y/m/d H:i" }}</span>
+                    </div>
+                    <p>{{ reply.content|linebreaksbr }}</p>
+                    <div class="reply-actions">
+                      <button class="reply-to-reply">回覆</button>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="comment-actions">
+              <button class="like-btn small" data-review-id="{{ r.id }}" data-liked="{{ r.is_liked_by_me|yesno:'1,0' }}">
+                <span class="like-icon">
+                  {% if r.is_liked_by_me %}
+                    <i class="fa-solid fa-thumbs-up"></i>
+                  {% else %}
+                    <i class="fa-regular fa-thumbs-up"></i>
+                  {% endif %}
+                </span>
+                <span class="like-count">{{ r.likes_count }}</span>
+              </button>
+
+              {% if r.is_owner %}
+              <button class="review-delete-btn" data-review-id="{{ r.id }}" aria-label="刪除評論" title="刪除這則評論">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="no-comments">
+          <p>目前沒有文字評論。</p>
+        </div>
+      {% endif %}
+    </section>
+
     <div class="deco-line"></div>
+</div>
 </body>
 
-<!-- 載入模態框HTML -->
 {% include 'pop_window/comment_pop.html' %}
-
 {% endblock %}
 
-{% block footer %}
-{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block body_js %}
 <script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
 <script src="{% static 'js/comment_detail.js' %}"></script>
+<script defer src="{% static 'js/pop_window/comment_toast.js' %}"></script>
 {% endblock %}

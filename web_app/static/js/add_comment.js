@@ -1,348 +1,549 @@
-// add_comment.js - 整合版本
+// static/js/add_comment.js — robust version（含：轉換錯誤時禁止送出）
+// 功能：頂端顯示同步 / 中文可見搜尋泡泡 / Toast 提示 / 匿名或實名顯示切換 & 上傳 / 保證 user_id 由後端以 request.user 儲存
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('add_comment.js 已載入');
-    
-    // 初始化所有功能
-    initializeUserInterface();
-    initializeRatingSystem();
-    initializeTextConversion();
-    initializeFormValidation();
-});
+(function(){
+  let departmentsData = {};
+  let gradesData = {};
+  let coursesData = [];
 
-// 初始化用戶界面功能
-function initializeUserInterface() {
-    // 注意：根據HTML，anonymous_yes對應匿名，anonymous_no對應實名
-    const anonymousRadio = document.getElementById('anonymous_yes');  // 匿名選項
-    const realNameRadio = document.getElementById('anonymous_no');    // 實名選項
-    const usernameElement = document.querySelector('.username');
-    const avatarElement = document.querySelector('.avatar');
-    
-    // 檢查元素是否存在
-    if (!anonymousRadio || !realNameRadio || !usernameElement || !avatarElement) {
-        console.error('找不到必要的用戶界面元素');
-        console.log('anonymousRadio:', anonymousRadio);
-        console.log('realNameRadio:', realNameRadio);
-        console.log('usernameElement:', usernameElement);
-        console.log('avatarElement:', avatarElement);
-        return;
-    }
-    
-    // 設定固定的用戶名和頭像路徑
-    const realName = '實名用戶';  // 您可以根據需要修改這個名稱
-    const anonymousName = '匿名';
-    const realNameAvatarPath = '/static/image/lay.png';
-    const anonymousAvatarPath = '/static/image/anonymous.png';
-    
-    console.log('實名用戶名:', realName);
-    console.log('實名頭像路徑:', realNameAvatarPath);
-    console.log('匿名頭像路徑:', anonymousAvatarPath);
-    
-    // Handle anonymous selection (anonymous_yes = 匿名)
-    anonymousRadio.addEventListener('change', function() {
-        console.log('選擇匿名:', this.checked);
-        if (this.checked) {
-            usernameElement.textContent = anonymousName;
-            avatarElement.src = anonymousAvatarPath;
-            console.log('已切換到匿名模式');
-            console.log('當前頭像路徑:', avatarElement.src);
-        }
-    });
-    
-    // Handle real name selection (anonymous_no = 實名)  
-    realNameRadio.addEventListener('change', function() {
-        console.log('選擇實名:', this.checked);
-        if (this.checked) {
-            usernameElement.textContent = realName;
-            avatarElement.src = realNameAvatarPath;
-            console.log('已切換到實名模式');
-            console.log('當前頭像路徑:', avatarElement.src);
-        }
-    });
-    
-    // 設置初始狀態 - 根據HTML，默認選中匿名 (anonymous_yes checked)
-    if (anonymousRadio.checked) {
-        usernameElement.textContent = anonymousName;
-        avatarElement.src = anonymousAvatarPath;
-        console.log('初始化為匿名模式');
-        console.log('初始頭像路徑:', avatarElement.src);
-    } else if (realNameRadio.checked) {
-        usernameElement.textContent = realName;
-        avatarElement.src = realNameAvatarPath;
-        console.log('初始化為實名模式');
-        console.log('初始頭像路徑:', avatarElement.src);
-    }
-}
+  function el(id){ return document.getElementById(id); }
 
-// 初始化星級評分系統
-function initializeRatingSystem() {
-    const starsContainer = document.getElementById('rating-stars');
-    if (!starsContainer) return;
-    
-    const stars = Array.from(starsContainer.querySelectorAll('i'));
-    const ratingInput = document.getElementById('rating-input');
-    const ratingText = starsContainer.querySelector('.rating-text');
-    
-    // Set initial rating to 1 by default
-    let currentRating = 1;
-    if (ratingInput) ratingInput.value = '1';
-    updateStars(currentRating);
-    
-    // Click to set rating
-    starsContainer.addEventListener('click', (e) => {
-        if (e.target.matches('i')) {
-            const star = e.target;
-            const newRating = parseInt(star.getAttribute('data-rating'));
-            
-            // 設置為新的評分值
-            currentRating = Math.min(5, Math.max(1, newRating)); // 確保最小評分為1
-            
-            updateStars(currentRating);
-            if (ratingInput) ratingInput.value = currentRating;
-            if (ratingText) ratingText.textContent = `${currentRating}/5.0`;
-        }
-    });
-    
-    // Hover effect for better user experience
-    stars.forEach(star => {
-        star.addEventListener('mouseenter', function() {
-            const hoverRating = parseInt(this.getAttribute('data-rating'));
-            updateStars(hoverRating, false); // Don't update input on hover
-        });
-    });
-    
-    // Reset to current rating when mouse leaves
-    starsContainer.addEventListener('mouseleave', function() {
-        updateStars(currentRating);
-    });
-    
-    function updateStars(rating, updateText = true) {
-        // Ensure rating is at least 1
-        if (rating < 1) rating = 1;
-        
-        stars.forEach((star, index) => {
-            const starRating = index + 1; // 1, 2, 3, 4, 5
-            
-            if (rating >= starRating) {
-                // Full star
-                star.className = 'fa-solid fa-star';
-            } else {
-                // Empty star
-                star.className = 'fa-regular fa-star';
-            }
-        });
-        
-        // Update rating text
-        if (updateText && ratingText) {
-            ratingText.textContent = `${rating}/5.0`;
-        }
-    }
-}
+  function getCSRFToken() {
+    // 先從 cookie 拿
+    const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
+    if (m) return decodeURIComponent(m[1]);
+    // 退而求其次：從頁面上的 hidden input / meta 拿
+    return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value
+        || document.querySelector('meta[name="csrf-token"]')?.content
+        || '';
+  }
 
-// 初始化文字轉換功能
-function initializeTextConversion() {
-    const commentTextarea = document.getElementById('comment_text');
-    const previewTextarea = document.getElementById('preview_text');
-    const convertBtn = document.getElementById('convert_btn');
-    
-    // Make sure preview is initially empty
-    previewTextarea.value = '';
-    
-    // Handle convert button click - transfer content from left to right with filtering
-    convertBtn.addEventListener('click', function() {
-        const originalText = commentTextarea.value;
-        
-        if (!originalText.trim()) {
-            alert('請先輸入評論內容再進行轉換');
-            return;
+  // ===== 新增：轉換/送出的狀態控制常數 =====
+  const GUARD = {
+    MIN_LEN: 20,                             // 你可依規則調整
+    ERROR_TEXT: '轉換失敗，請稍後重試',        // 轉換器回傳的失敗訊息
+    SHORT_HINT: '（內容過短）請補充具體細節。' // 你現有在右框顯示的「過短」提示
+  };
+
+  // 嘗試多種來源取得目前使用者資訊（供「實名」顯示）
+  function getCurrentUserInfo(){
+    // 1) <script type="application/json" id="current-user">{"username":"張三","avatar":"/media/u1.png"}</script>
+    try{
+      const j = el('current-user')?.textContent;
+      if (j) {
+        const data = JSON.parse(j);
+        if (data && (data.username || data.name)) {
+          return {
+            username: data.username || data.name || '使用者',
+            avatar: data.avatar || data.photo || data.image || ''
+          };
         }
-        
-        // 示例轉換：將原文轉換為更正面的評論
-        let convertedText = '';
-        
-        // 檢查是否包含負面詞彙並轉換
-        const negativeWords = {
-            // '很爛': '有改進空間',
-            // '超爛': '需要加強',
-            // '難死了': '具有挑戰性',
-            // '無聊': '比較平淡',
-            // '垃圾': '不太適合',
-            // '糟糕': '需要改善',
-            // '討厭': '不太喜歡',
-            // '幹': '真是',
-            // '靠': '哎呀',
-            // '爛': '需要改善',
-            // '廢': '有些不足',
-            '這門課超爛，老師根本不會教，完全是照著投影片念，講話有夠無聊，根本是在整學生，每週都要熬夜寫報告，完全沒有人性，奉勸大家不要踩雷，能避就避！':'這門課的教學方式以照著投影片講解為主，整體互動較少，對於習慣討論式學習或需要更多說明的同學來說，可能較難投入。老師授課節奏較快，說明部分內容時較為簡略，可能會影響理解。課程作業安排較密集，每週需要花費相當多時間準備報告，對時間管理能力是很大的挑戰。若沒有充足準備，可能會感受到學習壓力較大。整體來說，這門課對於具備自學能力與良好時間規劃的學生會比較適合。',
+      }
+    }catch(_){}
+    // 2) <body data-username="張三" data-avatar="/media/u1.png">
+    try{
+      const b = document.body;
+      const u = b?.dataset?.username || '';
+      const a = b?.dataset?.avatar || '';
+      if (u) return { username: u, avatar: a || '' };
+    }catch(_){}
+    // 3) window.CURRENT_USER = { username, avatar }
+    try{
+      if (window.CURRENT_USER && (window.CURRENT_USER.username || window.CURRENT_USER.name)) {
+        return {
+          username: window.CURRENT_USER.username || window.CURRENT_USER.name || '使用者',
+          avatar: window.CURRENT_USER.avatar || ''
         };
-        
-        convertedText = originalText;   
-        
-        // 替換負面詞彙
-        Object.keys(negativeWords).forEach(word => {
-            const regex = new RegExp(word, 'g');
-            convertedText = convertedText.replace(regex, negativeWords[word]);
+      }
+    }catch(_){}
+    // 4) 預設
+    return { username: '使用者', avatar: '' };
+  }
+
+  // 切換「匿名/實名」顯示
+  function bindAnonymousToggle(){
+    const container = document.querySelector('.display-mode-container');
+    if (!container) return;
+
+    const radioAnon = el('anonymous_yes'); // HTML 標籤文字是「匿名」
+    const radioReal = el('anonymous_no');  // HTML 標籤文字是「實名」
+    const avatarEl = container.querySelector('.user-info .avatar');
+    const nameEl = container.querySelector('.user-info .username');
+
+    const CURRENT = getCurrentUserInfo();
+    const REAL_NAME = CURRENT.username || '使用者';
+    const REAL_AVATAR = CURRENT.avatar || '/static/image/anonymous.png';
+    const ANON_NAME = '匿名';
+    const ANON_AVATAR = '/static/image/anonymous.png';
+
+    function applyDisplay(isAnonymous){
+      if (avatarEl) avatarEl.src = isAnonymous ? ANON_AVATAR : REAL_AVATAR;
+      if (nameEl) nameEl.textContent = isAnonymous ? ANON_NAME : REAL_NAME;
+    }
+
+    const initialAnonymous = !!(radioAnon?.checked); // radioAnon 代表匿名
+    applyDisplay(initialAnonymous);
+
+    radioAnon?.addEventListener('change', ()=> {
+      if (radioAnon.checked) applyDisplay(true);
+    });
+    radioReal?.addEventListener('change', ()=> {
+      if (radioReal.checked) applyDisplay(false);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+
+    // === 強化：預覽區僅允許「刪除/剪下」，中英/注音都無法新增 ===
+    (function enforceDeleteOnlyOnPreview_hard(){
+      const elp = document.getElementById('comment-preview') || document.getElementById('preview_text');
+      if (!elp) return;
+
+      const isTextarea = elp.tagName === 'TEXTAREA';
+
+      // 關閉系統自動更正，避免自動插入
+      if (isTextarea) {
+        elp.setAttribute('autocomplete', 'off');
+        elp.setAttribute('autocorrect', 'off');
+        elp.setAttribute('autocapitalize', 'off');
+        elp.setAttribute('spellcheck', 'false');
+      }
+
+      // 取值/設值封裝，兼容 div / textarea
+      const getVal = () => ('value' in elp ? elp.value : elp.textContent || '');
+      const setVal = (v) => {
+        if ('value' in elp) elp.value = v;
+        else elp.textContent = v;
+      };
+
+      // 快照（含游標）
+      let prev = getVal();
+      let selStart = isTextarea ? (elp.selectionStart ?? prev.length) : null;
+      let selEnd   = isTextarea ? (elp.selectionEnd   ?? prev.length) : null;
+
+      function snapshot() {
+        prev = getVal();
+        if (isTextarea) {
+          selStart = elp.selectionStart ?? prev.length;
+          selEnd   = elp.selectionEnd   ?? prev.length;
+        }
+      }
+      function restore() {
+        setVal(prev);
+        if (isTextarea) {
+          try {
+            elp.setSelectionRange(selStart, selEnd);
+          } catch(_){}
+        }
+      }
+
+      // 允許的 beforeinput 類型（刪除相關）
+      const ALLOWED = new Set([
+        'deleteContentBackward',
+        'deleteContentForward',
+        'deleteByCut',
+        'deleteByDrag',
+        'deleteContent'
+      ]);
+
+      // 1) 先用 beforeinput 擋（可攔 New text / Paste / IME 插入）
+      elp.addEventListener('beforeinput', (e) => {
+        const t = e.inputType || '';
+        if (!ALLOWED.has(t)) {
+          e.preventDefault();
+        } else {
+          snapshot();
+        }
+      });
+
+      // 2) 後盾：input 事件上做「差異比對」，若偵測到有新增 → 立刻回滾
+      elp.addEventListener('input', () => {
+        const cur = getVal();
+        if (cur.length > prev.length) {
+          restore();
+        } else {
+          snapshot();
+        }
+      });
+
+      // 3) 禁止貼上、拖放插入
+      elp.addEventListener('paste', (e) => e.preventDefault());
+      elp.addEventListener('drop',  (e) => e.preventDefault());
+
+      // 4) 鍵盤層限制
+      elp.addEventListener('keydown', (e) => {
+        const NAV = new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown','Tab','Escape','Shift','Control','Alt','Meta']);
+        if (NAV.has(e.key)) return;
+        if (e.key === 'Backspace' || e.key === 'Delete') { snapshot(); return; }
+
+        if (e.ctrlKey || e.metaKey) {
+          const k = e.key.toLowerCase();
+          if (k === 'a' || k === 'c' || k === 'x') { snapshot(); return; } // 全選/複製/剪下
+          if (k === 'v' || k === 'z' || k === 'y') { e.preventDefault(); return; } // 貼上/Undo/Redo 禁止
+        }
+
+        if (e.key.length === 1) { // 任何可見字元
+          e.preventDefault();
+        }
+      });
+
+      // 5) IME 組字
+      elp.addEventListener('compositionstart', () => snapshot());
+      elp.addEventListener('compositionupdate', () => {});
+      elp.addEventListener('compositionend', () => {});
+    })();
+
+
+    // 讀取嵌入的 JSON 資料
+    try{
+      departmentsData = JSON.parse(el('departments-data')?.textContent || '{}');
+      gradesData = JSON.parse(el('grades-data')?.textContent || '{}');
+      coursesData = JSON.parse(el('courses-data')?.textContent || '[]');
+    }catch(e){
+      console.error('資料解析失敗：', e);
+    }
+
+    const academic = el('academic');
+    const department = el('department');
+    const grade = el('grade');
+    const course = el('course');
+    const comment = el('comment_text');
+    const btnPreview = el('preview-btn');   // 你現有的「轉換/預覽」按鈕
+    const btnSubmit = el('submit-btn');
+    const preview = el('preview');          // 右側框外層
+    const previewText = el('preview_text'); // 右側實際文字（或 #comment-preview）
+
+    // ===== 新增：預覽框狀態與送出鎖定工具 =====
+    function setPreviewState(kind, msg) {
+      // kind: 'ok' | 'error' | 'empty'
+      if (!preview) return;
+      preview.dataset.state = kind;
+      preview.classList.remove('is-error', 'is-ok', 'is-empty');
+      if (kind === 'error') preview.classList.add('is-error');
+      if (kind === 'ok')    preview.classList.add('is-ok');
+      if (kind === 'empty') preview.classList.add('is-empty');
+      if (typeof msg === 'string' && previewText) previewText.textContent = msg;
+    }
+
+    function lockSubmit(lock, reason='') {
+      if (!btnSubmit) return;
+      btnSubmit.disabled = !!lock;
+      btnSubmit.setAttribute('aria-disabled', lock ? 'true' : 'false');
+      btnSubmit.classList.toggle('is-disabled', !!lock);
+      if (lock && reason) btnSubmit.title = reason; else btnSubmit.removeAttribute('title');
+    }
+
+    function hasBlockingError() {
+      if (!preview) return false;
+      const stateErr = preview.dataset.state === 'error';
+      const txt = (previewText ? ('value' in previewText ? previewText.value : previewText.textContent) : '')?.trim() || '';
+      const isErrorText = txt === GUARD.ERROR_TEXT || txt.startsWith('（內容過短）') || txt.startsWith(GUARD.SHORT_HINT);
+      return stateErr || isErrorText;
+    }
+
+    // 頂端顯示區塊
+    const courseNameEl = el('course-name-display');
+    const courseTeacherEl = el('course-teacher-display');
+
+    function updateCourseHeaderFromSelect() {
+      if (!course) return;
+      const opt = course.selectedOptions && course.selectedOptions[0];
+      const name = opt ? (opt.dataset.name || opt.textContent || '') : '';
+      const teacher = opt ? (opt.dataset.teacher || '') : '';
+      if (courseNameEl) courseNameEl.textContent = (name || '請先選擇課程').trim();
+      if (courseTeacherEl) courseTeacherEl.textContent = (teacher || '—').trim();
+    }
+
+    // 學制改變時重建科系與年級
+    function populateDepartments(){
+      if (!academic || !department) return;
+      const list = departmentsData[academic.value] || [];
+      department.innerHTML = '<option value="">請先選擇學制</option>';
+      list.forEach(d=>{
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.name;
+        department.appendChild(opt);
+      });
+    }
+
+    function populateGrades(){
+      if (!academic || !grade) return;
+      const list = gradesData[academic.value] || [];
+      grade.innerHTML = '<option value="">請先選擇學制</option>';
+      list.forEach(g=>{
+        const val = g.grade_level || g;
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        grade.appendChild(opt);
+      });
+    }
+
+    function populateCourses(){
+      if (!course) return;
+      const a = academic?.value, d = department?.value, g = grade?.value;
+
+      let filtered = (coursesData || []).filter(c=>
+        (!a || String(c.academic_id) === String(a)) &&
+        (!d || String(c.department_id) === String(d)) &&
+        (!g || String(c.grade_level) === String(g))
+      );
+      course.innerHTML = '<option value="">請先選擇學制、科系和年級</option>';
+
+      if(filtered.length === 0){
+        course.innerHTML = '<option value="">沒有符合條件的課程</option>';
+        updateCourseHeaderFromSelect();
+        return;
+      }
+
+      filtered.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.course_name}（${c.course_teacher || '未填寫教師'}）`;
+        opt.dataset.name = c.course_name || '';
+        opt.dataset.teacher = c.course_teacher || '';
+        course.appendChild(opt);
+      });
+
+      const pre = window.__PRESELECTED__ && window.__PRESELECTED__.courseId;
+      if (pre) course.value = String(pre);
+
+      updateCourseHeaderFromSelect();
+    }
+
+    // 事件綁定
+    academic?.addEventListener('change', ()=>{
+      populateDepartments();
+      populateGrades();
+      populateCourses();
+    });
+    department?.addEventListener('change', populateCourses);
+    grade?.addEventListener('change', populateCourses);
+    course?.addEventListener('change', updateCourseHeaderFromSelect);
+
+    // 初始預選
+    if(window.__PRESELECTED__){
+      if(window.__PRESELECTED__.academicId && academic) {
+        academic.value = String(window.__PRESELECTED__.academicId);
+      }
+      populateDepartments();
+      if(window.__PRESELECTED__.departmentId && department){
+        department.value = String(window.__PRESELECTED__.departmentId);
+      }
+      populateGrades();
+      if(window.__PRESELECTED__.grade && grade){
+        grade.value = String(window.__PRESELECTED__.grade);
+      }
+    }
+
+    // 初始課程清單 + 同步頂端顯示
+    populateCourses();
+    updateCourseHeaderFromSelect();
+
+    // 綁定匿名/實名切換與視覺
+    bindAnonymousToggle();
+
+    // ===== 修改：預覽/轉換按鈕流程 =====
+    btnPreview?.addEventListener('click', ()=>{
+      const raw = (comment?.value || '').trim();
+
+      // 先清空既有狀態
+      if (raw.length === 0) {
+        setPreviewState('empty', '');
+        lockSubmit(false);
+        CommentToast?.toastInfo?.('請先輸入評論內容');
+        return;
+      }
+
+      // 基本門檻（字數不足 → 右側框顯示提示 + 鎖送出）
+      if (raw.length < GUARD.MIN_LEN) {
+        setPreviewState('error', GUARD.SHORT_HINT);
+        lockSubmit(true, '評論內容太短，請補充後再送出');
+        preview?.classList.remove('d-none');
+        preview?.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+
+      // 一般情況：此處可接你的「語意優化 API」；目前先直接顯示原文當預覽
+      setPreviewState('ok', raw);
+      lockSubmit(false);
+      preview?.classList.remove('d-none');
+      preview?.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+
+    // 任何輸入變更 → 清掉錯誤，解鎖（讓使用者可以再按一次轉換）
+    comment?.addEventListener('input', ()=>{
+      if (!comment) return;
+      // 只有在原先是 error 時才重置，避免干擾正常狀態
+      if (preview?.dataset.state === 'error') {
+        setPreviewState('empty', '');
+        lockSubmit(false);
+      }
+    });
+
+    // ===== 修改：送出前的最終把關（轉換失敗/過短一律擋掉） =====
+    btnSubmit?.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const cId = course?.value;
+      const isAnonymous = (el('anonymous_yes')?.checked === true) || false;
+
+      const previewBox = el('comment-preview') || el('preview_text');
+      const previewVal = (previewBox ? ('value' in previewBox ? previewBox.value : previewBox.textContent) : '').trim();
+
+      if(!cId){ CommentToast?.toastError?.('請先選擇課程'); return; }
+
+      // 需要先「轉換/預覽」
+      if(!previewVal){
+        CommentToast?.toastInfo?.('請先按「轉換」，產生可提交的評論內容，再送出。');
+        return;
+      }
+
+      // 一律擋掉錯誤狀態或錯誤訊息
+      if (hasBlockingError()) {
+        CommentToast?.toastError?.('目前預覽內容無法提交，請修正後再試。');
+        return;
+      }
+
+      // 防呆：再次檢查字數
+      if (previewVal.length < GUARD.MIN_LEN) {
+        setPreviewState('error', GUARD.SHORT_HINT);
+        lockSubmit(true, '評論內容太短');
+        CommentToast?.toastInfo?.('評論內容過短，請補充具體細節後再送出。');
+        return;
+      }
+
+      // 再擋一次「轉換失敗」這句話
+      if (previewVal === GUARD.ERROR_TEXT) {
+        setPreviewState('error', GUARD.ERROR_TEXT);
+        lockSubmit(true, '轉換失敗，請稍後重試');
+        CommentToast?.toastError?.('轉換失敗提示不可作為評論內容。');
+        return;
+      }
+
+      // 覆蓋原始輸入：保證送出的是「轉換後」內容
+      if (comment) comment.value = previewVal;
+
+      const url = `/add_comment/${cId}/submit/`;
+
+      try{
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 送出中…';
+
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type':'application/json',
+            'X-Requested-With':'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken(),
+          },
+          body: JSON.stringify({
+            content: previewVal,        // ★ 只送轉換/預覽後的內容
+            anonymous: isAnonymous
+          })
         });
-        
-        // 如果沒有需要轉換的內容，添加一些正面的修飾
-        if (convertedText === originalText) {
-            convertedText = '總體來說，' + originalText + ' 希望能持續改進，讓課程更好。';
-         } 
-        // else {
-        //     convertedText = '經過思考後，我認為' + convertedText + ' 以上是我的客觀評價。';
-        // }
-        
-        // Update preview with converted text
-        previewTextarea.value = convertedText;
-        
-        // 顯示轉換完成提示
-        const originalBtnText = convertBtn.innerHTML;
-        const originalBgColor = convertBtn.style.backgroundColor;
-        
-        convertBtn.innerHTML = '已轉換';
-        convertBtn.style.backgroundColor = '#e0d3e0';
-        convertBtn.style.color = '#635c63';
-        convertBtn.disabled = true;
-        
-        setTimeout(() => {
-            convertBtn.innerHTML = originalBtnText;
-            convertBtn.style.backgroundColor = originalBgColor;
-            convertBtn.style.color = '#fff';
-            convertBtn.disabled = false;
-        }, 1500);
-    });
-}
 
-// 初始化表單驗證和提交
-function initializeFormValidation() {
-    const commentForm = document.querySelector('.comment-form');
-    const commentTextarea = document.getElementById('comment_text');
-    const previewTextarea = document.getElementById('preview_text');
-    
-    if (!commentForm) return;
-    
-    // Remove the onsubmit attribute from HTML to prevent conflicts
-    commentForm.removeAttribute('onsubmit');
-    
-    // Form submission handling with validation
-    commentForm.addEventListener('submit', function(e) {
-        e.preventDefault(); // 防止默認提交
-        
-        // 獲取所有必填欄位
-        const schoolYear = document.getElementById('school_year')?.value || '';
-        const category = document.getElementById('category')?.value || '';
-        const classInfo = document.getElementById('class_info')?.value || '';
-        const course = document.getElementById('course')?.value || '';
-        const rating = document.getElementById('rating-input')?.value || '';
-        const commentText = commentTextarea?.value.trim() || '';
-        const previewText = previewTextarea?.value.trim() || '';
-        const realNameRadio = document.getElementById('anonymous_no'); // 實名選項
-        
-        // 驗證必填欄位
-        let missingFields = [];
-        
-        if (!schoolYear) missingFields.push('學年度');
-        if (!category) missingFields.push('學制');
-        if (!classInfo) missingFields.push('班級');
-        if (!course) missingFields.push('課程');
-        if (!rating || rating < 1 || rating > 5) missingFields.push('課程評分');
-        if (!commentText && !previewText) missingFields.push('評論內容');
-        
-        if (missingFields.length > 0) {
-            alert('請填寫以下必填欄位：\n' + missingFields.join('、'));
-            return;
+        const data = await res.json().catch(()=> ({}));
+        if(!res.ok || data.error){
+          throw new Error(data.error || `HTTP ${res.status}`);
         }
-        
-        // 確認提交
-        const isAnonymous = realNameRadio?.checked ? '實名' : '匿名';
-        const finalText = previewText || commentText; // 優先使用轉換後的文字
-        
-        const confirmMessage = `送出後將無法修改，確定要送出嗎？`;
-        
-        if (confirm(confirmMessage)) {
-            // 如果有轉換後的文字，將其設為主要提交內容
-            if (previewText && commentTextarea) {
-                commentTextarea.value = previewText;
-            }
-            
-            // 顯示提交中狀態
-            const submitBtn = this.querySelector('.btn-submit');
-            if (submitBtn) {
-                const originalText = submitBtn.innerHTML;
-                
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
-                submitBtn.disabled = true;
-                
-                // 模擬提交過程
-                setTimeout(() => {
-                    alert('評論送出成功！');
-                    window.location.href = '/comment/';
-                }, 1500);
-            }
-        }
-    });
-}
 
-// 全域函數用於確認提交（向後兼容，並整合原本HTML中的驗證邏輯）
-function confirmSubmission() {
-    const form = document.getElementById('commentForm');
-    if (!form) return false;
-    
-    const comment = form.querySelector('textarea[name="comment_text"]')?.value.trim() || '';
-    const rating = parseFloat(document.getElementById('rating-input')?.value || 0);
-    const courseSelect = form.querySelector('select[name="course"]');
-    const classSelect = form.querySelector('select[name="class_info"]');
-    const schoolYearSelect = form.querySelector('select[name="school_year"]');
-    const categorySelect = form.querySelector('select[name="category"]');
-    
-    // 驗證必填欄位
-    if (!courseSelect?.value) {
-        alert('請選擇課程');
-        return false;
+        // 成功 → 跳轉到 comment_detail/<cId>
+        window.location.href = `/comment_detail/${cId}`;
+
+      }catch(err){
+        console.error(err);
+        CommentToast?.toastError?.(err.message || '送出失敗，請稍後再試');
+        btnSubmit.innerHTML = '送出失敗';
+      }
+    });
+  });
+})();
+
+// ======== 評分星星互動（健壯化） ========
+(function () {
+  function initAddCommentStars() {
+    const root = document.getElementById('rating-stars');
+    if (!root || root.dataset.bound === '1') return;
+
+    const stars = root.querySelectorAll('i[data-rating]');
+    const input = document.getElementById('rating-input');
+    const text  = root.querySelector('.rating-text');
+
+    function getCurrent() {
+      const v = parseInt(input?.value || root.getAttribute('data-rating') || '0', 10);
+      return Number.isFinite(v) ? Math.max(0, Math.min(5, v)) : 0;
     }
-    
-    if (!classSelect?.value) {
-        alert('請選擇班級');
-        return false;
-    }
-    
-    if (!schoolYearSelect?.value) {
-        alert('請選擇學年度');
-        return false;
-    }
-    
-    if (!categorySelect?.value) {
-        alert('請選擇學制');
-        return false;
-    }
-    
-    if (!comment) {
-        alert('請輸入評論內容');
-        return false;
-    }
-    
-    if (isNaN(rating) || rating < 1 || rating > 5) {
-        alert('請給出有效的評分 (1-5分)');
-        return false;
-    }
-    
-    // 顯示確認對話框
-    const confirmation = confirm('評論將公開顯示，送出後無法修改。');
-        
-    if (confirmation) {
-        // 顯示載入中或禁用按鈕等處理
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
-            
-            // 模擬提交完成後跳轉
-            setTimeout(() => {
-                alert('評論送出成功！');
-                window.location.href = '/comment/';
-            }, 1500);
+
+    function paint(val) {
+      const v = Math.max(0, Math.min(5, parseInt(val || '0', 10)));
+      stars.forEach((s) => {
+        const n = parseInt(s.getAttribute('data-rating') || '0', 10);
+        if (n <= v) {
+          s.classList.remove('fa-regular');
+          s.classList.add('fa-solid');
+        } else {
+          s.classList.remove('fa-solid');
+          s.classList.add('fa-regular');
         }
+        s.classList.add('fa-star');
+      });
+      if (text) { text.textContent = (v || 0).toFixed(1) + '/5.0'; }
+      root.setAttribute('data-rating', String(v));
     }
-    
-    return confirmation;
-}
+
+    function commit(val) {
+      const v = Math.max(1, Math.min(5, parseInt(val || '0', 10)));
+      if (input) input.value = String(v);
+      paint(v);
+    }
+
+    stars.forEach((star) => {
+      star.style.cursor = 'pointer';
+
+      star.addEventListener('mouseenter', () => {
+        const v = parseInt(star.getAttribute('data-rating') || '0', 10);
+        paint(v);
+      });
+
+      star.addEventListener('mouseleave', () => {
+        paint(getCurrent());
+      });
+
+      star.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const v = parseInt(star.getAttribute('data-rating') || '0', 10);
+        commit(v);
+      });
+
+      star.addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const v = parseInt(star.getAttribute('data-rating') || '0', 10);
+        commit(v);
+      }, { passive: false });
+    });
+
+    root.tabIndex = 0;
+    root.addEventListener('keydown', (e) => {
+      const cur = getCurrent();
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+        e.preventDefault(); commit(Math.min(5, cur + 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+        e.preventDefault(); commit(Math.max(1, cur - 1));
+      } else if (/^[1-5]$/.test(e.key)) {
+        e.preventDefault(); commit(parseInt(e.key, 10));
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        if (input) input.value = '0';
+        paint(0);
+      }
+    });
+
+    paint(getCurrent());
+    root.dataset.bound = '1';
+  }
+
+  document.addEventListener('DOMContentLoaded', initAddCommentStars);
+})();

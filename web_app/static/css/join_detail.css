@@ -64,147 +64,178 @@ body {
 
 
 /* 討論區樣式 */
+/* 討論區整體 */
 .discussion-section {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 24px;
-}
-
-.section-title {
-    color: #333;
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.comment-count {
-    color: #666;
-    font-size: 14px;
-    font-weight: 400;
-}
-
-.comments-section {
-    margin-bottom: 24px;
+    background: #fdfdfd;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .comment-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px 16px;
     margin-bottom: 16px;
-    background: #fafafa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.comment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .comment-header {
     display: flex;
-    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 12px;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
 .user-info-container {
     display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: #ddd;
+    gap: 10px;
 }
 
 .user-avatar img {
-    width: 100%;
-    height: 100%;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     object-fit: cover;
 }
 
-.user-avatar.small {
-    width: 32px;
-    height: 32px;
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.user-name {
+.user-info .user-name {
     font-weight: 600;
-    color: #333;
     font-size: 14px;
 }
 
-.comment-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.stars {
-    display: flex;
-    gap: 2px;
-}
-
-.stars i {
-    color: #fbbf24;
+.comment-meta .comment-date {
     font-size: 12px;
+    color: #888;
 }
 
-.comment-date {
-    color: #666;
-    font-size: 12px;
+.comment-content p {
+    margin: 6px 0;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
+/* 喜歡按鈕 */
 .like-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
     display: flex;
     align-items: center;
     gap: 4px;
-    background: none;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.like-btn:hover {
-    background: #f3f4f6;
+    font-size: 13px;
+    transition: color 0.2s;
 }
 
 .like-btn.liked {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
+    color: #ff6b81;
 }
 
-.like-icon {
-    font-size: 12px;
-}
-
-.like-count {
-    font-size: 12px;
-}
-
-.comment-content {
-    margin-bottom: 12px;
-    line-height: 1.5;
-    color: #374151;
-}
-
+/* 回覆 */
 .comment-actions {
-    display: flex;
-    gap: 12px;
+    margin-top: 8px;
 }
+
+.comment-actions .reply-btn {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 0.2s;
+}
+
+.comment-actions .reply-btn:hover {
+    color: #1e90ff;
+}
+
+.replies-container {
+    margin-top: 10px;
+    padding-left: 46px;
+    border-left: 2px solid rgba(0,0,0,0.05);
+}
+
+.reply {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.reply .user-avatar.small img {
+    width: 28px;
+    height: 28px;
+}
+
+.reply-content .reply-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.reply-content p {
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* 新增留言表單 */
+.add-comment-form {
+    margin-top: 20px;
+}
+
+.add-comment-form h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.add-comment-form .form-control {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    font-size: 14px;
+    resize: none;
+}
+
+.submit-comment-btn {
+    margin-top: 8px;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1e90ff;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.submit-comment-btn:hover {
+    background-color: #187bcd;
+}
+
+.no-comments {
+    color: #888;
+    font-style: italic;
+}
+
+/* 登入提示 */
+.login-prompt p {
+    font-size: 14px;
+    color: #555;
+}
+.login-prompt a {
+    color: #1e90ff;
+    text-decoration: underline;
+}
+
 
 .reply-btn, .reply-to-reply {
     background: none;
@@ -606,16 +637,28 @@ h2.section-title:first-of-type::before {
 
 .status {
     background-color: #f4f4f4;
-    padding: 25px;
+    padding: 10px 15px; /* 上下內距縮小 */
     border-radius: 12px;
     text-align: center;
-    margin-top: 30px;
+    margin-top: 10px; /* 距離參加者少一些 */
 }
 
 .status-text {
-    font-size: 18px;
+    font-size: 18px; /* 字體縮小 */
     color: #666;
-    margin-bottom: 15px;
+    margin-bottom: 5px; /* 與截止時間間距縮小 */
+}
+
+.deadline-info {
+    font-size: 16px; /* 字更小 */
+    color: #999;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* icon 與文字間距縮小 */
+    margin-top: 10px; 
+
 }
 
 .comment-form {
@@ -674,65 +717,77 @@ h2.section-title:first-of-type::before {
 }
 
 .related-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-    padding: 30px 40px;
-    background-color: #f4f4f4;
+    display: flex;
+    justify-content: space-between;
 }
 
 .related-card {
-    background-color: white;
-    border-radius: 0;
+    width: 48%;
+    background: #fff;
+    border-radius: 12px;
     overflow: hidden;
-    transition: transform 0.3s;
-    text-decoration: none;
-    box-shadow: none;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s;
 }
 
 .related-card:hover {
-    transform: translateY(-5px);
-    box-shadow: none;
+    transform: translateY(-4px);
 }
 
 .related-image {
-    height: 180px;
-    background-color: #eee;
     position: relative;
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+}
+
+.related-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .related-date {
     position: absolute;
-    bottom: 15px;
-    left: 15px;
-    background-color: #7E3D76;
-    color: white;
-    padding: 5px 15px;
-    border-radius: 5px;
-    font-size: 14px;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    padding: 2px 8px;
+    font-size: 12px;
+    border-radius: 8px;
 }
 
 .related-content {
-    padding: 20px;
-    background-color: white;
-    flex-grow: 1;
+    padding: 12px 10px;
 }
 
 .related-card-title {
-    font-size: 20px;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 15px;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 
 .related-info {
     display: flex;
     justify-content: space-between;
-    color: #999;
-    font-size: 14px;
+    font-size: 12px;
+    color: #555;
 }
+
+.related-info span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.05);
+}
+
+.related-info .related-participants {
+    background: rgba(100, 149, 237, 0.1);
+}
+
 
 @media (max-width: 768px) {
     .hero {
@@ -902,7 +957,6 @@ h2.section-title:first-of-type::before {
 
 /* Add Comment Form */
 .add-comment-form {
-    margin: 30px 0;
     background: white;
     border-radius: 8px;
     padding: 20px;
@@ -923,6 +977,12 @@ h2.section-title:first-of-type::before {
     transform: translateY(-2px);
 }
 
+.add-comment-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
 .add-comment-form .submit-comment-btn {
     background-color: #6F557D;
     color: white;
@@ -932,8 +992,8 @@ h2.section-title:first-of-type::before {
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
-    display: block;
-    margin-top: 15px;
+    display: inline-block;
+    margin-top: 0;
 }
 
 .add-comment-form .submit-comment-btn:hover {
@@ -1265,4 +1325,111 @@ h2.section-title:first-of-type::before {
     width: 100%;
     text-align: center;
     line-height: 1;
+}
+
+.avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #eee;
+    margin-bottom: 10px;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.participants {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 20px;
+}
+
+.participant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.name {
+    font-size: 14px;
+    color: #666;
+    word-wrap: break-word;
+}
+
+.no-comments {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+.login-prompt {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.no-related {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+}
+
+.activity-cover {
+    position: relative;
+    width: 100%;
+    max-width: 800px; /* 視情況調整 */
+    height: 300px;
+    margin: 20px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.activity-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 保持圖片比例，不拉伸 */
+    display: block;
+}
+
+.cover-title {
+    position: absolute;
+    bottom: 15px;
+    left: 20px;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background-color: rgba(0,0,0,0.4); /* 半透明背景 */
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+/* 移除相關活動推薦的連結底線 */
+.related-card {
+    text-decoration: none;   /* 移除底線 */
+    color: inherit;          /* 文字顏色跟父層一致 */
+}
+
+/* 如果想在 hover 時有特效可以另外加 */
+.related-card:hover {
+    text-decoration: none;   /* 保持沒有底線 */
+    opacity: 0.9;            /* 滑過時淡淡效果 */
+}
+
+a.join-btn, a.fixed-cta, a.like-btn, a.reply-btn {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a.join-btn:hover, a.fixed-cta:hover {
+    /* 保持原有的 hover 效果 */
 }
