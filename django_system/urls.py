@@ -46,10 +46,12 @@ urlpatterns = [
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
     path('book/upload/', views.upload_book2, name='upload_book2'),
 
+
     # Dynamic Dropdowns API
     path('api/departments/', views.get_departments, name='get_departments'),
     path('api/grades/', views.get_grades, name='get_grades'),
     path('book_2/', views.book_2, name='book_2'),
+    path('test/', views.ask_page, name='ask_page'),
     path('test/', views.ask_page, name='ask_page'),
     path('navbar2/' , views.navbar2),
 
@@ -105,8 +107,11 @@ urlpatterns = [
     path('api/pdf/<str:filename>/', views.view_pdf, name='view_pdf'),
 
     # 活動系統
+
+    # 活動系統
     path('activities/', views.activity_list, name='activity_list'),
     path('activities/<int:pk>/', views.activity_detail, name='join_detail'),
+    path('activities/<int:pk>/', views.activity_detail, name='activity_detail'),
     path('activities/<int:pk>/', views.activity_detail, name='activity_detail'),
     path('activities/<int:pk>/join/', views.join_activity, name='join_activity'),
     path('activities/<int:pk>/cancel/', views.cancel_activity, name='cancel_activity'),
