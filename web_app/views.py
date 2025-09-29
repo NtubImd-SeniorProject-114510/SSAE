@@ -417,7 +417,7 @@ from django.views.decorators.http import require_http_methods
 
 # 嘗試導入 vision_utils，如果失敗則設為 None
 try:
-    from .utils.vision_utils import book_recognition_service
+    from .utils.improved_book_recognition import book_recognition_service
 except ImportError as e:
     print(f"Warning: Google Cloud Vision not available: {e}")
     book_recognition_service = None
