@@ -25,6 +25,8 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('base/' , views.base),
+
+    path('ttt/' , views.ttt),
     path('login/' , views.login, name='login'),
     path('welcome/' , views.welcome),
     path('welcome_mo/' , views.welcome_mo, name='wel_mo'),
@@ -96,6 +98,8 @@ urlpatterns = [
     path('api/activities/<int:activity_id>/comments/', views.add_comment, name='add_comment_api'),
     path('api/comments/<int:comment_id>/toggle-like/', views.toggle_like, name='toggle_like'),
     path('get-related-data/', views.get_related_data, name='get_related_data'),
+    path('api/recognize-book/', views.recognize_book, name='recognize_book'),
+    path('api/search-book/', views.search_book_manual, name='search_book_manual'),
 ]
 
 from django.conf import settings

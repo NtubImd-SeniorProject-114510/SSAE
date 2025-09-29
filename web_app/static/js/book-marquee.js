@@ -1,3 +1,4 @@
+//book-marquee.js
 // 二手書卡片跑馬燈效果和顏色設定
 document.addEventListener('DOMContentLoaded', function() {
     initBookConditionColors();

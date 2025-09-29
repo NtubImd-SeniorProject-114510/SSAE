@@ -146,8 +146,6 @@ class ReviewLike(models.Model):
         return f"Like(review={getattr(self.review, 'id', None)}, user={getattr(self.user, 'user_id', None)})"
 #-------------
 
-
-
 class Category(models.Model):
     name = models.CharField(max_length=50)
     class Meta:
@@ -166,6 +164,11 @@ class Status(models.Model):
 class Book2(models.Model):
     book_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
+    
+    # 新增的欄位
+    author = models.CharField(max_length=255, blank=True, null=True)
+    publisher = models.CharField(max_length=255, blank=True, null=True)
+    isbn = models.CharField(max_length=20, blank=True, null=True)
     
     academic = models.ForeignKey(
         'Academic', 
@@ -206,7 +209,6 @@ class Book2(models.Model):
         ('used', '尚可'),
     ]
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, blank=True, null=True)
-
     price = models.IntegerField()
     description = models.TextField(blank=True)
     cover_image = models.ImageField(upload_to='book2_covers/', blank=True, null=True)
@@ -221,25 +223,21 @@ class Book2(models.Model):
         on_delete=models.PROTECT, 
         related_name='book2_seller'
     )
-
     status = models.ForeignKey(
         'Status', 
         on_delete=models.PROTECT, 
         blank=True, 
         null=True, 
-        default=1,  # 預設為可購買
+        default=1,
         db_column='status_id'
     )
-
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
         db_table = 'web_app_book2'
-
+    
     def __str__(self):
         return self.title
-
-
 
 class Book(models.Model):
     title = models.CharField(max_length=255)
@@ -291,6 +289,7 @@ class Book(models.Model):
 
 
 
+#================================
 
 # activities/models.py
 from django.conf import settings

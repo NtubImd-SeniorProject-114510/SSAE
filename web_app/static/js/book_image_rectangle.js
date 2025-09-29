@@ -1,3 +1,4 @@
+//book_image_rectangle.js
 // 長方形圖片上傳框互動
 // 遵循紫色主題、圓角、hover動畫、即時預覽
 
