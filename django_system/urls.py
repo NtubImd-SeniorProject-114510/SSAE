@@ -125,12 +125,7 @@ urlpatterns = [
     path('api/todos/<int:todo_id>/delete/', views_todo.delete_todo, name='delete_todo'),
 ]
 
-from django.conf import settings
-from django.conf.urls.static import static
-
-
-# 媒體檔案 (圖片上傳) 設定
-
+# 媒體/靜態檔案設定（開發環境）
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
