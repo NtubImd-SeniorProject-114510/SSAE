@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" href="{% static 'image/logo.png' %}" type="image/png">
 {% endblock %}
 
 {% block css %}
@@ -446,36 +447,10 @@
             <!-- 待辦事項卡片 -->
             <div class="card todo-card">
                 <div class="card-header">
-                    <h2>代辦事項</h2>
+                    <h2>待辦事項</h2>
                 </div>
                 <div class="todo-content">
-                    <ul class="todo-list">
-                        <li class="todo-item completed">
-                            <input type="checkbox" id="task1" checked>
-                            <label for="task1">完成統計學作業</label>
-                            <span class="todo-status">已完成</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task2">
-                            <label for="task2">準備行銷管理報告</label>
-                            <span class="todo-status">今天</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task3">
-                            <label for="task3">預約圖書館讀書室</label>
-                            <span class="todo-status">今天</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task4">
-                            <label for="task4">整理會計學筆記</label>
-                            <span class="todo-status">明天</span>
-                        </li>
-                        <li class="todo-item">
-                            <input type="checkbox" id="task5">
-                            <label for="task5">複習經濟學第四章</label>
-                            <span class="todo-status">4/6</span>
-                        </li>
-                    </ul>
+                    <ul class="todo-list"></ul>
                     </div>
                 </div>
 
@@ -534,5 +509,5 @@
     } catch (e) { window.calendarEventsData = []; }
   })();
   </script>
-<script src="{% static 'js/personal.js' %}"></script>
+<script src="{% static 'js/personal.js' %}?v=2"></script>
 {% endblock %}
