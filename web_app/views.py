@@ -40,47 +40,40 @@ def personal(request):
     if not request.user.is_authenticated:
         from django.shortcuts import redirect
         return redirect('login')
-        
+
     # 從自定義 User 表獲取用戶資料
     from django.db import connection
     user_data = None
-    
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT name, student_id, mail, course, grade, academic, role 
-                FROM `User` 
+                SELECT name, student_id, mail, course, grade, academic, role
+                FROM `User`
                 WHERE mail = %s
             """, [request.user.email])
-            
             columns = [col[0] for col in cursor.description]
             row = cursor.fetchone()
-            
             if row:
                 user_data = dict(zip(columns, row))
     except Exception as e:
         print(f"Error fetching user data: {e}")
-    
+
     # 獲取 Google 用戶照片
     google_picture = None
     try:
-        print("Checking social auth for user:", request.user.email)  # 調試日誌
         social = request.user.social_auth.filter(provider='google-oauth2').first()
-        print("Social auth found:", bool(social))  # 調試日誌
         if social:
-            print("Social extra data:", social.extra_data)  # 調試日誌
             google_picture = social.extra_data.get('picture')
-            print("Google picture URL:", google_picture)  # 調試日誌
     except Exception as e:
-        print(f"Error getting social auth data: {e}")  # 調試日誌
+        print(f"Error getting social auth data: {e}")
 
-    # 讀取「我已參加的活動」（顯示於個人中心）
+    # 讀取「我已參加的活動」與「我發起的活動」
     joined_activities = []
     created_activities = []
     try:
         from django.db.models import Count, Q
         from django.utils import timezone
-        # 僅顯示「尚未結束」的活動（日期在未來，或今天且時間未到），並依日期時間由近到遠排序
+
         now_date = timezone.localdate()
         now_time = timezone.localtime().time()
         upcoming_q = Q(date__gt=now_date) | (Q(date=now_date) & Q(time__gte=now_time))
@@ -92,7 +85,6 @@ def personal(request):
             .annotate(participants_count=Count('participants', filter=Q(participants__status='joined'), distinct=True))
             .order_by('date', 'time')
         )
-        # 我發起的活動（同樣顯示於個人中心）
         created_activities = (
             GroupActivity.objects
             .filter(user=request.user)
@@ -103,10 +95,9 @@ def personal(request):
     except Exception as e:
         print(f"Error fetching joined activities: {e}")
 
-    # 準備行事曆事件（顯示「所有」我發起與我參加過的活動，包含已過去）
+    # 準備行事曆事件（顯示所有我發起/參加過的活動，包含已過去）
     calendar_events = []
     try:
-        from django.db.models import Q
         def to_event(a):
             return {
                 "date": getattr(a, 'date', None),
@@ -115,13 +106,11 @@ def personal(request):
                 "created_at": getattr(a, 'created_at', None),
                 "time": getattr(a, 'time', None),
             }
-        # 重新查詢：不套用 upcoming 過濾
         all_created = GroupActivity.objects.filter(user=request.user)
         all_joined = GroupActivity.objects.filter(
             participants__user=request.user,
             participants__status='joined'
         )
-        # 合併 + 去重
         seen = set()
         for a in list(all_created) + list(all_joined):
             if not getattr(a, 'date', None):
@@ -132,6 +121,185 @@ def personal(request):
             calendar_events.append(to_event(a))
     except Exception as e:
         print(f"Error building calendar events: {e}")
+
+    # === 以 joined_activities 組成票券（重疊堆疊，越快到的在最上） ===
+    tickets = []
+    created_flags = []
+    try:
+        from .models import ActivityParticipant
+        import calendar
+        from datetime import date as _date, time as _time
+
+        # 疊法參數（可微調）
+        BASE_LEFT = 20     # 起始 X
+        BASE_TOP  = 10     # 起始 Y
+        STEP_X    = 10     # 每張向右偏移（越小越緊）
+        STEP_Y    = 18     # 每張向下偏移（越小越緊）
+        TICKET_H  = 200    # 票券高度，對應 .cticket
+
+        # 先把活動轉成 list，依 (date, time) 升冪；None 視為最大（排最後）
+        def _dt_key(a):
+            ad = getattr(a, 'date', None)
+            at = getattr(a, 'time', None)
+            if ad is None:
+                return (_date.max, _time.max)
+            if at is None:
+                at = _time.max
+            return (ad, at)
+
+        ja = list(joined_activities)
+        ja.sort(key=_dt_key)  # 越快到的在前面
+
+        total = len(ja)
+
+        for i, a in enumerate(ja, start=1):
+            host = (
+                getattr(a, 'host_name', None)
+                or getattr(a, 'creator_name', None)
+                or getattr(getattr(a, 'user', None), 'username', '主辦單位')
+            )
+
+            # 人數（含發起者）
+            participants_qs = ActivityParticipant.objects.filter(activity=a, status='joined').order_by('id')
+            participants_count  = participants_qs.count()
+            total_participants  = participants_count + 1
+            max_participants    = getattr(a, 'max_participants', None) or getattr(a, 'capacity', 0)
+            remaining_slots     = max(0, (max_participants or 0) - total_participants)
+
+            # 使用者順序 → 票號
+            user_position = None
+            for idx, p in enumerate(participants_qs, start=1):
+                if p.user_id == request.user.pk:
+                    user_position = idx
+                    break
+            if user_position is None and a.user_id == request.user.pk:
+                user_position = 0
+
+            ticket_number = f"NO:{a.pk:03d}{user_position:03d}" if user_position is not None else f"NO:{a.pk:06d}"
+
+            # 顯示欄位
+            if getattr(a, 'date', None):
+                month_abbr  = (calendar.month_abbr[a.date.month] or '').capitalize() + '.'
+                weekday_zh  = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日'][a.date.weekday()]
+                month_num   = a.date.strftime('%m')
+                date_num    = a.date.strftime('%d')
+                time_txt    = a.time.strftime('%H:%M') if getattr(a, 'time', None) else '—'
+            else:
+                month_abbr, weekday_zh, month_num, date_num, time_txt = '—','—','—','—','—'
+
+            # 位移與層級：越早越上（top 較小、z 較大），重疊更緊密
+            left_px = BASE_LEFT + (i - 1) * STEP_X
+            top_px  = BASE_TOP  + (i - 1) * STEP_Y
+            z_idx   = 100 - i               # 保持你的原規則：i=1 → 最大
+
+            # 輕微角度變化，避免完全重疊死板
+            rotate = (-2 if i % 2 == 0 else 2)
+
+            tickets.append({
+                "id": a.pk,
+                "title": getattr(a, 'title', ''),
+                "subtitle": (getattr(a, 'category', None) or 'CAMPUS EVENT').upper(),
+                "weekday": weekday_zh,
+                "month": month_num,
+                "date": date_num,
+                "time": time_txt,
+                "month_abbr": month_abbr,
+
+                "number": ticket_number,
+                "location": getattr(a, 'location', '校園活動場地'),
+                "host": host,
+                "icon": getattr(a, 'icon', 'fa-solid fa-ticket'),
+                "desc": getattr(a, 'description', '活動說明稍後公布。'),
+
+                "total_participants": total_participants,
+                "max_participants": max_participants,
+                "remaining_slots": remaining_slots,
+
+                "left_px": left_px,
+                "top_px":  top_px,
+                "z_index": z_idx,
+                "rotate_deg": rotate,
+            })
+
+        # 動態容器高度：最後一張的 top + 高度 + 底部留白
+        tickets_container_h = (BASE_TOP + (total - 1) * STEP_Y + TICKET_H + 16) if total else 240
+
+    except Exception as e:
+        print(f"Error building tickets: {e}")
+
+    # === 我發起的活動：旗子資料 ===
+    created_flags = []
+    try:
+        from .models import ActivityParticipant
+        for a in created_activities:
+            participants_qs = ActivityParticipant.objects.filter(activity=a, status='joined')
+            participants_count = participants_qs.count()
+            total_participants = participants_count + 1
+            max_participants = getattr(a, 'max_participants', None) or getattr(a, 'capacity', 0)
+
+            if getattr(a, 'date', None):
+                weekday_zh = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日'][a.date.weekday()]
+                month_num  = a.date.strftime('%m')
+                date_num   = a.date.strftime('%d')
+            else:
+                weekday_zh, month_num, date_num = '—','—','—'
+
+            created_flags.append({
+                "id": a.pk,
+                "title": getattr(a, 'title', ''),
+                "desc": getattr(a, 'description', '活動說明稍後公布。'),
+                "location": getattr(a, 'location', '校園活動場地'),
+                "weekday": weekday_zh,
+                "month": month_num,
+                "date": date_num,
+                "time": a.time.strftime('%H:%M') if getattr(a, 'time', None) else '—',
+                "total_participants": total_participants,
+                "max_participants": max_participants,
+                "tone": (getattr(a, 'category', '') or '').lower(),
+            })
+    except Exception as e:
+        print(f"Error building created_flags: {e}")
+
+    # === 我的書櫃（Model 名稱/外鍵依你的專案實際情況） ===
+    books = []
+    try:
+        BookModel = None
+        try:
+            from .models import SecondHandBook as BookModel
+        except Exception:
+            try:
+                from .models import Book as BookModel
+            except Exception:
+                try:
+                    from .models import UsedBook as BookModel
+                except Exception:
+                    BookModel = None
+
+        if BookModel:
+            from django.db.models import Q
+            qs = (BookModel.objects
+                .filter(
+                    Q(user=request.user) |
+                    Q(owner=getattr(request.user, 'pk', None)) |
+                    Q(seller=request.user) |
+                    Q(created_by=request.user)
+                )
+                .order_by('-id')[:12])
+
+            for b in qs:
+                books.append({
+                    "id": b.pk,
+                    "title": getattr(b, 'title', getattr(b, 'book_title', '')),
+                    "author": getattr(b, 'author', ''),
+                    "publisher": getattr(b, 'publisher', ''),
+                    "isbn": getattr(b, 'isbn', ''),
+                    "desc": getattr(b, 'description', getattr(b, 'intro', '這本書目前尚未提供簡介。')),
+                    "cover": getattr(b, 'cover_url', getattr(b, 'image_url', '')),
+                })
+        else:
+            print("No Book model found (SecondHandBook/Book/UsedBook).")
+    except Exception as e:
+        print(f"Error fetching books: {e}")
     
     return render(request, "personal.html", {
         'user_data': user_data,
@@ -149,7 +317,15 @@ def personal(request):
             }
             for e in calendar_events
         ], ensure_ascii=False),
+
+        # ★ 新增：提供給 course-schedule 卡片使用
+        'tickets': tickets,
+        'books': books,
+        'created_flags': created_flags,
     })
+
+
+    
 
 def chat(request):
     return render(request, 'chat.html')
