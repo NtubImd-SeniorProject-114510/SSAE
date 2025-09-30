@@ -646,6 +646,10 @@ body.sidebar-collapsed .input-container {
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+.upload-btn {
+    display: none;
+}
+
 /* 消息樣式 - 修正文字超出問題 */
 .message-container {
     display: flex;
