@@ -785,24 +785,308 @@
   margin-bottom: 8px;
 }
 
-.manual-search-controls {
+.contact-reminder {
+  margin: 16px 0;
+}
+
+.reminder-content {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: all 0.3s ease;
 }
 
-.manual-search-btn {
+.reminder-content.warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffc107;
+  color: #856404;
+}
+
+.reminder-content.partial {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #2196f3;
+  color: #1565c0;
+}
+
+.reminder-content.info {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border: 1px solid #9c27b0;
+  color: #6a1b9a;
+}
+
+.reminder-content.success {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+}
+
+.reminder-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.reminder-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reminder-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.reminder-desc {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.reminder-btn {
+  flex-shrink: 0;
   padding: 6px 12px;
-  border: 1px solid #6F557D;
-  background: #6F557D;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
+  border: none;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.manual-search-type {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+.reminder-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* 主要按鈕 - 警告狀態 */
+.reminder-content.warning .reminder-btn {
+  background: #ffc107;
+  color: #856404;
+  border: 1px solid #e0a800;
+}
+
+.reminder-content.warning .reminder-btn:hover {
+  background: #e0a800;
+  color: white;
+}
+
+/* 次要按鈕 - 部分完成狀態 */
+.reminder-content.partial .reminder-btn.secondary {
+  background: #2196f3;
+  color: white;
+  border: 1px solid #1976d2;
+}
+
+.reminder-content.partial .reminder-btn.secondary:hover {
+  background: #1976d2;
+}
+
+/* 資訊按鈕 - 資訊狀態 */
+.reminder-content.info .reminder-btn.minimal {
+  background: transparent;
+  color: #6a1b9a;
+  border: 1px solid #9c27b0;
+}
+
+.reminder-content.info .reminder-btn.minimal:hover {
+  background: #9c27b0;
+  color: white;
+}
+
+/* 最小化按鈕 - 完成狀態 */
+.reminder-content.success .reminder-btn.minimal {
+  background: transparent;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.reminder-content.success .reminder-btn.minimal:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.contact-update-hint a:hover {
+  text-decoration: underline;
+}
+
+/* 聯絡資訊編輯彈窗樣式 */
+.contact-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+.contact-modal-content {
+  background-color: white;
+  margin: 10% auto;
+  padding: 0;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: contactModalSlideIn 0.3s ease-out;
+}
+
+@keyframes contactModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.contact-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #6F557D 0%, #8B7A9B 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.contact-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.contact-close {
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.contact-close:hover {
+  opacity: 1;
+}
+
+.contact-modal-body {
+  padding: 25px;
+}
+
+.contact-form-group {
+  margin-bottom: 20px;
+}
+
+.contact-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.contact-form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.contact-form-group input:focus {
+  outline: none;
+  border-color: #6F557D;
+  box-shadow: 0 0 0 3px rgba(111, 85, 125, 0.1);
+}
+
+.contact-hint {
+  display: block;
+  margin-top: 5px;
   font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.contact-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.contact-btn-cancel,
+.contact-btn-save {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contact-btn-cancel {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.contact-btn-cancel:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.contact-btn-save {
+  background: linear-gradient(135deg, #6F557D 0%, #8B7A9B 100%);
+  color: white;
+}
+
+.contact-btn-save:hover {
+  background: linear-gradient(135deg, #5d4669 0%, #7a6b87 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(111, 85, 125, 0.3);
+}
+
+.contact-btn-save:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .contact-modal-content {
+    margin: 5% auto;
+    width: 95%;
+  }
+  
+  .contact-modal-header,
+  .contact-modal-body {
+    padding: 15px 20px;
+  }
+  
+  .contact-form-actions {
+    flex-direction: column;
+  }
+  
+  .contact-btn-cancel,
+  .contact-btn-save {
+    width: 100%;
+  }
 }

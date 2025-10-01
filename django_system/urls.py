@@ -18,13 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
-from django.conf.urls.static import static
 from web_app import views
 from web_app import views_todo  # Todo API
 from django.conf import settings
 from django.conf.urls.static import static
 from web_app import views
 from web_app import views_todo  # Todo API
+from web_app import profile_api  # Profile API
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
@@ -44,6 +44,8 @@ urlpatterns = [
     path('join_create/' , views.join_create),
     path('book/', views.book, name='book'),
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
+    path('book/<int:pk>/remove/', views.remove_book, name='remove_book'),
+    path('book/<int:pk>/mark-sold/', views.mark_book_sold, name='mark_book_sold'),
     path('book/upload/', views.upload_book2, name='upload_book2'),
 
 
@@ -130,6 +132,9 @@ urlpatterns = [
     path('api/todos/create/', views_todo.create_todo, name='create_todo'),
     path('api/todos/<int:todo_id>/update/', views_todo.update_todo, name='update_todo'),
     path('api/todos/<int:todo_id>/delete/', views_todo.delete_todo, name='delete_todo'),
+    
+    # Profile API
+    path('api/profile/update/', profile_api.update_profile, name='update_profile'),
 ]
 
 # 媒體/靜態檔案設定（開發環境）

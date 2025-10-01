@@ -4,7 +4,6 @@
 {% block title %}智能校事專家 - 活動召集{% endblock %}
 
 {% block lang %}zh-Hant{% endblock %}
-
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://kit.fontawesome.com/9e4db15554.js" crossorigin="anonymous"></script>
@@ -161,7 +160,7 @@
                         <!-- 頭像區域 -->
                         <div class="avatars-section">
                             <!-- 發起人頭像 -->
-                            <div class="organizer-avatar" title="{{ a.user.username }} (發起人)">
+                            <div class="organizer-avatar" title="{{ a.user_display_name }} (發起人)">
                                 {% if a.user.profile.avatar %}
                                     <img src="{{ a.user.profile.avatar.url }}" alt="{{ a.user.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                 {% elif a.user.social_auth.all.0.extra_data.picture %}
@@ -173,7 +172,7 @@
                             
                             <!-- 已參加的人頭像 -->
                             {% for participant in a.cleaned_participants|slice:":3" %}
-                                <div class="participant-avatar" title="{{ participant.user.username }}">
+                                <div class="participant-avatar" title="{{ participant.user_display_name }}">
                                     {% if participant.user.profile.avatar %}
                                         <img src="{{ participant.user.profile.avatar.url }}" alt="{{ participant.user.username }}">
                                     {% elif participant.user.social_auth.all.0.extra_data.picture %}

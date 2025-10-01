@@ -129,32 +129,156 @@
         </div>
     </div>
     
-    <!-- 固定在下方的購買按鈕 -->
-    <a href="#" id="buyNowBtn" class="fixed-cta">
-    立即購買 <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
-    </a>
+    <!-- 固定在下方的按鈕 -->
+    {% if is_owner %}
+        <!-- 書籍擁有者看到管理按鈕 -->
+        <div class="owner-actions">
+            <button id="markSoldBtn" class="owner-action-btn sold-btn">
+                <i class="fa-solid fa-check"></i> 標記已售出
+            </button>
+            <button id="removeBookBtn" class="owner-action-btn remove-btn">
+                <i class="fa-solid fa-trash"></i> 下架書籍
+            </button>
+        </div>
+    {% else %}
+        <!-- 其他用戶看到購買按鈕 -->
+        <a href="#" id="buyNowBtn" class="fixed-cta">
+            立即購買 <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
+        </a>
+    {% endif %}
 
     <script>
-    document.getElementById("buyNowBtn").addEventListener("click", function(e) {
-        e.preventDefault();
-        
-        const email = "{{ seller_user.email }}";
-        const subject = "我想購買您的書籍《{{ book.title }}》";
-        const body = `您好，我想購買您的書籍《{{ book.title }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri }}`;
-
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-        if (isMobile) {
-        // 📱 手機 → 使用 mailto
-        window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        } else {
-        // 💻 電腦 → 使用 Gmail 網頁版
-        window.open(
-            `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
-            "_blank"
-        );
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if is_owner %}
+        // 標記已售出按鈕事件處理
+        const markSoldBtn = document.getElementById("markSoldBtn");
+        if (markSoldBtn) {
+            markSoldBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                
+                if (confirm('確定要標記這本書籍為已售出嗎？')) {
+                    console.log('開始標記已售出，書籍ID:', {{ book.pk }});
+                    
+                    fetch(`/book/{{ book.pk }}/mark-sold/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => {
+                        console.log('收到響應，狀態:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('響應數據:', data);
+                        if (data.success) {
+                            alert('書籍已標記為已售出！');
+                            window.location.href = '/book/';
+                        } else {
+                            console.error('標記失敗:', data);
+                            alert('標記失敗：' + (data.message || '未知錯誤'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('請求錯誤:', error);
+                        alert('標記失敗，請稍後再試。錯誤：' + error.message);
+                    });
+                }
+            });
         }
+        
+        // 下架按鈕事件處理
+        const removeBtn = document.getElementById("removeBookBtn");
+        if (removeBtn) {
+            removeBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                
+                if (confirm('確定要下架這本書籍嗎？下架後其他用戶將無法看到此書籍。')) {
+                    console.log('開始下架書籍，ID:', {{ book.pk }});
+                    
+                    fetch(`/book/{{ book.pk }}/remove/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => {
+                        console.log('收到響應，狀態:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('響應數據:', data);
+                        if (data.success) {
+                            alert('書籍已成功下架！');
+                            window.location.href = '/book/';
+                        } else {
+                            console.error('下架失敗:', data);
+                            alert('下架失敗：' + (data.message || '未知錯誤'));
+                            if (data.error_details) {
+                                console.error('錯誤詳情:', data.error_details);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('請求錯誤:', error);
+                        alert('下架失敗，請稍後再試。錯誤：' + error.message);
+                    });
+                }
+            });
+        }
+        {% else %}
+        // 購買按鈕事件處理
+        const buyBtn = document.getElementById("buyNowBtn");
+        if (buyBtn) {
+            buyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                
+                const email = "{{ seller_user.email|escapejs }}";
+                const subject = "我想購買您的書籍《{{ book.title|escapejs }}》";
+                const body = `您好，我想購買您的書籍《{{ book.title|escapejs }}》（售價：${{ book.price }}）。請問目前還有在販售嗎？請回覆我，謝謝！書籍連結：{{ request.build_absolute_uri|escapejs }}`;
+
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // 📱 手機 → 使用 mailto
+                    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                } else {
+                    // 💻 電腦 → 使用 Gmail 網頁版
+                    window.open(
+                        `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+                        "_blank"
+                    );
+                }
+            });
+        }
+        {% endif %}
     });
+    
+    // 獲取 CSRF Token 的函數
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
     </script>
 
     
@@ -193,8 +317,17 @@
                                 </label>
                             </div>
                             <div class="method-details">
-                                <p>賣家LINE ID: <strong>尚無賣家資料</strong></p>
-                                <button class="add-line-btn"><i class="fas fa-plus-circle"></i> 加入LINE好友</button>
+                                {% if seller_line_id %}
+                                    <p>賣家LINE ID: <strong>{{ seller_line_id }}</strong></p>
+                                    <a href="https://line.me/ti/p/~{{ seller_line_id }}" target="_blank" class="add-line-btn">
+                                        <i class="fas fa-plus-circle"></i> 加入LINE好友
+                                    </a>
+                                {% else %}
+                                    <p>賣家LINE ID: <strong>未提供</strong></p>
+                                    <button class="add-line-btn" disabled style="opacity: 0.5;">
+                                        <i class="fas fa-plus-circle"></i> 賣家未提供LINE ID
+                                    </button>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -219,8 +352,17 @@
                                 </label>
                             </div>
                             <div class="method-details" style="display: none;">
-                                <p>賣家手機: <strong>尚無賣家資料</strong></p>
-                                <a href="tel:到時候去資料庫抓" class="call-btn"><i class="fas fa-phone"></i> 撥打電話</a>
+                                {% if seller_phone %}
+                                    <p>賣家手機: <strong>{{ seller_phone }}</strong></p>
+                                    <a href="tel:{{ seller_phone }}" class="call-btn">
+                                        <i class="fas fa-phone"></i> 撥打電話
+                                    </a>
+                                {% else %}
+                                    <p>賣家手機: <strong>未提供</strong></p>
+                                    <button class="call-btn" disabled style="opacity: 0.5;">
+                                        <i class="fas fa-phone"></i> 賣家未提供電話
+                                    </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
