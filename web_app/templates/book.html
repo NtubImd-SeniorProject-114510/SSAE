@@ -190,7 +190,7 @@
   <div class="deco-line"></div>
 </div>
 
-{% include 'book_upload_form2.html' %}
+{% include 'book_upload_form2.html' with user_phone=user_phone user_line_id=user_line_id %}
 {% endblock %}
 
 {% block body_js %}

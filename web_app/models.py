@@ -74,13 +74,40 @@ class AcadeGrade(models.Model):
 
 # ===== 唯一的使用者表（就是你資料庫的 User）=====
 class User(models.Model):
+    ACADEMIC_CHOICES = [
+        ('研究所', '研究所'),
+        ('四技', '四技'),
+        ('二技', '二技'),
+        ('五專', '五專'),
+    ]
+    
+    ROLE_CHOICES = [
+        ('admin', 'admin'),
+        ('teacher', 'teacher'),
+        ('student', 'student'),
+        ('guest', 'guest'),
+        ('測試', '測試'),
+    ]
+    
     user_id = models.AutoField(primary_key=True)
-    mail = models.CharField(max_length=255, blank=True, null=True)
+    student_id = models.CharField(max_length=50, blank=True, null=True)
+    mail = models.CharField(max_length=100, blank=True, null=True)
+    course = models.CharField(max_length=10, blank=True, null=True)
+    grade = models.CharField(max_length=3, blank=True, null=True)
+    academic = models.CharField(max_length=10, choices=ACADEMIC_CHOICES, blank=True, null=True)
+    anonymous = models.CharField(max_length=10, blank=True, null=True)
+    password = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=100, blank=True, null=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    LINE_ID = models.CharField(max_length=50, blank=True, null=True)
+    
     class Meta:
         db_table = "User"
         managed = False
+    
     def __str__(self):
-        return self.mail or f"User({self.user_id})"
+        return self.name or self.mail or f"User({self.user_id})"
 
 # ===== 課程 =====
 class Course(models.Model):
