@@ -101,7 +101,7 @@ const shortcuts = [
         action: "redirect",
         target: "/join/",
         label: "發起活動",
-        popupToOpen: "upload-form" 
+        popupToOpen: "uploadForm" 
     },
     {
         intentSet: ["event"],

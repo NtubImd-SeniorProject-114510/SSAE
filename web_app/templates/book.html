@@ -195,6 +195,63 @@
 
 {% block body_js %}
 <script>
+// book.js —— 二手書頁面專用（與你 index / comment 的作法一致）
+(function () {
+  // 你實際的 modal/按鈕 id（若不同，改這裡就好）
+  const BOOK_MODAL_IDS = ['uploadFormModal2', 'centerUploadBtn', 'upload-form'];
+  const BOOK_PLUS_IDS  = ['centerUploadBtn2', 'centerUploadBtn']; // 右下角 + 的按鈕
+
+  function showBookModalById(id) {
+    // 1) 先用指定 id 找；2) 找不到就用備援列表找第一個存在的；3) 再不行就點「＋」
+    let el = document.getElementById(id);
+    if (!el) {
+      el = BOOK_MODAL_IDS.map(x => document.getElementById(x)).find(Boolean);
+    }
+    if (el) {
+      el.classList.add('active');      // 跟你現在的規則一致
+      if (!el.style.display) el.style.display = 'flex'; // 你 fallback 寫法
+      console.log('[book] 開啟彈窗:', el.id);
+      return true;
+    }
+    const plus = BOOK_PLUS_IDS.map(x => document.getElementById(x)).find(Boolean);
+    if (plus) {
+      plus.click();
+      // 若 + 會動態插入 modal，等一下再加 active
+      setTimeout(() => {
+        const injected = BOOK_MODAL_IDS.map(x => document.getElementById(x)).find(Boolean);
+        if (injected) {
+          injected.classList.add('active');
+          if (!injected.style.display) injected.style.display = 'flex';
+        }
+      }, 50);
+      return true;
+    }
+    console.warn('[book] 找不到彈窗或觸發按鈕');
+    return false;
+  }
+
+  // 與你 index 同步：讀 sessionStorage.openPopup 自動打開
+  window.addEventListener('DOMContentLoaded', () => {
+    const popupId = sessionStorage.getItem('openPopup');
+    if (popupId) {
+      if (!showBookModalById(popupId)) {
+        setTimeout(() => showBookModalById(popupId), 100);
+      }
+      sessionStorage.removeItem('openPopup');
+    }
+  });
+
+  // （可選）頁內的快捷開窗：.open-book-upload / .add-book
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.open-book-upload, .add-book');
+    if (!btn) return;
+    e.preventDefault();
+    const pid = btn.getAttribute('data-popup') || 'uploadFormModal2';
+    showBookModalById(pid);
+  });
+})();
+
+
   // 取得登入狀態
   function isUserAuthenticated() {
       const authAttr = document.querySelector('.page-container')?.getAttribute('data-user-authenticated');

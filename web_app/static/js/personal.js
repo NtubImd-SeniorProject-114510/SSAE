@@ -16,6 +16,192 @@ window.addEventListener('DOMContentLoaded', function () {
 });
 
 
+// ===== 編輯姓名 =====
+(function () {
+  document.addEventListener('DOMContentLoaded', function () {
+    const row   = document.querySelector('.user-name-row');
+    if (!row) return;
+    let nameEl  = row.querySelector('.user-name');
+    const btn   = row.querySelector('#editNameBtn');
+
+    let editing = false;
+    let inputEl = null;
+    const pencilSVG = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+      </svg>`;
+    const checkSVG  = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M20 6 9 17l-5-5"/>
+      </svg>`;
+
+    function startEdit() {
+      const current = nameEl.textContent.trim();
+      inputEl = document.createElement('input');
+      inputEl.type = 'text';
+      inputEl.className = 'user-name-input';
+      inputEl.maxLength = 20;
+      inputEl.value = current;
+
+      nameEl.replaceWith(inputEl);     // 直接用 input 取代顯示
+      inputEl.focus();
+      btn.innerHTML = checkSVG;        // 鉛筆 → 勾勾（代表儲存）
+      btn.setAttribute('title','儲存');
+      row.style.gap = '2px';
+      editing = true;
+    }
+
+    function saveEdit() {
+      const newVal = (inputEl.value || '').trim();
+      const display = document.createElement('div');
+      display.className = 'user-name';
+      display.textContent = newVal || nameEl?.textContent?.trim() || '';
+      inputEl.replaceWith(display);
+      nameEl = display;
+
+      btn.innerHTML = pencilSVG;       // 勾勾 → 鉛筆
+      btn.setAttribute('title','編輯姓名');
+      row.style.gap = '25px';
+      editing = false;
+
+      // TODO: 在這裡用 fetch/POST 傳到後端保存（如果要即時存 DB）
+      // fetch('/profile/update-name/', { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken': csrftoken}, body: JSON.stringify({ name: newVal }) })
+    }
+
+    function cancelEdit() {            // 按 Esc 還原
+      const display = document.createElement('div');
+      display.className = 'user-name';
+      display.textContent = nameEl?.textContent?.trim() || '';
+      if (inputEl && inputEl.parentNode) {
+        inputEl.replaceWith(display);
+        nameEl = display;
+      }
+      btn.innerHTML = pencilSVG;
+      btn.setAttribute('title','編輯姓名');
+      editing = false;
+    }
+
+    btn.addEventListener('click', () => {
+      if (!editing) startEdit();
+      else saveEdit();
+    });
+
+    // Enter 儲存、Esc 取消
+    document.addEventListener('keydown', (e) => {
+      if (!editing) return;
+      if (e.key === 'Enter') saveEdit();
+      if (e.key === 'Escape') cancelEdit();
+    });
+  });
+})();
+
+
+(function(){
+try {
+    var node = document.getElementById('calendar-events');
+    window.calendarEventsData = node ? JSON.parse(node.textContent || '[]') : [];
+} catch (e) { window.calendarEventsData = []; }
+})();
+
+
+// ===== Books modal =====
+(function(){
+  const modal = document.getElementById('cshelfBookModal');
+  if (!modal) return;
+  const closeBtn = document.getElementById('cshelfCloseBtn');
+  const tTitle = document.getElementById('cshelfBookTitle');
+  const tAuthor = document.getElementById('cshelfBookAuthor');
+  const tPublisher = document.getElementById('cshelfBookPublisher');
+  const tISBN = document.getElementById('cshelfBookISBN');
+  const tDesc = document.getElementById('cshelfBookDesc');
+
+  document.querySelectorAll('.cshelf__book').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tTitle.textContent = btn.dataset.title || '';
+      tAuthor.textContent = btn.dataset.author || '—';
+      tPublisher.textContent = btn.dataset.publisher || '—';
+      tISBN.textContent = btn.dataset.isbn || '—';
+      tDesc.textContent = btn.dataset.desc || '';
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden','false');
+    });
+  });
+
+  const close = ()=>{
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden','true');
+  };
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
+})();
+
+// ===== Tickets flip & gentle float =====
+(function(){
+  const tickets = document.querySelectorAll('.cticket');
+  tickets.forEach((el, idx)=>{
+    el.addEventListener('click', ()=> el.classList.toggle('is-flipped'));
+
+    // gentle float: 每 3~4.5 秒輕微改變 rotate 角度
+    const base = el.style.transform || '';
+    const getRot = ()=>{
+      const m = base.match(/rotate\(([-\d.]+)deg\)/);
+      return m ? parseFloat(m[1]) : 0;
+    };
+    let baseDeg = getRot();
+    setInterval(()=>{
+      const random = (Math.random() - 0.5) * 2; // -1 ~ +1 度
+      el.style.transform = base.replace(/rotate\([-\d.]+deg\)/, `rotate(${(baseDeg + random).toFixed(2)}deg)`);
+    }, 3000 + idx*400);
+  });
+})();
+
+// ===== 小三角旗 modal 開啟（全頁） =====
+(function(){
+  let modal = document.getElementById('cflagModal');
+  if (!modal) return;
+
+  // 確保 modal 在 body 直層（避免被祖先 overflow/transform 影響）
+  if (modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+
+  const closeBtn = document.getElementById('cflagCloseBtn');
+  const elTitle = document.getElementById('cflagTitle');
+  const elWhen  = document.getElementById('cflagWhen');
+  const elWhere = document.getElementById('cflagWhere');
+  const elPeople= document.getElementById('cflagPeople');
+  const elDesc  = document.getElementById('cflagDesc');
+
+  const open = () => { modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); };
+  const close = () => { modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); };
+
+  document.querySelectorAll('.gflag').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const title = btn.dataset.title || '活動';
+      const weekday = btn.dataset.weekday || '';
+      const date = btn.dataset.date || '';
+      const time = btn.dataset.time || '';
+      const location = btn.dataset.location || '—';
+      const total = btn.dataset.total || '0';
+      const max = btn.dataset.max || '0';
+      const desc = btn.dataset.desc || '';
+
+      elTitle.textContent = title;
+      elWhen.textContent  = `${weekday} ${date} 日 ${time}`;
+      elWhere.textContent = location;
+      elPeople.textContent= `${total}/${max} 人`;
+      elDesc.textContent  = desc;
+
+      open();
+    });
+  });
+
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
+})();
+
+
+
 // 學分進度條
 const segments = document.querySelectorAll('.progress-segment');
 const tooltip = document.getElementById('tooltip');

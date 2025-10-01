@@ -260,44 +260,131 @@ def personal(request):
     except Exception as e:
         print(f"Error building created_flags: {e}")
 
-    # === 我的書櫃（Model 名稱/外鍵依你的專案實際情況） ===
+    # === 我的書櫃（跨 app 自動偵測 Model 與擁有者欄位，含除錯） ===
     books = []
     try:
-        BookModel = None
-        try:
-            from .models import SecondHandBook as BookModel
-        except Exception:
-            try:
-                from .models import Book as BookModel
-            except Exception:
-                try:
-                    from .models import UsedBook as BookModel
-                except Exception:
-                    BookModel = None
+        from django.apps import apps
+        from django.db.models import Q
+        from django.conf import settings
+        from django.db.models.fields.related import ForeignKey, ManyToManyField, OneToOneField
+
+        def _cover_url(obj):
+            # 常見封面欄位：都試一次；ImageField/File 取 .url
+            for name in ['cover_url', 'image_url', 'thumbnail_url', 'cover', 'image', 'thumbnail', 'photo']:
+                if hasattr(obj, name):
+                    val = getattr(obj, name)
+                    if not val:
+                        continue
+                    try:
+                        return val.url  # ImageField/File
+                    except Exception:
+                        return str(val)
+            return ''
+
+        def _text(obj, *names, default=''):
+            for n in names:
+                if hasattr(obj, n):
+                    v = getattr(obj, n)
+                    if v:
+                        return str(v)
+            return default
+
+        # 1) 從所有 model 中找「像是書」的候選清單
+        candidates = []
+        for M in apps.get_models():
+            label = M._meta.label_lower  # e.g. "market.book2"
+            name  = M.__name__.lower()
+            fields = list(M._meta.get_fields())
+            field_names = {f.name for f in fields}
+
+            looks_like_book = (
+                'book' in name
+                or 'book' in label
+                or {'isbn', 'book_title', 'author'}.intersection(field_names)
+            )
+            if not looks_like_book:
+                continue
+
+            # 簡單打分：越像「二手書」分越高
+            score = 0
+            if any(k in name for k in ['used', 'secondhand', 'second_hand', 'preowned']):
+                score += 3
+            if 'isbn' in field_names: score += 2
+            if any(n in field_names for n in ['title','book_title']): score += 1
+            if any(n in field_names for n in ['user','owner','seller','created_by','uploader']): score += 2
+
+            candidates.append((score, M, fields, field_names))
+
+        if not candidates:
+            print('[books] no candidate models found.')
+            BookModel = None
+        else:
+            # 分數高者優先
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            BookModel, fields, field_names = candidates[0][1], candidates[0][2], candidates[0][3]
+            print(f"[books] picked model: {BookModel._meta.label} (score={candidates[0][0]})")
 
         if BookModel:
-            from django.db.models import Q
-            qs = (BookModel.objects
-                .filter(
-                    Q(user=request.user) |
-                    Q(owner=getattr(request.user, 'pk', None)) |
-                    Q(seller=request.user) |
-                    Q(created_by=request.user)
-                )
-                .order_by('-id')[:12])
+            # 2) 組「屬於我的」過濾條件：支援 FK / O2O / M2M / email 欄位
+            ors = Q()
+            uid = getattr(request.user, 'id', None)
+            my_email = (request.user.email or '').strip() if hasattr(request.user, 'email') else ''
+
+            for f in fields:
+                # 針對關聯到 User 的 FK / O2O
+                if isinstance(f, (ForeignKey, OneToOneField)) and getattr(f, 'related_model', None):
+                    if f.related_model == apps.get_model(settings.AUTH_USER_MODEL):
+                        # 欄位名例如: user/owner/seller/created_by/uploader...
+                        ors |= Q(**{f.name: request.user}) | Q(**{f.name + '_id': uid})
+
+                # 針對 M2M 到 User
+                if isinstance(f, ManyToManyField) and getattr(f, 'related_model', None):
+                    if f.related_model == apps.get_model(settings.AUTH_USER_MODEL):
+                        ors |= Q(**{f.name: request.user})
+
+            # 另外嘗試常見欄位名（即使不是外鍵）
+            for fn in ['user', 'owner', 'seller', 'created_by', 'uploader', 'posted_by']:
+                if fn in field_names:
+                    ors |= Q(**{fn: request.user}) | Q(**{fn + '_id': uid})
+
+            # 以 email 存的情況
+            for fn in ['seller_email', 'owner_email', 'email', 'contact_email']:
+                if fn in field_names and my_email:
+                    ors |= Q(**{fn: my_email})
+
+            # 3) 查詢
+            base_qs = BookModel.objects.all() if ors == Q() else BookModel.objects.filter(ors)
+
+            # 若有狀態欄位再加條件（存在才套用）
+            if 'is_active' in field_names:
+                base_qs = base_qs.filter(is_active=True)
+            if 'status' in field_names:
+                base_qs = base_qs.filter(status__in=['listed', 'published', 'active', 'available'])
+
+            qs = base_qs.order_by('-id')[:12]
+
+            # 若依然撈不到任何東西，為了除錯先拿最近 12 筆給你看得到畫面
+            if not qs.exists():
+                print('[books] filtered result empty; fallback to latest 12 for debugging.')
+                qs = BookModel.objects.all().order_by('-id')[:12]
 
             for b in qs:
                 books.append({
                     "id": b.pk,
-                    "title": getattr(b, 'title', getattr(b, 'book_title', '')),
-                    "author": getattr(b, 'author', ''),
-                    "publisher": getattr(b, 'publisher', ''),
-                    "isbn": getattr(b, 'isbn', ''),
-                    "desc": getattr(b, 'description', getattr(b, 'intro', '這本書目前尚未提供簡介。')),
-                    "cover": getattr(b, 'cover_url', getattr(b, 'image_url', '')),
+                    "title": _text(b, 'title', 'book_title', default=''),
+                    "author": _text(b, 'author', 'authors', default=''),
+                    "publisher": _text(b, 'publisher', default=''),
+                    "isbn": _text(b, 'isbn', 'isbn13', 'isbn_13', default=''),
+                    "desc": _text(b, 'description', 'intro', 'summary', default='這本書目前尚未提供簡介。'),
+                    "cover": _cover_url(b),
                 })
+
+            print(f"[books] model={BookModel._meta.label}, fields={sorted(list(field_names))}")
+            print(f"[books] final count={len(books)}")
+
         else:
-            print("No Book model found (SecondHandBook/Book/UsedBook).")
+            print("No Book model found in installed apps.")
+
     except Exception as e:
         print(f"Error fetching books: {e}")
     
