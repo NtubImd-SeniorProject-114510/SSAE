@@ -13,6 +13,8 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/join.css' %}">
 <link rel="stylesheet" href="{% static 'css/pop_window/join_pop.css' %}">
+<style>
+</style>
 {% endblock %}
 
 {% if user.is_authenticated %}
@@ -521,5 +523,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化
     init();
 });
+
+//index
+window.addEventListener('DOMContentLoaded', () => {
+  const popupId = sessionStorage.getItem('openPopup');
+  if (popupId) {
+    const popup = document.getElementById(popupId);
+    if (popup) {
+      popup.classList.add('active');
+      console.log(`自動開啟彈窗: ${popupId}`);
+    } else {
+      console.warn(`找不到彈窗 ID: ${popupId}`);
+    }
+    sessionStorage.removeItem('openPopup');
+  }
+});
 </script>
+
 {% endblock %}
