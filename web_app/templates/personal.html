@@ -249,6 +249,17 @@
 }
 .user-name-input:focus{ border-color:#7C86E4; }
 
+.profile-input{
+  width:100% !important;
+  padding:.5rem .6rem;
+  border:2px solid #93A0FF22;
+  border-radius:8px;
+  outline:none;
+  font-size:14px;
+  background:#fff;
+}
+.profile-input:focus{ border-color:#7C86E4; box-shadow:0 0 0 3px rgba(124,134,228,0.1); }
+
 </style>
 {% endblock %}
 
@@ -450,7 +461,7 @@
                                     {{ user.last_name }}{{ user.first_name }}
                                 {% endif %}
                             </div>
-                            <button class="btn-icon" id="editNameBtn" aria-label="編輯姓名" title="編輯姓名">
+                            <button class="btn-icon" id="editNameBtn" aria-label="編輯資料" title="編輯資料">
                                 <!-- 鉛筆 SVG（Lucide 的 edit-3）-->
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path d="M12 20h9"/>
@@ -503,6 +514,26 @@
                                         {{ user_data.mail }}
                                     {% else %}
                                         {{ user.email }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="label">電話</div>
+                                <div class="value">
+                                    {% if user_data and user_data.phone %}
+                                        {{ user_data.phone }}
+                                    {% else %}
+                                        未設定
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="label">LINE </div>
+                                <div class="value">
+                                    {% if user_data and user_data.LINE_ID %}
+                                        {{ user_data.LINE_ID }}
+                                    {% else %}
+                                        未設定
                                     {% endif %}
                                 </div>
                             </div>
@@ -777,7 +808,65 @@
 {% block body_js %}
 <script id="calendar-events" type="application/json">{{ calendar_events_json|default:'[]'|safe }}</script>
 <script>
-// ===== 編輯姓名 =====
+// ===== 工具函數 =====
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function showMessage(message, type = 'info') {
+  // 創建訊息元素
+  const messageEl = document.createElement('div');
+  messageEl.className = `message message-${type}`;
+  messageEl.textContent = message;
+  messageEl.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  `;
+  
+  document.body.appendChild(messageEl);
+  
+  // 3秒後自動移除
+  setTimeout(() => {
+    messageEl.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => messageEl.remove(), 300);
+  }, 3000);
+}
+
+// 新增動畫樣式
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+`;
+document.head.appendChild(style);
+
+// ===== 編輯個人資料 =====
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
     const row   = document.querySelector('.user-name-row');
@@ -785,8 +874,26 @@
     let nameEl  = row.querySelector('.user-name');
     const btn   = row.querySelector('#editNameBtn');
 
+    // 找到電話和LINE ID的元素
+    const phoneItems = document.querySelectorAll('.profile-item');
+    let phoneValueEl = null;
+    let lineValueEl = null;
+    
+    phoneItems.forEach(item => {
+      const label = item.querySelector('.label');
+      if (label && label.textContent.trim() === '電話') {
+        phoneValueEl = item.querySelector('.value');
+      }
+      if (label && label.textContent.trim() === 'LINE') {
+        lineValueEl = item.querySelector('.value');
+      }
+    });
+
     let editing = false;
-    let inputEl = null;
+    let nameInputEl = null;
+    let phoneInputEl = null;
+    let lineInputEl = null;
+    
     const pencilSVG = `
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
         <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
@@ -797,48 +904,147 @@
       </svg>`;
 
     function startEdit() {
-      const current = nameEl.textContent.trim();
-      inputEl = document.createElement('input');
-      inputEl.type = 'text';
-      inputEl.className = 'user-name-input';
-      inputEl.maxLength = 20;
-      inputEl.value = current;
+      // 編輯姓名
+      const currentName = nameEl.textContent.trim();
+      nameInputEl = document.createElement('input');
+      nameInputEl.type = 'text';
+      nameInputEl.className = 'user-name-input';
+      nameInputEl.maxLength = 20;
+      nameInputEl.value = currentName;
+      nameEl.replaceWith(nameInputEl);
+      nameInputEl.focus();
 
-      nameEl.replaceWith(inputEl);     // 直接用 input 取代顯示
-      inputEl.focus();
-      btn.innerHTML = checkSVG;        // 鉛筆 → 勾勾（代表儲存）
+      // 編輯電話
+      if (phoneValueEl) {
+        const currentPhone = phoneValueEl.textContent.trim();
+        phoneInputEl = document.createElement('input');
+        phoneInputEl.type = 'tel';
+        phoneInputEl.className = 'profile-input';
+        phoneInputEl.maxLength = 20;
+        phoneInputEl.value = currentPhone === '未設定' ? '' : currentPhone;
+        phoneInputEl.placeholder = '請輸入電話號碼';
+        phoneValueEl.replaceWith(phoneInputEl);
+      }
+
+      // 編輯LINE ID
+      if (lineValueEl) {
+        const currentLine = lineValueEl.textContent.trim();
+        lineInputEl = document.createElement('input');
+        lineInputEl.type = 'text';
+        lineInputEl.className = 'profile-input';
+        lineInputEl.maxLength = 50;
+        lineInputEl.value = currentLine === '未設定' ? '' : currentLine;
+        lineInputEl.placeholder = '請輸入LINE ID';
+        lineValueEl.replaceWith(lineInputEl);
+      }
+
+      btn.innerHTML = checkSVG;
       btn.setAttribute('title','儲存');
       row.style.gap = '2px';
       editing = true;
     }
 
     function saveEdit() {
-      const newVal = (inputEl.value || '').trim();
-      const display = document.createElement('div');
-      display.className = 'user-name';
-      display.textContent = newVal || nameEl?.textContent?.trim() || '';
-      inputEl.replaceWith(display);
-      nameEl = display;
+      // 儲存姓名
+      const newName = (nameInputEl.value || '').trim();
+      const nameDisplay = document.createElement('div');
+      nameDisplay.className = 'user-name';
+      nameDisplay.textContent = newName || nameEl?.textContent?.trim() || '';
+      nameInputEl.replaceWith(nameDisplay);
+      nameEl = nameDisplay;
 
-      btn.innerHTML = pencilSVG;       // 勾勾 → 鉛筆
-      btn.setAttribute('title','編輯姓名');
+      // 儲存電話
+      if (phoneInputEl) {
+        const newPhone = (phoneInputEl.value || '').trim();
+        const phoneDisplay = document.createElement('div');
+        phoneDisplay.className = 'value';
+        phoneDisplay.textContent = newPhone || '未設定';
+        phoneInputEl.replaceWith(phoneDisplay);
+        phoneValueEl = phoneDisplay;
+      }
+
+      // 儲存LINE ID
+      if (lineInputEl) {
+        const newLine = (lineInputEl.value || '').trim();
+        const lineDisplay = document.createElement('div');
+        lineDisplay.className = 'value';
+        lineDisplay.textContent = newLine || '未設定';
+        lineInputEl.replaceWith(lineDisplay);
+        lineValueEl = lineDisplay;
+      }
+
+      btn.innerHTML = pencilSVG;
+      btn.setAttribute('title','編輯資料');
       row.style.gap = '25px';
       editing = false;
 
-      // TODO: 在這裡用 fetch/POST 傳到後端保存（如果要即時存 DB）
-      // fetch('/profile/update-name/', { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken': csrftoken}, body: JSON.stringify({ name: newVal }) })
+      // 發送到後端保存
+      const data = {
+        anonymous: newName,  // 更改為 anonymous 欄位
+        phone: phoneInputEl ? phoneInputEl.value.trim() : '',
+        line_id: lineInputEl ? lineInputEl.value.trim() : ''
+      };
+      
+      // 取得 CSRF token
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                       document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                       getCookie('csrftoken');
+      
+      fetch('/api/profile/update/', { 
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        }, 
+        body: JSON.stringify(data) 
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          console.log('個人資料更新成功:', result.message);
+          // 可以顯示成功訊息
+          showMessage('個人資料更新成功！', 'success');
+        } else {
+          console.error('更新失敗:', result.error);
+          showMessage('更新失敗: ' + result.error, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('網路錯誤:', error);
+        showMessage('網路錯誤，請稍後再試', 'error');
+      });
     }
 
-    function cancelEdit() {            // 按 Esc 還原
-      const display = document.createElement('div');
-      display.className = 'user-name';
-      display.textContent = nameEl?.textContent?.trim() || '';
-      if (inputEl && inputEl.parentNode) {
-        inputEl.replaceWith(display);
-        nameEl = display;
+    function cancelEdit() {
+      // 還原姓名
+      const nameDisplay = document.createElement('div');
+      nameDisplay.className = 'user-name';
+      nameDisplay.textContent = nameEl?.textContent?.trim() || '';
+      if (nameInputEl && nameInputEl.parentNode) {
+        nameInputEl.replaceWith(nameDisplay);
+        nameEl = nameDisplay;
       }
+
+      // 還原電話
+      if (phoneInputEl && phoneInputEl.parentNode) {
+        const phoneDisplay = document.createElement('div');
+        phoneDisplay.className = 'value';
+        phoneDisplay.textContent = phoneValueEl?.textContent?.trim() || '未設定';
+        phoneInputEl.replaceWith(phoneDisplay);
+        phoneValueEl = phoneDisplay;
+      }
+
+      // 還原LINE ID
+      if (lineInputEl && lineInputEl.parentNode) {
+        const lineDisplay = document.createElement('div');
+        lineDisplay.className = 'value';
+        lineDisplay.textContent = lineValueEl?.textContent?.trim() || '未設定';
+        lineInputEl.replaceWith(lineDisplay);
+        lineValueEl = lineDisplay;
+      }
+
       btn.innerHTML = pencilSVG;
-      btn.setAttribute('title','編輯姓名');
+      btn.setAttribute('title','編輯資料');
       editing = false;
     }
 

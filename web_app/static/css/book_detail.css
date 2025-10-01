@@ -1167,20 +1167,113 @@ body {
     box-shadow: 0 0 0 3px rgba(111,85,125,0.25);
 }
 
-
 .fixed-cta:hover {
     background-color: #543464;
     transform: translateX(-50%) translateY(-3px);
     box-shadow: 0 8px 20px rgba(111, 85, 125, 0.3);
-    color: #fff;
-    text-decoration: none;
 }
 
-.section {
-    padding: 40px;
-    width: 100%;
-    clear: both;
-    overflow: hidden;
+/* 下架按鈕樣式 */
+.fixed-cta.owner-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: 2px solid #dc3545;
+}
+
+.fixed-cta.owner-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+    border-color: #c82333;
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+}
+
+.fixed-cta.owner-btn:active {
+    transform: translateX(-50%) translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+/* 擁有者操作按鈕組 */
+.owner-actions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.owner-action-btn {
+    /* 參考 fixed-cta 的樣式 */
+    padding: 15px 35px;
+    border: none;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    outline: none;
+    color: #fff;
+}
+
+.owner-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.owner-action-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.owner-action-btn:focus {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+}
+
+/* 已售出按鈕 */
+.sold-btn {
+    background-color: #28a745;
+}
+
+.sold-btn:hover {
+    background-color: #218838;
+}
+
+.sold-btn:focus {
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+}
+
+/* 下架按鈕 */
+.remove-btn {
+    background-color: #dc3545;
+}
+
+.remove-btn:hover {
+    background-color: #c82333;
+}
+
+.remove-btn:focus {
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .owner-actions {
+        flex-direction: column;
+        gap: 10px;
+        bottom: 15px;
+    }
+    
+    .owner-action-btn {
+        padding: 12px 25px;
+        font-size: 16px;
+    }
 }
 
 .section:nth-child(odd) {

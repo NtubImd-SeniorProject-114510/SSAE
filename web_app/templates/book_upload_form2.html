@@ -153,12 +153,72 @@
                     <select name="condition" class="form-select" id="id_condition">
                         <option value="">請選擇書況</option>
                         <option value="new">全新</option>
-                        <option value="good">良好</option>
                         <option value="used">尚可</option>
                     </select>
                 </div>
             </div>
             
+
+            <!-- 聯絡資訊智能提醒 -->
+            <div class="contact-reminder" id="contactReminder">
+                {% if not user_phone and not user_line_id %}
+                    <!-- 只有郵件聯絡 -->
+                    <div class="reminder-content partial">
+                        <div class="reminder-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="reminder-text">
+                            <span class="reminder-title">建議補充聯絡資訊</span>
+                            <span class="reminder-desc">目前買家只能透過郵件聯絡，建議添加電話或LINE ID方便聯繫</span>
+                        </div>
+                        <button type="button" class="reminder-btn secondary" onclick="openContactEditModal()">
+                            <i class="fas fa-plus"></i> 添加聯絡方式
+                        </button>
+                    </div>
+                {% elif not user_phone or not user_line_id %}
+                    <!-- 部分聯絡資訊缺失 -->
+                    <div class="reminder-content info">
+                        <div class="reminder-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="reminder-text">
+                            <span class="reminder-title">聯絡方式</span>
+                            <span class="reminder-desc">
+                                買家可透過郵件聯絡，
+                                {% if user_phone %}已設定電話{% endif %}
+                                {% if user_phone and user_line_id %}、{% endif %}
+                                {% if user_line_id %}已設定LINE ID{% endif %}
+                                {% if not user_phone %}，可考慮添加電話{% endif %}
+                                {% if not user_line_id %}，可考慮添加LINE ID{% endif %}
+                            </span>
+                        </div>
+                        <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
+                            <i class="fas fa-edit"></i> 管理聯絡方式
+                        </button>
+                    </div>
+                {% else %}
+                    <!-- 聯絡資訊完整 -->
+                    <div class="reminder-content success">
+                        <div class="reminder-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="reminder-text">
+                            <span class="reminder-title">聯絡方式完整</span>
+                            <span class="reminder-desc">
+                                買家可透過郵件、電話
+                                {% if user_phone %}({{ user_phone }}){% endif %}
+                                或LINE
+                                {% if user_line_id %}({{ user_line_id }}){% endif %}
+                                聯絡您
+                            </span>
+                        </div>
+                        <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
+                            <i class="fas fa-edit"></i> 修改
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+
             <div class="form-group">
                 <label class="form-label">描述</label>
                 <div class="description-label">
@@ -198,6 +258,36 @@
         <div class="success-message">
             <span class="success-icon">✅</span>
             <span class="success-text">上架成功！</span>
+        </div>
+    </div>
+</div>
+
+<!-- 聯絡資訊編輯彈窗 -->
+<div id="contactEditModal" class="contact-modal">
+    <div class="contact-modal-content">
+        <div class="contact-modal-header">
+            <h3>編輯聯絡資訊</h3>
+            <span class="contact-close">&times;</span>
+        </div>
+        <div class="contact-modal-body">
+            <form id="contactEditForm">
+                <div class="contact-form-group">
+                    <label for="editPhone">電話號碼</label>
+                    <input type="tel" id="editPhone" name="phone" value="{{ user_phone|default:'' }}" placeholder="請輸入電話號碼">
+                    <small class="contact-hint">例如：0912345678</small>
+                </div>
+                
+                <div class="contact-form-group">
+                    <label for="editLineId">LINE ID</label>
+                    <input type="text" id="editLineId" name="line_id" value="{{ user_line_id|default:'' }}" placeholder="請輸入LINE ID">
+                    <small class="contact-hint">例如：your_line_id</small>
+                </div>
+                
+                <div class="contact-form-actions">
+                    <button type="button" class="contact-btn-cancel" onclick="closeContactEditModal()">取消</button>
+                    <button type="submit" class="contact-btn-save">儲存</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -421,6 +511,140 @@ function showAutoFillInfo(bookData, ocrText) {
     }
 }
 
+// 開啟個人中心函數
+function openPersonalCenter() {
+    // 在新分頁開啟個人中心
+    window.open('/personal/', '_blank');
+}
+
+// 聯絡資訊編輯彈窗功能
+function openContactEditModal() {
+    document.getElementById('contactEditModal').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // 防止背景滾動
+}
+
+function closeContactEditModal() {
+    document.getElementById('contactEditModal').style.display = 'none';
+    document.body.style.overflow = 'auto'; // 恢復滾動
+}
+
+// 彈窗事件處理
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('contactEditModal');
+    const closeBtn = document.querySelector('.contact-close');
+    
+    // 點擊關閉按鈕
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeContactEditModal);
+    }
+    
+    // 點擊彈窗外部關閉
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeContactEditModal();
+            }
+        });
+    }
+    
+    // ESC鍵關閉
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            closeContactEditModal();
+        }
+    });
+    
+    // 表單提交處理
+    const contactForm = document.getElementById('contactEditForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitContactInfo();
+        });
+    }
+});
+
+function submitContactInfo() {
+    const phone = document.getElementById('editPhone').value.trim();
+    const lineId = document.getElementById('editLineId').value.trim();
+    const saveBtn = document.querySelector('.contact-btn-save');
+    
+    // 禁用提交按鈕
+    saveBtn.disabled = true;
+    saveBtn.textContent = '儲存中...';
+    
+    // 發送AJAX請求
+    fetch('/api/profile/update/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            phone: phone,
+            line_id: lineId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 成功更新
+            showContactUpdateSuccess();
+            closeContactEditModal();
+            // 更新聯絡資訊提醒區域，而不是重整頁面
+            updateContactReminder(phone, lineId);
+        } else {
+            throw new Error(data.message || '更新失敗');
+        }
+    })
+    .catch(error => {
+        console.error('更新聯絡資訊失敗:', error);
+        alert('更新失敗：' + error.message);
+    })
+    .finally(() => {
+        // 恢復提交按鈕
+        saveBtn.disabled = false;
+        saveBtn.textContent = '儲存';
+    });
+}
+
+function showContactUpdateSuccess() {
+    // 創建成功提示
+    const successDiv = document.createElement('div');
+    successDiv.className = 'contact-success-toast';
+    successDiv.innerHTML = `
+        <div class="contact-success-content">
+            <i class="fas fa-check-circle"></i>
+            <span>聯絡資訊已更新</span>
+        </div>
+    `;
+    
+    // 添加樣式
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        z-index: 10001;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(successDiv);
+    
+    // 3秒後移除
+    setTimeout(() => {
+        successDiv.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => {
+            document.body.removeChild(successDiv);
+        }, 300);
+    }, 3000);
+}
+
+// 獲取CSRF Token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -434,6 +658,91 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+// 動態更新聯絡資訊提醒區域
+function updateContactReminder(phone, lineId) {
+    const reminderContainer = document.getElementById('contactReminder');
+    if (!reminderContainer) return;
+    
+    // 判斷聯絡資訊狀態
+    const hasPhone = phone && phone.trim() !== '';
+    const hasLineId = lineId && lineId.trim() !== '';
+    
+    let reminderHTML = '';
+    
+    if (!hasPhone && !hasLineId) {
+        // 只有郵件聯絡
+        reminderHTML = `
+            <div class="reminder-content partial">
+                <div class="reminder-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="reminder-text">
+                    <span class="reminder-title">建議補充聯絡資訊</span>
+                    <span class="reminder-desc">目前買家只能透過郵件聯絡，建議添加電話或LINE ID方便聯繫</span>
+                </div>
+                <button type="button" class="reminder-btn secondary" onclick="openContactEditModal()">
+                    <i class="fas fa-plus"></i> 添加聯絡方式
+                </button>
+            </div>
+        `;
+    } else if (!hasPhone || !hasLineId) {
+        // 部分聯絡資訊缺失
+        reminderHTML = `
+            <div class="reminder-content info">
+                <div class="reminder-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="reminder-text">
+                    <span class="reminder-title">聯絡方式</span>
+                    <span class="reminder-desc">
+                        買家可透過郵件聯絡，
+                        ${hasPhone ? '已設定電話' : ''}
+                        ${hasPhone && hasLineId ? '、' : ''}
+                        ${hasLineId ? '已設定LINE ID' : ''}
+                        ${!hasPhone ? '，可考慮添加電話' : ''}
+                        ${!hasLineId ? '，可考慮添加LINE ID' : ''}
+                    </span>
+                </div>
+                <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
+                    <i class="fas fa-edit"></i> 管理聯絡方式
+                </button>
+            </div>
+        `;
+    } else {
+        // 聯絡資訊完整
+        reminderHTML = `
+            <div class="reminder-content success">
+                <div class="reminder-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="reminder-text">
+                    <span class="reminder-title">聯絡方式完整</span>
+                    <span class="reminder-desc">
+                        買家可透過郵件、電話
+                        ${hasPhone ? `(${phone})` : ''}
+                        或LINE
+                        ${hasLineId ? `(${lineId})` : ''}
+                        聯絡您
+                    </span>
+                </div>
+                <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
+                    <i class="fas fa-edit"></i> 修改
+                </button>
+            </div>
+        `;
+    }
+    
+    // 更新HTML內容
+    reminderContainer.innerHTML = reminderHTML;
+    
+    // 添加更新動畫效果
+    reminderContainer.style.opacity = '0.5';
+    setTimeout(() => {
+        reminderContainer.style.opacity = '1';
+        reminderContainer.style.transition = 'opacity 0.3s ease';
+    }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', function() {

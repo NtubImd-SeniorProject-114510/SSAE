@@ -168,7 +168,7 @@
                             <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
                         {% endif %}
                     </div>
-                    <div class="name">{{ a.user.first_name|default:a.user.username }} (發起人)</div>
+                    <div class="name">{{ a.user_display_name }} (發起人)</div>
                 </div>
                 
                 <!-- 其他參加者 -->
@@ -181,7 +181,7 @@
                             <img src="{% static 'image/avatar24-01.jpg' %}" alt="預設頭像">
                         {% endif %}
                     </div>
-                    <div class="name">{{ participant.user.first_name|default:participant.user.username }}</div>
+                    <div class="name">{{ participant.user_display_name }}</div>
                 </div>
                 {% endfor %}
             </div>
@@ -229,7 +229,7 @@
                                 {% endif %}
                             </div>
                             <div class="user-info">
-                                <span class="user-name">{{ comment.user.first_name|default:comment.user.username }}</span>
+                                <span class="user-name">{{ comment.user_display_name }}</span>
                                 <div class="comment-meta">
                                     <span class="comment-date">{{ comment.created_at|date:"m/d H:i" }}</span>
                                 </div>
@@ -260,7 +260,7 @@
                             </div>
                             <div class="reply-content">
                                 <div class="reply-header">
-                                    <span class="user-name">{{ reply.user.first_name|default:reply.user.username }}</span>
+                                    <span class="user-name">{{ reply.user_display_name }}</span>
                                     <span class="reply-date">{{ reply.created_at|date:"m/d H:i" }}</span>
                                 </div>
                                 <p>{{ reply.content|linebreaks }}</p>
