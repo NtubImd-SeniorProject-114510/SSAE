@@ -13,6 +13,241 @@
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/personal.css' %}">
 <style>
+/* ============== Title ============== */
+.cshelf__title{
+  color:#000; font-size:20px; margin:20px 0 12px;
+  display:flex; gap:10px; align-items:center;
+}
+
+/* ============== Bookshelf ============== */
+.cshelf__bookshelf{
+  background:linear-gradient(180deg,#8b7355 0%,#6d5d4b 100%);
+  border-radius:14px; padding:28px 20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  position:relative; margin-bottom:24px;
+}
+.cshelf__bookshelf::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:6px;
+  background:#5a4a3a; border-radius:14px 14px 0 0;
+}
+.cshelf__shelf{
+  display:flex; gap:14px; margin-bottom:34px; padding:14px;
+  background:rgba(90,74,58,.28); border-radius:10px;
+  position:relative; flex-wrap:wrap;
+}
+.cshelf__shelf::after{
+  content:''; position:absolute; bottom:-12px; left:0; right:0; height:12px;
+  background:linear-gradient(180deg,#5a4a3a 0%,#4a3a2a 100%);
+  border-radius:0 0 5px 5px; box-shadow:0 4px 10px rgba(0,0,0,.35);
+}
+.cshelf__book{
+  width:80px; height:200px; border:0; border-radius:5px;
+  cursor:pointer; position:relative;
+  box-shadow:2px 4px 8px rgba(0,0,0,.3);
+  transform-origin:bottom; transition:transform .25s, box-shadow .25s;
+  background:linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%); color:#fff;
+}
+.cshelf__book:nth-child(2){ background:linear-gradient(135deg,#4ecdc4 0%,#44a08d 100%) }
+.cshelf__book:nth-child(3){ background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%) }
+.cshelf__book:nth-child(4){ background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%) }
+.cshelf__book:nth-child(5){ background:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%) }
+.cshelf__book:nth-child(6){ background:linear-gradient(135deg,#fa709a 0%,#fee140 100%) }
+.cshelf__book:nth-child(7){ background:linear-gradient(135deg,#30cfd0 0%,#330867 100%) }
+.cshelf__book:nth-child(8){ background:linear-gradient(135deg,#a8edea 0%,#fed6e3 100%) }
+.cshelf__book:hover{ transform:translateY(-8px) scale(1.04); box-shadow:4px 8px 16px rgba(0,0,0,.4) }
+.cshelf__spine{ writing-mode:vertical-rl; text-orientation:mixed; padding:14px 8px; font-weight:700; font-size:13px; text-shadow:1px 1px 2px rgba(0,0,0,.25) }
+.cshelf__empty{ background:rgba(255,255,255,.15); color:#000; border:1px dashed rgba(255,255,255,.4); padding:14px 16px; border-radius:8px }
+
+/* ============== Bookshelf Modal ============== */
+.cshelf__modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; animation:cshelfFadeIn .25s ease }
+.cshelf__modal.is-open{ display:flex }
+.cshelf__modal-panel{ background:#fff; border-radius:18px; padding:28px; max-width:600px; width:90%; position:relative; animation:cshelfSlideUp .3s ease }
+.cshelf__modal-close{ position:absolute; top:10px; right:12px; font-size:26px; border:0; background:transparent; cursor:pointer; color:#666 }
+.cshelf__modal-close:hover{ color:#ff6b6b }
+@keyframes cshelfFadeIn{ from{opacity:0} to{opacity:1} }
+@keyframes cshelfSlideUp{ from{opacity:0; transform:translateY(40px)} to{opacity:1; transform:translateY(0)} }
+
+/* ============== Tickets ============== */
+.cshelf__tickets{ position:relative; min-height:240px; padding:20px 10px; margin-bottom:8px }
+.cticket{ position:absolute; width:450px; height:200px; perspective:1000px; cursor:pointer; transition:transform .6s }
+.cticket:hover{ z-index:100 !important; transform:scale(1.05) !important }
+.cticket__inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .8s }
+.cticket.is-flipped .cticket__inner{ transform:rotateY(180deg) }
+.cticket__front, .cticket__back{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.3); overflow:hidden;
+}
+.cticket__front{ background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%); display:flex }
+.cticket__left{
+  flex:1; padding:22px; display:flex; flex-direction:column; justify-content:space-between; position:relative;
+}
+.cticket__left::after{
+  content:''; position:absolute; right:0; top:0; bottom:0; width:2px;
+  background:repeating-linear-gradient(0deg,#d4a574,#d4a574 10px,transparent 10px,transparent 20px);
+}
+.cticket__icon{ font-size:44px; color:#d4a574; margin-bottom:8px }
+.cticket__title{ font-size:20px; font-weight:700; color:#5a4a3a; margin-bottom:6px }
+.cticket__subtitle{ font-size:13px; color:#8b7355; text-transform:uppercase; letter-spacing:2px }
+.cticket__stars{ color:#d4a574; font-size:13px; letter-spacing:3px }
+.cticket__right{
+  width:100px; background:linear-gradient(135deg,#d4a574 0%,#b8936d 100%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#fff; position:relative;
+}
+.cticket__right::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+  background:repeating-linear-gradient(0deg,#ffecd2,#ffecd2 10px,transparent 10px,transparent 20px);
+}
+.cticket__no{ writing-mode:vertical-rl; text-orientation:mixed; font-size:12px; letter-spacing:2px; margin-top:6px }
+
+/* --- Ticket date area：右上角單欄（星期 / 日期 / 時間） --- */
+.cticket__dateinfo{
+  position:absolute; top:14px; right:16px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:2px;
+}
+.cticket__day{ font-size:15px; font-weight:700; line-height:1 }
+.cticket__date{ font-size:44px; font-weight:800; line-height:1 }
+.cticket__time{ font-size:13px; line-height:1 }
+
+/* --- Ticket month label：英文縮寫，固定在左區右下角 --- */
+.cticket__monthlabel{
+  position:absolute; right:12px; bottom:10px;
+  font-size:40px; font-weight:600; color:#5a4a3a; opacity:.85;
+  text-transform:capitalize; /* Jan. / Feb. ... */
+}
+
+/* Back side */
+.cticket__back{
+  background:linear-gradient(135deg,#fff5e6 0%,#ffe4c4 100%);
+  transform:rotateY(180deg); padding:24px;
+  display:flex; flex-direction:column; justify-content:center; text-align:center;
+}
+.cticket__back h3{ font-size:22px; color:#5a4a3a; margin-bottom:12px }
+.cticket__back-txt{ color:#6d5d4b; line-height:1.6; margin-bottom:12px }
+.cticket__back-meta{ display:flex; flex-direction:column; gap:8px; font-size:14px; color:#8b7355 }
+.cticket__back-meta i{ margin-right:8px; color:#d4a574 }
+
+/* ============== Small Guide Flags (Created activities) ============== */
+.gflag-board{
+  display:flex; flex-wrap:wrap; gap:0; align-items:flex-start; margin-bottom:12px;
+}
+.gflag{
+  position:relative; width:120px; height:72px; border:0; background:transparent; padding:0;
+  cursor:pointer; transform-origin:center; transition:transform .15s ease, filter .15s ease;
+  transform: rotate(-8deg); /* 順時針旋轉 5 度 */
+}
+.gflag:hover{ transform:translateY(-2px); filter:brightness(1.02) }
+.gflag::before{
+  content:''; position:absolute; left:10px; top:4px; bottom:0; width:6px; border-radius:6px;
+  background:linear-gradient(180deg,#8b7355 0%, #5a4a3acb 100%); box-shadow:inset 0 0 2px rgba(0,0,0,.35);
+}
+.gflag::after{
+  content:''; position:absolute; left:7px; top:0; width:12px; height:12px; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #ffe7a1, #d4a574); box-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.gflag__flag{
+  position:absolute; left:16px; top:8px; width:96px; height:56px;
+  background:linear-gradient(135deg,#fcb7Bf 0%, #ffe7a1 100%);
+  clip-path: polygon(0 0, 86% 28%, 86% 72%, 0 100%); 
+  border-top-left-radius:6px; border-bottom-left-radius:6px;
+  box-shadow:0 4px 10px rgba(0,0,0,.18); overflow:hidden;
+}
+.gflag__safe{ position: absolute; inset: 20px 15px 3px 2px; }
+
+/* 旗子內容：只顯示 月(英文縮寫) + 日 */
+.cticket__dateinfo--flag{
+  position:relative; display:flex; align-items:center; justify-content:center; text-align:center; top: 6px;
+}
+.gflag__md{ display:flex; flex-direction:column; align-items:center; line-height:1; gap:2px; color:#2e2b2f; text-shadow:0 1px 0 rgba(255,255,255,.4) }
+.gflag__month{ font-size:11px; font-weight:800; text-transform:capitalize }
+.gflag__date{  font-size:22px; font-weight:900 }
+
+/* 主題色（依 tone） */
+.gflag--sports .gflag__flag{ background:linear-gradient(135deg,#43e97b 0%, #38f9d7 100%) }
+.gflag--movie  .gflag__flag{ background:linear-gradient(135deg,#4facfe 0%, #00f2fe 100%) }
+.gflag--study  .gflag__flag{ background:linear-gradient(135deg,#a18cd1 0%, #fbc2eb 100%) }
+
+/* 單行 12/25 置中顯示，避免被 clip-path 切到 */
+.gflag__md-inline{
+  display:inline-block;
+  font-weight:900;
+  font-size:18px;      /* 可依需要調整 16~20 */
+  line-height:1;
+  color:#2e2b2f;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+
+/* 讓容器是置中、單行 */
+.cticket__dateinfo--flag{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  inset:auto; /* 交由 .gflag__safe 控制內距 */
+}
+
+/* 小螢幕字級微調 */
+@media (max-width:768px){
+  .gflag__md-inline{ font-size:16px }
+}
+
+/* ============== Global Modal (for flags) ============== */
+#cflagModal{
+  position:fixed; inset:0; z-index:9999; display:none;
+  background:rgba(0,0,0,.55); justify-content:center; align-items:center; backdrop-filter:blur(2px);
+}
+#cflagModal.is-open{ display:flex }
+.cflag-modal__panel{
+  background:#fff; border-radius:16px; padding:28px 32px;
+  max-width:640px; width:90%; max-height:80vh; overflow-y:auto;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25); animation:cflagPop .25s ease; position:relative;
+}
+.cflag-modal__close{
+  position:absolute; top:12px; right:16px; font-size:24px; color:#888;
+  background:none; border:none; cursor:pointer; transition:color .2s;
+}
+.cflag-modal__close:hover{ color:#ff6b6b }
+@keyframes cflagPop{ from{ transform:translateY(30px); opacity:0 } to{ transform:translateY(0); opacity:1 } }
+
+/* ============== Responsive ============== */
+@media (max-width:768px){
+  .cticket{ width:100%; max-width:350px; height:160px; position:relative !important; margin:18px auto !important; transform:none !important }
+  .cshelf__book{ width:60px; height:150px }
+  .cticket__date{ font-size:36px }
+  .gflag{ width:112px; height:68px }
+  .gflag__flag{ width:92px; height:52px }
+  .gflag__date{ font-size:20px }
+}
+
+.user-name-input{
+    width: 100px;
+}
+
+.user-name-row{
+  display:flex; align-items:center; gap:25px;
+}
+.user-name{ font-size:1rem; font-weight:600; line-height:1.2; }
+
+/* 鉛筆按鈕外觀（圓形、透明背景） */
+.btn-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; height:32px; border-radius:9999px;
+  border:1px solid rgba(0,0,0,.08); background:transparent; cursor:pointer;
+  color:#6b6b6b;
+}
+.btn-icon:hover{ background:#f4f4f6; color:#333; }
+
+.user-name-input{
+  width:100px !important;
+  padding:.5rem .6rem;
+  border:2px solid #93A0FF22;
+  border-radius:8px;
+  outline:none;
+}
+.user-name-input:focus{ border-color:#7C86E4; }
 
 </style>
 {% endblock %}
@@ -159,22 +394,22 @@
                     </div>
 
                     <div class="cshelf__bookshelf">
-                <div class="cshelf__shelf">
-                    {% if books %}
-                    {% for b in books %}
-                        <button class="cshelf__book"
-                                data-title="{{ b.title|default:'' }}"
-                                data-author="{{ b.author|default:'—' }}"
-                                data-publisher="{{ b.publisher|default:'—' }}"
-                                data-isbn="{{ b.isbn|default:'—' }}"
-                                data-desc="{{ b.desc|default:'' }}">
-                        <div class="cshelf__spine">{{ b.title }}</div>
-                        </button>
-                    {% endfor %}
-                    {% else %}
-                    <div class="cshelf__empty">還沒有書籍～去上架你的第一本書吧！</div>
-                    {% endif %}
-                </div>
+                    <div class="cshelf__shelf">
+                        {% if books %}
+                        {% for b in books %}
+                            <button class="cshelf__book"
+                                    data-title="{{ b.title|default:'' }}"
+                                    data-author="{{ b.author|default:'—' }}"
+                                    data-publisher="{{ b.publisher|default:'—' }}"
+                                    data-isbn="{{ b.isbn|default:'—' }}"
+                                    data-desc="{{ b.desc|default:'' }}">
+                            <div class="cshelf__spine">{{ b.title }}</div>
+                            </button>
+                        {% endfor %}
+                        {% else %}
+                        <div class="cshelf__empty">還沒有書籍～去上架你的第一本書吧！</div>
+                        {% endif %}
+                    </div>
                 </div>
 
                 </div>
@@ -542,7 +777,189 @@
 {% block body_js %}
 <script id="calendar-events" type="application/json">{{ calendar_events_json|default:'[]'|safe }}</script>
 <script>
+// ===== 編輯姓名 =====
+(function () {
+  document.addEventListener('DOMContentLoaded', function () {
+    const row   = document.querySelector('.user-name-row');
+    if (!row) return;
+    let nameEl  = row.querySelector('.user-name');
+    const btn   = row.querySelector('#editNameBtn');
 
-  </script>
+    let editing = false;
+    let inputEl = null;
+    const pencilSVG = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+      </svg>`;
+    const checkSVG  = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M20 6 9 17l-5-5"/>
+      </svg>`;
+
+    function startEdit() {
+      const current = nameEl.textContent.trim();
+      inputEl = document.createElement('input');
+      inputEl.type = 'text';
+      inputEl.className = 'user-name-input';
+      inputEl.maxLength = 20;
+      inputEl.value = current;
+
+      nameEl.replaceWith(inputEl);     // 直接用 input 取代顯示
+      inputEl.focus();
+      btn.innerHTML = checkSVG;        // 鉛筆 → 勾勾（代表儲存）
+      btn.setAttribute('title','儲存');
+      row.style.gap = '2px';
+      editing = true;
+    }
+
+    function saveEdit() {
+      const newVal = (inputEl.value || '').trim();
+      const display = document.createElement('div');
+      display.className = 'user-name';
+      display.textContent = newVal || nameEl?.textContent?.trim() || '';
+      inputEl.replaceWith(display);
+      nameEl = display;
+
+      btn.innerHTML = pencilSVG;       // 勾勾 → 鉛筆
+      btn.setAttribute('title','編輯姓名');
+      row.style.gap = '25px';
+      editing = false;
+
+      // TODO: 在這裡用 fetch/POST 傳到後端保存（如果要即時存 DB）
+      // fetch('/profile/update-name/', { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken': csrftoken}, body: JSON.stringify({ name: newVal }) })
+    }
+
+    function cancelEdit() {            // 按 Esc 還原
+      const display = document.createElement('div');
+      display.className = 'user-name';
+      display.textContent = nameEl?.textContent?.trim() || '';
+      if (inputEl && inputEl.parentNode) {
+        inputEl.replaceWith(display);
+        nameEl = display;
+      }
+      btn.innerHTML = pencilSVG;
+      btn.setAttribute('title','編輯姓名');
+      editing = false;
+    }
+
+    btn.addEventListener('click', () => {
+      if (!editing) startEdit();
+      else saveEdit();
+    });
+
+    // Enter 儲存、Esc 取消
+    document.addEventListener('keydown', (e) => {
+      if (!editing) return;
+      if (e.key === 'Enter') saveEdit();
+      if (e.key === 'Escape') cancelEdit();
+    });
+  });
+})();
+
+
+(function(){
+try {
+    var node = document.getElementById('calendar-events');
+    window.calendarEventsData = node ? JSON.parse(node.textContent || '[]') : [];
+} catch (e) { window.calendarEventsData = []; }
+})();
+
+
+// ===== Books modal =====
+(function(){
+  const modal = document.getElementById('cshelfBookModal');
+  if (!modal) return;
+  const closeBtn = document.getElementById('cshelfCloseBtn');
+  const tTitle = document.getElementById('cshelfBookTitle');
+  const tAuthor = document.getElementById('cshelfBookAuthor');
+  const tPublisher = document.getElementById('cshelfBookPublisher');
+  const tISBN = document.getElementById('cshelfBookISBN');
+  const tDesc = document.getElementById('cshelfBookDesc');
+
+  document.querySelectorAll('.cshelf__book').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tTitle.textContent = btn.dataset.title || '';
+      tAuthor.textContent = btn.dataset.author || '—';
+      tPublisher.textContent = btn.dataset.publisher || '—';
+      tISBN.textContent = btn.dataset.isbn || '—';
+      tDesc.textContent = btn.dataset.desc || '';
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden','false');
+    });
+  });
+
+  const close = ()=>{
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden','true');
+  };
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
+})();
+
+// ===== Tickets flip & gentle float =====
+(function(){
+  const tickets = document.querySelectorAll('.cticket');
+  tickets.forEach((el, idx)=>{
+    el.addEventListener('click', ()=> el.classList.toggle('is-flipped'));
+
+    // gentle float: 每 3~4.5 秒輕微改變 rotate 角度
+    const base = el.style.transform || '';
+    const getRot = ()=>{
+      const m = base.match(/rotate\(([-\d.]+)deg\)/);
+      return m ? parseFloat(m[1]) : 0;
+    };
+    let baseDeg = getRot();
+    setInterval(()=>{
+      const random = (Math.random() - 0.5) * 2; // -1 ~ +1 度
+      el.style.transform = base.replace(/rotate\([-\d.]+deg\)/, `rotate(${(baseDeg + random).toFixed(2)}deg)`);
+    }, 3000 + idx*400);
+  });
+})();
+
+// ===== 小三角旗 modal 開啟（全頁） =====
+(function(){
+  let modal = document.getElementById('cflagModal');
+  if (!modal) return;
+
+  // 確保 modal 在 body 直層（避免被祖先 overflow/transform 影響）
+  if (modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+
+  const closeBtn = document.getElementById('cflagCloseBtn');
+  const elTitle = document.getElementById('cflagTitle');
+  const elWhen  = document.getElementById('cflagWhen');
+  const elWhere = document.getElementById('cflagWhere');
+  const elPeople= document.getElementById('cflagPeople');
+  const elDesc  = document.getElementById('cflagDesc');
+
+  const open = () => { modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); };
+  const close = () => { modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); };
+
+  document.querySelectorAll('.gflag').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const title = btn.dataset.title || '活動';
+      const weekday = btn.dataset.weekday || '';
+      const date = btn.dataset.date || '';
+      const time = btn.dataset.time || '';
+      const location = btn.dataset.location || '—';
+      const total = btn.dataset.total || '0';
+      const max = btn.dataset.max || '0';
+      const desc = btn.dataset.desc || '';
+
+      elTitle.textContent = title;
+      elWhen.textContent  = `${weekday} ${date} 日 ${time}`;
+      elWhere.textContent = location;
+      elPeople.textContent= `${total}/${max} 人`;
+      elDesc.textContent  = desc;
+
+      open();
+    });
+  });
+
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
+})();
+</script>
 <script src="{% static 'js/personal.js' %}?v=2"></script>
 {% endblock %}
