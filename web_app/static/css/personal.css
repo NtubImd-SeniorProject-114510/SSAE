@@ -250,17 +250,17 @@ h1, h2, h3 {
 }
 
 .class-item {
-    background-color: rgba(170, 157, 169, 0.3);
-    color: #2E2B2F;
-    border-radius: 6px;
-    padding: 8px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: relative;
-    border-left: 4px solid #AA9DA9;
-    transition: transform 0.2s;
+  background-color: rgba(170, 157, 169, 0.3);
+  color: #2E2B2F;
+  border-radius: 6px;
+  padding: 8px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  border-left: 4px solid #AA9DA9;   /* ← 就用這條 */
+  transition: transform 0.2s;
 }
 
 .class-item:hover {
@@ -278,25 +278,7 @@ h1, h2, h3 {
     opacity: 0.9;
 }
 
-.schedule-table tr:nth-child(1) .class-item {
-    border-left-color: rgba(170, 157, 169, 0.5);
-}
 
-.schedule-table tr:nth-child(2) .class-item {
-    border-left-color: rgba(170, 157, 169, 0.4);
-}
-
-.schedule-table tr:nth-child(3) .class-item {
-    border-left-color: rgba(170, 157, 169, 0.6);
-}
-
-.schedule-table tr:nth-child(5) .class-item {
-    border-left-color: rgba(170, 157, 169, 0.2);
-}
-
-.schedule-table tr:nth-child(6) .class-item {
-    border-left-color: #9479C1;
-}
 
 .course-schedule {
     flex: 2;
