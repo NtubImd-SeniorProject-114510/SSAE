@@ -535,16 +535,16 @@
 
         <!-- 旗子詳情 Modal -->
         <div class="cflag-modal" id="cflagModal" aria-hidden="true">
-        <div class="cflag-modal__panel" role="dialog" aria-modal="true">
-            <button class="cflag-modal__close" id="cflagCloseBtn" aria-label="關閉">&times;</button>
-            <h2 id="cflagTitle">活動名稱</h2>
-            <div class="cflag-modal__meta">
-            <div><i class="fa-solid fa-calendar-day"></i> <span id="cflagWhen">—</span></div>
-            <div><i class="fa-solid fa-location-dot"></i> <span id="cflagWhere">—</span></div>
-            <div><i class="fa-solid fa-users"></i> <span id="cflagPeople">—</span></div>
-            </div>
-            <div class="cflag-modal__desc" id="cflagDesc">—</div>
-        </div>
+          <div class="cflag-modal__panel" role="dialog" aria-modal="true">
+              <button class="cflag-modal__close" id="cflagCloseBtn" aria-label="關閉">&times;</button>
+              <a id="cflagTitle" href="">活動名稱</a>
+              <div class="cflag-modal__meta">
+                <div><i class="fa-solid fa-calendar-day"></i> <span id="cflagWhen">—</span></div>
+                <div><i class="fa-solid fa-location-dot"></i> <span id="cflagWhere">—</span></div>
+                <div><i class="fa-solid fa-users"></i> <span id="cflagPeople">—</span></div>
+              </div>
+              <div class="cflag-modal__desc" id="cflagDesc">—</div>
+          </div>
         </div>
 
         <div class="row">
@@ -790,7 +790,7 @@
                               <div class="activity-content">
                                   <div class="activity-title">
                                       <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
-                                      <span style="margin-left:8px; font-size:12px; color:#fff; background:#6c63ff; padding:2px 8px; border-radius:12px;">我發起</span>
+                                      <span style="margin-left:8px; font-size:12px; color:#fff; background:rgb(138, 119, 136); padding:2px 8px; border-radius:12px;">我發起</span>
                                   </div>
                                   <div class="activity-details">
                                       <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
