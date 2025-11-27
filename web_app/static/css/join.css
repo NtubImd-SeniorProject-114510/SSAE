@@ -1770,7 +1770,6 @@ body {
   }
   
   .pagination {
-    flex-direction: column;
     gap: 12px;
   }
   
@@ -3113,9 +3112,9 @@ body {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: #667eea;
-  color: white;
-  border-color: #667eea;
+  background: #f4f0ff;
+  border-color: #764ba2;
+  color: #9f66ea;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102,126,234,0.3);
 }
@@ -3157,9 +3156,9 @@ body {
 }
 
 .pagination-number:hover {
-  background: #f0f4ff;
-  border-color: #667eea;
-  color: #667eea;
+  background: #f4f0ff;
+  border-color: #764ba2;
+  color: #9f66ea;
   transform: translateY(-1px);
 }
 
