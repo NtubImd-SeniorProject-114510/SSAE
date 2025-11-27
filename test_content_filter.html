@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>禁用詞檢查調試工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .found-words {
+            margin-top: 10px;
+        }
+        .found-words ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        .found-words li {
+            margin: 3px 0;
+        }
+        .normalized-text {
+            margin-top: 10px;
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 禁用詞檢查調試工具</h1>
+        
+        <div class="form-group">
+            <label for="textInput">請輸入要檢查的文字：</label>
+            <textarea id="textInput" placeholder="在這裡輸入您想要檢查的文字內容..."></textarea>
+        </div>
+        
+        <button onclick="checkContent()">檢查內容</button>
+        
+        <div id="result" class="result">
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function checkContent() {
+            const textInput = document.getElementById('textInput');
+            const result = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('請輸入要檢查的文字');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/debug/content-filter/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'result success';
+                    result.style.display = 'block';
+                    
+                    if (data.has_banned_content) {
+                        resultContent.innerHTML = `
+                            <h3>❌ 檢測到禁用詞彙</h3>
+                            <p><strong>原始文字：</strong> ${data.text}</p>
+                            <div class="found-words">
+                                <strong>檢測到的詞彙：</strong>
+                                <ul>
+                                    ${data.found_words.map(word => `<li>${word}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="normalized-text">
+                                <strong>標準化後的文字：</strong> ${data.normalized_text}
+                            </div>
+                        `;
+                    } else {
+                        resultContent.innerHTML = `
+                            <h3>✅ 內容檢查通過</h3>
+                            <p><strong>原始文字：</strong> ${data.text}</p>
+                            <p>沒有檢測到任何禁用詞彙</p>
+                            <div class="normalized-text">
+                                <strong>標準化後的文字：</strong> ${data.normalized_text}
+                            </div>
+                        `;
+                    }
+                } else {
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    resultContent.innerHTML = `<h3>❌ 檢查失敗</h3><p>${data.error}</p>`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.style.display = 'block';
+                resultContent.innerHTML = `<h3>❌ 網路錯誤</h3><p>${error.message}</p>`;
+            }
+        }
+        
+        // 按 Enter 鍵也可以檢查
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                checkContent();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -79,7 +79,7 @@
 <div class="cloud-shape" style="width: 250px; height: 250px; top: 800px; left: 20%; opacity: 0.2;"></div>
 
 <div class="main-container">
-    <div class="back-button" onclick="history.back()">
+    <div class="back-button" onclick="goBackWithRefresh()">
         <a href="#">返回</a>
     </div>
 
@@ -192,4 +192,20 @@
 <script src="{% static 'js/pop_window/comment_pop.js' %}"></script>
 <script src="{% static 'js/comment_detail.js' %}"></script>
 <script defer src="{% static 'js/pop_window/comment_toast.js' %}"></script>
+
+<script>
+// 返回並刷新評論列表頁面
+function goBackWithRefresh() {
+    console.log('準備返回並刷新評論列表');
+    
+    // 設置多個標記確保能被檢測到
+    sessionStorage.setItem('needRefreshRatings', 'true');
+    localStorage.setItem('needRefreshRatings', 'true');
+    
+    // 嘗試直接跳轉到評論列表頁面而不是使用 history.back()
+    // 這樣可以確保頁面重新載入
+    const commentListUrl = '/comment/';
+    window.location.href = commentListUrl;
+}
+</script>
 {% endblock %}

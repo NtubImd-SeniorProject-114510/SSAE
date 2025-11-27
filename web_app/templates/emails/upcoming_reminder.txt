@@ -1,0 +1,8 @@
+{{ user_data.name|default:user.get_full_name }} 您好：
+
+這是{{ kind_label }}「{{ title }}」的{{ rtype }}。
+開始時間：{{ starts_at }}{% if detail_url %}
+
+詳細資訊：{{ detail_url }}{% endif %}
+
+— 智能校事專家 系統通知

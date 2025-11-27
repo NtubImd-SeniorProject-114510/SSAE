@@ -4,3 +4,5 @@ __pycache__/
 db.sqlite3
 ssae114510-d58d80f3142f.json
 config/google-credentials.json
+logs/*.log
+node_modules/

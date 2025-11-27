@@ -6,12 +6,10 @@
     <div class="header">
         <img class="bookTitleimg" src="{% static 'image/BookTitleOwl.png' %}" alt="logo">
         <button class="close-btn" type="button" onclick="closeForm2()">&times;</button>
-        {% comment %} <h1>上傳二手書</h1> {% endcomment %}
-        {% comment %} <p>分享你的知識，讓書籍找到新的歸宿</p> {% endcomment %}
     </div>
 
     <div class="form-container">
-        <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book2' %}">
+        <form id="bookForm2" method="post" enctype="multipart/form-data" action="{% url 'upload_book2' %}" data-related-url="{% url 'get_related_data' %}">
             {% csrf_token %}
             
             <!-- 上傳區域 -->
@@ -67,48 +65,24 @@
                 <div id="id_title_error_text" class="field-error" role="alert" aria-live="polite"></div>
             </div>
 
-            <!-- 新增作者欄位 -->
             <div class="form-group">
                 <label class="form-label" for="id_author">作者</label>
-                <input type="text" 
-                       name="author" 
-                       maxlength="255" 
-                       class="form-input" 
-                       id="id_author" 
-                       placeholder="請輸入作者">
+                <input type="text" name="author" maxlength="255" class="form-input" id="id_author" placeholder="請輸入作者">
             </div>
 
-            <!-- 新增出版社欄位 -->
             <div class="form-group">
                 <label class="form-label" for="id_publisher">出版社</label>
-                <input type="text" 
-                       name="publisher" 
-                       maxlength="255" 
-                       class="form-input" 
-                       id="id_publisher" 
-                       placeholder="請輸入出版社">
+                <input type="text" name="publisher" maxlength="255" class="form-input" id="id_publisher" placeholder="請輸入出版社">
             </div>
 
-            <!-- 新增 ISBN 欄位 -->
             <div class="form-group">
                 <label class="form-label" for="id_isbn">ISBN</label>
-                <input type="text" 
-                       name="isbn" 
-                       maxlength="20" 
-                       class="form-input" 
-                       id="id_isbn" 
-                       placeholder="請輸入 ISBN">
+                <input type="text" name="isbn" maxlength="20" class="form-input" id="id_isbn" placeholder="請輸入 ISBN">
             </div>
 
             <div class="form-group">
                 <label class="form-label required" for="id_price">價格</label>
-                <input type="number" 
-                       name="price" 
-                       class="form-input" 
-                       id="id_price" 
-                       placeholder="請輸入價格" 
-                       min="0"
-                       required>
+                <input type="number" name="price" class="form-input" id="id_price" placeholder="請輸入價格" min="0" required>
             </div>
             
             <div class="form-row-three">
@@ -157,30 +131,20 @@
                     </select>
                 </div>
             </div>
-            
 
-            <!-- 聯絡資訊智能提醒 -->
             <div class="contact-reminder" id="contactReminder">
                 {% if not user_phone and not user_line_id %}
-                    <!-- 只有郵件聯絡 -->
                     <div class="reminder-content partial">
-                        <div class="reminder-icon">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
+                        <div class="reminder-icon"><i class="fas fa-info-circle"></i></div>
                         <div class="reminder-text">
                             <span class="reminder-title">建議補充聯絡資訊</span>
                             <span class="reminder-desc">目前買家只能透過郵件聯絡，建議添加電話或LINE ID方便聯繫</span>
                         </div>
-                        <button type="button" class="reminder-btn secondary" onclick="openContactEditModal()">
-                            <i class="fas fa-plus"></i> 添加聯絡方式
-                        </button>
+                        <button type="button" class="reminder-btn secondary" onclick="openContactEditModal()"><i class="fas fa-plus"></i> 添加聯絡方式</button>
                     </div>
                 {% elif not user_phone or not user_line_id %}
-                    <!-- 部分聯絡資訊缺失 -->
                     <div class="reminder-content info">
-                        <div class="reminder-icon">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
+                        <div class="reminder-icon"><i class="fas fa-info-circle"></i></div>
                         <div class="reminder-text">
                             <span class="reminder-title">聯絡方式</span>
                             <span class="reminder-desc">
@@ -192,29 +156,18 @@
                                 {% if not user_line_id %}，可考慮添加LINE ID{% endif %}
                             </span>
                         </div>
-                        <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
-                            <i class="fas fa-edit"></i> 管理聯絡方式
-                        </button>
+                        <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()"><i class="fas fa-edit"></i> 管理聯絡方式</button>
                     </div>
                 {% else %}
-                    <!-- 聯絡資訊完整 -->
                     <div class="reminder-content success">
-                        <div class="reminder-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
+                        <div class="reminder-icon"><i class="fas fa-check-circle"></i></div>
                         <div class="reminder-text">
                             <span class="reminder-title">聯絡方式完整</span>
                             <span class="reminder-desc">
-                                買家可透過郵件、電話
-                                {% if user_phone %}({{ user_phone }}){% endif %}
-                                或LINE
-                                {% if user_line_id %}({{ user_line_id }}){% endif %}
-                                聯絡您
+                                買家可透過郵件、電話{% if user_phone %}({{ user_phone }}){% endif %}或LINE{% if user_line_id %}({{ user_line_id }}){% endif %}聯絡您
                             </span>
                         </div>
-                        <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
-                            <i class="fas fa-edit"></i> 修改
-                        </button>
+                        <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()"><i class="fas fa-edit"></i> 修改</button>
                     </div>
                 {% endif %}
             </div>
@@ -236,11 +189,7 @@
                     <button type="button" class="quick-tag" onclick="toggleTag(this, '面交佳')">🤝 面交佳</button>
                     <button type="button" class="quick-tag" onclick="toggleTag(this, '已絕版')">⭐ 已絕版</button>
                 </div>
-                <textarea name="description" 
-                          id="description" 
-                          class="form-textarea" 
-                          rows="3" 
-                          placeholder="請描述書籍狀況、購買原因等..."></textarea>
+                <textarea name="description" id="description" class="form-textarea" rows="3" placeholder="請描述書籍狀況、購買原因等..."></textarea>
             </div>
 
             <div class="submit-container">
@@ -297,9 +246,7 @@ let selectedFile = null;
 let isLoadingData = false;
 let isSubmitting = false;
 
-const BANNED_WORDS = [
-  '違禁','仿冒','成人','武器','毒品','菸草','賭博'
-];
+const BANNED_WORDS = ['違禁','仿冒','成人','武器','毒品','菸草','賭博'];
 function normalizeText(s){ return (s||'').toLowerCase().trim(); }
 function containsBannedTitle(s){
   const t = normalizeText(s);
@@ -331,7 +278,6 @@ function showRecognitionStatus(message, type) {
     statusElement.textContent = message;
     statusElement.className = `recognition-status ${type}`;
     statusElement.style.display = 'block';
-    
     if (type === 'loading') {
         setTimeout(() => {
             if (statusElement.className.includes('loading')) {
@@ -340,45 +286,28 @@ function showRecognitionStatus(message, type) {
         }, 10000);
     }
 }
-
-function hideRecognitionStatus() {
-    document.getElementById('recognitionStatus').style.display = 'none';
-}
+function hideRecognitionStatus() { document.getElementById('recognitionStatus').style.display = 'none'; }
 
 async function recognizeBookFromFile(file) {
     try {
         showRecognitionStatus('正在識別書籍資訊...', 'loading');
-        
         const formData = new FormData();
         formData.append('image', file);
-        
         const response = await fetch('/api/recognize-book/', {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
         });
-        
         const data = await response.json();
-        
         if (data.success) {
             showRecognitionStatus('識別成功！正在自動填入資訊...', 'success');
-            
             fillBookInfo(data.data);
             showAutoFillInfo(data.data, data.ocr_text);
-            
             setTimeout(hideRecognitionStatus, 3000);
         } else {
             showRecognitionStatus('識別失敗：' + data.error, 'error');
-            console.error('識別失敗：', data.error);
-            
-            if (data.ocr_text) {
-                showAutoFillInfo({}, data.ocr_text);
-            }
+            if (data.ocr_text) showAutoFillInfo({}, data.ocr_text);
         }
-        
     } catch (error) {
         console.error('識別請求錯誤：', error);
         showRecognitionStatus('識別請求失敗，請稍後再試', 'error');
@@ -388,30 +317,15 @@ async function recognizeBookFromFile(file) {
 async function manualSearchBook() {
     const query = document.getElementById('manualSearchInput').value.trim();
     const type = document.getElementById('manualSearchType').value;
-    
-    if (!query) {
-        alert('請輸入搜尋關鍵字');
-        return;
-    }
-    
+    if (!query) { alert('請輸入搜尋關鍵字'); return; }
     try {
         showRecognitionStatus(`正在搜尋${type === 'isbn' ? 'ISBN' : '書名'}...`, 'loading');
-        
         const response = await fetch('/api/search-book/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                query: query,
-                type: type
-            })
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ query, type })
         });
-        
         const data = await response.json();
-        
         if (data.success) {
             showRecognitionStatus('搜尋成功！正在填入資訊...', 'success');
             fillBookInfo(data.data);
@@ -420,7 +334,6 @@ async function manualSearchBook() {
         } else {
             showRecognitionStatus('搜尋失敗：' + data.error, 'error');
         }
-        
     } catch (error) {
         console.error('搜尋錯誤：', error);
         showRecognitionStatus('搜尋請求失敗，請稍後再試', 'error');
@@ -428,40 +341,21 @@ async function manualSearchBook() {
 }
 
 function fillBookInfo(bookData) {
-    if (bookData.title) {
-        document.getElementById('id_title').value = bookData.title;
-    }
-    if (bookData.author) {
-        document.getElementById('id_author').value = bookData.author;
-    }
-    if (bookData.publisher) {
-        document.getElementById('id_publisher').value = bookData.publisher;
-    }
-    if (bookData.isbn) {
-        document.getElementById('id_isbn').value = bookData.isbn;
-    }
-    
+    if (bookData.title) document.getElementById('id_title').value = bookData.title;
+    if (bookData.author) document.getElementById('id_author').value = bookData.author;
+    if (bookData.publisher) document.getElementById('id_publisher').value = bookData.publisher;
+    if (bookData.isbn) document.getElementById('id_isbn').value = bookData.isbn;
     if (bookData.description) {
         const descTextarea = document.getElementById('description');
         const currentDesc = descTextarea.value;
         const newDesc = bookData.description.substring(0, 200) + '...';
-        
-        if (currentDesc) {
-            descTextarea.value = currentDesc + '\n\n自動識別描述：' + newDesc;
-        } else {
-            descTextarea.value = '自動識別描述：' + newDesc;
-        }
+        descTextarea.value = currentDesc ? (currentDesc + '\n\n自動識別描述：' + newDesc) : ('自動識別描述：' + newDesc);
     }
-    
-    if (bookData.categories && bookData.categories.length > 0) {
-        autoSelectCategory(bookData.categories);
-    }
+    if (bookData.categories && bookData.categories.length > 0) autoSelectCategory(bookData.categories);
 }
-
 function autoSelectCategory(categories) {
     const categorySelect = document.getElementById('id_category');
     const categoryOptions = Array.from(categorySelect.options);
-    
     const categoryMapping = {
         '教育': ['education', 'textbook', '教科書', '教材'],
         '文學': ['fiction', 'literature', '小說', '文學'],
@@ -472,179 +366,78 @@ function autoSelectCategory(categories) {
         '計算機': ['computer', 'programming', '電腦', '程式'],
         '語言': ['language', 'linguistics', '語言', '語文']
     };
-    
     for (const category of categories) {
         const lowerCategory = category.toLowerCase();
-        
         for (const [key, keywords] of Object.entries(categoryMapping)) {
             if (keywords.some(keyword => lowerCategory.includes(keyword.toLowerCase()))) {
                 const option = categoryOptions.find(opt => opt.textContent.includes(key));
-                if (option) {
-                    categorySelect.value = option.value;
-                    break;
-                }
+                if (option) { categorySelect.value = option.value; break; }
             }
         }
     }
 }
-
 function showAutoFillInfo(bookData, ocrText) {
     const infoElement = document.getElementById('autoFillInfo');
     const resultElement = document.getElementById('recognitionResult');
-    
     let infoHtml = '';
-    
     if (bookData.title) infoHtml += `<strong>書名：</strong> ${bookData.title}<br>`;
     if (bookData.author) infoHtml += `<strong>作者：</strong> ${bookData.author}<br>`;
     if (bookData.publisher) infoHtml += `<strong>出版社：</strong> ${bookData.publisher}<br>`;
     if (bookData.isbn) infoHtml += `<strong>ISBN：</strong> ${bookData.isbn}<br>`;
     if (bookData.source) infoHtml += `<strong>資料來源：</strong> ${bookData.source}<br>`;
-    
     if (ocrText) {
         const shortText = ocrText.substring(0, 100) + (ocrText.length > 100 ? '...' : '');
         infoHtml += `<strong>識別文字：</strong> ${shortText}<br>`;
     }
-    
-    if (infoHtml) {
-        resultElement.innerHTML = infoHtml;
-        infoElement.style.display = 'block';
-    }
+    if (infoHtml) { resultElement.innerHTML = infoHtml; infoElement.style.display = 'block'; }
 }
 
-// 開啟個人中心函數
-function openPersonalCenter() {
-    // 在新分頁開啟個人中心
-    window.open('/personal/', '_blank');
-}
+// 開啟個人中心
+function openPersonalCenter() { window.open('/personal/', '_blank'); }
 
-// 聯絡資訊編輯彈窗功能
-function openContactEditModal() {
-    document.getElementById('contactEditModal').style.display = 'block';
-    document.body.style.overflow = 'hidden'; // 防止背景滾動
-}
-
-function closeContactEditModal() {
-    document.getElementById('contactEditModal').style.display = 'none';
-    document.body.style.overflow = 'auto'; // 恢復滾動
-}
+// 聯絡資訊彈窗
+function openContactEditModal() { document.getElementById('contactEditModal').style.display = 'block'; document.body.style.overflow = 'hidden'; }
+function closeContactEditModal() { document.getElementById('contactEditModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
 // 彈窗事件處理
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('contactEditModal');
     const closeBtn = document.querySelector('.contact-close');
-    
-    // 點擊關閉按鈕
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeContactEditModal);
-    }
-    
-    // 點擊彈窗外部關閉
+    if (closeBtn) closeBtn.addEventListener('click', closeContactEditModal);
     if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeContactEditModal();
-            }
-        });
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeContactEditModal(); });
     }
-    
-    // ESC鍵關閉
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.style.display === 'block') {
-            closeContactEditModal();
-        }
-    });
-    
-    // 表單提交處理
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display === 'block') closeContactEditModal(); });
     const contactForm = document.getElementById('contactEditForm');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitContactInfo();
-        });
-    }
+    if (contactForm) contactForm.addEventListener('submit', function(e) { e.preventDefault(); submitContactInfo(); });
 });
 
 function submitContactInfo() {
     const phone = document.getElementById('editPhone').value.trim();
     const lineId = document.getElementById('editLineId').value.trim();
     const saveBtn = document.querySelector('.contact-btn-save');
-    
-    // 禁用提交按鈕
-    saveBtn.disabled = true;
-    saveBtn.textContent = '儲存中...';
-    
-    // 發送AJAX請求
+    saveBtn.disabled = true; saveBtn.textContent = '儲存中...';
     fetch('/api/profile/update/', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            phone: phone,
-            line_id: lineId
-        })
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ phone, line_id: lineId })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
-        if (data.success) {
-            // 成功更新
-            showContactUpdateSuccess();
-            closeContactEditModal();
-            // 更新聯絡資訊提醒區域，而不是重整頁面
-            updateContactReminder(phone, lineId);
-        } else {
-            throw new Error(data.message || '更新失敗');
-        }
+        if (data.success) { showContactUpdateSuccess(); closeContactEditModal(); updateContactReminder(phone, lineId); }
+        else { throw new Error(data.message || '更新失敗'); }
     })
-    .catch(error => {
-        console.error('更新聯絡資訊失敗:', error);
-        alert('更新失敗：' + error.message);
-    })
-    .finally(() => {
-        // 恢復提交按鈕
-        saveBtn.disabled = false;
-        saveBtn.textContent = '儲存';
-    });
+    .catch(err => { console.error('更新聯絡資訊失敗:', err); alert('更新失敗：' + err.message); })
+    .finally(() => { saveBtn.disabled = false; saveBtn.textContent = '儲存'; });
 }
-
 function showContactUpdateSuccess() {
-    // 創建成功提示
     const successDiv = document.createElement('div');
     successDiv.className = 'contact-success-toast';
-    successDiv.innerHTML = `
-        <div class="contact-success-content">
-            <i class="fas fa-check-circle"></i>
-            <span>聯絡資訊已更新</span>
-        </div>
-    `;
-    
-    // 添加樣式
-    successDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-        z-index: 10001;
-        animation: slideInRight 0.3s ease-out;
-    `;
-    
+    successDiv.innerHTML = `<div class="contact-success-content"><i class="fas fa-check-circle"></i><span>聯絡資訊已更新</span></div>`;
+    successDiv.style.cssText = `position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#4caf50 0%,#45a049 100%);color:#fff;padding:15px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(76,175,80,0.3);z-index:10001;animation:slideInRight .3s ease-out;`;
     document.body.appendChild(successDiv);
-    
-    // 3秒後移除
-    setTimeout(() => {
-        successDiv.style.animation = 'slideOutRight 0.3s ease-in';
-        setTimeout(() => {
-            document.body.removeChild(successDiv);
-        }, 300);
-    }, 3000);
+    setTimeout(() => { successDiv.style.animation = 'slideOutRight .3s ease-in'; setTimeout(() => { document.body.removeChild(successDiv); }, 300); }, 3000);
 }
-
-// 獲取CSRF Token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -659,443 +452,288 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
-// 動態更新聯絡資訊提醒區域
 function updateContactReminder(phone, lineId) {
     const reminderContainer = document.getElementById('contactReminder');
     if (!reminderContainer) return;
-    
-    // 判斷聯絡資訊狀態
-    const hasPhone = phone && phone.trim() !== '';
-    const hasLineId = lineId && lineId.trim() !== '';
-    
-    let reminderHTML = '';
-    
+    const hasPhone = !!(phone && phone.trim());
+    const hasLineId = !!(lineId && lineId.trim());
+    let html = '';
     if (!hasPhone && !hasLineId) {
-        // 只有郵件聯絡
-        reminderHTML = `
-            <div class="reminder-content partial">
-                <div class="reminder-icon">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <div class="reminder-text">
-                    <span class="reminder-title">建議補充聯絡資訊</span>
-                    <span class="reminder-desc">目前買家只能透過郵件聯絡，建議添加電話或LINE ID方便聯繫</span>
-                </div>
-                <button type="button" class="reminder-btn secondary" onclick="openContactEditModal()">
-                    <i class="fas fa-plus"></i> 添加聯絡方式
-                </button>
-            </div>
-        `;
+        html = `<div class="reminder-content partial"><div class="reminder-icon"><i class="fas fa-info-circle"></i></div><div class="reminder-text"><span class="reminder-title">建議補充聯絡資訊</span><span class="reminder-desc">目前買家只能透過郵件聯絡，建議添加電話或LINE ID方便聯繫</span></div><button type="button" class="reminder-btn secondary" onclick="openContactEditModal()"><i class="fas fa-plus"></i> 添加聯絡方式</button></div>`;
     } else if (!hasPhone || !hasLineId) {
-        // 部分聯絡資訊缺失
-        reminderHTML = `
-            <div class="reminder-content info">
-                <div class="reminder-icon">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <div class="reminder-text">
-                    <span class="reminder-title">聯絡方式</span>
-                    <span class="reminder-desc">
-                        買家可透過郵件聯絡，
-                        ${hasPhone ? '已設定電話' : ''}
-                        ${hasPhone && hasLineId ? '、' : ''}
-                        ${hasLineId ? '已設定LINE ID' : ''}
-                        ${!hasPhone ? '，可考慮添加電話' : ''}
-                        ${!hasLineId ? '，可考慮添加LINE ID' : ''}
-                    </span>
-                </div>
-                <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
-                    <i class="fas fa-edit"></i> 管理聯絡方式
-                </button>
-            </div>
-        `;
+        html = `<div class="reminder-content info"><div class="reminder-icon"><i class="fas fa-info-circle"></i></div><div class="reminder-text"><span class="reminder-title">聯絡方式</span><span class="reminder-desc">買家可透過郵件聯絡，${hasPhone ? '已設定電話' : ''}${hasPhone && hasLineId ? '、' : ''}${hasLineId ? '已設定LINE ID' : ''}${!hasPhone ? '，可考慮添加電話' : ''}${!hasLineId ? '，可考慮添加LINE ID' : ''}</span></div><button type="button" class="reminder-btn minimal" onclick="openContactEditModal()"><i class="fas fa-edit"></i> 管理聯絡方式</button></div>`;
     } else {
-        // 聯絡資訊完整
-        reminderHTML = `
-            <div class="reminder-content success">
-                <div class="reminder-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="reminder-text">
-                    <span class="reminder-title">聯絡方式完整</span>
-                    <span class="reminder-desc">
-                        買家可透過郵件、電話
-                        ${hasPhone ? `(${phone})` : ''}
-                        或LINE
-                        ${hasLineId ? `(${lineId})` : ''}
-                        聯絡您
-                    </span>
-                </div>
-                <button type="button" class="reminder-btn minimal" onclick="openContactEditModal()">
-                    <i class="fas fa-edit"></i> 修改
-                </button>
-            </div>
-        `;
+        html = `<div class="reminder-content success"><div class="reminder-icon"><i class="fas fa-check-circle"></i></div><div class="reminder-text"><span class="reminder-title">聯絡方式完整</span><span class="reminder-desc">買家可透過郵件、電話(${phone})或LINE(${lineId})聯絡您</span></div><button type="button" class="reminder-btn minimal" onclick="openContactEditModal()"><i class="fas fa-edit"></i> 修改</button></div>`;
     }
-    
-    // 更新HTML內容
-    reminderContainer.innerHTML = reminderHTML;
-    
-    // 添加更新動畫效果
+    reminderContainer.innerHTML = html;
     reminderContainer.style.opacity = '0.5';
-    setTimeout(() => {
-        reminderContainer.style.opacity = '1';
-        reminderContainer.style.transition = 'opacity 0.3s ease';
-    }, 100);
+    setTimeout(() => { reminderContainer.style.opacity = '1'; reminderContainer.style.transition = 'opacity 0.3s ease'; }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.querySelector('.upload-modal2 .close-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('叉叉按鈕被點擊');
-            closeForm2();
-        });
+  const modal = document.getElementById('uploadFormModal2');
+  const closeBtn = document.querySelector('.upload-modal2 .close-btn');
+  const bookForm = document.getElementById('bookForm2');
+
+  // === ① 進頁自動開窗（從 index 帶 popupToOpen:'uploadFormModal2'） ===
+  try {
+    const popupId = sessionStorage.getItem('openPopup');
+    if (popupId === 'uploadFormModal2' && typeof window.openBookUploadModal2 === 'function') {
+      window.openBookUploadModal2();
+      sessionStorage.removeItem('openPopup');
     }
-    
-    const modal = document.getElementById('uploadFormModal2');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                console.log('點擊背景關閉表單');
-                closeForm2();
-            }
-        });
-    }
-    
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('uploadFormModal2');
-            if (modal && modal.style.display === 'flex') {
-                console.log('ESC鍵關閉表單');
-                closeForm2();
-            }
-        }
+  } catch (_) {}
+
+  // === ② 關閉事件：叉叉 / 點背景 / Esc ===
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (typeof window.closeForm2 === 'function') window.closeForm2();
     });
-    
-    const academicSelect = document.getElementById('id_academic');
-    const deptSelect = document.getElementById('id_department');
-    const gradeSelect = document.getElementById('id_grade');
-
-    if (academicSelect) {
-        academicSelect.addEventListener('change', function() {
-            const academicId = this.value;
-            console.log('學制選擇變更:', academicId);
-
-            resetDepartmentAndGrade();
-
-            if (!academicId) {
-                deptSelect.disabled = true;
-                gradeSelect.disabled = true;
-                return;
-            }
-
-            showLoadingState();
-            isLoadingData = true;
-
-            fetch(`/get-related-data/?academic_id=${academicId}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => {
-                console.log('響應狀態:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('收到資料:', data);
-                updateDepartmentOptions(data.departments);
-                updateGradeOptions(data.grades);
-                deptSelect.disabled = false;
-                gradeSelect.disabled = false;
-                if (data.debug) { console.log('除錯資訊:', data.debug); }
-            })
-            .catch(error => {
-                console.error('載入失敗:', error);
-                showErrorState(error.message);
-            })
-            .finally(() => {
-                isLoadingData = false;
-            });
-        });
+  }
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal && typeof window.closeForm2 === 'function') window.closeForm2();
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const m = document.getElementById('uploadFormModal2');
+      if (m && getComputedStyle(m).display === 'flex' && typeof window.closeForm2 === 'function') {
+        window.closeForm2();
+      }
     }
-    
-    const bookForm = document.getElementById('bookForm2');
-    console.log('尋找表單元素 bookForm2:', bookForm);
-    
-    if (bookForm) {
-        console.log('✅ 找到表單元素，綁定提交事件');
-        console.log('表單action:', bookForm.action);
-        console.log('表單method:', bookForm.method);
-        
-        bookForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            console.log('🚀 表單提交事件被觸發！');
+  });
 
-            const titleVal = (document.getElementById('id_title')?.value || '').trim();
-            if (!titleVal){
-                setTitleError('請輸入書名');
-                return;
-            }
-            if (containsBannedTitle(titleVal)){
-                setTitleError('輸入內容包含禁止或不當詞彙，請重新編輯。');
-                return;
-            }
-            
-            if (isLoadingData) { alert('正在載入資料，請稍候再提交'); return; }
-            if (isSubmitting)   { console.log('表單正在提交中，請勿重複點擊'); return; }
-            isSubmitting = true;
-            
-            const formData = new FormData(this);
-            
-            if (selectedFile) {
-                formData.set('cover_image', selectedFile);
-            }
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
+  // === ③ 學制 → 載入科系/年級 ===
+  const academicSelect = document.getElementById('id_academic');
+  const deptSelect = document.getElementById('id_department');
+  const gradeSelect = document.getElementById('id_grade');
 
-            const price = formData.get('price');
-            if (!price || parseFloat(price) < 0) {
-                setTitleError('');
-                alert('請輸入有效的價格');
-                isSubmitting = false;
-                return;
-            }
-            
-            submitBtn.textContent = '上架中...';
-            submitBtn.disabled = true;
-            
-            let uploadSuccess = false;
-        
-            try {
-                const response = await fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
+  if (academicSelect) {
+    academicSelect.addEventListener('change', function () {
+      const academicId = this.value;
+      if (typeof resetDepartmentAndGrade === 'function') resetDepartmentAndGrade();
 
-                let data = null, rawText = '';
-                try { data = await response.json(); }
-                catch { try { rawText = await response.text(); } catch(_){} }
+      if (!academicId) {
+        if (deptSelect) deptSelect.disabled = true;
+        if (gradeSelect) gradeSelect.disabled = true;
+        return;
+      }
 
-                if (response.ok && data && data.success) {
-                    uploadSuccess = true;
-                    console.log('書籍上架成功，準備顯示成功訊息');
-                    showSuccessModal();
-                    closeForm2();
-                    setTimeout(() => { hideSuccessModal(); window.location.reload(); }, 2000);
-                } else {
-                    let msg = (data && (data.message || data.error)) || '';
-                    if (!msg && rawText) {
-                        msg = rawText
-                                .replace(/<[^>]+>/g, ' ')
-                                .replace(/\s+/g,' ')
-                                .replace(/^title\s*/i,'')
-                                .trim();
-                    }
-                    if (!msg) msg = '上架失敗，請重試';
+      if (typeof showLoadingState === 'function') showLoadingState();
+      window.isLoadingData = true;
 
-                    if (/禁止|不當|禁用/.test(msg)) {
-                        msg = '輸入內容包含禁止或不當詞彙，請重新編輯。';
-                    }
-                    setTitleError(msg);
-                    console.error('上架失敗:', data || rawText || response.status);
-                }
-                
-            } catch (error) {
-                console.error('網路錯誤:', error);
-                setTitleError('網路錯誤，請稍後再試');
-            } finally {
-                if (!uploadSuccess) {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    isSubmitting = false;
-                }
-            }
-        });
-        
-        const submitBtn = bookForm.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            console.log('✅ 找到上架按鈕，添加點擊事件');
-            submitBtn.addEventListener('click', function(){ });
-        } else {
-            console.error('❌ 找不到上架按鈕');
+      const relatedUrl = (bookForm && bookForm.getAttribute('data-related-url')) || '/get-related-data/';
+      const url = `${relatedUrl}?academic_id=${encodeURIComponent(academicId)}`;
+
+      fetch(url, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' }
+      })
+      .then(resp => {
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp.json();
+      })
+      .then(data => {
+        if (typeof updateDepartmentOptions === 'function') updateDepartmentOptions(data.departments || []);
+        if (typeof updateGradeOptions === 'function') updateGradeOptions(data.grades || []);
+        if (deptSelect) deptSelect.disabled = false;
+        if (gradeSelect) gradeSelect.disabled = false;
+      })
+      .catch(err => {
+        console.error('載入失敗:', err);
+        if (typeof showErrorState === 'function') showErrorState(err.message || '資料載入失敗');
+      })
+      .finally(() => { window.isLoadingData = false; });
+    });
+  }
+
+  // === ④ 表單提交（走 bookForm2.action） ===
+  if (bookForm) {
+    bookForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const titleInput = document.getElementById('id_title');
+      const titleVal = (titleInput?.value || '').trim();
+      if (!titleVal) { if (typeof setTitleError === 'function') setTitleError('請輸入書名'); return; }
+      if (typeof containsBannedTitle === 'function' && containsBannedTitle(titleVal)) {
+        if (typeof setTitleError === 'function') setTitleError('輸入內容包含禁止或不當詞彙，請重新編輯。');
+        return;
+      }
+      if (window.isLoadingData) { alert('正在載入資料，請稍候再提交'); return; }
+      if (window.isSubmitting)   { return; }
+      window.isSubmitting = true;
+
+      const formData = new FormData(this);
+      if (window.selectedFile) formData.set('cover_image', window.selectedFile);
+
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn ? submitBtn.textContent : '';
+
+      const price = formData.get('price');
+      if (!price || isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+        if (typeof setTitleError === 'function') setTitleError('');
+        alert('請輸入有效的價格');
+        window.isSubmitting = false;
+        return;
+      }
+
+      if (submitBtn) { submitBtn.textContent = '上架中...'; submitBtn.disabled = true; }
+
+      const extractMsg = (data, rawText) => {
+        let msg = (data && (data.message || data.error)) || '';
+        if (!msg && data && data.errors) {
+          const first =
+            (Array.isArray(data.errors) && data.errors[0]) ||
+            (Array.isArray(data.errors.title) && data.errors.title[0]) ||
+            (data.errors.general && Array.isArray(data.errors.general) && data.errors.general[0]) ||
+            (Object.values(data.errors)[0] && Array.isArray(Object.values(data.errors)[0]) && Object.values(data.errors)[0][0]);
+          if (first) msg = first;
         }
-        
-    } else {
-        console.error('❌ 找不到表單元素 bookForm2');
-    }
+        if (!msg && rawText) msg = rawText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        return msg || '';
+      };
+
+      let uploadSuccess = false;
+      try {
+        const resp = await fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin'
+        });
+
+        let data = null, rawText = '';
+        try { data = await resp.json(); }
+        catch { try { rawText = await resp.text(); } catch(_){} }
+
+        if (resp.ok && data && data.success) {
+          uploadSuccess = true;
+          if (typeof showSuccessModal === 'function') showSuccessModal();
+          if (typeof closeForm2 === 'function') closeForm2();
+          setTimeout(() => {
+            if (typeof hideSuccessModal === 'function') hideSuccessModal();
+            window.location.reload();
+          }, 2000);
+          return;
+        }
+
+        const msg = extractMsg(data, rawText);
+        const looksBanned = (data && (data.code === 'BANNED' || data.code === 'BANNED_TITLE')) || /禁止|不當|禁用/.test(msg);
+        if (looksBanned) {
+          if (typeof setTitleError === 'function') setTitleError('輸入內容包含禁止或不當詞彙，請重新編輯。');
+        } else {
+          if (typeof setTitleError === 'function') setTitleError('');
+          alert(msg || '上架失敗，請稍後再試');
+        }
+      } catch (error) {
+        console.error('網路錯誤:', error);
+        if (typeof setTitleError === 'function') setTitleError('網路錯誤，請稍後再試');
+      } finally {
+        if (!uploadSuccess && submitBtn) {
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        }
+        if (!uploadSuccess) window.isSubmitting = false;
+      }
+    });
+  }
 });
 
 function resetDepartmentAndGrade() {
     const deptSelect = document.getElementById('id_department');
     const gradeSelect = document.getElementById('id_grade');
-    
     deptSelect.innerHTML = '<option value="">請先選擇學制</option>';
     gradeSelect.innerHTML = '<option value="">請先選擇學制</option>';
-    deptSelect.disabled = true;
-    gradeSelect.disabled = true;
+    deptSelect.disabled = true; gradeSelect.disabled = true;
 }
-
 function showLoadingState() {
     const deptSelect = document.getElementById('id_department');
     const gradeSelect = document.getElementById('id_grade');
-    
     deptSelect.innerHTML = '<option value="" class="loading-option">載入中...</option>';
     gradeSelect.innerHTML = '<option value="" class="loading-option">載入中...</option>';
-    deptSelect.disabled = true;
-    gradeSelect.disabled = true;
+    deptSelect.disabled = true; gradeSelect.disabled = true;
 }
-
 function updateDepartmentOptions(departments) {
     const deptSelect = document.getElementById('id_department');
-    
     if (departments && departments.length > 0) {
         deptSelect.innerHTML = '<option value="">請選擇科系</option>';
         departments.forEach(dept => {
-            const option = document.createElement('option');
-            option.value = dept.id;
-            option.textContent = dept.name;
-            deptSelect.appendChild(option);
+            const option = document.createElement('option'); option.value = dept.id; option.textContent = dept.name; deptSelect.appendChild(option);
         });
     } else {
         deptSelect.innerHTML = '<option value="">此學制無科系資料</option>';
     }
 }
-
 function updateGradeOptions(grades) {
     const gradeSelect = document.getElementById('id_grade');
-    
     if (grades && grades.length > 0) {
         gradeSelect.innerHTML = '<option value="">請選擇年級</option>';
         grades.forEach(grade => {
-            const option = document.createElement('option');
-            option.value = grade.id;
-            option.textContent = grade.grade_level;
-            gradeSelect.appendChild(option);
+            const option = document.createElement('option'); option.value = grade.id; option.textContent = grade.grade_level; gradeSelect.appendChild(option);
         });
     } else {
         gradeSelect.innerHTML = '<option value="">此學制無年級資料</option>';
     }
 }
-
 function showErrorState(errorMessage) {
     const deptSelect = document.getElementById('id_department');
     const gradeSelect = document.getElementById('id_grade');
-    
     deptSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
     gradeSelect.innerHTML = '<option value="" class="error-option">載入失敗，請重試</option>';
     console.error('資料載入錯誤:', errorMessage);
 }
 
-function triggerFileInput() { 
-    document.getElementById('id_cover_image').click(); 
-}
+function triggerFileInput() { document.getElementById('id_cover_image').click(); }
 
 async function handleFileSelect(input) {
     const file = input.files[0];
     const uploadArea = document.getElementById('uploadArea');
-    
-    if (!file) { 
-        selectedFile = null; 
-        return; 
-    }
+    if (!file) { selectedFile = null; return; }
 
     const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
-    if (!allowedTypes.includes(file.type)) { 
-        alert('不支援的格式，請上傳 JPG、PNG、GIF 或 WebP 格式的圖片'); 
-        input.value = ''; 
-        selectedFile = null; 
-        return; 
-    }
-
-    if (file.size > 5 * 1024 * 1024) { 
-        alert('圖片大小不能超過 5MB'); 
-        input.value = ''; 
-        selectedFile = null; 
-        return; 
-    }
-
-    if (file.size < 100) { 
-        alert('圖片檔案過小，請選擇有效的圖片'); 
-        input.value = ''; 
-        selectedFile = null; 
-        return; 
-    }
+    if (!allowedTypes.includes(file.type)) { alert('不支援的格式，請上傳 JPG、PNG、GIF 或 WebP 格式的圖片'); input.value = ''; selectedFile = null; return; }
+    if (file.size > 5 * 1024 * 1024) { alert('圖片大小不能超過 5MB'); input.value = ''; selectedFile = null; return; }
+    if (file.size < 100) { alert('圖片檔案過小，請選擇有效的圖片'); input.value = ''; selectedFile = null; return; }
 
     selectedFile = file;
-
     const reader = new FileReader();
     reader.onload = function(e) {
         uploadArea.innerHTML = `
-            <img src="${e.target.result}" 
-                 style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:1rem;object-fit:cover;"
-                 alt="預覽圖片">
+            <img src="${e.target.result}" style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:1rem;object-fit:cover;" alt="預覽圖片">
             <div class="upload-text">圖片已選擇：${file.name}</div>
             <div class="upload-subtext">大小：${(file.size/1024).toFixed(1)}KB | 點擊重新選擇</div>
         `;
     };
     reader.readAsDataURL(file);
-    
     await recognizeBookFromFile(file);
 }
 
 function toggleTag(btn, text) {
     const textarea = document.getElementById('description');
     let tags = textarea.value ? textarea.value.split('、').map(t => t.trim()).filter(t => t) : [];
-
     if (btn.classList.contains('selected')) {
-        tags = tags.filter(t => t !== text);
-        btn.classList.remove('selected');
+        tags = tags.filter(t => t !== text); btn.classList.remove('selected');
     } else {
-        if (!tags.includes(text)) { tags.push(text); }
-        btn.classList.add('selected');
+        if (!tags.includes(text)) { tags.push(text); } btn.classList.add('selected');
     }
     textarea.value = tags.join('、');
 }
-
 function clearSelectedTags() {
     document.getElementById('description').value = '';
-    document.querySelectorAll('.quick-tag.selected').forEach(tag => {
-        tag.classList.remove('selected');
-    });
+    document.querySelectorAll('.quick-tag.selected').forEach(tag => { tag.classList.remove('selected'); });
 }
 
 function closeForm2() {
     try {
-        console.log('關閉表單函數被調用');
-        
         const modal = document.getElementById('uploadFormModal2');
         const form = document.getElementById('bookForm2');
-        
-        if (!modal) {
-            console.error('找不到模態框元素');
-            return;
-        }
-        
-        if (form) {
-            form.reset();
-            console.log('表單已重置');
-        }
-        
-        selectedFile = null;
-        isLoadingData = false;
-        isSubmitting = false;
-
+        if (!modal) { console.error('找不到模態框元素'); return; }
+        if (form) form.reset();
+        selectedFile = null; isLoadingData = false; isSubmitting = false;
         setTitleError('');
-        
-        hideRecognitionStatus();
-        document.getElementById('autoFillInfo').style.display = 'none';
-        
+        hideRecognitionStatus(); document.getElementById('autoFillInfo').style.display = 'none';
         const uploadArea = document.getElementById('uploadArea');
         if (uploadArea) {
             uploadArea.innerHTML = `
@@ -1104,21 +742,13 @@ function closeForm2() {
                 <div class="upload-subtext">支援 JPG, PNG 格式，檔案大小不超過 5MB</div>
             `;
         }
-        
-        if (typeof clearSelectedTags === 'function') { clearSelectedTags(); }
-        if (typeof resetDepartmentAndGrade === 'function') { resetDepartmentAndGrade(); }
-        
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        console.log('表單已成功關閉並重置');
-        
+        if (typeof clearSelectedTags === 'function') clearSelectedTags();
+        if (typeof resetDepartmentAndGrade === 'function') resetDepartmentAndGrade();
+        modal.style.display = 'none'; document.body.style.overflow = '';
     } catch (error) {
         console.error('關閉表單時發生錯誤:', error);
         const modal = document.getElementById('uploadFormModal2');
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
+        if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
     }
 }
 
@@ -1128,27 +758,16 @@ function openBookUploadModal2() {
     document.body.style.overflow = 'hidden';
     resetDepartmentAndGrade();
     setTitleError('');
-    
-    hideRecognitionStatus();
-    document.getElementById('autoFillInfo').style.display = 'none';
+    hideRecognitionStatus(); document.getElementById('autoFillInfo').style.display = 'none';
 }
 
 function showSuccessModal() {
     const modal = document.getElementById('successModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        setTimeout(() => { modal.classList.add('show'); }, 10);
-        console.log('顯示成功方塊');
-    }
+    if (modal) { modal.style.display = 'flex'; setTimeout(() => { modal.classList.add('show'); }, 10); }
 }
-
 function hideSuccessModal() {
     const modal = document.getElementById('successModal');
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => { modal.style.display = 'none'; }, 300);
-        console.log('隱藏成功方塊');
-    }
+    if (modal) { modal.classList.remove('show'); setTimeout(() => { modal.style.display = 'none'; }, 300); }
 }
 
 window.addEventListener('beforeunload', function(e) {
@@ -1159,4 +778,11 @@ window.addEventListener('beforeunload', function(e) {
         return '您有未保存的內容，確定要離開嗎？';
     }
 });
+
+/* ★★★★★ 讓 inline onclick 找得到：把需要的函式掛到 window ★★★★★ */
+window.openBookUploadModal2 = openBookUploadModal2;
+window.closeForm2 = closeForm2;
+window.triggerFileInput = triggerFileInput;
+window.handleFileSelect = handleFileSelect;
+window.manualSearchBook = manualSearchBook;
 </script>

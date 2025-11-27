@@ -135,23 +135,52 @@ try {
   modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
 })();
 
+
 // ===== Tickets flip & gentle float =====
 (function(){
   const tickets = document.querySelectorAll('.cticket');
   tickets.forEach((el, idx)=>{
-    el.addEventListener('click', ()=> el.classList.toggle('is-flipped'));
+    const inner = el.querySelector('.cticket__inner');
 
-    // gentle float: 每 3~4.5 秒輕微改變 rotate 角度
-    const base = el.style.transform || '';
-    const getRot = ()=>{
-      const m = base.match(/rotate\(([-\d.]+)deg\)/);
-      return m ? parseFloat(m[1]) : 0;
-    };
-    let baseDeg = getRot();
+    // 點擊 -> 翻面
+    el.addEventListener('click', ()=>{
+      el.classList.toggle('flipped');
+    });
+
+    // 設定初始角度（基礎角度 + 隨機）
+    const base = (parseFloat(el.dataset.baseDeg || '0') || 0) + (Math.random() * 8 - 4); // -4~+4度
+    el.style.setProperty('--tilt', `${base.toFixed(2)}deg`);
+
+    // 每隔幾秒微微晃動（隨機 ±1 度）
     setInterval(()=>{
-      const random = (Math.random() - 0.5) * 2; // -1 ~ +1 度
-      el.style.transform = base.replace(/rotate\([-\d.]+deg\)/, `rotate(${(baseDeg + random).toFixed(2)}deg)`);
+      const random = (Math.random() - 0.5) * 2; // -1~+1 度
+      const next = (base + random).toFixed(2);
+      el.style.setProperty('--tilt', `${next}deg`);
     }, 3000 + idx*400);
+
+     // 讓「背面的標題」可直接前往活動詳情
+    const backTitle = el.querySelector('.cticket__back h3');
+    if (backTitle) {
+      backTitle.style.cursor = 'pointer';
+
+      const goDetail = (ev) => {
+        ev.stopPropagation(); // 避免又觸發翻面
+        const url = el.dataset.url || (el.querySelector('.cticket__back a')?.href);
+        if (url) window.location.href = url;
+      };
+
+      backTitle.addEventListener('click', goDetail);
+      backTitle.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          goDetail(ev);
+        }
+      });
+      backTitle.setAttribute('tabindex', '0'); // 鍵盤可聚焦
+      backTitle.setAttribute('role', 'link');
+      backTitle.setAttribute('aria-label', '查看活動詳情');
+    }
+    
   });
 })();
 
@@ -179,6 +208,7 @@ try {
     btn.addEventListener('click', ()=>{
       const title = btn.dataset.title || '活動';
       const weekday = btn.dataset.weekday || '';
+      const month = btn.dataset.month || '';
       const date = btn.dataset.date || '';
       const time = btn.dataset.time || '';
       const location = btn.dataset.location || '—';
@@ -187,7 +217,7 @@ try {
       const desc = btn.dataset.desc || '';
 
       elTitle.textContent = title;
-      elWhen.textContent  = `${weekday} ${date} 日 ${time}`;
+      elWhen.textContent  = `${month}/${date} ${weekday} ${time}`;
       elWhere.textContent = location;
       elPeople.textContent= `${total}/${max} 人`;
       elDesc.textContent  = desc;
@@ -203,13 +233,21 @@ try {
 
 
 // 學分進度條
-const segments = document.querySelectorAll('.progress-segment');
-const tooltip = document.getElementById('tooltip');
+document.addEventListener('DOMContentLoaded', function() {
+    const segments = document.querySelectorAll('.progress-segment');
+    const tooltip = document.getElementById('tooltip');
 
-segments.forEach(segment => {
-    segment.addEventListener('mouseenter', function(e) {
-        const tooltipText = this.getAttribute('data-tooltip');
-        if (tooltipText && this.style.width !== '0%') {
+    // 啟動動畫（逐段延遲）
+    segments.forEach((seg, index) => {
+        seg.classList.remove('animate');
+        setTimeout(() => seg.classList.add('animate'), index * 200);
+    });
+
+    // Tooltip 顯示
+    segments.forEach(segment => {
+        segment.addEventListener('mouseenter', function() {
+            const tooltipText = this.getAttribute('data-tooltip');
+            if (tooltipText && this.style.width !== '0%') {
             tooltip.textContent = tooltipText;
             tooltip.classList.add('show');
             
@@ -221,14 +259,12 @@ segments.forEach(segment => {
             tooltip.style.left = left + 'px';
             tooltip.style.transform = `translateX(-90%) translateY(6px)`;
         }
-    });
-    
-    segment.addEventListener('mouseleave', function() {
-        tooltip.classList.remove('show');
+     });
+        segment.addEventListener('mouseleave', () => tooltip.classList.remove('show'));
     });
 });
 
-// 页面加载时触发动画
+// 頁面加載觸發動畫
 window.addEventListener('load', function() {
     const segments = document.querySelectorAll('.progress-segment.animate');
     segments.forEach((segment, index) => {
@@ -239,10 +275,9 @@ window.addEventListener('load', function() {
 });
 document.addEventListener('DOMContentLoaded', function() {
     segments.forEach(segment => {
-        if (segment.style.width === '0%') {
-            segment.style.pointerEvents = 'none';
-        }
-    });
+        const w = parseFloat(getComputedStyle(segment).width);
+            if (w <= 1) segment.style.pointerEvents = 'none';
+        });
 });
 
 

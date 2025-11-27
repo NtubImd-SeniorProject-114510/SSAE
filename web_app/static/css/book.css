@@ -731,7 +731,9 @@ body {
 .book-card:hover .book-meta-marquee {
   animation-play-state: running;
 }
-
+.book-card.filtered-hidden {
+  display: none !important;
+}
 /* 保留原本的懸停效果作為備用 */
 .book-meta:hover .book-meta-marquee {
   animation-play-state: running;

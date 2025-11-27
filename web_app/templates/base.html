@@ -10,6 +10,7 @@
       <link rel="stylesheet" href="{% static 'css/pop_window/login_pop.css' %}">
       <link rel="stylesheet" href="{% static 'css/footer.css' %}">
       <link rel="stylesheet" href="{% static 'css/loading.css' %}">
+      <link rel="stylesheet" href="{% static 'css/notification.css' %}">
       {% block css %}{% endblock %}
       {% block head_js %}{% endblock %}
   </head>
@@ -33,6 +34,15 @@
 
       {% include 'pop_window/login_pop.html' %}
       
+      <!-- 通知模態框 -->
+      <div id="notificationModal" class="notification-modal" style="display: none;">
+          <div class="notification-content">
+              <span id="notificationIcon" class="notification-icon"></span>
+              <span id="notificationMessage" class="notification-message"></span>
+              <button onclick="closeNotification()" class="notification-close">&times;</button>
+          </div>
+      </div>
+      
       <!-- JavaScript 文件 -->
       <script src="{% static 'js/pop_window/login_pop.js' %}"></script>
       <script src="{% static 'js/navbar.js' %}"></script>
@@ -46,6 +56,13 @@
           const icon = document.getElementById('notificationIcon');
           const messageEl = document.getElementById('notificationMessage');
           
+          // 檢查元素是否存在
+          if (!modal || !icon || !messageEl) {
+            console.warn('通知元素未找到，使用 alert 替代');
+            alert(message);
+            return;
+          }
+          
           // 設置內容
           messageEl.textContent = message;
           
@@ -56,6 +73,10 @@
             icon.textContent = '✅';
           } else if (type === 'error') {
             icon.textContent = '❌';
+          } else if (type === 'warning') {
+            icon.textContent = '⚠️';
+          } else if (type === 'info') {
+            icon.textContent = 'ℹ️';
           }
           
           // 顯示彈窗

@@ -1,51 +1,78 @@
-// book.js
-// 📚 書籍交易系統前端功能腳本
-// 包含：彈窗顯示、背景滾動效果、篩選功能、書籍卡片效果、表單驗證與上傳功能、圖片預覽與拖放、SVG 對齊等
+function openModal(modal) {
+  if (!modal) return;
+  if (modal.classList.contains('upload-modal2')) {
+    modal.style.display = 'flex';            // ✅ 顯示
+  }
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  document.body.style.height = '100%';
 
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.classList.add('show');
+}
+
+function closeModal(modal) {
+  if (!modal) return;
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  if (modal.classList.contains('upload-modal2')) {
+    modal.style.display = 'none';            // ✅ 關閉
+  }
+  document.body.style.overflow = '';
+  document.body.style.height = '';
+
+  const backdrop = document.querySelector('.modal-backdrop.show');
+  if (backdrop) backdrop.classList.remove('show');
+}
+
+// 事件委派：叉叉 / 遮罩 / ESC
+document.addEventListener('click', (e) => {
+  const closer = e.target.closest('[data-modal-close], .modal__close, .btn-close');
+  if (closer) {
+    const modal = closer.closest('.modal');
+    if (modal) closeModal(modal);
+    return;
+  }
+  if (e.target.classList?.contains('modal') && e.target.classList.contains('show')) {
+    closeModal(e.target);
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const opened = document.querySelector('.modal.show');
+    if (opened) closeModal(opened);
+  }
+});
+
+//book.js
 window.addEventListener('DOMContentLoaded', () => {
-
-    /* -------------------------
-       1. 頁面載入後處理彈窗顯示
-    ------------------------- */
     const popupId = sessionStorage.getItem('openPopup');
     if (popupId) {
         const popup = document.getElementById(popupId);
         if (popup) {
-            popup.classList.add('show-popup');
+            openModal(popup);
             console.log(`開啟彈窗: ${popupId}`);
         } else {
             console.warn(`找不到彈窗 ID: ${popupId}`);
         }
-        sessionStorage.removeItem('openPopup'); // 清除暫存，避免下次重複
+        sessionStorage.removeItem('openPopup');
     }
 
-    /* -------------------------
-       2. 上傳表單彈窗控制
-    ------------------------- */
-    const centerUploadBtn = document.getElementById('centerUploadBtn'); // 中央上傳按鈕
-    const uploadFormModal = document.getElementById('uploadForm');     // 上傳表單彈窗
-    const uploadFormEl = document.querySelector('#uploadForm form');   // 上傳表單本體
-
+    // 修正：將＋按鈕事件註冊放在這裡，確保元素都已渲染
+    const centerUploadBtn = document.getElementById('centerUploadBtn');
+    const uploadFormModal = document.getElementById('uploadFormModal2');
+    const uploadFormEl = document.querySelector('#bookForm2');
     if (centerUploadBtn && uploadFormModal) {
         centerUploadBtn.addEventListener('click', function() {
-            uploadFormModal.classList.add('show'); // 顯示表單
-            document.body.style.overflow = 'hidden'; // 鎖定背景捲動
-            document.body.style.height = '100%';
+            openModal(uploadFormModal); 
         });
     }
 
-    // 關閉表單（右上角 × 按鈕）
-    const closeFormBtn = document.getElementById('closeFormBtn');
-    if (closeFormBtn && uploadFormEl) {
-        closeFormBtn.addEventListener('click', function() {
-            uploadFormEl.classList.remove('show');
-            unlockBodyScroll();
-        });
-    }
+    // 確俞SVG路徑和上傳按鈕中心點對齊
+    alignSvgPathWithUploadButton();
 
-    /* -------------------------
-       3. 背景文字隨滾動移動效果
-    ------------------------- */
+    // 背景文字隨滾動移動
     const bgText = document.querySelector('.bg-text');
     if (bgText) {
         window.addEventListener('scroll', function() {
@@ -55,9 +82,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* -------------------------
-       4. 鎖定/解鎖背景捲動
-    ------------------------- */
+    // 鎖定背景滾動功能
     function lockBodyScroll() {
         document.body.style.overflow = 'hidden';
         document.body.style.height = '100%';
@@ -68,23 +93,26 @@ window.addEventListener('DOMContentLoaded', () => {
         document.body.style.height = '';
     }
 
-    /* -------------------------
-       5. 篩選功能（書籍分類）
-    ------------------------- */
+    // 篩選標籤點擊效果
     const filterItems = document.querySelectorAll('.filter-item');
+
     filterItems.forEach(item => {
         item.addEventListener('click', function() {
-            // 移除舊的 active 樣式
+            // 移除所有active類
             filterItems.forEach(i => i.classList.remove('active'));
-            this.classList.add('active'); // 新選擇項目加上 active
-
-            // TODO: 實際篩選邏輯，這裡僅模擬動畫
-            console.log('篩選類型:', this.textContent);
-
+            // 添加當前點擊項目的active類
+            this.classList.add('active');
+            
+            // 這裡可以添加實際篩選功能
+            const filterType = this.textContent;
+            console.log('篩選類型:', filterType);
+            
+            // 模擬篩選效果
             const bookCards = document.querySelectorAll('.book-card');
             bookCards.forEach(card => {
                 card.style.opacity = '0.6';
                 card.style.transform = 'scale(0.98)';
+                
                 setTimeout(() => {
                     card.style.opacity = '1';
                     card.style.transform = 'scale(1)';
@@ -92,167 +120,363 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
-
-    /* -------------------------
-       6. 書籍卡片點擊效果
-    ------------------------- */
+    
+    // 書籍卡片點擊效果
     const bookCards = document.querySelectorAll('.book-card');
     bookCards.forEach(card => {
         card.addEventListener('click', function() {
             this.style.transform = 'scale(0.98)';
             setTimeout(() => {
                 this.style.transform = '';
+                // 這裡可以添加點擊後的導航邏輯
                 console.log('查看書籍:', this.querySelector('.book-title').textContent);
-                // TODO: 書籍詳情頁導航
             }, 150);
         });
     });
-
-    /* -------------------------
-       7. 上傳表單提交處理
-    ------------------------- */
+    
+    // 上傳功能相關
+    const closeFormBtn = document.getElementById('closeFormBtn');
     const imagePreview = document.getElementById('imagePreview');
     const imageUpload = document.getElementById('imageUpload');
     const previewImage = document.getElementById('previewImage');
     const previewPlaceholder = document.getElementById('previewPlaceholder');
     const submitBtn = document.getElementById('submitBtn');
-
+    // 上傳表單 submit 攔截
     if (uploadFormEl) {
         uploadFormEl.addEventListener('submit', async (e) => {
-            e.preventDefault(); // 防止頁面跳轉
+            e.preventDefault();
             showBookMsg('上傳中...', true);
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '上傳中...'; }
 
             try {
-                // 收集表單資料
-                const fd = new FormData(uploadFormEl);
-                const resp = await fetch(uploadFormEl.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: fd,
-                    credentials: 'same-origin',
-                });
+            const fd = new FormData(uploadFormEl);  // 自動包含檔案與所有欄位
+            const resp = await fetch(uploadFormEl.action, {
+                method: 'POST',
+                headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: fd,
+                credentials: 'same-origin',
+            });
 
-                let data = {};
-                try { data = await resp.json(); } catch (e) {}
+            let data = {};
+            try { data = await resp.json(); } catch (e) {}
 
-                if (resp.ok && data && data.success) {
-                    // ✅ 成功
-                    showBookMsg(data.message || '書籍上架成功！', true);
-                    uploadFormEl.reset();
-                    if (previewImage && previewPlaceholder) {
-                        previewImage.src = '';
-                        previewImage.style.display = 'none';
-                        previewPlaceholder.style.display = 'block';
-                    }
-                    setTimeout(() => {
-                        uploadFormModal.classList.remove('show');
-                        unlockBodyScroll();
-                        location.reload();
-                    }, 500);
-                } else {
-                    // ❌ 失敗
-                    const msg = (data && (data.message ||
-                                (data.errors && JSON.stringify(data.errors)))) ||
-                                '上傳失敗，請檢查欄位內容';
-                    showBookMsg(msg, false);
+            if (resp.ok && data && data.success) {
+                // ✅ 成功
+                showBookMsg(data.message || '書籍上架成功！', true);
+                uploadFormEl.reset();
+                if (previewImage && previewPlaceholder) {
+                previewImage.src = '';
+                previewImage.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
                 }
+                setTimeout(() => {
+                uploadFormModal.classList.remove('show');
+                document.body.style.overflow = '';
+                document.body.style.height   = '';
+                location.reload();
+                }, 500);
+            } else {
+                // ❌ 失敗（包含禁用詞）
+                const msg = (data && (data.message ||
+                        (data.errors && JSON.stringify(data.errors)))) ||
+                        '上傳失敗，請檢查欄位內容';
+                showBookMsg(msg, false);   // 🔴 在表單上方顯示紅字
+            }
             } catch (err) {
-                console.error('[upload_book2] error:', err);
-                showBookMsg('網路或系統錯誤，請稍後再試', false);
+            console.error('[upload_book2] error:', err);
             } finally {
-                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '上傳書籍'; }
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '上傳書籍'; }
+            }
+        });
+        }
+    // 點擊預覽區域觸發文件選擇
+    if (imagePreview && imageUpload) {
+        imagePreview.addEventListener('click', function() {
+            imageUpload.click();
+        });
+    }
+    
+    // 圖片上傳預覽
+    if (imageUpload) {
+        imageUpload.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    if (previewImage && previewPlaceholder) {
+                        previewImage.src = e.target.result;
+                        previewImage.style.display = 'block';
+                        previewPlaceholder.style.display = 'none';
+                    }
+                }
+                
+                reader.readAsDataURL(this.files[0]);
             }
         });
     }
-
-    /* -------------------------
-       8. 圖片上傳預覽與拖放
-    ------------------------- */
-    // 點擊圖片預覽框 → 開啟檔案選擇
-    imagePreview.addEventListener('click', function() {
-        imageUpload.click();
-    });
-
-    // 選擇圖片後顯示預覽
-    imageUpload.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                previewImage.style.display = 'block';
-                previewPlaceholder.style.display = 'none';
-            }
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-
-    // 拖放上傳功能
+    
+    // 拖放功能
     const previewContainer = document.querySelector('.preview-container');
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        previewContainer.addEventListener(eventName, preventDefaults, false);
-    });
-
+    
+    if (previewContainer) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            previewContainer.addEventListener(eventName, preventDefaults, false);
+        });
+    }
+    
     function preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
     }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        previewContainer.addEventListener(eventName, highlight, false);
-    });
-    ['dragleave', 'drop'].forEach(eventName => {
-        previewContainer.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight() { previewContainer.classList.add('highlight'); }
-    function unhighlight() { previewContainer.classList.remove('highlight'); }
-
-    // 拖放圖片 → 自動觸發 change 事件
-    previewContainer.addEventListener('drop', handleDrop, false);
+    
+    if (previewContainer) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            previewContainer.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            previewContainer.addEventListener(eventName, unhighlight, false);
+        });
+        
+        previewContainer.addEventListener('drop', handleDrop, false);
+    }
+    
+    function highlight() {
+        if (previewContainer) {
+            previewContainer.classList.add('highlight');
+        }
+    }
+    
+    function unhighlight() {
+        if (previewContainer) {
+            previewContainer.classList.remove('highlight');
+        }
+    }
+    
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        if (files && files.length) {
+        
+        if (files && files.length && imageUpload) {
             imageUpload.files = files;
             const event = new Event('change');
             imageUpload.dispatchEvent(event);
         }
     }
+    
+    // 驗證必填欄位
+    function validateRequiredFields() {
+        const bookTitleInput = document.getElementById('bookTitle');
+        const priceInput = document.getElementById('price');
+        const faceToFaceCheckbox = document.getElementById('faceToFace');
+        const shippingCheckbox = document.getElementById('shipping');
+        const submitBtn = document.getElementById('submitBtn');
+        const bookTitleError = document.getElementById('bookTitleError');
+        const priceError = document.getElementById('priceError');
+        const transactionMethodError = document.getElementById('transactionMethodError');
+        
+        // 初始化時隱藏所有錯誤訊息
+        bookTitleError.style.display = 'none';
+        priceError.style.display = 'none';
+        transactionMethodError.style.display = 'none';
+        
+        // 檢查必填欄位是否填寫
+        function checkRequiredFields() {
+            const bookTitleValid = bookTitleInput.value.trim() !== '';
+            const priceValid = priceInput.value.trim() !== '';
+            const transactionMethodValid = faceToFaceCheckbox.checked || shippingCheckbox.checked;
+            
+            // 只在表單驗證時才顯示錯誤訊息，不在實時顯示
+            return bookTitleValid && priceValid && transactionMethodValid;
+        }
+        
+        // 監聽輸入欄位變化但不顯示錯誤訊息
+        bookTitleInput.addEventListener('input', function() {
+            // 如果有值則隱藏錯誤訊息
+            if (bookTitleInput.value.trim() !== '') {
+                bookTitleError.style.display = 'none';
+            }
+        });
+        
+        priceInput.addEventListener('input', function() {
+            if (priceInput.value.trim() !== '') {
+                priceError.style.display = 'none';
+            }
+        });
+        
+        function checkTransactionMethod() {
+            if (faceToFaceCheckbox.checked || shippingCheckbox.checked) {
+                transactionMethodError.style.display = 'none';
+            }
+        }
+        
+        faceToFaceCheckbox.addEventListener('change', checkTransactionMethod);
+        shippingCheckbox.addEventListener('change', checkTransactionMethod);
+        
+        return checkRequiredFields;
+    }
+    
+    // 初始化驗證函數
+    const checkRequiredFields = validateRequiredFields();
+    
+    // 提交按鈕點擊事件
+    submitBtn.addEventListener('click', function() {
+        // 其它提交行為（如表單驗證）
+        // ...
+        // 點擊提交時也可呼叫 filterBooks 以確保顯示正確
+        function filterBooks() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const department = departmentFilter.value;
+            const grade = gradeFilter.value;
+            const condition = conditionFilter.value;
+            const priceRange = priceFilter.value;
+            const academic = document.getElementById('academicFilter').value;
+            const category = document.getElementById('categoryFilter').value;
 
-    /* -------------------------
-       9. 表單驗證功能
-    ------------------------- */
+            const bookCards = document.querySelectorAll('.book-card');
+
+            bookCards.forEach(card => {
+                const title = card.querySelector('.book-header').textContent.toLowerCase();
+                const dept = card.querySelector('.book-department').textContent;
+                const bookGrade = card.querySelector('.book-grade').textContent;
+                const bookCondition = card.querySelector('.book-condition').textContent;
+                const price = parseInt(card.querySelector('.book-price').textContent.replace('$', ''));
+                const bookAcademic = card.querySelector('.book-academic').textContent;
+                const bookCategory = card.querySelector('.book-category') ? card.querySelector('.book-category').getAttribute('data-id') : '';
+
+                const matchesSearch = title.includes(searchTerm) || searchTerm === '';
+                const matchesDept = !department || dept === department;
+                const matchesGrade = !grade || bookGrade === grade;
+                const matchesCondition = !condition || bookCondition === condition;
+                const matchesAcademic = !academic || bookAcademic === academic;
+                const matchesCategory = !category || bookCategory === category;
+
+                let matchesPrice = true;
+                if (priceRange) {
+                    const [min, max] = priceRange.split('-').map(Number);
+                    matchesPrice = price >= min && price <= max;
+                }
+
+                if (matchesSearch && matchesDept && matchesGrade && matchesCondition && matchesPrice && matchesAcademic && matchesCategory) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        filterBooks();
+    });
+        
+        // 其他表單驗證
+        if (!validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods)) {
+            return;
+        }
+        
+        // 顯示加載狀態
+        submitBtn.textContent = '上傳中...';
+        submitBtn.disabled = true;
+        
+        // 收集交易方式
+        const selectedMethods = [];
+        transactionMethods.forEach(method => {
+            selectedMethods.push(method.value);
+        });
+        
+        // 準備表單數據
+        const formData = new FormData();
+        formData.append('bookTitle', bookTitle);
+        formData.append('department', department);
+        formData.append('grade', grade);
+        formData.append('bookType', bookType);
+        formData.append('price', price);
+        formData.append('condition', condition);
+        formData.append('bookDescription', bookDescription);
+        
+        // 添加交易方式
+        selectedMethods.forEach(method => {
+            formData.append('transactionMethod', method);
+        });
+        
+        // 添加圖片
+        if (imageUpload.files[0]) {
+            formData.append('bookImage', imageUpload.files[0]);
+        }
+        
+        // 添加CSRF令牌
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // 發送AJAX請求
+        fetch('/upload_book/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                uploadForm.style.display = 'none';
+                
+                // 重置表單
+                resetForm();
+                
+                // 刷新頁面以顯示新上傳的書籍
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert(data.message || '上傳失敗，請稍後再試');
+                submitBtn.textContent = '上傳書籍';
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('上傳錯誤:', error);
+            alert('上傳失敗，請稍後再試');
+            submitBtn.textContent = '上傳書籍';
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // 表單驗證函數
     function validateForm(bookTitle, department, grade, bookType, price, condition, transactionMethods) {
+        // 必填欄位已在提交按鈕點擊事件中驗證
+        
         if (!imageUpload.files[0]) {
             alert('請上傳書籍圖片！');
             return false;
         }
+        
         if (!department) {
             alert('請選擇系所！');
             return false;
         }
+        
         if (!grade) {
             alert('請選擇年級！');
             return false;
         }
+        
         if (!bookType) {
             alert('請選擇書籍類型！');
             return false;
         }
+        
         if (!condition) {
             alert('請選擇書籍狀況！');
             return false;
         }
+        
         return true;
     }
-
-    /* -------------------------
-       10. 重置表單
-    ------------------------- */
+    
+    // 重置表單函數
     function resetForm() {
         document.getElementById('bookTitle').value = '';
         document.getElementById('department').selectedIndex = 0;
@@ -261,18 +485,20 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('price').value = '';
         document.getElementById('condition').selectedIndex = 0;
         document.getElementById('bookDescription').value = '';
+        
+        // 重置交易方式
         document.querySelectorAll('input[name="transactionMethod"]').forEach(checkbox => {
             checkbox.checked = false;
         });
+        
+        // 重置圖片
         imageUpload.value = '';
         previewImage.src = '';
         previewImage.style.display = 'none';
         previewPlaceholder.style.display = 'block';
     }
-
-    /* -------------------------
-       11. 模擬新增書籍卡片
-    ------------------------- */
+    
+    // 模擬添加新卡片的函數
     function addNewBookCard(bookTitle, bookDescription, bookType) {
         const booksGrid = document.querySelector('.books-grid');
         const newCard = document.createElement('div');
@@ -289,20 +515,24 @@ window.addEventListener('DOMContentLoaded', () => {
         `;
         booksGrid.prepend(newCard);
     }
-
-    /* -------------------------
-       12. SVG 路徑與按鈕對齊
-    ------------------------- */
-    alignSvgPathWithUploadButton();
+    
+    // 上傳按鈕點擊事件
+    uploadBtn.addEventListener('click', function() {
+        uploadForm.style.display = 'flex';
+    });
+    
+    // 添加SVG路徑和上傳按鈕中心點對齊的功能
     function alignSvgPathWithUploadButton() {
         const svgPath = document.getElementById('curve');
         const uploadBtn = document.getElementById('uploadBtn');
+        
         if (!svgPath || !uploadBtn) return;
-
+        
+        // 獲取SVG元素
         const svg = svgPath.closest('svg');
         if (!svg) return;
-
-        // 創建參考點（圓形）
+        
+        // 創建一個新的圓形元素作為參考點
         const centerPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         centerPoint.setAttribute('cx', '50');
         centerPoint.setAttribute('cy', '50');
@@ -310,17 +540,33 @@ window.addEventListener('DOMContentLoaded', () => {
         centerPoint.setAttribute('fill', 'transparent');
         centerPoint.setAttribute('id', 'centerPoint');
         svg.appendChild(centerPoint);
-
+        
+        // 監聽窗口大小變化，確保對齊
         window.addEventListener('resize', updateAlignment);
+        
+        // 初始對齊
         updateAlignment();
-
+        
         function updateAlignment() {
+            // 獲取SVG中心點的位置
+            const svgRect = svg.getBoundingClientRect();
+            const svgCenterX = svgRect.left + svgRect.width / 2;
+            const svgCenterY = svgRect.top + svgRect.height / 2;
+            
+            // 獲取上傳按鈕的位置
+            const btnRect = uploadBtn.getBoundingClientRect();
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
+            
+            // 計算SVG路徑需要的調整
+            const pathD = svgPath.getAttribute('d');
             const newPathD = `M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0`;
             svgPath.setAttribute('d', newPathD);
+            
+            // 更新文字路徑的長度，確保文字正確顯示
             const textPath = document.querySelector('textPath');
             if (textPath) {
                 textPath.setAttribute('textLength', '250');
             }
         }
     }
-});

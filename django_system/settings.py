@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "social_django",  # Google OAuth2
     "web_app",
+    "reminders",
 ]
 
 # ========================
@@ -31,7 +32,7 @@ INSTALLED_APPS = [
 # ========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # 靜態檔壓縮
+    # "whitenoise.middleware.WhiteNoiseMiddleware",  # 靜態檔壓縮 - 暫時停用
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -41,7 +42,7 @@ MIDDLEWARE = [
     "social_django.middleware.SocialAuthExceptionMiddleware",  # Google 登入錯誤處理
 ]
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"  # 暫時停用
 
 ROOT_URLCONF = 'django_system.urls'
 
@@ -231,3 +232,54 @@ LOGGING = {
         },
     },
 }
+
+
+# 時區建議台北
+TIME_ZONE = "Asia/Taipei"
+USE_TZ = True
+
+# Email：改成你們 SMTP
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "ntubimd114510@gmail.com"
+EMAIL_HOST_PASSWORD = "lodw hjdb tjmm qmdv"
+DEFAULT_FROM_EMAIL = "智能校事專家 <ntubimd114510@gmail.com>"
+
+
+# settings.py
+REMINDER_SOURCES = [
+    # A) 參與者來源（有參與者時寄給參與者）
+    {
+        "label": "活動",
+        "model": "web_app.ActivityParticipant",
+        "filters": {"status": "joined"},  # 先留空，等你確認資料後再加狀態過濾
+        "date_field": {"date": "activity__date", "time": "activity__time"},
+        "title_field": "activity__title",
+        "user_field": ["user", "owner", "created_by"],  # ← 支援多候選
+        "object_field_for_log": "activity",
+        # "detail_url_attr": "get_absolute_url",
+    },
+    # B) 活動本體來源（沒有參與者時，寄給建立者/擁有者）
+    {
+        "label": "活動（建立者）",
+        "model": "web_app.GroupActivity",
+        "filters": {},
+        "date_field": {"date": "date", "time": "time"},
+        "title_field": "title",
+        "user_field": ["user", "owner", "created_by"],  # ← 支援多候選
+        "object_field_for_log": None,
+        # "detail_url_attr": "get_absolute_url",
+    },
+    # C) 行事曆（Todo）
+    {
+        "label": "行事曆",
+        "model": "web_app.Todo",
+        "filters": {},
+        "date_field": "date",   # 只有日期
+        "title_field": "title",
+        "user_field": ["user", "owner", "created_by"],  # 一併用候選
+        "object_field_for_log": None,
+    },
+]

@@ -23,35 +23,43 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // 點擊區塊觸發 input
-  uploadArea.addEventListener('click', () => fileInput.click());
+  if (uploadArea && fileInput) {
+    uploadArea.addEventListener('click', () => fileInput.click());
+  }
 
   // 檔案選擇即時預覽
-  fileInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = event => setPreview(event.target.result);
-      reader.readAsDataURL(file);
-    }
-  });
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = event => setPreview(event.target.result);
+        reader.readAsDataURL(file);
+      }
+    });
+  }
 
   // 拖曳互動
-  ['dragenter','dragover','dragleave','drop'].forEach(ev => {
-    uploadArea.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
-  });
-  ['dragenter','dragover'].forEach(ev => {
-    uploadArea.addEventListener(ev, () => uploadArea.style.borderColor = '#6F557D');
-  });
-  ['dragleave','drop'].forEach(ev => {
-    uploadArea.addEventListener(ev, () => uploadArea.style.borderColor = '#ddd');
-  });
-  uploadArea.addEventListener('drop', function(e) {
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = event => setPreview(event.target.result);
-      reader.readAsDataURL(file);
-      fileInput.files = e.dataTransfer.files;
-    }
-  });
+  if (uploadArea) {
+    ['dragenter','dragover','dragleave','drop'].forEach(ev => {
+      uploadArea.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+    });
+    ['dragenter','dragover'].forEach(ev => {
+      uploadArea.addEventListener(ev, () => uploadArea.style.borderColor = '#6F557D');
+    });
+    ['dragleave','drop'].forEach(ev => {
+      uploadArea.addEventListener(ev, () => uploadArea.style.borderColor = '#ddd');
+    });
+    uploadArea.addEventListener('drop', function(e) {
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = event => setPreview(event.target.result);
+        reader.readAsDataURL(file);
+        if (fileInput) {
+          fileInput.files = e.dataTransfer.files;
+        }
+      }
+    });
+  }
 });

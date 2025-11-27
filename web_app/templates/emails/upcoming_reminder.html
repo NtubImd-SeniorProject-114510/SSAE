@@ -1,0 +1,7 @@
+<p>{{ user_data.name|default:user.get_full_name }} 您好：</p>
+<p>這是<strong>{{ kind_label }}</strong>「<strong>{{ title }}</strong>」的<strong>{{ rtype }}</strong>。</p>
+<p>開始時間：{{ starts_at }}</p>
+{% if detail_url %}
+<p>詳細資訊：<a href="{{ detail_url }}">{{ detail_url }}</a></p>
+{% endif %}
+<p>— 智能校事專家 系統通知</p>

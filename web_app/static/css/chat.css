@@ -143,10 +143,60 @@ body:not(.sidebar-collapsed) .sidebar .new-chat-btn {
 }
 
 .sidebar-record {
-    padding-top: 20px;
+    padding: 20px 15px 10px 15px;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+#historyTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-align: center;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+/* 創建裝飾性線條和文字的組合 */
+#historyTitle::before {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #8A7695, #6F557D);
+    margin-right: 15px;
+    border-radius: 1px;
+    transition: all 0.3s ease;
+}
+
+#historyTitle::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, #6F557D, #8A7695, transparent);
+    margin-left: 15px;
+    border-radius: 1px;
+    transition: all 0.3s ease;
+}
+
+/* 懸停效果 */
+#historyTitle:hover::before,
+#historyTitle:hover::after {
+    height: 3px;
+    background: linear-gradient(90deg, #e7c21b, #f8de77, #e7c21b);
+    box-shadow: 0 0 8px rgba(231, 194, 27, 0.4);
 }
 
 .new-chat-btn {

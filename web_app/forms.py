@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 from .forms_mixins import SafeContentFormMixin
 
 
-# ---------------------------
 # 活動建立表單：掛上 Mixin
 # ---------------------------
 class ActivityForm(SafeContentFormMixin, forms.ModelForm):
@@ -17,13 +16,12 @@ class ActivityForm(SafeContentFormMixin, forms.ModelForm):
             'title', 'type', 'location_type', 'location', 
             'address', 'latitude', 'longitude', 'place_id',
             'date', 'time', 'min_participants', 'max_participants',
-            'description', 'cover_image', 'deadline', 'contact_info'
+            'description', 'cover_image', 'deadline'
         ]
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'time': forms.TimeInput(attrs={'type': 'time'}),
             'deadline': forms.DateInput(attrs={'type': 'date'}),
-            'cover_image': forms.FileInput(attrs={'required': False}),
             'address': forms.HiddenInput(),
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
@@ -38,7 +36,6 @@ class ActivityForm(SafeContentFormMixin, forms.ModelForm):
         self.fields['latitude'].required = False
         self.fields['longitude'].required = False
         self.fields['place_id'].required = False
-        self.fields['contact_info'].required = False
         
     def clean(self):
         cleaned_data = super().clean()  # ★ 會先跑 SafeContentFormMixin.clean()

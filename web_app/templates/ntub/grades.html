@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}北商成績查詢 - SSAE{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{% static 'css/ntub_dashboard.css' %}">
+<style>
+.grades-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.grades-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.grades-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.grades-title {
+    display: flex;
+    align-items: center;
+}
+
+.grades-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.grades-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.grades-table th {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 15px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.grades-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+}
+
+.grades-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.grade-excellent {
+    background: #d4edda;
+    color: #155724;
+    font-weight: 600;
+}
+
+.grade-good {
+    background: #d1ecf1;
+    color: #0c5460;
+    font-weight: 600;
+}
+
+.grade-average {
+    background: #fff3cd;
+    color: #856404;
+    font-weight: 600;
+}
+
+.grade-poor {
+    background: #f8d7da;
+    color: #721c24;
+    font-weight: 600;
+}
+
+.semester-selector {
+    margin-bottom: 20px;
+}
+
+.semester-selector select {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    cursor: pointer;
+}
+
+.gpa-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.gpa-item {
+    display: inline-block;
+    margin: 0 20px;
+}
+
+.gpa-value {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+
+.gpa-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.refresh-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+}
+
+.back-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.no-grades {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grades-container">
+    <div class="grades-card">
+        <div class="grades-header">
+            <div class="grades-title">
+                <div class="grades-icon">
+                    <i class="fas fa-chart-line" style="color: white; font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: #333;">我的成績</h2>
+                    <p style="margin: 0; color: #666;">學期成績查詢</p>
+                </div>
+            </div>
+            <div>
+                <button class="refresh-btn" onclick="loadGrades()">
+                    <i class="fas fa-sync-alt"></i> 重新載入
+                </button>
+                <a href="{% url 'ntub_dashboard' %}" class="back-btn" style="margin-left: 10px;">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+
+        <div class="semester-selector">
+            <label for="semesterSelect" style="margin-right: 10px; font-weight: 500;">選擇學期:</label>
+            <select id="semesterSelect" onchange="loadGrades()">
+                <option value="">當前學期</option>
+                <option value="1141">114學年度第1學期</option>
+                <option value="1132">113學年度第2學期</option>
+                <option value="1131">113學年度第1學期</option>
+            </select>
+        </div>
+
+        <div id="gpaSection" style="display: none;">
+            <div class="gpa-summary">
+                <div class="gpa-item">
+                    <span class="gpa-value" id="semesterGPA">--</span>
+                    <span class="gpa-label">學期GPA</span>
+                </div>
+                <div class="gpa-item">
+                    <span class="gpa-value" id="totalCredits">--</span>
+                    <span class="gpa-label">總學分</span>
+                </div>
+                <div class="gpa-item">
+                    <span class="gpa-value" id="averageGrade">--</span>
+                    <span class="gpa-label">平均成績</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="gradesContent">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #f093fb;"></i>
+                <p>正在載入成績資料...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📊 成績頁面載入完成');
+    loadGrades();
+});
+
+async function loadGrades() {
+    const content = document.getElementById('gradesContent');
+    const gpaSection = document.getElementById('gpaSection');
+    const semesterSelect = document.getElementById('semesterSelect');
+    const semester = semesterSelect ? semesterSelect.value : '';
+    
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #f093fb;"></i>
+            <p>正在載入成績資料...</p>
+        </div>
+    `;
+    
+    gpaSection.style.display = 'none';
+
+    try {
+        let url = '{% url "api_ntub_grades" %}';
+        if (semester) {
+            url += `?semester=${semester}`;
+        }
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+            displayGrades(result.data);
+        } else {
+            content.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    載入失敗: ${result.message}
+                    <br><br>
+                    <button class="refresh-btn" onclick="window.location.href='{% url "ntub_dashboard" %}'">
+                        返回重新登入
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('載入成績錯誤:', error);
+        content.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                載入失敗，請稍後再試
+                <br><br>
+                <button class="refresh-btn" onclick="loadGrades()">
+                    重新嘗試
+                </button>
+            </div>
+        `;
+    }
+}
+
+function displayGrades(gradesData) {
+    const content = document.getElementById('gradesContent');
+    const gpaSection = document.getElementById('gpaSection');
+    
+    if (!gradesData || gradesData.length === 0) {
+        content.innerHTML = `
+            <div class="no-grades">
+                <i class="fas fa-chart-line" style="font-size: 3rem; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>暫無成績資料</h3>
+                <p>可能是當前學期尚未公布成績，或請嘗試選擇其他學期</p>
+            </div>
+        `;
+        return;
+    }
+
+    // 計算GPA統計
+    let totalCredits = 0;
+    let totalGradePoints = 0;
+    let totalGrades = 0;
+
+    // 創建成績表格
+    let tableHtml = `
+        <table class="grades-table">
+            <thead>
+                <tr>
+                    <th>課程代碼</th>
+                    <th>課程名稱</th>
+                    <th>學分</th>
+                    <th>成績</th>
+                    <th>GPA</th>
+                    <th>備註</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    gradesData.forEach(grade => {
+        const gradeClass = getGradeClass(grade.grade);
+        const credits = parseFloat(grade.credits) || 0;
+        const gradeValue = parseFloat(grade.grade) || 0;
+        const gpa = parseFloat(grade.gpa) || 0;
+
+        totalCredits += credits;
+        totalGradePoints += gradeValue * credits;
+        totalGrades += gradeValue;
+
+        tableHtml += `
+            <tr>
+                <td>${grade.courseCode || ''}</td>
+                <td style="text-align: left;">${grade.courseName || ''}</td>
+                <td>${grade.credits || ''}</td>
+                <td class="${gradeClass}">${grade.grade || ''}</td>
+                <td>${grade.gpa || ''}</td>
+                <td>${grade.remark || ''}</td>
+            </tr>
+        `;
+    });
+
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+    
+    content.innerHTML = tableHtml;
+
+    // 顯示GPA統計
+    if (gradesData.length > 0) {
+        const avgGPA = totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : '0.00';
+        const avgGrade = gradesData.length > 0 ? (totalGrades / gradesData.length).toFixed(1) : '0.0';
+
+        document.getElementById('semesterGPA').textContent = avgGPA;
+        document.getElementById('totalCredits').textContent = totalCredits.toString();
+        document.getElementById('averageGrade').textContent = avgGrade;
+        
+        gpaSection.style.display = 'block';
+    }
+}
+
+function getGradeClass(grade) {
+    const gradeValue = parseFloat(grade);
+    if (gradeValue >= 90) return 'grade-excellent';
+    if (gradeValue >= 80) return 'grade-good';
+    if (gradeValue >= 70) return 'grade-average';
+    if (gradeValue >= 60) return 'grade-average';
+    return 'grade-poor';
+}
+</script>
+{% endblock %}

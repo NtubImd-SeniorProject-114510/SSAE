@@ -12,7 +12,512 @@
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/personal.css' %}">
+<style>
+  /* ============== Tickets ============== */
+.cshelf__tickets{
+  position: relative;
+  padding:20px 10px;
+  margin-bottom:8px;
+}
+.cshelf__tickets::after {
+  content: "";
+  display: block;
+  height: calc(var(--tickets-h, 0px));
+}
 
+/* 外層：只負責傾斜（rotateZ）。用 CSS 變數，不去覆蓋翻面 */
+.cticket {
+  position:absolute;
+  width:450px;
+  height:200px;
+  perspective:1000px;
+  cursor:pointer;
+  transition:transform .6s;
+  transform: rotate(var(--tilt, 0deg));
+  will-change: transform, opacity;
+  /* 合成：先上下位移，再傾斜；沒有傾斜就 0deg */
+  --slideY: 0px;
+  --tilt: 0deg;
+  transform: translateY(var(--slideY)) rotate(var(--tilt));
+  transition: transform .35s ease, opacity .25s ease;
+}
+
+/* 被「滑掉」的那張：往上移出、暫時不可點 */
+.cticket.is-slid{
+  --slideY: -120%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* hover 放大但保留傾斜角度（不會吃掉 rotate）*/
+.cticket:hover{
+  z-index:104 !important;
+  transform: rotate(var(--tilt, 0deg)) scale(1.03) !important;
+}
+
+/* 內層：翻面動畫 */
+.cticket__inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  transform-style:preserve-3d;
+  transition:transform .8s;
+}
+.cticket__inner:hover { transform: translateZ(0) scale(1.03); }
+.cticket.flipped .cticket__inner, .cticket.flipped > .cticket__inner{ transform:rotateY(180deg) scale(1.03); }
+
+.cticket__front, .cticket__back{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.3); overflow:hidden;
+}
+
+.cticket__front{ background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%); display:flex }
+
+/* 右上角日期不擠標題：右側留白 */
+.cticket__left{
+  flex:1; padding:22px 96px 22px 22px;
+  display:flex; flex-direction:column; justify-content:space-between; position:relative;
+}
+.cticket__left::after{
+  content:''; position:absolute; right:0; top:0; bottom:0; width:2px;
+  background:repeating-linear-gradient(0deg,#d4a574,#d4a574 10px,transparent 10px,transparent 20px);
+}
+
+.cticket__icon{ font-size:44px; color:#d4a574; margin-bottom:8px }
+
+/* 標題兩行省略，避免小視窗疊字 */
+.cticket__title{
+  font-size:20px; font-weight:700; color:#5a4a3a; margin-bottom:6px;
+  max-width:100%;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  word-break:break-word;
+}
+
+.cticket__back h3{
+  text-decoration: underline;
+}
+.cticket__back h3:hover{
+  color: #967d3bff;
+}
+
+.cticket__subtitle{ font-size:13px; color:#8b7355; text-transform:uppercase; letter-spacing:2px }
+.cticket__stars{ color:#d4a574; font-size:13px; letter-spacing:3px }
+.cticket__stars::before { content: "★ ★ ★ ★ ★ ★ ★ ★ ★"; }
+
+.cticket__right{
+  width:100px; background:linear-gradient(135deg,#d4a574 0%,#b8936d 100%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#fff; position:relative;
+}
+.cticket__right::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+  background:repeating-linear-gradient(0deg,#ffecd2,#ffecd2 10px,transparent 10px,transparent 20px);
+}
+.cticket__no{ writing-mode:vertical-rl; text-orientation:mixed; font-size:12px; letter-spacing:2px; margin-top:6px }
+
+/* --- Ticket date area：右上角（星期 / 日期 / 時間） --- */
+.cticket__dateinfo{
+  position:absolute; top:18px; right:16px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:2px;
+}
+.cticket__day{ font-size:15px; font-weight:700; line-height:1 }
+.cticket__date{ font-size:44px; font-weight:800; line-height:1 }
+.cticket__time{ font-size:13px; line-height:1 }
+
+/* --- Ticket month label：英文縮寫，左區右下角 --- */
+.cticket__monthlabel{
+  position:absolute; right:12px; bottom:10px;
+  font-size:40px; font-weight:600; color:#5a4a3a; opacity:.85;
+  text-transform:capitalize; /* Jan. / Feb. ... */
+}
+
+/* Back side */
+.cticket__back{
+  background:linear-gradient(135deg,#fff5e6 0%,#ffe4c4 100%);
+  transform:rotateY(180deg); padding:24px;
+  display:flex; flex-direction:column; justify-content:center; text-align:center;
+}
+.cticket__back h3{ font-size:22px; color:#5a4a3a; margin-bottom:0; }
+.cticket__back-txt{ color:#6d5d4b; line-height:1.6; margin-bottom:12px;   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;}
+.cticket__back-meta{ display:flex; flex-direction:column; gap:8px; font-size:14px; color:#8b7355 }
+.cticket__back-meta i{ margin-right:8px; color:#d4a574 }
+
+/* ============== RWD：手機也要「重疊＋有角度」 ============== */
+@media (max-width: 768px){
+  /* 保持絕對定位，寬度自適應 */
+  .cticket{
+    position:absolute !important;
+    width:calc(100% - 32px);
+    left:16px !important;
+  }
+  /* 疊起來（間距 32px）。若模板沒提供 --i，可用 nth-child 覆蓋在下方 */
+  .cticket{ top: calc(8px + var(--i, 0) * 32px) !important; }
+
+  /* 安全降字級，避免擠到 */
+  .cticket__title{ font-size:18px }
+  .cticket__date{ font-size:36px }
+    
+  .cticket {
+    height: 180px;
+  }
+  .cticket__monthlabel{ font-size:32px }
+  .cticket__right{ width:50px; }
+  .cticket__subtitle{ font-size: 10px; }
+  .cticket__left{ padding: 10px 6px 22px 20px; }
+  .cticket__stars::before {
+    content: "★ ★ ★ ★ ★";
+  }
+  .cticket__dateinfo{ right:12px; }
+  .flag__dateinfo{ top:0; right:2px; }
+
+  /* 手機版票券背面調整 */
+  .cticket__back {
+    padding: 12px 16px !important;   /* 上下左右間距縮小 */
+  }
+
+  .cticket__back h3 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    cursor: pointer;
+    font-size: 1rem;                 /* 標題字小一點 */
+    margin-bottom:0;              /* 標題和內文間距縮小 */
+  }
+
+  .cticket__back .cticket__back-meta {
+    font-size: 0.85rem;              /* 內文字體稍小 */
+    line-height: 1.4;                /* 行距緊縮 */
+  }
+
+  .cticket__back .cticket__back-meta span {
+    display: block;                  /* 每個 meta 各占一行 */
+    margin-bottom: 4px;              /* 每行間距縮小 */
+  }
+
+}
+
+/* 若模板沒設 --i，以下用 nth-child 給 1~8 張對應 top 與 z-index（可再加） */
+@media (max-width: 768px){
+  .cshelf__tickets .cticket:nth-child(1){ top:8px !important;   z-index:58 }
+  .cshelf__tickets .cticket:nth-child(2){ top:40px !important;  z-index:57 }
+  .cshelf__tickets .cticket:nth-child(3){ top:72px !important;  z-index:56 }
+  .cshelf__tickets .cticket:nth-child(4){ top:104px !important; z-index:55 }
+  .cshelf__tickets .cticket:nth-child(5){ top:136px !important; z-index:54 }
+  .cshelf__tickets .cticket:nth-child(6){ top:168px !important; z-index:53 }
+  .cshelf__tickets .cticket:nth-child(7){ top:200px !important; z-index:52 }
+  .cshelf__tickets .cticket:nth-child(8){ top:232px !important; z-index:51 }
+}
+
+
+/* 書櫃：每頁最多 4 本 → 2x2 */
+.bookshelf--paged {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.pager {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pager__btn {
+  appearance: none;
+  border: 1px solid #AA9DA9;
+  background: #fff;
+  color: #4a4a4a;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: box-shadow .2s ease, transform .06s ease;
+}
+
+.pager__btn:hover { box-shadow: 0 2px 8px rgba(170,157,169,.25); }
+.pager__btn:active { transform: translateY(1px); }
+
+.pager__btn.is-active {
+  background: #AA9DA9;
+  color: #fff;
+  border-color: #AA9DA9;
+  cursor: default;
+}
+
+.pager__btn.is-disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* 手機：書櫃改單欄 */
+@media (max-width: 768px) {
+  .bookshelf--paged { grid-template-columns: 1fr; }
+  .book-detail-content { flex-direction: column; }
+  .book-info-section { margin-top: 16px; margin-left: auto; margin-right: auto; }
+  .book-management-buttons{ justify-content: center; }
+  #bookshelf.cshelf__shelf {
+    gap: 6px;
+  }
+}
+
+
+
+
+/* === Bookshelf: wood tone + diagonal book stripes (優先生效，請放在分隔線上方) === */
+
+.cshelf__bookshelf{
+  --plank-w: 70px;               /* 每塊木板的寬度 */
+  --gap-w:   1px;                /* 木板縫隙寬 */
+  --gap-d:   rgba(0,0,0,.18);    /* 縫隙顏色（深） */
+  --gap-l:   rgba(255,255,255,.12); /* 縫隙高光（可略） */
+
+  position: relative;
+  border-radius: 16px;
+  padding: 32px 24px;
+
+  /* 外觀陰影與邊框（保留木頭立體感） */
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.20),
+    inset 0 -2px 6px rgba(0,0,0,0.28),
+    0 12px 32px rgba(0,0,0,.18);
+  border: 1px solid rgba(75,56,34,.35);
+
+  /* 背景（最底層：整體木頭的上下明暗） */
+  background:
+    /* 細縫 + 高光：每 80px 1px 深色，緊接 0.5px 淡亮（讓縫隙更立體） */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 calc(var(--plank-w) - var(--gap-w)),
+      var(--gap-d) calc(var(--plank-w) - var(--gap-w)) var(--plank-w),
+      var(--gap-l) var(--plank-w) calc(var(--plank-w) + 0.5px),
+      transparent calc(var(--plank-w) + 0.5px) calc(2*var(--plank-w))
+    ),
+    /* 單塊木板的上下漸層色（可調整色感） */
+    linear-gradient(180deg, #e6d6ba 0%, #c7ad91 55%, #b09276 100%);
+  overflow: hidden; /* 讓內部裝飾的 ::before/::after 不外溢 */
+}
+
+
+.cshelf__bookshelf::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:8px;
+  background: linear-gradient(180deg, #baa086 0%, #8c7761 100%);
+  border-radius:16px 16px 0 0;
+  box-shadow:0 2px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+/* 層板：微透明木色、內凹陰影 */
+.cshelf__shelf{
+  display:flex; gap:10px; margin-bottom:38px; padding:20px;
+  background: rgba(60,44,30,.18);
+  border-radius:12px;
+  position:relative; flex-wrap:wrap; justify-content:center;
+  border:1px solid rgba(60,44,30,.28);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.18);
+}
+.cshelf__shelf::after{
+  content:''; position:absolute; top:220px; left:20px; right:20px; height:10px;
+  background: linear-gradient(180deg,#8c7761 0%, #6a533d 100%);
+  border-radius:0 0 6px 6px;
+  box-shadow:0 4px 12px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.15);
+}
+
+/* 書：改成「斜線」紋理（45°），去掉橫線；帶輕微高光 */
+.cshelf__book{
+  width:70px; height:200px; border:0; border-radius:6px;
+  cursor:pointer; position:relative;
+  box-shadow:2px 5px 10px rgba(0,0,0,.28), inset -1px 0 2px rgba(0,0,0,.12);
+  transform-origin:bottom; transition:transform .3s, box-shadow .3s;
+
+  /* 斜向條紋（fabric/皮革感） */
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,.10) 0px, rgba(255,255,255,.10) 2px,
+      rgba(255,255,255,0)   2px, rgba(255,255,255,0)   6px);
+  background-blend-mode: overlay;
+
+  color:#fff;
+  border-left:2px solid rgba(255,255,255,.18);
+}
+.cshelf__book::before{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.18), transparent 30%, rgba(0,0,0,.08));
+  pointer-events:none; mix-blend-mode:soft-light;
+}
+.cshelf__book:hover{
+  transform:translateY(-10px) scale(1.05) rotateZ(1.5deg);
+  box-shadow:4px 10px 20px rgba(0,0,0,.35);
+}
+
+/* 書色盤：復古又不刺眼（可自行增減 nth-child） */
+/* .cshelf__book:nth-child(1){  background-color:#c98967; } 
+.cshelf__book:nth-child(2){  background-color:#a15e5a; } 
+.cshelf__book:nth-child(3){  background-color:#6f8990; } 
+.cshelf__book:nth-child(4){  background-color:#86a56a; } 
+.cshelf__book:nth-child(5){  background-color:#c7a75e; }
+.cshelf__book:nth-child(6){  background-color:#7297bd; } 
+.cshelf__book:nth-child(7){  background-color:#a37ab0; } 
+.cshelf__book:nth-child(8){  background-color:#d07f6e; } 
+.cshelf__book:nth-child(9){  background-color:#6b8f7b; } 
+.cshelf__book:nth-child(10){ background-color:#b5a06a; } */
+
+.cshelf__book:nth-child(5){  background-color:#b5a06a; } 
+.cshelf__book:nth-child(4){  background-color:#d08c60; } 
+.cshelf__book:nth-child(3){  background-color:#e9c46a; } 
+.cshelf__book:nth-child(2){  background-color:#c1957a; } 
+.cshelf__book:nth-child(1){  background-color:#9bc7c5; }
+.cshelf__book:nth-child(8){  background-color:#b5a06a; } 
+.cshelf__book:nth-child(9){  background-color:#d08c60; } 
+.cshelf__book:nth-child(7){  background-color:#e9c46a; } 
+.cshelf__book:nth-child(10){  background-color:#c1957a; } 
+.cshelf__book:nth-child(6){  background-color:#9bc7c5; }
+.cshelf__book:nth-child(11){  background-color:#b5a06a; } 
+.cshelf__book:nth-child(12){  background-color:#d08c60; } 
+.cshelf__book:nth-child(13){  background-color:#e9c46a; } 
+.cshelf__book:nth-child(14){  background-color:#c1957a; } 
+.cshelf__book:nth-child(15){  background-color:#9bc7c5; }
+
+/* 書脊字：維持你原本的直排設定（微調陰影即可） */
+.cshelf__spine{
+  writing-mode:vertical-rl; text-orientation:mixed; padding:14px 8px;
+  font-weight:700; font-size:13px; text-shadow:1px 2px 3px rgba(0,0,0,.3); letter-spacing:.5px;
+}
+
+/* 空位：也改成斜線紋路，保持整體一致性 */
+.cshelf__empty{ 
+  background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,.08) 5px, rgba(255,255,255,.08) 10px),
+              rgba(255,255,255,.25); 
+  color:#3f2f23; border:2px dashed rgba(255,255,255,.35); padding:14px 16px; border-radius:8px; font-style:italic;
+}
+
+
+/* ================= 小旗樣式 ================= */
+.gflag__flag {
+  position: absolute;
+  left: 16px;
+  top: 8px;
+  width: 96px;
+  height: 56px;
+
+  /* clip 成旗子形狀 */
+  clip-path: polygon(0 0, 86% 28%, 86% 72%, 0 100%);
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  overflow: hidden;
+
+  /* 布料感：多段顏色 + 光影 */
+  background: linear-gradient(
+    135deg,
+    #f4e9da 0%,      /* 亮 */
+    #e2d1bd 20%,     /* 暗 */
+    #f8f1e6 45%,     /* 再亮 */
+    #dfcdb8 70%,     /* 再次暗 */
+    #f6e8d7 100%     /* 收尾亮 */
+  );
+
+  {% comment %} background: linear-gradient(135deg, #ede5f4 0%, #d7c3e6 25%, #f2eaf8 50%, #cbb0dc 75%, #e8d9f2 100%); {% endcomment %}
+
+  box-shadow: 0 4px 10px rgba(0,0,0,.18), inset 0 0 4px rgba(255,255,255,.25);
+}
+
+/* 外層容器：保持排版 */
+.value-with-progress {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-bar {
+  width: 150px;
+  height: 16px;
+  background-color: #dbdfe4;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-segment {
+  height: 100%;
+  float: left;
+  position: relative;
+  width: 0;                       /* 初始 0 */
+  transition: width 1.2s ease;    /* 用 transition 推到目標寬度 */
+}
+
+.progress-segment.animate {
+  width: var(--target-width);     /* 套上 .animate 就會從 0 過渡到這裡 */
+}
+
+.progress-segment.required { background: #219ebc; }
+.progress-segment.elective { background: #023047; }
+.progress-segment.major    { background: #ffb703; }
+.progress-segment.general  { background: #fb8500; }
+
+/* 進場動畫：從0→var(--target-width) */
+@keyframes slideIn {
+    0% { width: 0; }
+    100% { width: var(--target-width); }
+}
+
+
+.progress-segment:hover {
+    filter: brightness(1.1);
+    z-index: 2;
+}
+
+
+/* 讓這層成為 tooltip 的定位父層 */
+.value-with-progress { position: relative; }
+
+/* 改為絕對定位；預設以 left 為中心，向下 8px */
+.tooltip {
+  position: absolute;
+  left: 0; top: 0;
+  transform: translateX(-90%) translateY(20px);
+  background: rgba(0,0,0,0.9);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .18s ease, visibility .18s ease;
+  pointer-events: none;
+  max-width: 220px;
+}
+
+/* 只控制可見性，不再改 transform（避免被推走） */
+.tooltip.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 小箭頭：在上緣、朝上（因為 tooltip 在進度條下方） */
+.tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent rgba(0,0,0,0.9) transparent;
+}
+
+
+
+</style>
 {% endblock %}
 
 {% block content %}
@@ -43,365 +548,343 @@
         </div>
 
         <div class="row">
-             <!-- 左側課表區塊 -->
-            <div class="card course-schedule">
-                <div class="card-header">
-                    <h2>要叫什麼</h2>
-                </div>
-
-                <div class="card-body">
-                    <!-- 標題：我的活動票券 -->
-                    <div class="cshelf__title">
-                    <i class="fa-solid fa-ticket"></i><span></span>
-                    </div>
-
-                    <div class="cshelf__tickets">
-                    {% if tickets %}
-                        {% for t in tickets %}
-                        <div class="cticket"
-                            style="left: {{ t.left_px }}px;
-                                    top: {{ t.top_px }}px;
-                                    transform:rotate({{ t.rotate_deg }}deg);
-                                    z-index: {{ t.z_index }};"
-                            data-title="{{ t.title|escape }}"
-                            data-subtitle="{{ t.subtitle|escape }}"
-                            data-weekday="{{ t.weekday }}"
-                            data-date="{{ t.date }}"
-                            data-time="{{ t.time }}"
-                            data-number="{{ t.number }}"
-                            data-location="{{ t.location|escape }}"
-                            data-joined="{{ t.joined }}"
-                            data-capacity="{{ t.capacity }}"
-                            data-host="{{ t.host|escape }}"
-                            data-desc="{{ t.desc|escape }}"
-                            data-icon="{{ t.icon|default:'fa-solid fa-ticket' }}">
-                        <div class="cticket__inner">
-                            <div class="cticket__front">
-                            <div class="cticket__left">
-                                <div class="cticket__dateinfo">
-                                    <div class="cticket__day">{{ t.weekday }}</div>
-                                    <div class="cticket__date">{{ t.date }}</div>
-                                    <div class="cticket__time">{{ t.time }}</div>
-                                </div>
-                                <div class="cticket__monthlabel">{{ t.month_abbr }}</div>
-                                <div>
-                                <div class="cticket__icon"><i class="{{ t.icon|default:'fa-solid fa-ticket' }}"></i></div>
-                                <div class="cticket__title">{{ t.title }}</div>
-                                <div class="cticket__subtitle">{{ t.subtitle }}</div>
-                                </div>
-                                <div class="cticket__stars">★ ★ ★ ★ ★ ★ ★ ★ ★</div>
-                            </div>
-                            <div class="cticket__right">
-                                
-                                <div class="cticket__no">{{ t.number }}</div>
-                            </div>
-                            </div>
-                            <div class="cticket__back">
-                            <h3>{{ t.title }}</h3>
-                            <div class="cticket__back-txt">{{ t.desc }}</div>
-                            <div class="cticket__back-meta">
-                                <div><i class="fa-solid fa-map-marker-alt"></i>{{ t.location }}</div>
-                                <div><i class="fa-solid fa-users"></i>已報名: {{ t.total_participants }}/{{ t.max_participants }} 人</div>
-                                <div><i class="fa-solid fa-user"></i>發起人: {{ t.host }}</div>
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="cshelf__empty">還沒有票券～去參加一個活動吧！</div>
-                    {% endif %}
-                    </div>
-
-                    <!-- 我發起的活動（小三角旗） -->
-                    <div class="cshelf__title">
-                    <i class="fa-solid fa-flag"></i><span></span>
-                    </div>
-
-                    <div class="gflag-board">
-                    {% if created_flags %}
-                        {% for f in created_flags %}
-                        <button class="gflag {% if f.tone %}gflag--{{ f.tone }}{% endif %}"
-                            type="button"
-                            aria-label="查看活動 {{ f.title }}"
-                            data-id="{{ f.id }}"
-                            data-title="{{ f.title|escape }}"
-                            data-desc="{{ f.desc|escape }}"
-                            data-location="{{ f.location|escape }}"
-                            data-weekday="{{ f.weekday }}"
-                            data-date="{{ f.date }}"
-                            data-time="{{ f.time }}"
-                            data-total="{{ f.total_participants }}"
-                            data-max="{{ f.max_participants }}">
-                    <div class="gflag__flag">
-                        <!-- 安全區：往旗尖內縮，避免 clip-path 切字 -->
-                        <div class="gflag__safe">
-                            <div class="cticket__dateinfo cticket__dateinfo--flag">
-                            <div class="gflag__md-inline">
-                                {{ f.month }}/{{ f.date }}
-                            </div>
-                            </div>
-                        </div>
-                    </div>
-                    </button>
-                        {% endfor %}
-                    {% else %}
-                        <div class="cshelf__empty">你還沒有發起活動～去揪一場吧！</div>
-                    {% endif %}
-                    </div>
-
-                    
-                    <!-- 標題：我的書架 -->
-                    <div class="cshelf__title">
-                    <i class="fa-solid fa-book"></i><span></span>
-                    </div>
-
-                    <div class="cshelf__bookshelf">
-                    <div class="cshelf__shelf">
-                        {% if books %}
-                        {% for b in books %}
-                            <button class="cshelf__book"
-                                    data-title="{{ b.title|default:'' }}"
-                                    data-author="{{ b.author|default:'—' }}"
-                                    data-publisher="{{ b.publisher|default:'—' }}"
-                                    data-isbn="{{ b.isbn|default:'—' }}"
-                                    data-desc="{{ b.desc|default:'' }}">
-                            <div class="cshelf__spine">{{ b.title }}</div>
-                            </button>
-                        {% endfor %}
-                        {% else %}
-                        <div class="cshelf__empty">還沒有書籍～去上架你的第一本書吧！</div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                </div>
-                </div>
-
-                <!-- 書籍 Modal（共用一個） -->
-                <div class="cshelf__modal" id="cshelfBookModal" aria-hidden="true">
-                <div class="cshelf__modal-panel" role="dialog" aria-modal="true">
-                    <button class="cshelf__modal-close" id="cshelfCloseBtn" aria-label="關閉">&times;</button>
-                    <h2 id="cshelfBookTitle">書籍標題</h2>
-                    <p><strong>作者：</strong><span id="cshelfBookAuthor"></span></p>
-                    <p><strong>出版社：</strong><span id="cshelfBookPublisher"></span></p>
-                    <p><strong>ISBN：</strong><span id="cshelfBookISBN"></span></p>
-                    <p><strong>簡介：</strong></p>
-                    <p id="cshelfBookDesc"></p>
-                </div>
-                </div>
-
-            <!-- 右側資料與活動區塊 -->
-            <div class="right-column">
-                <!-- 個人資料卡片 -->
-                <div class="card profile-card">
-                    <h2>我的資料</h2>
-                    <div class="profile-content">
-                        <div class="profile-image">
-                            {% if google_picture %}
-                                <img src="{{ google_picture }}" alt="{% if user_data and user_data.name %}{{ user_data.name }}{% else %}{{ user.last_name }}{{ user.first_name }}{% endif %}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
-                            {% else %}
-                                <img src="{% static 'image/me1.png' %}" alt="{% if user_data and user_data.name %}{{ user_data.name }}{% else %}{{ user.last_name }}{{ user.first_name }}{% endif %}">
-                            {% endif %}
-                            <div class="user-name-row">
-                            <div class="user-name">
-                                {% if user_data and user_data.anonymous %}
-                                    {{ user_data.anonymous }}
-                                {% elif user_data and user_data.name %}
-                                    {{ user_data.name }}
-                                {% else %}
-                                    {{ user.last_name }}{{ user.first_name }}
-                                {% endif %}
-                            </div>
-                            <button class="btn-icon" id="editNameBtn" aria-label="編輯資料" title="編輯資料">
-                                <!-- 鉛筆 SVG（Lucide 的 edit-3）-->
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M12 20h9"/>
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-                                </svg>
-                            </button>
-                            </div>
-                        </div>
-                        <div class="profile-details">
-                            <div class="profile-item">
-                                <div class="label">姓名</div>
-                                <div class="value">
-                                    {% if user_data and user_data.name %}
-                                        {{ user_data.name }}
-                                    {% else %}
-                                        {{ user.last_name }}{{ user.first_name }}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="profile-item">
-                                <div class="label">學號</div>
-                                <div class="value">
-                                    {% if user_data and user_data.student_id %}
-                                        {{ user_data.student_id }}
-                                    {% else %}
-                                        {{ user.username }}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% if user_data and user_data.academic %}
-                            <div class="profile-item">
-                                <div class="label">學制</div>
-                                <div class="value">{{ user_data.academic }}</div>
-                            </div>
-                            {% endif %}
-                            <div class="profile-item">
-                                <div class="label">班級</div>
-                                <div class="value">
-                                    {% if user_data and user_data.course %}
-                                        {{ user_data.course }}
-                                    {% else %}
-                                        資訊管理科
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="profile-item">
-                                <div class="label">Email</div>
-                                <div class="value">
-                                    {% if user_data and user_data.mail %}
-                                        {{ user_data.mail }}
-                                    {% else %}
-                                        {{ user.email }}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="profile-item">
-                                <div class="label">電話</div>
-                                <div class="value">
-                                    {% if user_data and user_data.phone %}
-                                        {{ user_data.phone }}
-                                    {% else %}
-                                        未設定
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="profile-item">
-                                <div class="label">LINE </div>
-                                <div class="value">
-                                    {% if user_data and user_data.LINE_ID %}
-                                        {{ user_data.LINE_ID }}
-                                    {% else %}
-                                        未設定
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="profile-item">
-                                <!--
-                                <div class="label">學分</div>
-                                <div class="value-with-progress">
-                                    <div class="value">已修196 /220</div>
-                                    <div class="progress-bar" id="progressBar">
-                                        <div class="progress-segment required animate" 
-                                            style="--target-width: 37.73%;" 
-                                            data-tooltip="必修：83學分"></div>
-                                        <div class="progress-segment elective animate" 
-                                            style="--target-width: 0%;" 
-                                            data-tooltip="選修：0學分"></div>
-                                        <div class="progress-segment major animate" 
-                                            style="--target-width: 12.27%;" 
-                                            data-tooltip="專選：27 /37學分"></div>
-                                        <div class="progress-segment general animate" 
-                                            style="--target-width: 30%;" 
-                                            data-tooltip="通識：66學分"></div>
-                                    </div>
-                                    <div class="tooltip" id="tooltip"></div>
-                                </div>
-                                -->
-                            </div>
-                            
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 活動卡片 -->
-                <div class="card activities-card">
-                    <div class="card-header">
-                        <h2>我的活動</h2>
-                    </div>
-                    <div class="activities-list">
-                        {% if created_activities or joined_activities %}
-                            {# 先顯示我發起的活動 #}
-                            {% for a in created_activities %}
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    {% with a.type as t %}
-                                        {% if t == 'sport' %}
-                                            <i class="fas fa-running"></i>
-                                        {% elif t == 'food' %}
-                                            <i class="fas fa-utensils"></i>
-                                        {% elif t == 'movie' %}
-                                            <i class="fas fa-film"></i>
-                                        {% elif t == 'study' %}
-                                            <i class="fas fa-book"></i>
-                                        {% elif t == 'travel' %}
-                                            <i class="fas fa-plane"></i>
-                                        {% else %}
-                                            <i class="fas fa-users"></i>
-                                        {% endif %}
-                                    {% endwith %}
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">
-                                        <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
-                                        <span style="margin-left:8px; font-size:12px; color:#fff; background:#6c63ff; padding:2px 8px; border-radius:12px;">我發起</span>
-                                    </div>
-                                    <div class="activity-details">
-                                        <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
-                                        <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            {# 再顯示我參加的活動 #}
-                            {% for a in joined_activities %}
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    {% with a.type as t %}
-                                        {% if t == 'sport' %}
-                                            <i class="fas fa-running"></i>
-                                        {% elif t == 'food' %}
-                                            <i class="fas fa-utensils"></i>
-                                        {% elif t == 'movie' %}
-                                            <i class="fas fa-film"></i>
-                                        {% elif t == 'study' %}
-                                            <i class="fas fa-book"></i>
-                                        {% elif t == 'travel' %}
-                                            <i class="fas fa-plane"></i>
-                                        {% else %}
-                                            <i class="fas fa-users"></i>
-                                        {% endif %}
-                                    {% endwith %}
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">
-                                        <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
-                                    </div>
-                                    <div class="activity-details">
-                                        <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
-                                        <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="activity-item">
-                                <div class="activity-icon"><i class="fas fa-info-circle"></i></div>
-                                <div class="activity-content">
-                                    <div class="activity-title">尚未參加任何活動</div>
-                                    <div class="activity-details">
-                                        <a href="{% url 'activity_list' %}" class="btn-link">前往活動召集</a>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
+          <!-- 左側課表區塊 -->
+          <div class="card course-schedule">
+            <div class="card-header">
+              <h2>這些事我在忙</h2>
             </div>
+
+            <!-- 課表票券 -->
+            <div class="cshelf__title">
+              <i class="fa-solid fa-ticket"></i><span>我的票夾</span>
+            </div>
+            <div class="cshelf__tickets">
+              {% if tickets %}
+                {% for t in tickets %}
+                  <div class="cticket"
+                    style="left: {{ t.left_px }}px; top: {{ t.top_px }}px; z-index: {{ t.z_index }};"
+                    data-title="{{ t.title|escape }}"
+                    data-subtitle="{{ t.subtitle|escape }}"
+                    data-weekday="{{ t.weekday }}"
+                    data-date="{{ t.date }}"
+                    data-time="{{ t.time }}"
+                    data-number="{{ t.number }}"
+                    data-location="{{ t.location|escape }}"
+                    data-joined="{{ t.total_participants }}"
+                    data-capacity="{{ t.max_participants }}"
+                    data-host="{{ t.host|escape }}"
+                    data-desc="{{ t.desc|escape }}"
+                    data-icon="{{ t.icon|default:'fa-solid fa-ticket' }}"
+                    data-id="{{ t.id }}"
+                    data-url="{% url 'activity_detail' t.id %}">
+
+                    <div class="cticket__inner">
+                      <div class="cticket__front">
+                        <div class="cticket__left">
+                          <div class="cticket__dateinfo">
+                            <div class="cticket__day">{{ t.weekday }}</div>
+                            <div class="cticket__date">{{ t.date }}</div>
+                            <div class="cticket__time">{{ t.time }}</div>
+                          </div>
+                          <div class="cticket__monthlabel">{{ t.month_abbr }}</div>
+                          <div>
+                            <div class="cticket__icon"><i class="{{ t.icon|default:'fa-solid fa-ticket' }}"></i></div>
+                            <div class="cticket__title">{{ t.title }}</div>
+                            <div class="cticket__subtitle">{{ t.subtitle }}</div>
+                          </div>
+                          <div class="cticket__stars"></div>
+                        </div>
+                        <div class="cticket__right">
+                          <div class="cticket__no">{{ t.number }}</div>
+                        </div>
+                      </div>
+                      <div class="cticket__back">
+                        <h3>{{ t.title }}</h3>
+                        <div class="cticket__back-txt">{{ t.desc }}</div>
+                        <div class="cticket__back-meta">
+                          <div><i class="fa-solid fa-map-marker-alt"></i>{{ t.location }}</div>
+                          <div><i class="fa-solid fa-users"></i>已報名: {{ t.total_participants }}/{{ t.max_participants }} 人</div>
+                          <div><i class="fa-solid fa-user"></i>發起人: {{ t.host }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="cshelf__empty">還沒有票券～去參加一個活動吧！</div>
+              {% endif %}
+            </div>
+
+            <!-- 小旗：我發起的活動 -->
+            <div class="cshelf__title">
+              <i class="fa-solid fa-flag"></i><span>我來帶路</span>
+            </div>
+
+            <div class="gflag-board">
+              {% if created_flags %}
+                {% for f in created_flags %}
+                  <button class="gflag {% if f.tone %}gflag--{{ f.tone }}{% endif %}"
+                    type="button"
+                    aria-label="查看活動 {{ f.title }}"
+                    data-id="{{ f.id }}"
+                    data-title="{{ f.title|escape }}"
+                    data-desc="{{ f.desc|escape }}"
+                    data-location="{{ f.location|escape }}"
+                    data-weekday="{{ f.weekday }}"
+                    data-month="{{ f.month }}"
+                    data-date="{{ f.date }}"
+                    data-time="{{ f.time }}"
+                    data-total="{{ f.total_participants }}"
+                    data-max="{{ f.max_participants }}">
+                    <div class="gflag__flag">
+                      <div class="gflag__safe">
+                        <div class="flag__dateinfo cticket__dateinfo--flag">
+                          <div class="gflag__md-inline">{{ f.month_abbr }}.{{ f.date }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                {% endfor %}
+              {% else %}
+                <div class="cshelf__empty">你還沒有發起活動～去揪一場吧！</div>
+              {% endif %}
+            </div>
+
+            <!-- 書架 -->
+            <div class="cshelf__title">
+              <i class="fa-solid fa-book"></i><span>書攤子 出清中...</span>
+            </div>
+
+            <div class="cshelf__bookshelf">
+              <div class="cshelf__shelf" id="bookshelf">
+                {% if books %}
+                  {% for b in books %}
+                    <button class="cshelf__book"
+                      data-id="{{ b.id }}"
+                      data-title="{{ b.title|default:'' }}"
+                      data-author="{{ b.author|default:'—' }}"
+                      data-publisher="{{ b.publisher|default:'—' }}"
+                      data-isbn="{{ b.isbn|default:'—' }}"
+                      data-desc="{{ b.desc|default:'' }}"
+                      data-status="{{ b.status|default:'未知' }}"
+                      data-cover="{{ b.cover|default:'' }}">
+                      <div class="cshelf__spine">{{ b.title }}</div>
+                      {% if b.status %}
+                        <div class="cshelf__status-badge 
+                          {% if b.status == '在售' %}status-available
+                          {% elif b.status == '已售出' %}status-sold
+                          {% elif b.status == '已下架' %}status-offline
+                          {% else %}status-unknown{% endif %}">
+                          {{ b.status }}
+                        </div>
+                      {% endif %}
+                    </button>
+                  {% endfor %}
+                {% else %}
+                  <div class="cshelf__empty">
+                    還沒有書籍～
+                    <a href="{% url 'upload_book2' %}" class="upload-book-link">去上架你的第一本書吧！</a>
+                  </div>
+                {% endif %}
+              </div>
+              <nav id="bookshelfPager" class="pager"></nav>
+            </div>
+          </div>
+
+          <!-- 右側：個人資料與活動 -->
+          <div class="right-column">
+
+            <!-- 個人資料卡 -->
+            <div class="card profile-card">
+              <h2>我的資料</h2>
+              <div class="profile-content">
+                <div class="profile-image">
+                  {% if google_picture %}
+                    <img src="{{ google_picture }}" alt="{{ user_data.name|default:user.last_name|add:user.first_name }}" style="border-radius: 50%; width: 100px; height: 100px; object-fit: cover;">
+                  {% else %}
+                    <img src="{% static 'image/me1.png' %}" alt="{{ user_data.name|default:user.last_name|add:user.first_name }}">
+                  {% endif %}
+                  <div class="user-name-row">
+                    <div class="user-name">
+                      {% if user_data and user_data.anonymous %}
+                        {{ user_data.anonymous }}
+                      {% elif user_data and user_data.name %}
+                        {{ user_data.name }}
+                      {% else %}
+                        {{ user.last_name }}{{ user.first_name }}
+                      {% endif %}
+                    </div>
+                    <button class="btn-icon" id="editNameBtn" aria-label="編輯資料" title="編輯資料">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 資料明細 -->
+                <div class="profile-details">
+                  <div class="profile-item"><div class="label">姓名</div><div class="value">{{ user_data.name|default:user.get_full_name }}</div></div>
+                  <div class="profile-item"><div class="label">學號</div><div class="value">{{ user_data.student_id|default:user.username }}</div></div>
+                  {% if user_data and user_data.academic %}
+                    <div class="profile-item"><div class="label">學制</div><div class="value">{{ user_data.academic }}</div></div>
+                  {% endif %}
+                  <div class="profile-item"><div class="label">班級</div><div class="value">{{ user_data.course|default:'資訊管理科' }}</div></div>
+                  <div class="profile-item"><div class="label">Email</div><div class="value">{{ user_data.mail|default:user.email }}</div></div>
+                  <div class="profile-item"><div class="label">電話</div><div class="value">{{ user_data.phone|default:'未設定' }}</div></div>
+                  <div class="profile-item"><div class="label">LINE</div><div class="value">{{ user_data.LINE_ID|default:'未設定' }}</div></div>
+                  <div class="profile-item">
+                    <div class="label">學分</div>
+                    
+                    <div class="value-with-progress">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-segment required animate" 
+                                style="--target-width: 37.73%;" 
+                                data-tooltip="必修：83學分"></div>
+                            <div class="progress-segment elective animate" 
+                                style="--target-width: 0%;" 
+                                data-tooltip="選修：2學分"></div>
+                            <div class="progress-segment major animate" 
+                                style="--target-width: 12.27%;" 
+                                data-tooltip="專選：27學分"></div>
+                            <div class="progress-segment general animate" 
+                                style="--target-width: 30%;" 
+                                data-tooltip="通識：66學分"></div>
+                        </div>
+                        <div class="value">已修196</div>
+                        <div class="tooltip" id="tooltip"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card activities-card">
+              <div class="card-header">
+                  <h2>我的活動</h2>
+              </div>
+              <div class="activities-list activities-scrollable">
+                  {% if created_activities or joined_activities %}
+                      <div id="activitiesContainer">
+                          {# 先顯示我發起的活動 #}
+                          {% for a in created_activities %}
+                          <div class="activity-item" data-index="{{ forloop.counter0 }}">
+                              <div class="activity-icon">
+                                  {% with a.type as t %}
+                                      {% if t == 'sport' %}
+                                          <i class="fas fa-running"></i>
+                                      {% elif t == 'food' %}
+                                          <i class="fas fa-utensils"></i>
+                                      {% elif t == 'movie' %}
+                                          <i class="fas fa-film"></i>
+                                      {% elif t == 'study' %}
+                                          <i class="fas fa-book"></i>
+                                      {% elif t == 'travel' %}
+                                          <i class="fas fa-plane"></i>
+                                      {% else %}
+                                          <i class="fas fa-users"></i>
+                                      {% endif %}
+                                  {% endwith %}
+                              </div>
+                              <div class="activity-content">
+                                  <div class="activity-title">
+                                      <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
+                                      <span style="margin-left:8px; font-size:12px; color:#fff; background:#6c63ff; padding:2px 8px; border-radius:12px;">我發起</span>
+                                  </div>
+                                  <div class="activity-details">
+                                      <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
+                                      <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
+                                  </div>
+                              </div>
+                          </div>
+                          {% endfor %}
+                          {# 再顯示我參加的活動 #}
+                          {% for a in joined_activities %}
+                          <div class="activity-item" data-index="{{ forloop.counter0|add:created_activities|length }}">
+                              <div class="activity-icon">
+                                  {% with a.type as t %}
+                                      {% if t == 'sport' %}
+                                          <i class="fas fa-running"></i>
+                                      {% elif t == 'food' %}
+                                          <i class="fas fa-utensils"></i>
+                                      {% elif t == 'movie' %}
+                                          <i class="fas fa-film"></i>
+                                      {% elif t == 'study' %}
+                                          <i class="fas fa-book"></i>
+                                      {% elif t == 'travel' %}
+                                          <i class="fas fa-plane"></i>
+                                      {% else %}
+                                          <i class="fas fa-users"></i>
+                                      {% endif %}
+                                  {% endwith %}
+                              </div>
+                              <div class="activity-content">
+                                  <div class="activity-title">
+                                      <a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a>
+                                  </div>
+                                  <div class="activity-details">
+                                      <span><i class="fas fa-map-marker-alt"></i> {{ a.location_short }}</span>
+                                      <span><i class="far fa-clock"></i> {{ a.date }} {{ a.time|time:"H:i" }}</span>
+                                  </div>
+                              </div>
+                          </div>
+                          {% endfor %}
+                      </div>
+                      
+                      <!-- 顯示更多按鈕 -->
+                      <div class="activities-show-more" id="activitiesShowMore" style="display:none;">
+                          <button class="show-more-btn" onclick="toggleActivities()">
+                              <span id="showMoreText">顯示更多活動</span>
+                              <i class="fas fa-chevron-down" id="showMoreIcon"></i>
+                          </button>
+                      </div>
+                  {% else %}
+                      <div class="activity-item">
+                          <div class="activity-icon"><i class="fas fa-info-circle"></i></div>
+                          <div class="activity-content">
+                              <div class="activity-title">尚未參加任何活動</div>
+                              <div class="activity-details">
+                                  <a href="{% url 'activity_list' %}" class="btn-link">前往活動召集</a>
+                              </div>
+                          </div>
+                      </div>
+                  {% endif %}
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- 書籍 Modal（放在 .row 外面）-->
+        <div class="cshelf__modal" id="cshelfBookModal" aria-hidden="true">
+          <div class="cshelf__modal-panel book-detail-modal" role="dialog" aria-modal="true">
+            <button class="cshelf__modal-close" id="cshelfCloseBtn" aria-label="關閉">&times;</button>
+            <div class="book-detail-content">
+              <div class="book-image-section">
+                <img id="cshelfBookCover" src="" alt="書籍封面" class="book-cover-image">
+                <div class="book-status-badge-large" id="cshelfBookStatusBadge">在售</div>
+              </div>
+              <div class="book-info-section">
+                <h2 id="cshelfBookTitle">書籍標題</h2>
+                <div class="book-details">
+                  <p><strong>作者：</strong><span id="cshelfBookAuthor"></span></p>
+                  <p><strong>出版社：</strong><span id="cshelfBookPublisher"></span></p>
+                  <p><strong>ISBN：</strong><span id="cshelfBookISBN"></span></p>
+                  <p><strong>狀態：</strong><span id="cshelfBookStatus" class="book-status-text"></span></p>
+                </div>
+                <div class="book-description">
+                  <h4>簡介：</h4>
+                  <p id="cshelfBookDesc"></p>
+                </div>
+                <div class="book-management-buttons">
+                  <button id="markSoldBtn" class="btn btn-sold">標記已售出</button>
+                  <button id="removeBookBtn" class="btn btn-remove">下架書籍</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         <div class="row">
             <!-- 行事曆卡片 -->
@@ -823,32 +1306,280 @@ try {
 })();
 
 
+// ===== CSRF Token Helper =====
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
 // ===== Books modal =====
+(function(){
+  function getPerPage() {
+    return window.innerWidth <= 768 ? 3 : 5;
+  }
+
+  let PER_PAGE = getPerPage();
+  const ITEM_SELECTOR = '.cshelf__book';
+
+  const shelf = document.querySelector('#bookshelf');
+  if (!shelf) return;
+
+  const items = Array.from(shelf.querySelectorAll(ITEM_SELECTOR));
+  const pager = document.querySelector('#bookshelfPager');
+  if (!items.length || !pager) return;
+
+  let current = 1;
+  let total = Math.max(1, Math.ceil(items.length / PER_PAGE));
+
+  function render(){
+    const start = (current - 1) * PER_PAGE;
+    const end   = start + PER_PAGE;
+    items.forEach((el, i) => {
+      el.style.display = (i >= start && i < end) ? '' : 'none';
+    });
+    renderPager();
+  }
+
+  function goto(n){
+    current = Math.min(Math.max(1, n), total);
+    render();
+    
+  }
+
+  function renderPager(){
+    pager.innerHTML = '';
+    const mkBtn = (label, page, disabled=false, active=false) => {
+      const btn = document.createElement('button');
+      btn.className = 'pager__btn' + (active ? ' is-active' : '') + (disabled ? ' is-disabled' : '');
+      btn.type = 'button';
+      btn.textContent = label;
+      if (!disabled && !active) btn.addEventListener('click', () => goto(page));
+      return btn;
+    };
+
+    pager.appendChild(mkBtn('◀︎', current - 1, current === 1));
+    const windowSize = 5;
+    const half = Math.floor(windowSize / 2);
+    let start = Math.max(1, current - half);
+    let end   = Math.min(total, start + windowSize - 1);
+    if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+
+    for (let p = start; p <= end; p++){
+      pager.appendChild(mkBtn(String(p), p, false, p === current));
+    }
+    pager.appendChild(mkBtn('▶︎', current + 1, current === total));
+  }
+
+  render();
+
+  // 視窗大小變動 → 重新計算每頁數量
+  window.addEventListener('resize', () => {
+    const newPerPage = getPerPage();
+    if (newPerPage !== PER_PAGE) {
+      PER_PAGE = newPerPage;
+      total = Math.max(1, Math.ceil(items.length / PER_PAGE));
+      current = 1;
+      render();
+    }
+  });
+})();
+
 (function(){
   const modal = document.getElementById('cshelfBookModal');
   if (!modal) return;
   const closeBtn = document.getElementById('cshelfCloseBtn');
   const tTitle = document.getElementById('cshelfBookTitle');
+  const tStatus = document.getElementById('cshelfBookStatus');
   const tAuthor = document.getElementById('cshelfBookAuthor');
   const tPublisher = document.getElementById('cshelfBookPublisher');
   const tISBN = document.getElementById('cshelfBookISBN');
   const tDesc = document.getElementById('cshelfBookDesc');
+  const tCover = document.getElementById('cshelfBookCover');
+  const tStatusBadge = document.getElementById('cshelfBookStatusBadge');
+  const markSoldBtn = document.getElementById('markSoldBtn');
+  const removeBookBtn = document.getElementById('removeBookBtn');
+
+  let currentBookId = null;
+
+  // 根據書籍狀態更新按鈕狀態
+  function updateButtonStates(status) {
+    // 重置按鈕狀態
+    markSoldBtn.disabled = false;
+    removeBookBtn.disabled = false;
+    markSoldBtn.classList.remove('btn-disabled');
+    removeBookBtn.classList.remove('btn-disabled');
+    markSoldBtn.textContent = '標記已售出';
+    removeBookBtn.textContent = '下架書籍';
+    
+    if (status === '在售') {
+      // 在售：兩個按鈕都可用
+      // 保持預設狀態即可
+    } else if (status === '已售出') {
+      // 已售出：只能下架，不能再標記售出
+      markSoldBtn.disabled = true;
+      markSoldBtn.classList.add('btn-disabled');
+      markSoldBtn.textContent = '已售出';
+      // removeBookBtn 保持可用
+    } else if (status === '已下架') {
+      // 已下架：什麼都不能做（終結狀態）
+      markSoldBtn.disabled = true;
+      markSoldBtn.classList.add('btn-disabled');
+      markSoldBtn.textContent = '已下架';
+      removeBookBtn.disabled = true;
+      removeBookBtn.classList.add('btn-disabled');
+      removeBookBtn.textContent = '已下架';
+    }
+  }
 
   document.querySelectorAll('.cshelf__book').forEach(btn=>{
     btn.addEventListener('click', ()=>{
+      const status = btn.dataset.status || '未知';
+      currentBookId = btn.dataset.id || null;
+      
       tTitle.textContent = btn.dataset.title || '';
+      tStatus.textContent = status;
+      tStatusBadge.textContent = status;
+      
+      // 設置狀態樣式
+      tStatus.className = 'book-status-text';
+      tStatusBadge.className = 'book-status-badge-large';
+      
+      if (status === '在售') {
+        tStatus.classList.add('status-available');
+        tStatusBadge.style.background = '#4CAF50';
+      } else if (status === '已售出') {
+        tStatus.classList.add('status-sold');
+        tStatusBadge.style.background = '#FF5722';
+      } else if (status === '已下架') {
+        tStatus.classList.add('status-offline');
+        tStatusBadge.style.background = '#9E9E9E';
+      } else {
+        tStatus.classList.add('status-unknown');
+        tStatusBadge.style.background = '#FFC107';
+      }
+      
+      // 根據狀態調整按鈕顯示和可用性
+      updateButtonStates(status);
+      
       tAuthor.textContent = btn.dataset.author || '—';
       tPublisher.textContent = btn.dataset.publisher || '—';
       tISBN.textContent = btn.dataset.isbn || '—';
       tDesc.textContent = btn.dataset.desc || '';
+      
+      // 設置書籍封面
+      const cover = btn.dataset.cover || '';
+      if (cover) {
+        tCover.src = cover;
+        tCover.style.display = 'block';
+      } else {
+        tCover.src = '/static/image/default-book.png'; // 預設圖片
+        tCover.style.display = 'block';
+      }
+      
       modal.classList.add('is-open');
       modal.setAttribute('aria-hidden','false');
     });
   });
 
+  // 標記已售出按鈕
+  markSoldBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    if (!currentBookId || markSoldBtn.disabled) return;
+    
+    if (confirm('確定要標記這本書籍為已售出嗎？')) {
+      console.log('開始標記已售出，書籍ID:', currentBookId);
+      
+      fetch(`/book/${currentBookId}/mark-sold/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      })
+      .then(response => {
+        console.log('收到響應，狀態:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('響應數據:', data);
+        if (data.success) {
+          alert('書籍已標記為已售出！');
+          location.reload(); // 重新載入頁面以更新狀態
+        } else {
+          console.error('標記失敗:', data);
+          alert('標記失敗：' + (data.message || '未知錯誤'));
+        }
+      })
+      .catch(error => {
+        console.error('請求錯誤:', error);
+        alert('標記失敗，請稍後再試。錯誤：' + error.message);
+      });
+    }
+  });
+
+  // 下架書籍按鈕
+  removeBookBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    if (!currentBookId || removeBookBtn.disabled) return;
+    
+    if (confirm('確定要下架這本書籍嗎？下架後其他用戶將無法看到此書籍。')) {
+      console.log('開始下架書籍，ID:', currentBookId);
+      
+      fetch(`/book/${currentBookId}/remove/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      })
+      .then(response => {
+        console.log('收到響應，狀態:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('響應數據:', data);
+        if (data.success) {
+          alert('書籍已成功下架！');
+          location.reload(); // 重新載入頁面以更新狀態
+        } else {
+          console.error('下架失敗:', data);
+          alert('下架失敗：' + (data.message || '未知錯誤'));
+          if (data.error_details) {
+            console.error('錯誤詳情:', data.error_details);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('請求錯誤:', error);
+        alert('下架失敗，請稍後再試。錯誤：' + error.message);
+      });
+    }
+  });
+
   const close = ()=>{
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden','true');
+    currentBookId = null;
   };
   closeBtn.addEventListener('click', close);
   modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
@@ -856,22 +1587,87 @@ try {
 
 // ===== Tickets flip & gentle float =====
 (function(){
-  const tickets = document.querySelectorAll('.cticket');
+  const tickets = document.querySelectorAll('.ticket');
   tickets.forEach((el, idx)=>{
-    el.addEventListener('click', ()=> el.classList.toggle('is-flipped'));
+    const inner = el.querySelector('.cticket__inner');
 
-    // gentle float: 每 3~4.5 秒輕微改變 rotate 角度
-    const base = el.style.transform || '';
-    const getRot = ()=>{
-      const m = base.match(/rotate\(([-\d.]+)deg\)/);
-      return m ? parseFloat(m[1]) : 0;
-    };
-    let baseDeg = getRot();
+    // 點擊 -> 翻面
+    el.addEventListener('click', ()=>{
+      el.classList.toggle('flipped');
+    });
+
+    // 設定初始角度（基礎角度 + 隨機）
+    const base = (parseFloat(el.dataset.baseDeg || '0') || 0) + (Math.random() * 8 - 4); // -4~+4度
+    el.style.setProperty('--tilt', `${base.toFixed(2)}deg`);
+
+    // 每隔幾秒微微晃動（隨機 ±1 度）
     setInterval(()=>{
-      const random = (Math.random() - 0.5) * 2; // -1 ~ +1 度
-      el.style.transform = base.replace(/rotate\([-\d.]+deg\)/, `rotate(${(baseDeg + random).toFixed(2)}deg)`);
+      const random = (Math.random() - 0.5) * 2; // -1~+1 度
+      const next = (base + random).toFixed(2);
+      el.style.setProperty('--tilt', `${next}deg`);
     }, 3000 + idx*400);
   });
+})();
+
+
+// ===== Tickets: height auto, flip kept, random tilt kept =====
+(function(){
+  const container = document.querySelector('.cshelf__tickets');
+  if (!container) return;
+
+  const tickets = Array.from(container.querySelectorAll('.cticket'));
+
+  // 隨機輕微傾斜（保留你的翻頁互動）
+  tickets.forEach((el, idx) => {
+    const inner = el.querySelector('.cticket__inner') || el;
+
+    // 點擊翻面
+    el.addEventListener('click', () => {
+      el.classList.toggle('is-flipped');
+      // 翻面後重新計算高度（避免 back 面較高）
+      requestAnimationFrame(updateTicketsHeight);
+    });
+
+    // 初始隨機角度 + 微浮動
+    const base = (parseFloat(el.dataset.baseDeg || '0') || 0) + (Math.random()*8 - 4); // -4~+4 度
+    inner.style.setProperty('--tilt', base.toFixed(2) + 'deg');
+
+    setInterval(()=>{
+      const random = (Math.random() - 0.5) * 2; // -1~+1 度
+      inner.style.setProperty('--tilt', (base + random).toFixed(2) + 'deg');
+    }, 3000 + idx*400);
+  });
+
+  // 量測所有票券「變形後」實際底部，寫入 --tickets-h
+  function updateTicketsHeight(){
+    const contTop = container.getBoundingClientRect().top;
+    let maxBottom = 0;
+
+    tickets.forEach(el => {
+      const target = el.querySelector('.cticket__inner') || el;
+      const rect = target.getBoundingClientRect(); // 含 transform 後尺寸
+      const bottom = rect.bottom - contTop;
+      if (bottom > maxBottom) maxBottom = bottom;
+    });
+
+    // 預留一點 padding
+    const pad = 12;
+    container.style.setProperty('--tickets-h', Math.ceil(maxBottom + pad) + 'px');
+  }
+
+  // 初始 / 視窗改變尺寸時重算（加上 rAF 去抖）
+  let rafId = null;
+  function schedule(){
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(updateTicketsHeight);
+  }
+  window.addEventListener('resize', schedule);
+
+  // 等圖片/字體/FA 圖示載入後再量一次，避免初算過低
+  window.addEventListener('load', schedule);
+
+  // 初次執行
+  schedule();
 })();
 
 // ===== 小三角旗 modal 開啟（全頁） =====
@@ -917,6 +1713,68 @@ try {
 
   closeBtn.addEventListener('click', close);
   modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
+})();
+
+// ===== Activities Show More =====
+(function(){
+  const maxVisibleActivities = 5; // 最多顯示5個活動
+  const container = document.getElementById('activitiesContainer');
+  const showMoreBtn = document.getElementById('activitiesShowMore');
+  const showMoreText = document.getElementById('showMoreText');
+  const showMoreIcon = document.getElementById('showMoreIcon');
+  
+  if (!container) return;
+  
+  const activities = container.querySelectorAll('.activity-item');
+  let isExpanded = false;
+  
+  function initializeActivities() {
+    if (activities.length <= maxVisibleActivities) {
+      // 如果活動數量不超過限制，不顯示"顯示更多"按鈕
+      return;
+    }
+    
+    // 隱藏超過限制的活動
+    activities.forEach((activity, index) => {
+      if (index >= maxVisibleActivities) {
+        activity.style.display = 'none';
+      }
+    });
+    
+    // 顯示"顯示更多"按鈕
+    if (showMoreBtn) {
+      showMoreBtn.style.display = 'block';
+    }
+  }
+  
+  window.toggleActivities = function() {
+    isExpanded = !isExpanded;
+    
+    activities.forEach((activity, index) => {
+      if (index >= maxVisibleActivities) {
+        activity.style.display = isExpanded ? 'flex' : 'none';
+      }
+    });
+    
+    // 更新按鈕文字和圖標
+    if (showMoreText && showMoreIcon) {
+      showMoreText.textContent = isExpanded ? '顯示較少活動' : '顯示更多活動';
+      showMoreIcon.className = isExpanded ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+    }
+    
+    // 更新按鈕樣式
+    const btn = document.querySelector('.show-more-btn');
+    if (btn) {
+      if (isExpanded) {
+        btn.classList.add('expanded');
+      } else {
+        btn.classList.remove('expanded');
+      }
+    }
+  };
+  
+  // 初始化
+  initializeActivities();
 })();
 </script>
 <script src="{% static 'js/personal.js' %}?v=2"></script>

@@ -1,0 +1,739 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}北商課表查詢 - SSAE{% endblock %}
+
+{% block head_css %}
+<!-- 強制刷新CSS緩存 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<style>
+/* 課表專用CSS - 版本 3.0 - 完全獨立 */
+
+/* 基礎重置 */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+.schedule-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.schedule-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.schedule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.schedule-title {
+    display: flex;
+    align-items: center;
+}
+
+.schedule-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.schedule-container .schedule-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 2px !important;
+    margin-top: 20px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3) !important;
+    padding: 8px !important;
+}
+
+.schedule-container .schedule-table th {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #333 !important;
+    padding: 20px 12px !important;
+    text-align: center !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    position: relative !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.schedule-container .schedule-table th:first-child {
+    width: 120px !important;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+    color: white !important;
+}
+
+.schedule-container .schedule-table td {
+    padding: 0 !important;
+    text-align: center !important;
+    vertical-align: top !important;
+    height: 100px !important;
+    position: relative !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.schedule-table td:last-child {
+    border-right: none;
+}
+
+.schedule-table tr:last-child td {
+    border-bottom: none;
+}
+
+.time-slot {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    font-weight: 700;
+    color: #495057;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    padding: 15px 8px !important;
+    border-right: 3px solid #dee2e6 !important;
+    position: relative;
+}
+
+.time-slot::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.course-cell {
+    background: transparent;
+    min-height: 80px;
+    position: relative;
+    padding: 6px !important;
+}
+
+.course-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 10px;
+    border-radius: 15px;
+    margin: 4px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    height: calc(100% - 8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.course-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.course-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+}
+
+.course-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+}
+
+.course-teacher {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    margin-bottom: 2px;
+}
+
+.course-location {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+/* 不同課程的顏色主題 */
+.course-info.theme-1 { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; 
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+}
+.course-info.theme-2 { 
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; 
+    box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4) !important;
+}
+.course-info.theme-3 { 
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; 
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4) !important;
+}
+.course-info.theme-4 { 
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; 
+    box-shadow: 0 8px 25px rgba(67, 233, 123, 0.4) !important;
+}
+.course-info.theme-5 { 
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; 
+    box-shadow: 0 8px 25px rgba(250, 112, 154, 0.4) !important;
+}
+.course-info.theme-6 { 
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; 
+    color: #333 !important;
+    box-shadow: 0 8px 25px rgba(168, 237, 234, 0.4) !important;
+}
+.course-info.theme-7 { 
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; 
+    color: #333 !important;
+    box-shadow: 0 8px 25px rgba(255, 236, 210, 0.4) !important;
+}
+.course-info.theme-8 { 
+    background: linear-gradient(135deg, #ff8a80 0%, #ea4c89 100%) !important; 
+    box-shadow: 0 8px 25px rgba(255, 138, 128, 0.4) !important;
+}
+
+.empty-slot {
+    color: #adb5bd;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-style: italic;
+}
+
+/* 動畫效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+.schedule-table {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.course-info:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2) !important;
+    animation: pulse 2s infinite;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .schedule-table {
+        font-size: 0.8rem;
+    }
+    
+    .schedule-table th,
+    .schedule-table td {
+        padding: 8px 4px;
+    }
+    
+    .course-info {
+        font-size: 0.65rem;
+        padding: 6px 4px;
+    }
+    
+    .time-slot {
+        font-size: 0.7rem;
+    }
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.refresh-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+}
+
+.semester-selector {
+    margin-bottom: 20px;
+}
+
+.semester-selector select {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    cursor: pointer;
+}
+
+.no-schedule {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.back-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- CSS測試指示器 -->
+<div style="position: fixed; top: 10px; right: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px; border-radius: 10px; z-index: 9999; font-size: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    🎨 CSS v3.0 已載入
+</div>
+
+<!-- 404錯誤檢測 -->
+<script>
+window.addEventListener('error', function(e) {
+    if (e.target.tagName === 'LINK' || e.target.tagName === 'SCRIPT') {
+        console.error('❌ 資源載入失敗:', e.target.src || e.target.href);
+        
+        // 顯示錯誤提示
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed; 
+            top: 50px; 
+            right: 10px; 
+            background: #ff4757; 
+            color: white; 
+            padding: 10px; 
+            border-radius: 10px; 
+            z-index: 9999; 
+            font-size: 12px;
+            max-width: 300px;
+        `;
+        errorDiv.textContent = `❌ 404錯誤: ${e.target.src || e.target.href}`;
+        document.body.appendChild(errorDiv);
+        
+        setTimeout(() => errorDiv.remove(), 5000);
+    }
+}, true);
+</script>
+<div class="123" style="height: 100px;"></div>
+
+<div class="schedule-container" style="padding: 20px;">
+    <div class="schedule-card">
+        <div class="schedule-header">
+            <div class="schedule-title">
+                <div class="schedule-icon">
+                    <i class="fas fa-calendar-alt" style="color: white; font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: #333;">我的課表</h2>
+                    <p style="margin: 0; color: #666;">當前學期課程安排</p>
+                </div>
+            </div>
+            <div>
+                <button class="refresh-btn" onclick="loadSchedule()">
+                    <i class="fas fa-sync-alt"></i> 重新載入
+                </button>
+                <a href="{% url 'ntub_dashboard' %}" class="back-btn" style="margin-left: 10px;">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </a>
+            </div>
+        </div>
+
+        <div id="scheduleContent">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #4facfe;"></i>
+                <p>正在載入課表資料...</p>
+            </div>
+            
+            <!-- CSS測試區域 -->
+            <div style="display: none;" id="cssTest">
+                <div class="schedule-table" style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; margin: 10px;">
+                    CSS測試
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📅 課表頁面載入完成');
+    
+    // 檢查CSS是否正確載入
+    setTimeout(() => {
+        const testElement = document.getElementById('cssTest');
+        if (testElement) {
+            testElement.style.display = 'block';
+            console.log('🎨 CSS測試元素已顯示');
+            setTimeout(() => {
+                testElement.style.display = 'none';
+            }, 2000);
+        }
+    }, 1000);
+    
+    loadSchedule();
+});
+
+async function loadSchedule() {
+    const content = document.getElementById('scheduleContent');
+    const semesterSelect = document.getElementById('semesterSelect');
+    const semester = semesterSelect ? semesterSelect.value : '';
+    
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #4facfe;"></i>
+            <p>正在載入課表資料...</p>
+        </div>
+    `;
+
+    try {
+        let url = '{% url "api_ntub_schedule" %}';
+        if (semester) {
+            url += `?semester=${semester}`;
+        }
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+            displaySchedule(result.data);
+        } else {
+            content.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    載入失敗: ${result.message}
+                    <br><br>
+                    <button class="refresh-btn" onclick="window.location.href='{% url "ntub_dashboard" %}'">
+                        返回重新登入
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('載入課表錯誤:', error);
+        content.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                載入失敗，請稍後再試
+                <br><br>
+                <button class="refresh-btn" onclick="loadSchedule()">
+                    重新嘗試
+                </button>
+            </div>
+        `;
+    }
+}
+
+function displaySchedule(scheduleData) {
+    const content = document.getElementById('scheduleContent');
+    
+    if (!scheduleData || scheduleData.length === 0) {
+        content.innerHTML = `
+            <div class="no-schedule">
+                <i class="fas fa-calendar-times" style="font-size: 3rem; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>暫無課表資料</h3>
+                <p>可能是當前學期尚未安排課程，或請嘗試選擇其他學期</p>
+            </div>
+        `;
+        return;
+    }
+
+    // 創建課表表格
+    let tableHtml = `
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>時間</th>
+                    <th>星期一<br><small>Monday</small></th>
+                    <th>星期二<br><small>Tuesday</small></th>
+                    <th>星期三<br><small>Wednesday</small></th>
+                    <th>星期四<br><small>Thursday</small></th>
+                    <th>星期五<br><small>Friday</small></th>
+                    <th>星期六<br><small>Saturday</small></th>
+                    <th>星期日<br><small>Sunday</small></th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // 過濾掉無效的行
+    const validRows = scheduleData.filter(row => {
+        const timeText = row.time || '';
+        return timeText.includes('第') || timeText.includes('節') || timeText.match(/\d{2}:\d{2}/);
+    });
+
+    validRows.forEach((row, index) => {
+        tableHtml += `
+            <tr>
+                <td class="time-slot">${formatTimeSlot(row.time || '')}</td>
+                <td class="course-cell">${formatCourse(row.monday, index)}</td>
+                <td class="course-cell">${formatCourse(row.tuesday, index)}</td>
+                <td class="course-cell">${formatCourse(row.wednesday, index)}</td>
+                <td class="course-cell">${formatCourse(row.thursday, index)}</td>
+                <td class="course-cell">${formatCourse(row.friday, index)}</td>
+                <td class="course-cell">${formatCourse(row.saturday, index)}</td>
+                <td class="course-cell">${formatCourse(row.sunday, index)}</td>
+            </tr>
+        `;
+    });
+
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+    
+    content.innerHTML = tableHtml;
+}
+
+function formatTimeSlot(timeText) {
+    if (!timeText) return '';
+    
+    // 北商格式: "第一節\n08:10\n09:00" 或類似格式
+    const lines = timeText.split(/[\n\r]+/).map(line => line.trim()).filter(line => line);
+    
+    if (lines.length >= 3) {
+        // 有完整的節次和時間資訊
+        const period = lines[0]; // 第一節
+        const startTime = lines[1]; // 08:10
+        const endTime = lines[2]; // 09:00
+        
+        return `
+            <div style="font-weight: 700; color: #2c3e50; margin-bottom: 4px;">${period}</div>
+            <div style="font-size: 0.75rem; color: #7f8c8d; line-height: 1.2;">
+                ${startTime}<br>~<br>${endTime}
+            </div>
+        `;
+    } else if (lines.length >= 1) {
+        // 只有節次資訊
+        const period = lines[0];
+        
+        // 嘗試從節次推斷時間
+        const timeMap = {
+            '第一節': '08:10~09:00',
+            '第二節': '09:10~10:00', 
+            '第三節': '10:10~11:00',
+            '第四節': '11:10~12:00',
+            '第五節': '13:30~14:20',
+            '第六節': '14:25~15:15',
+            '第七節': '15:25~16:15',
+            '第八節': '16:20~17:10',
+            '第九節': '17:15~18:05',
+            '第十節': '18:10~19:00',
+            '第十一節': '18:30~19:15',
+            '第十二節': '19:20~20:05',
+            '第十三節': '20:15~21:00',
+            '第十四節': '21:05~21:50'
+        };
+        
+        const timeRange = timeMap[period] || '';
+        
+        return `
+            <div style="font-weight: 700; color: #2c3e50; margin-bottom: 4px;">${period}</div>
+            <div style="font-size: 0.7rem; color: #7f8c8d;">
+                ${timeRange}
+            </div>
+        `;
+    }
+    
+    return timeText;
+}
+
+function formatCourse(courseText, rowIndex = 0) {
+    if (!courseText || courseText.trim() === '') {
+        return '<div class="empty-slot"> </div>';
+    }
+    
+    // 解析課程資訊
+    const courseInfo = parseCourseInfo(courseText);
+    
+    if (!courseInfo.name) {
+        return '<div class="empty-slot"> </div>';
+    }
+    
+    // 為不同課程分配顏色主題 - 基於課程名稱的hash
+    let themeIndex = 1;
+    if (courseInfo.name) {
+        let hash = 0;
+        for (let i = 0; i < courseInfo.name.length; i++) {
+            hash = courseInfo.name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        themeIndex = Math.abs(hash) % 8 + 1;
+    }
+    
+    return `
+        <div class="course-info theme-${themeIndex}" title="${courseText}" style="animation: fadeInUp 0.6s ease-out ${rowIndex * 0.1}s both;">
+            <div class="course-name">${courseInfo.name}</div>
+            ${courseInfo.teacher ? `<div class="course-teacher">👨‍🏫 ${courseInfo.teacher}</div>` : ''}
+            ${courseInfo.location ? `<div class="course-location">📍 ${courseInfo.location}</div>` : ''}
+        </div>
+    `;
+}
+
+function parseCourseInfo(courseText) {
+    if (!courseText || courseText.trim() === '') {
+        return { name: '', teacher: '', location: '' };
+    }
+    
+    // 按行分割課程資訊 (北商格式: 課程名稱\n教師\n教室)
+    const lines = courseText.split('\n').map(line => line.trim()).filter(line => line);
+    
+    let courseName = '';
+    let teacher = '';
+    let location = '';
+    
+    if (lines.length >= 1) {
+        courseName = lines[0];
+    }
+    
+    if (lines.length >= 2) {
+        teacher = lines[1];
+        // 移除教師名稱後的P或其他標記
+        teacher = teacher.replace(/P$/, '').trim();
+    }
+    
+    if (lines.length >= 3) {
+        location = lines[2];
+    }
+    
+    // 如果沒有按行分割成功，嘗試舊的解析方式
+    if (!courseName && lines.length === 1) {
+        const cleanText = courseText.replace(/\s+/g, ' ').trim();
+        
+        // 尋找教室資訊 (通常包含數字和樓層資訊)
+        const locationMatch = cleanText.match(/([\u4e00-\u9fa5]*\d+[\u4e00-\u9fa5]*(?:樓|室|廳|館)?[\u4e00-\u9fa5]*\d*)/);
+        if (locationMatch) {
+            location = locationMatch[1];
+            cleanText = cleanText.replace(locationMatch[1], '').trim();
+        }
+        
+        // 尋找教師姓名 (通常是2-4個中文字)
+        const teacherMatch = cleanText.match(/([\u4e00-\u9fa5]{2,4})(?![\u4e00-\u9fa5]*(?:學|系|課|程|設|計|管|理|數|英|文|史|化|物|理))/);
+        if (teacherMatch) {
+            teacher = teacherMatch[1].replace(/P$/, '').trim();
+            courseName = cleanText.replace(teacherMatch[1], '').trim();
+        } else {
+            courseName = cleanText;
+        }
+    }
+    
+    // 清理課程名稱
+    if (courseName) {
+        // 移除課程名稱中的特殊字符
+        courseName = courseName.replace(/[()（）]/g, '');
+        
+        // 如果課程名稱太長，智能截取
+        if (courseName.length > 12) {
+            // 嘗試在合適的位置截取
+            const breakPoints = ['(', '（', '-', '：', ':', ' '];
+            let shortened = courseName;
+            
+            for (const bp of breakPoints) {
+                const index = courseName.indexOf(bp);
+                if (index > 6 && index < 12) {
+                    shortened = courseName.substring(0, index);
+                    break;
+                }
+            }
+            
+            if (shortened === courseName && courseName.length > 12) {
+                shortened = courseName.substring(0, 10) + '...';
+            }
+            
+            courseName = shortened;
+        }
+    }
+    
+    return {
+        name: courseName || '課程',
+        teacher: teacher || '',
+        location: location || ''
+    };
+}
+</script>
+{% endblock %}

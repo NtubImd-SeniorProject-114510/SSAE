@@ -15,28 +15,30 @@ def update_profile(request):
         anonymous = data.get('anonymous', '').strip()
         phone = data.get('phone', '').strip()
         line_id = data.get('line_id', '').strip()
+        email = data.get('email', '').strip()
         
-        # 使用原生 SQL 更新資料
-        from django.db import connection
-        with connection.cursor() as cursor:
-            # 先檢查是否存在記錄
-            cursor.execute("""
-                SELECT user_id FROM `User` WHERE mail = %s
-            """, [request.user.email])
-            
-            if cursor.fetchone():
-                # 更新現有記錄
-                cursor.execute("""
-                    UPDATE `User` 
-                    SET anonymous = %s, phone = %s, LINE_ID = %s 
-                    WHERE mail = %s
-                """, [anonymous or None, phone or None, line_id or None, request.user.email])
-            else:
-                # 創建新記錄
-                cursor.execute("""
-                    INSERT INTO `User` (mail, anonymous, phone, LINE_ID) 
-                    VALUES (%s, %s, %s, %s)
-                """, [request.user.email, anonymous or None, phone or None, line_id or None])
+        # 使用Django ORM更新資料
+        from .models import User
+        
+        # 嘗試獲取或創建自定義用戶記錄
+        custom_user, created = User.objects.get_or_create(
+            mail=request.user.email,
+            defaults={
+                'anonymous': anonymous or None,
+                'phone': phone or None,
+                'LINE_ID': line_id or None,
+                'mail': email or request.user.email
+            }
+        )
+        
+        if not created:
+            # 更新現有記錄
+            custom_user.anonymous = anonymous or None
+            custom_user.phone = phone or None
+            custom_user.LINE_ID = line_id or None
+            if email:
+                custom_user.mail = email
+            custom_user.save()
         
         return JsonResponse({
             'success': True,
@@ -44,7 +46,8 @@ def update_profile(request):
             'data': {
                 'anonymous': anonymous,
                 'phone': phone,
-                'line_id': line_id
+                'line_id': line_id,
+                'email': email
             }
         })
         

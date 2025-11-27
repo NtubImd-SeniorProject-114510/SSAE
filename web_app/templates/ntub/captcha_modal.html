@@ -1,0 +1,267 @@
+<!-- 驗證碼輸入模態框 -->
+<div id="captchaModal" class="captcha-modal" style="display: none;">
+    <div class="captcha-modal-content">
+        <div class="captcha-header">
+            <h3><i class="fas fa-shield-alt"></i> 驗證碼輸入</h3>
+            <button class="captcha-close" onclick="closeCaptchaModal()">&times;</button>
+        </div>
+        
+        <div class="captcha-body">
+            <div class="captcha-info">
+                <p>系統檢測到需要輸入驗證碼，請查看下方圖片並輸入對應的文字。</p>
+            </div>
+            
+            <div class="captcha-image-container">
+                <img id="captchaImage" src="" alt="驗證碼圖片" class="captcha-image">
+                <div class="captcha-loading" id="captchaLoading">
+                    <i class="fas fa-spinner fa-spin"></i> 載入驗證碼圖片...
+                </div>
+            </div>
+            
+            <div class="captcha-input-section">
+                <div class="ocr-suggestion" id="ocrSuggestion" style="display: none;">
+                    <p><i class="fas fa-robot"></i> AI識別建議: <span id="ocrText"></span></p>
+                    <small>請確認AI識別結果是否正確，或手動輸入正確的驗證碼</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="captchaInput">驗證碼:</label>
+                    <input type="text" id="captchaInput" class="captcha-input" placeholder="請輸入驗證碼" maxlength="10" autocomplete="off">
+                </div>
+                
+                <div class="captcha-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCaptchaModal()">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-primary" id="submitCaptcha" onclick="submitCaptcha()">
+                        <i class="fas fa-check"></i> 確認登入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.captcha-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.captcha-modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.captcha-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+.captcha-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.captcha-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.captcha-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.captcha-body {
+    padding: 25px;
+}
+
+.captcha-info {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.captcha-image-container {
+    position: relative;
+    text-align: center;
+    margin-bottom: 20px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.captcha-image {
+    max-width: 100%;
+    max-height: 150px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+}
+
+.captcha-loading {
+    color: #666;
+    font-size: 16px;
+}
+
+.captcha-input-section {
+    margin-top: 20px;
+}
+
+.ocr-suggestion {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.ocr-suggestion p {
+    margin: 0 0 5px 0;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.ocr-suggestion small {
+    color: #666;
+}
+
+#ocrText {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1.1em;
+    background: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #90caf9;
+}
+
+.captcha-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 18px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transition: border-color 0.3s;
+}
+
+.captcha-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.captcha-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.captcha-actions .btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+    .captcha-modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .captcha-header {
+        padding: 15px 20px;
+    }
+    
+    .captcha-body {
+        padding: 20px;
+    }
+    
+    .captcha-actions {
+        flex-direction: column;
+    }
+}
+</style>

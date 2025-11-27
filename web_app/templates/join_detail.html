@@ -39,7 +39,10 @@
             <button class="fixed-cta" type="submit" id="cancel-activity-btn">取消參加</button>
         </form>
     {% elif is_creator %}
-        <button class="fixed-cta" disabled>您是發起人</button>
+        <form action="{% url 'delete_activity' a.id %}" method="post" class="fixed-cta-form" id="delete-activity-form">
+            {% csrf_token %}
+            <button class="fixed-cta delete-btn" type="submit" id="delete-activity-btn">刪除活動</button>
+        </form>
     {% else %}
         <form action="{% url 'join_activity' a.id %}" method="post" class="fixed-cta-form" id="join-activity-form">
             {% csrf_token %}
@@ -65,6 +68,14 @@
                 }
             });
         }
+        var deleteForm = document.getElementById('delete-activity-form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                if (!confirm('確定要刪除此活動嗎？刪除後無法復原，且只有在沒有其他人參加的情況下才能刪除。')) {
+                    e.preventDefault();
+                }
+            });
+        }
     });
     </script>
 
@@ -73,59 +84,69 @@
             <a href="#">返回</a>
         </div>
 
-        <div class="section ">
-            <div class="activity-title ">
-                <h2 class="section-title">{{ a.title }}</h2>
-            </div>
-        </div>
-
-        <!-- 活動資訊卡 -->
-        <div class="section">
-            <div class="event-info-cards">
-                <div class="info-card">
-                    <div class="info-icon-circle">
-                        <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
-                    </div>
-                    <div class="info-content">
-                        <h3 class="info-title">活動地點</h3>
-                        <p class="info-value">{{ a.location_short }}</p>
-                        {% if a.address and a.address != a.location %}
-                            <p class="info-address">{{ a.address }}</p>
+        <!-- 活動主要資訊區域 - 參考二手書頁面設計 -->
+        <div class="activity-main-section">
+            <div class="activity-info">
+                <div class="activity-content-layout">
+                    <div class="activity-image-container">
+                        {% if a.cover_image %}
+                            <img src="{{ a.cover_image.url }}" alt="{{ a.title }}" class="activity-image">
+                        {% else %}
+                            <img src="{% static 'image/default_cover.jpg' %}" alt="活動圖片" class="activity-image">
                         {% endif %}
                     </div>
-                </div>
+                    <div class="activity-details-container">
+                        <div class="activity-title-container">
+                            <h1 class="activity-title">{{ a.title }}</h1>
+                        </div>
+                        <div class="event-info-cards">
+                            <div class="info-card">
+                                <div class="info-icon-circle">
+                                    <span class="info-icon"><i class="fa-solid fa-map-pin"></i></span>
+                                </div>
+                                <div class="info-content">
+                                    <h3 class="info-title">活動地點</h3>
+                                    <p class="info-value">{{ a.location_short }}</p>
+                                    {% if a.address and a.address != a.location %}
+                                        <p class="info-address">{{ a.address }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
 
-                <div class="info-card">
-                    <div class="info-icon-circle">
-                        <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
-                    </div>
-                    <div class="info-content">
-                        <h3 class="info-title">活動時間</h3>
-                        <p class="info-value">{{ a.date|date:"m/d" }}（{{ a.date|date:"D" }}）{{ a.time|time:"H:i" }}</p>
-                    </div>
-                </div>
+                            <div class="info-card">
+                                <div class="info-icon-circle">
+                                    <span class="info-icon"><i class="fa-solid fa-clock"></i></span>
+                                </div>
+                                <div class="info-content">
+                                    <h3 class="info-title">活動時間</h3>
+                                    <p class="info-value">{{ a.date|date:"m/d" }}（{{ a.date|date:"D" }}）{{ a.time|time:"H:i" }}</p>
+                                </div>
+                            </div>
 
-                <div class="info-card">
-                    <div class="info-icon-circle">
-                        <span class="info-icon"><i class="fa-solid fa-person"></i></span>
-                    </div>
-                    <div class="info-content">
-                        <h3 class="info-title">參加人數</h3>
-                        <p class="info-value">{{ total_participants }}/{{ a.max_participants }}人</p>
-                    </div>
-                </div>
+                            <div class="info-card">
+                                <div class="info-icon-circle">
+                                    <span class="info-icon"><i class="fa-solid fa-person"></i></span>
+                                </div>
+                                <div class="info-content">
+                                    <h3 class="info-title">參加人數</h3>
+                                    <p class="info-value">{{ total_participants }}/{{ a.max_participants }}人</p>
+                                </div>
+                            </div>
 
-                {% if a.contact_info %}
-                <div class="info-card">
-                    <div class="info-icon-circle">
-                        <span class="info-icon"><i class="fa-solid fa-phone"></i></span>
-                    </div>
-                    <div class="info-content">
-                        <h3 class="info-title">聯絡方式</h3>
-                        <p class="info-value">{{ a.contact_info }}</p>
+                            {% if a.contact_info %}
+                            <div class="info-card">
+                                <div class="info-icon-circle">
+                                    <span class="info-icon"><i class="fa-solid fa-phone"></i></span>
+                                </div>
+                                <div class="info-content">
+                                    <h3 class="info-title">聯絡方式</h3>
+                                    <p class="info-value">{{ a.contact_info }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
 
@@ -296,7 +317,7 @@
             <h2 class="section-title">相關活動推薦</h2>
             <div class="related-grid">
                 {% for activity in related_activities|slice:":2" %}
-                    <a href="{% url 'join_detail' activity.id %}" class="related-card">
+                    <a href="{% url 'activity_detail' activity.id %}" class="related-card">
                         <div class="related-image">
                             {% if activity.cover_image %}
                                 <img src="{{ activity.cover_image.url }}" alt="{{ activity.title }}">

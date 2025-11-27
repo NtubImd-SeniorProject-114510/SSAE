@@ -1,11 +1,10 @@
 import os
 import re
-import json
+import time
+import markdown
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-
-# LangChain 套件
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -16,101 +15,237 @@ from langchain.chat_models import AzureChatOpenAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 
-# ===============================
-# 1. 載入環境變數與 MongoDB 測試連線
-# ===============================
-
-# 載入 .env 檔
+# 載入 .env
 load_dotenv()
 
+
+# ==================== 終端機視覺化工具 ====================
+
+class TerminalColors:
+    """終端機顏色代碼"""
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+class TerminalUI:
+    """終端機視覺化輸出工具"""
+    
+    ENABLE_VISUAL = True
+    
+    @staticmethod
+    def set_visual_mode(enabled: bool):
+        """設定是否啟用視覺化輸出"""
+        TerminalUI.ENABLE_VISUAL = enabled
+    
+    @staticmethod
+    def print_header(text: str):
+        """列印大標題"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        print(f"\n{TerminalColors.HEADER}{TerminalColors.BOLD}{'='*60}{TerminalColors.ENDC}")
+        print(f"{TerminalColors.HEADER}{TerminalColors.BOLD}{text:^60}{TerminalColors.ENDC}")
+        print(f"{TerminalColors.HEADER}{TerminalColors.BOLD}{'='*60}{TerminalColors.ENDC}\n")
+    
+    @staticmethod
+    def print_step(step_num: int, text: str):
+        """列印步驟標題"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        print(f"\n{TerminalColors.OKBLUE}{TerminalColors.BOLD}[步驟 {step_num}]{TerminalColors.ENDC} {text}")
+    
+    @staticmethod
+    def print_success(text: str):
+        """列印成功訊息"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        print(f"{TerminalColors.OKGREEN}✓ {text}{TerminalColors.ENDC}")
+    
+    @staticmethod
+    def print_warning(text: str):
+        """列印警告訊息"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        print(f"{TerminalColors.WARNING}⚠ {text}{TerminalColors.ENDC}")
+    
+    @staticmethod
+    def print_error(text: str):
+        """列印錯誤訊息"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        print(f"{TerminalColors.FAIL}✗ {text}{TerminalColors.ENDC}")
+    
+    @staticmethod
+    def print_info(text: str, indent: int = 0):
+        """列印資訊"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        prefix = "  " * indent
+        print(f"{prefix}{TerminalColors.OKCYAN}→{TerminalColors.ENDC} {text}")
+    
+    @staticmethod
+    def print_progress(current: int, total: int, prefix: str = "進度"):
+        """列印進度條"""
+        if not TerminalUI.ENABLE_VISUAL:
+            return
+        bar_length = 30
+        filled = int(bar_length * current / total)
+        bar = '█' * filled + '░' * (bar_length - filled)
+        percent = 100 * current / total
+        print(f"\r{prefix}: |{bar}| {percent:.1f}% ({current}/{total})", end='', flush=True)
+        if current == total:
+            print()
+    
+    @staticmethod
+    def simulate_processing(duration: float = 0.5, message: str = "處理中"):
+        """模擬處理過程（帶進度條）"""
+        if not TerminalUI.ENABLE_VISUAL:
+            time.sleep(duration)
+            return
+        
+        steps = 20
+        for i in range(steps + 1):
+            TerminalUI.print_progress(i, steps, message)
+            time.sleep(duration / steps)
+
+
+# ==================== MongoDB 連線測試 ====================
+
 def test_mongo_connection():
-    """測試 MongoDB 是否能成功連線"""
+    """測試 MongoDB 連線"""
+    TerminalUI.print_header("🔌 測試 MongoDB 連線")
+    
     MONGO_URI = os.getenv("MONGO_URI")
     if not MONGO_URI:
-        print("❌ 找不到 MONGODB_URI 環境變數")
+        TerminalUI.print_error("找不到 MONGODB_URI 環境變數")
         return
+    
     try:
+        TerminalUI.print_info("正在連接 MongoDB...", 1)
+        TerminalUI.simulate_processing(0.8, "連接中")
+        
         client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
         client.admin.command('ping')
-        print("✅ MongoDB 連線成功。")
+        
+        TerminalUI.print_success("MongoDB 連線成功")
+        
     except ConnectionFailure:
-        print("❌ MongoDB 連線失敗")
+        TerminalUI.print_error("MongoDB 連線失敗")
     except Exception as e:
-        print(f"❌ MongoDB 連線錯誤: {e}")
-
-print("🚀 測試 MongoDB 連線...")
-test_mongo_connection()
+        TerminalUI.print_error(f"MongoDB 連線錯誤: {e}")
 
 
-# ===============================
-# 2. 初始化 LLM 與 Embedding 模型
-# ===============================
+# ==================== 初始化 AI 模型 ====================
 
-# 初始化 LLM (Azure OpenAI)
+TerminalUI.print_header("🤖 初始化 AI 模型")
+
+TerminalUI.print_info("載入 Azure OpenAI LLM...", 1)
 llm = AzureChatOpenAI(
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
-    temperature=0
+    azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 )
+TerminalUI.print_success("LLM 載入成功")
 
-# 初始化 Embedding 模型
+TerminalUI.print_info("載入 Embedding 模型...", 1)
 embeddings = AzureOpenAIEmbeddings(
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     azure_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
 )
+TerminalUI.print_success("Embedding 模型載入成功")
 
 
-# ===============================
-# 3. 文件處理與向量資料庫
-# ===============================
+# ==================== 文件處理函式 ====================
 
 def load_pdf_documents():
-    """載入 uploaded_files 資料夾下的 PDF 文件"""
+    """讀取 PDF 文件"""
+    TerminalUI.print_step(1, "載入 PDF 文件")
+    
     current_dir = os.path.dirname(__file__)
     parent_dir = os.path.dirname(current_dir)
     pdf_dir = os.path.join(parent_dir, "uploaded_files")
+    
     all_docs = []
-
+    
     if not os.path.exists(pdf_dir):
-        print(f"⚠️ 找不到資料夾：{pdf_dir}")
+        TerminalUI.print_warning(f"找不到資料夾：{pdf_dir}")
         return []
-
-    for filename in os.listdir(pdf_dir):
-        if filename.endswith(".pdf"):
-            full_path = os.path.join(pdf_dir, filename)
-            print(f"📄 載入：{filename}")
+    
+    pdf_files = [f for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
+    
+    if not pdf_files:
+        TerminalUI.print_warning("資料夾中沒有 PDF 檔案")
+        return []
+    
+    TerminalUI.print_info(f"找到 {len(pdf_files)} 個 PDF 檔案", 1)
+    
+    for i, filename in enumerate(pdf_files, 1):
+        full_path = os.path.join(pdf_dir, filename)
+        TerminalUI.print_info(f"載入 [{i}/{len(pdf_files)}]: {filename}", 1)
+        
+        try:
             loader = PyPDFLoader(full_path)
             docs = loader.load()
             all_docs.extend(docs)
-
+            TerminalUI.print_success(f"成功載入 {len(docs)} 頁")
+        except Exception as e:
+            TerminalUI.print_error(f"載入失敗: {e}")
+    
+    TerminalUI.print_success(f"總共載入 {len(all_docs)} 頁文件")
     return all_docs
 
 
 def split_documents(documents):
-    """將文件切成小段落以利向量化"""
+    """分割文件"""
+    TerminalUI.print_step(2, "分割文件")
+    TerminalUI.print_info("使用 RecursiveCharacterTextSplitter...", 1)
+    TerminalUI.print_info("chunk_size=500, chunk_overlap=100", 1)
+    
+    TerminalUI.simulate_processing(0.8, "分割中")
+    
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,  # 每段最大長度
-        chunk_overlap=100,  # 段落重疊字數
+        chunk_size=500, 
+        chunk_overlap=100, 
         add_start_index=True
     )
-    return splitter.split_documents(documents)
+    splits = splitter.split_documents(documents)
+    
+    TerminalUI.print_success(f"分割成 {len(splits)} 個文件塊")
+    return splits
 
 
 def create_vector_store(splits):
-    """建立向量資料庫 (Chroma)"""
-    return Chroma.from_documents(documents=splits, embedding=embeddings)
+    """建立向量資料庫"""
+    TerminalUI.print_step(3, "建立向量資料庫")
+    TerminalUI.print_info("使用 Chroma 向量資料庫...", 1)
+    TerminalUI.print_info(f"正在處理 {len(splits)} 個文件塊...", 1)
+    
+    # 模擬向量化過程
+    for i in range(0, len(splits), max(1, len(splits) // 10)):
+        TerminalUI.print_progress(i, len(splits), "向量化")
+        time.sleep(0.1)
+    TerminalUI.print_progress(len(splits), len(splits), "向量化")
+    
+    vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
+    
+    TerminalUI.print_success("向量資料庫建立完成")
+    return vectorstore
 
-
-# ===============================
-# 4. 建立進階 RAG 鏈
-# ===============================
 
 def create_advanced_rag_chain(retriever):
-    """建立進階 RAG 問答鏈"""
+    """建立進階 RAG 鏈"""
+    TerminalUI.print_step(4, "建立 RAG 檢索鏈")
+    TerminalUI.print_info("設定系統提示詞...", 1)
+    
     system_prompt = (
         "You are a helpful assistant for answering questions about National Taipei University of Business (NTUB). "
         "Use the following retrieved context to answer the question. "
@@ -119,290 +254,229 @@ def create_advanced_rag_chain(retriever):
         "Your tone should be friendly and professional (like a knowledgeable NTUB student helper), "
         "but your information must be accurate and based on the context. "
         "Always clearly mention that the information is from NTUB regulations, by saying things like '根據國立臺北商業大學的校規顯示'. "
-        "Use bold (** **) or headers (like # or ##) to highlight key points. "
-        "When listing items, use numbering (1. 2. 3.) or bullet points (•). "
-        "Organize your response with clear structure.\n\n{context}"
+        "Use bold (** **) or headers (like # or ##) to highlight key points and make the answer easier to read. "
+        "When listing items, use proper numbering (1. 2. 3.) or bullet points (•) with consistent spacing. "
+        "Organize your response with clear structure and consistent formatting.\n\n{context}"
     )
-
+    
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("human", "{input}"),
     ])
-
+    
+    TerminalUI.print_info("建立文件鏈...", 1)
     qa_chain = create_stuff_documents_chain(llm, prompt)
-    return create_retrieval_chain(retriever, qa_chain)
+    
+    TerminalUI.print_info("建立檢索鏈...", 1)
+    rag_chain = create_retrieval_chain(retriever, qa_chain)
+    
+    TerminalUI.print_success("RAG 檢索鏈建立完成")
+    return rag_chain
 
 
-print("🚀 初始化進階 RAG 系統...")
-docs = load_pdf_documents()
-splits = split_documents(docs)
-vectorstore = create_vector_store(splits)
-retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 2})
-advanced_rag_chain = create_advanced_rag_chain(retriever)
-print("✅ 進階 RAG 系統初始化完成。")
-
-
-# ===============================
-# Helper: 安全地呼叫 llm 並抽出文字
-# ===============================
-def _call_llm_and_extract_text(messages):
-    """
-    呼叫 llm 並嘗試以各種可能的回傳型態抽出純文字（兼容不同 LangChain 版本）
-    messages: list of SystemMessage/HumanMessage
-    回傳純文字 str
-    """
-    res = llm(messages)
-    # 常見型態處理
-    # 1) 直接有 .content
-    if hasattr(res, "content"):
-        return res.content
-    # 2) 可能回傳 list 或類似結構
-    try:
-        # 如果是 list-like（例如 [AIMessage(...)]）
-        if isinstance(res, (list, tuple)) and len(res) > 0:
-            first = res[0]
-            if hasattr(first, "content"):
-                return first.content
-            return str(first)
-    except Exception:
-        pass
-    # 3) ChatResult / generations
-    if hasattr(res, "generations"):
-        gens = res.generations
-        try:
-            if isinstance(gens, list) and len(gens) > 0:
-                first_gen = gens[0]
-                if isinstance(first_gen, list) and len(first_gen) > 0 and hasattr(first_gen[0], "text"):
-                    return first_gen[0].text
-        except Exception:
-            pass
-    # fallback
-    return str(res)
-
-
-# ===============================
-# 5. 新增：語意分類函式（由 LLM 判斷是否為校規相關）
-# ===============================
-def classify_school_question(question: str, top_k: int = 3) -> dict:
-    """
-    用 LLM 判斷 question 是否和校規/學校政策相關（**語意判斷**，非關鍵字）。
-    回傳 dict: {"is_school_regulation": bool, "reason": str}
-    我們會把 top_k 個檢索到的片段給 LLM 做判斷（若 retriever 可用）。
-    """
-    # 取出 top_k 片段（若 retriever 可用）
-    try:
-        top_docs = retriever.get_relevant_documents(question)[:top_k]
-    except Exception:
-        try:
-            top_docs = vectorstore.similarity_search(question, k=top_k)
-        except Exception:
-            top_docs = []
-
-    snippets = []
-    for d in top_docs:
-        # 避免過長，限制每段最大字數
-        content = getattr(d, "page_content", "") or str(d)
-        snippets.append(content[:1500])
-
-    snippet_text = "\n\n---\n\n".join(snippets) if snippets else "(no retrieved snippets)"
-
-    system = SystemMessage(content=(
-        "你是一個語意判斷器。你的任務是判斷使用者的提問是否與「國立臺北商業大學（NTUB）的校規、學校政策、行政規定或官方流程」有關。"
-        "請以語意理解（不要使用簡單的關鍵字比對）來判斷。"
-        "如果問題涉及：畢業條件、修課規定、學分、選課衝堂、修退選流程、證照需求、學校考試/檢定、行政流程（例如請假、註冊、審核）、或明確需要引用校內官方文件的答覆，都視為「校規/學校政策相關」。"
-        "請**只回傳一個 JSON**，格式如下："
-        '{"is_school_regulation": true/false, "reason": "一句話解釋判斷依據（不要超過兩句）"}'
-    ))
-
-    human = HumanMessage(content=(
-        f"使用者提問：{question}\n\n"
-        f"檢索到的文件片段（若有）如下：\n{snippet_text}\n\n"
-        "請基於以上內容與語意，回傳 JSON 判斷結果（strict JSON，不能有其他多餘文字）。"
-    ))
-
-    raw = _call_llm_and_extract_text([system, human])
-
-    # 嘗試解析 JSON，或用簡單正則抓 true/false 與理由
-    parsed = {"is_school_regulation": False, "reason": "未解析結果，預設為非校規相關"}
-    try:
-        # 嘗試找 JSON 子字串
-        json_start = raw.find("{")
-        json_str = raw[json_start:] if json_start != -1 else raw
-        parsed_json = json.loads(json_str)
-        parsed = {
-            "is_school_regulation": bool(parsed_json.get("is_school_regulation", False)),
-            "reason": parsed_json.get("reason", "") if isinstance(parsed_json.get("reason", ""), str) else ""
-        }
-    except Exception:
-        # fallback: 用簡單文字判斷
-        lower = raw.lower()
-        if "true" in lower or "是" in raw:
-            parsed["is_school_regulation"] = True
-            parsed["reason"] = raw.strip().replace("\n", " ")[:200]
+def format_text_with_proper_alignment(text):
+    """改進的文字格式化，保持原本緊湊但讓編號對齊"""
+    if not text:
+        return ""
+    
+    text = re.sub(r'\r\n|\r', '\n', text)
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    
+    def replace_numbered_item(match):
+        num = match.group(1)
+        content = match.group(2).strip()
+        return f'<div style="display:flex;margin:4px 0;"><span style="min-width:24px;font-weight:bold;color:#2563eb;">{num}.</span><span style="flex:1;">{content}</span></div>'
+    
+    text = re.sub(r'^(\d+)\.\s*(.+)$', replace_numbered_item, text, flags=re.MULTILINE)
+    
+    lines = text.split('\n')
+    result = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        if line.startswith('<div') or line.startswith('<strong'):
+            result.append(line)
         else:
-            parsed["is_school_regulation"] = False
-            parsed["reason"] = raw.strip().replace("\n", " ")[:200]
+            result.append(f'<p style="margin:4px 0;line-height:1.5;">{line}</p>')
+    
+    return ''.join(result)
 
-    return parsed
+
+# ==================== 初始化系統 ====================
+
+TerminalUI.print_header("🚀 初始化 RAG 系統")
+
+# 測試 MongoDB 連線
+test_mongo_connection()
+time.sleep(0.3)
+
+# 載入文件
+docs = load_pdf_documents()
+time.sleep(0.3)
+
+# 分割文件
+splits = split_documents(docs)
+time.sleep(0.3)
+
+# 建立向量資料庫
+vectorstore = create_vector_store(splits)
+time.sleep(0.3)
+
+# 建立檢索器
+TerminalUI.print_info("設定檢索器參數...", 1)
+retriever = vectorstore.as_retriever(
+    search_type="similarity", 
+    search_kwargs={"k": 2}
+)
+TerminalUI.print_success("檢索器設定完成 (top-k=2)")
+
+# 建立 RAG 鏈
+advanced_rag_chain = create_advanced_rag_chain(retriever)
+
+TerminalUI.print_header("✅ RAG 系統初始化完成")
 
 
-# ===============================
-# 6. 查詢函式（主流程：先分類，再決定走 RAG 還是直接用 LLM 回答）
-# ===============================
+# ==================== 查詢函式 ====================
+
 def ask_question(question: str, conversation_history: list = None) -> dict:
     """
-    查詢問題並回傳格式化的答案（dict）：
-    - answer: HTML 字串
-    - has_sources: bool
-    - sources: list
+    詢問問題並取得回答
+    
+    Args:
+        question: 使用者的問題
+        conversation_history: 對話歷史記錄
+        
+    Returns:
+        dict: 包含答案、來源等資訊
     """
     try:
-        # 🔥 加入歷史對話（只取最近 8 筆）
+        TerminalUI.print_header("💬 處理問題")
+        TerminalUI.print_info(f"問題: {question}", 1)
+        
+        # 處理對話歷史
         if conversation_history:
-            recent_history = conversation_history[-8:]
+            recent_history = conversation_history[-8:] if len(conversation_history) > 8 else conversation_history
+            
+            TerminalUI.print_info(f"包含 {len(recent_history)} 輪對話歷史", 1)
+            
             history_context = "之前的對話內容：\n"
             for msg in recent_history:
                 history_context += f"Q: {msg['question']}\nA: {msg['answer']}\n\n"
+            
             full_question = f"{history_context}現在的新問題：{question}"
         else:
             full_question = question
-
-        # 1) 先判斷是否為「校規 / 學校政策」相關（語意判斷）
-        clf = classify_school_question(question)
-        is_school_q = clf.get("is_school_regulation", False)
-
-        if is_school_q:
-            # 走原本的 RAG 流程（會引用來源）
-            response = advanced_rag_chain.invoke({"input": full_question})
-            raw_answer = response["answer"].strip()
-
-            # 收集引用來源
-            pdf_sources = []
-            for doc in response.get("context", []):
-                if hasattr(doc, 'metadata') and 'source' in doc.metadata:
-                    pdf_name = os.path.basename(doc.metadata['source'])
-                    if pdf_name not in pdf_sources:
-                        pdf_sources.append(pdf_name)
-
-            # 格式化答案（跟原本一樣）
-            raw_answer = re.sub(r'\*\*([^*\n]+?)\*\*',
-                                r'<strong style="color:#4A5B73; font-weight:700;">\1</strong>',
-                                raw_answer)
-
-            lines = raw_answer.split('\n')
-            formatted_lines = []
-
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-
-                # 標題處理
-                if line.startswith('###'):
-                    title = line.replace('###', '').strip()
-                    formatted_lines.append(f'<h3 style="color:#5B7296; margin:12px 0 6px 0;">{title}</h3>')
-                elif line.startswith('##'):
-                    title = line.replace('##', '').strip()
-                    formatted_lines.append(f'<h2 style="color:#4A668A; margin:15px 0 8px 0;">{title}</h2>')
-                elif line.startswith('#'):
-                    title = line.replace('#', '').strip()
-                    formatted_lines.append(f'<h1 style="color:#365073; margin:18px 0 10px 0;">{title}</h1>')
-
-                # 編號列表
-                elif re.match(r'^(\d+)\.\s*(.+)$', line):
-                    num, content = re.match(r'^(\d+)\.\s*(.+)$', line).groups()
-                    formatted_lines.append(
-                        f'<div style="display:flex; margin:6px 0;">'
-                        f'<span style="min-width:28px; font-weight:650; color:#6B5B8A;">{num}.</span>'
-                        f'<span style="flex:1; line-height:1.5;">{content}</span>'
-                        f'</div>'
-                    )
-
-                # 點列清單
-                elif line.startswith('- ') or line.startswith('• '):
-                    content = line[2:].strip()
-                    formatted_lines.append(f'<div style="margin:4px 0 4px 20px;">• {content}</div>')
-
-                # 普通段落
-                else:
-                    formatted_lines.append(f'<p style="margin:6px 0; line-height:1.6; color:#334455;">{line}</p>')
-
-            result_html = ''.join(formatted_lines)
-
-            return {
-                "answer": result_html,
-                "has_sources": len(pdf_sources) > 0,
-                "sources": pdf_sources,
-                "classification": clf  # optional: 回傳分類依據給前端/除錯用
-            }
-
+            TerminalUI.print_info("首次提問（無對話歷史）", 1)
+        
+        # 檢索相關文件
+        TerminalUI.print_step(1, "檢索相關文件")
+        TerminalUI.simulate_processing(0.8, "檢索中")
+        
+        # 生成回答
+        TerminalUI.print_step(2, "生成回答")
+        TerminalUI.simulate_processing(1.2, "AI 思考中")
+        
+        response = advanced_rag_chain.invoke({"input": full_question})
+        raw_answer = response["answer"].strip()
+        
+        # 獲取來源文件
+        source_documents = response.get("context", [])
+        pdf_sources = []
+        
+        for doc in source_documents:
+            if hasattr(doc, 'metadata') and 'source' in doc.metadata:
+                pdf_path = doc.metadata['source']
+                pdf_name = os.path.basename(pdf_path)
+                if pdf_name not in pdf_sources:
+                    pdf_sources.append(pdf_name)
+        
+        if pdf_sources:
+            TerminalUI.print_success(f"找到 {len(pdf_sources)} 個來源文件")
+            for source in pdf_sources:
+                TerminalUI.print_info(f"• {source}", 2)
         else:
-            # 非校規相關：**不要顯示來源**，直接用 LLM 回答（不強制 RAG 的校規系統提示）
-            system_non_rag = SystemMessage(content=(
-                "你是一個友善的助理。請**只用繁體中文**回答，語氣親切、簡潔。"
-                "此類問題為一般生活/閒聊/建議類型（非學校行政/校規），請不要引用或顯示任何檔案來源或說「根據XXX」，也不要製造看起來像官方來源的文字。"
-                "若使用者問到學校行政/校規類問題，你應該先用分類器判斷再使用 RAG，但在這個模式下請**不要**提及來源。"
-            ))
-
-            human_non_rag = HumanMessage(content=full_question)
-            raw_answer = _call_llm_and_extract_text([system_non_rag, human_non_rag]).strip()
-
-            # 同樣做簡單的 markdown -> HTML 格式化（保留原來的格式化規則）
-            raw_answer = re.sub(r'\*\*([^*\n]+?)\*\*',
-                                r'<strong style="color:#4A5B73; font-weight:700;">\1</strong>',
-                                raw_answer)
-
-            lines = raw_answer.split('\n')
-            formatted_lines = []
-
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-
-                # 標題處理（比較少用，但保留）
-                if line.startswith('###'):
-                    title = line.replace('###', '').strip()
-                    formatted_lines.append(f'<h3 style="color:#5B7296; margin:12px 0 6px 0;">{title}</h3>')
-                elif line.startswith('##'):
-                    title = line.replace('##', '').strip()
-                    formatted_lines.append(f'<h2 style="color:#4A668A; margin:15px 0 8px 0;">{title}</h2>')
-                elif line.startswith('#'):
-                    title = line.replace('#', '').strip()
-                    formatted_lines.append(f'<h1 style="color:#365073; margin:18px 0 10px 0;">{title}</h1>')
-
-                # 編號列表
-                elif re.match(r'^(\d+)\.\s*(.+)$', line):
-                    num, content = re.match(r'^(\d+)\.\s*(.+)$', line).groups()
-                    formatted_lines.append(
-                        f'<div style="display:flex; margin:6px 0;">'
-                        f'<span style="min-width:28px; font-weight:650; color:#6B5B8A;">{num}.</span>'
-                        f'<span style="flex:1; line-height:1.5;">{content}</span>'
-                        f'</div>'
-                    )
-
-                # 點列清單
-                elif line.startswith('- ') or line.startswith('• '):
-                    content = line[2:].strip()
-                    formatted_lines.append(f'<div style="margin:4px 0 4px 20px;">• {content}</div>')
-
-                # 普通段落
-                else:
-                    formatted_lines.append(f'<p style="margin:6px 0; line-height:1.6; color:#334455;">{line}</p>')
-
-            result_html = ''.join(formatted_lines)
-
-            return {
-                "answer": result_html,
-                "has_sources": False,
-                "sources": [],
-                "classification": clf
-            }
-
-    except Exception as e:
-        print(f"❌ RAG / LLM 處理錯誤: {e}")
+            TerminalUI.print_warning("未找到明確的來源文件")
+        
+        # 格式化回答
+        TerminalUI.print_step(3, "格式化回答")
+        
+        # 處理粗體
+        raw_answer = re.sub(
+            r'\*\*([^*\n]+?)\*\*', 
+            r'<strong style="color:#4A5B73; font-weight:700;">\1</strong>', 
+            raw_answer
+        )
+        
+        # 逐行處理
+        lines = raw_answer.split('\n')
+        formatted_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            
+            if not line:
+                continue
+            
+            # 處理標題
+            if line.startswith('###'):
+                title = line.replace('###', '').strip()
+                formatted_line = f'<h3 style="color:#5B7296; margin:12px 0 6px 0; font-weight:650; font-size:1.2em;">{title}</h3>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            elif line.startswith('##'):
+                title = line.replace('##', '').strip()
+                formatted_line = f'<h2 style="color:#4A668A; margin:15px 0 8px 0; font-weight:650; font-size:1.4em;">{title}</h2>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            elif line.startswith('#'):
+                title = line.replace('#', '').strip()
+                formatted_line = f'<h1 style="color:#365073; margin:18px 0 10px 0; font-weight:650; font-size:1.6em;">{title}</h1>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理編號列表
+            numbered_match = re.match(r'^(\d+)\.\s*(.+)$', line)
+            if numbered_match:
+                num = numbered_match.group(1)
+                content = numbered_match.group(2)
+                formatted_line = f'<div style="display:flex; margin:6px 0; align-items:flex-start;"><span style="min-width:28px; font-weight:650; color:#6B5B8A; flex-shrink:0;">{num}.</span><span style="flex:1; line-height:1.5;">{content}</span></div>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理列表項
+            elif line.startswith('- ') or line.startswith('• '):
+                content = line[2:].strip()
+                formatted_line = f'<div style="margin:4px 0 4px 20px; line-height:1.5;">• {content}</div>'
+                formatted_lines.append(formatted_line)
+                continue
+            
+            # 處理普通段落
+            else:
+                formatted_lines.append(f'<p style="margin:6px 0; line-height:1.6; color:#334455;">{line}</p>')
+        
+        result = ''.join(formatted_lines)
+        
+        TerminalUI.print_success("回答生成完成")
+        TerminalUI.print_header("✅ 處理完成")
+        
         return {
-            "answer": "<p style='color:#8B6B6B;'>抱歉，處理您的問題時發生錯誤，請稍後再試。</p>",
+            "answer": result,
+            "has_sources": len(pdf_sources) > 0,
+            "sources": pdf_sources
+        }
+        
+    except Exception as e:
+        error_msg = f"處理問題時發生錯誤: {str(e)}"
+        TerminalUI.print_error(error_msg)
+        print(f"❌ RAG 錯誤: {error_msg}")
+        
+        return {
+            "answer": f"<p style='color:#8B6B6B;'>抱歉，我在處理您的問題時遇到了一些困難。請稍後再試或換個方式提問。</p>",
             "has_sources": False,
             "sources": []
         }

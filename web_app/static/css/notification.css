@@ -1,0 +1,131 @@
+/* 通知模態框樣式 */
+.notification-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 100px;
+    z-index: 10000;
+}
+
+.notification-content {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    max-width: 500px;
+    position: relative;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.notification-message {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.4;
+}
+
+.notification-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.notification-close:hover {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+/* 成功通知樣式 */
+.notification-success .notification-content {
+    border-left: 5px solid #28a745;
+}
+
+.notification-success .notification-icon {
+    color: #28a745;
+}
+
+/* 錯誤通知樣式 */
+.notification-error .notification-content {
+    border-left: 5px solid #dc3545;
+}
+
+.notification-error .notification-icon {
+    color: #dc3545;
+}
+
+/* 警告通知樣式 */
+.notification-warning .notification-content {
+    border-left: 5px solid #ffc107;
+}
+
+.notification-warning .notification-icon {
+    color: #ffc107;
+}
+
+/* 資訊通知樣式 */
+.notification-info .notification-content {
+    border-left: 5px solid #17a2b8;
+}
+
+.notification-info .notification-icon {
+    color: #17a2b8;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .notification-modal {
+        padding: 20px;
+        padding-top: 80px;
+    }
+    
+    .notification-content {
+        min-width: auto;
+        width: 100%;
+        max-width: none;
+        padding: 15px 20px;
+    }
+    
+    .notification-message {
+        font-size: 14px;
+    }
+}

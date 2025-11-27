@@ -23,10 +23,27 @@ document.addEventListener('DOMContentLoaded', () => {
   if (popupId) {
     const popup = document.getElementById(popupId);
     if (popup) {
-      popup.classList.add('active');
+      openModal(popup);
       console.log(`自動開啟彈窗: ${popupId}`);
     }
     sessionStorage.removeItem('openPopup');
+  }
+
+  // 檢查是否需要刷新評星數據（檢查兩種存儲方式）
+  const needRefreshSession = sessionStorage.getItem('needRefreshRatings');
+  const needRefreshLocal = localStorage.getItem('needRefreshRatings');
+  
+  if (needRefreshSession || needRefreshLocal) {
+    console.log('檢測到需要刷新評星數據');
+    
+    // 清除標記
+    sessionStorage.removeItem('needRefreshRatings');
+    localStorage.removeItem('needRefreshRatings');
+    
+    // 延遲一點時間確保頁面完全載入後再刷新
+    setTimeout(() => {
+      refreshCourseData();
+    }, 300);
   }
 
   // 2) 從頁面載入課程資料
@@ -48,22 +65,44 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeInteractions();
 });
 
-// 初始化篩選器事件監聽
+// 監聽頁面顯示事件，處理從其他頁面返回的情況
+window.addEventListener('pageshow', (event) => {
+  console.log('pageshow 事件觸發，persisted:', event.persisted);
+  
+  // 檢查是否需要刷新（不管是否從快取載入）
+  const needRefreshSession = sessionStorage.getItem('needRefreshRatings');
+  const needRefreshLocal = localStorage.getItem('needRefreshRatings');
+  
+  if (needRefreshSession || needRefreshLocal) {
+    console.log('檢測到需要刷新評星數據（pageshow事件）');
+    
+    // 清除標記
+    sessionStorage.removeItem('needRefreshRatings');
+    localStorage.removeItem('needRefreshRatings');
+    
+    setTimeout(() => {
+      refreshCourseData();
+    }, 300);
+  }
+});
+
+// 初始化篩選器事件
 function initializeFilters() {
   const educationSelect = document.getElementById('education-select');
   const majorSelect = document.getElementById('major-select');
   const gradeSelect = document.getElementById('grade-select');
+  const ratingSelect = document.getElementById('rating-select');
+  const reviewCountSelect = document.getElementById('review-count-select');
+  const sortSelect = document.getElementById('sort-select');
   const searchBox = document.querySelector('.search-box');
 
-  // 學制變更 → 更新科系
+  // 學制變更 → 更新科系選項 + 重渲染
   if (educationSelect) {
     educationSelect.addEventListener('change', function () {
       updateDepartmentOptions(this.value);
       filterAndRenderCourses();
     });
   }
-
-  // 科系/年級變更 → 重渲染
   if (majorSelect) {
     majorSelect.addEventListener('change', filterAndRenderCourses);
   }
@@ -71,10 +110,62 @@ function initializeFilters() {
     gradeSelect.addEventListener('change', filterAndRenderCourses);
   }
 
+  // 新增的篩選器
+  if (ratingSelect) {
+    ratingSelect.addEventListener('change', filterAndRenderCourses);
+  }
+  if (reviewCountSelect) {
+    reviewCountSelect.addEventListener('change', filterAndRenderCourses);
+  }
+  if (sortSelect) {
+    sortSelect.addEventListener('change', filterAndRenderCourses);
+  }
+
   // 搜尋框
   if (searchBox) {
     searchBox.addEventListener('input', debounce(filterAndRenderCourses, 300));
   }
+
+  // 清除篩選按鈕
+  const clearFiltersBtn = document.getElementById('clear-filters-btn');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+  }
+}
+
+// 清除所有篩選條件
+function clearAllFilters() {
+  // 重置所有下拉選單
+  const educationSelect = document.getElementById('education-select');
+  const majorSelect = document.getElementById('major-select');
+  const gradeSelect = document.getElementById('grade-select');
+  const ratingSelect = document.getElementById('rating-select');
+  const reviewCountSelect = document.getElementById('review-count-select');
+  const sortSelect = document.getElementById('sort-select');
+  const searchBox = document.querySelector('.search-box');
+  const clearBtn = document.getElementById('clear-filters-btn');
+
+  if (educationSelect) educationSelect.value = '';
+  if (majorSelect) {
+    majorSelect.innerHTML = '<option value="">所有科系</option>';
+    majorSelect.value = '';
+  }
+  if (gradeSelect) gradeSelect.value = '';
+  if (ratingSelect) ratingSelect.value = '';
+  if (reviewCountSelect) reviewCountSelect.value = '';
+  if (sortSelect) sortSelect.value = 'name';
+  if (searchBox) searchBox.value = '';
+
+  // 按鈕動畫反饋
+  if (clearBtn) {
+    clearBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      clearBtn.style.transform = '';
+    }, 150);
+  }
+
+  // 重新渲染所有課程
+  filterAndRenderCourses();
 }
 
 // 更新科系選項（依學制）
@@ -143,20 +234,41 @@ function filterAndRenderCourses() {
   const educationSelect = document.getElementById('education-select');
   const majorSelect = document.getElementById('major-select');
   const gradeSelect = document.getElementById('grade-select');
+  const ratingSelect = document.getElementById('rating-select');
+  const reviewCountSelect = document.getElementById('review-count-select');
+  const sortSelect = document.getElementById('sort-select');
   const searchBox = document.querySelector('.search-box');
 
   const academicId = educationSelect ? educationSelect.value : '';
   const departmentId = majorSelect ? majorSelect.value : '';
   const grade = gradeSelect ? gradeSelect.value : '';
+  const minRating = ratingSelect ? parseFloat(ratingSelect.value) || 0 : 0;
+  const minReviewCount = reviewCountSelect ? parseInt(reviewCountSelect.value) || 0 : 0;
+  const sortBy = sortSelect ? sortSelect.value : 'name';
   const searchQuery = searchBox ? searchBox.value.trim().toLowerCase() : '';
 
-  const filteredCourses = allCourses.filter((course) => {
+
+  let filteredCourses = allCourses.filter((course) => {
+    // 原有篩選條件
     if (academicId && String(course.academic_id) !== String(academicId))
       return false;
     if (departmentId && String(course.department_id) !== String(departmentId))
       return false;
     if (grade && String(course.grade_level) !== String(grade)) return false;
 
+    // 新增評分篩選
+    const courseRating = parseFloat(course.avg_rating) || 0;
+    if (minRating > 0 && courseRating < minRating) {
+      return false;
+    }
+
+    // 新增評論數量篩選
+    const reviewCount = parseInt(course.review_count) || 0;
+    if (minReviewCount > 0 && reviewCount < minReviewCount) {
+      return false;
+    }
+
+    // 搜尋篩選
     if (searchQuery) {
       const inName = course.course_name
         ? course.course_name.toLowerCase().includes(searchQuery)
@@ -172,6 +284,23 @@ function filterAndRenderCourses() {
     }
 
     return true;
+  });
+
+  // 排序邏輯
+  filteredCourses.sort((a, b) => {
+    switch (sortBy) {
+      case 'rating-desc':
+        return (parseFloat(b.avg_rating) || 0) - (parseFloat(a.avg_rating) || 0);
+      case 'rating-asc':
+        return (parseFloat(a.avg_rating) || 0) - (parseFloat(b.avg_rating) || 0);
+      case 'review-count-desc':
+        return (parseInt(b.review_count) || 0) - (parseInt(a.review_count) || 0);
+      case 'review-count-asc':
+        return (parseInt(a.review_count) || 0) - (parseInt(b.review_count) || 0);
+      case 'name':
+      default:
+        return (a.course_name || '').localeCompare(b.course_name || '');
+    }
   });
 
   renderCourses(filteredCourses);
@@ -266,6 +395,47 @@ function renderCourses(courses) {
   initializeStarRatings();
 }
 
+// 刷新課程數據
+async function refreshCourseData() {
+  console.log('🔄 正在刷新課程數據...');
+  
+  try {
+    // 重新從伺服器獲取最新的課程數據
+    console.log('📡 發送請求到 /get_courses/');
+    const response = await fetch('/get_courses/');
+    
+    if (response.ok) {
+      const freshCourses = await response.json();
+      const oldCount = allCourses.length;
+      allCourses = freshCourses;
+      
+      console.log('✅ 已刷新課程資料:', allCourses.length, '筆 (原本:', oldCount, '筆)');
+      
+      // 重新渲染課程列表
+      filterAndRenderCourses();
+      
+      console.log('🎯 課程列表已重新渲染完成');
+    } else {
+      console.error('❌ 刷新課程數據失敗:', response.status, response.statusText);
+      // 如果請求失敗，至少重新渲染現有數據
+      filterAndRenderCourses();
+    }
+  } catch (error) {
+    console.error('💥 刷新課程數據時發生錯誤:', error);
+    
+    // 如果網路請求失敗，至少重新渲染現有數據
+    console.log('🔄 網路請求失敗，使用現有數據重新渲染');
+    filterAndRenderCourses();
+  }
+  
+  // 確保透明度恢復正常（無論成功或失敗）
+  const container = document.querySelector('.activity-grid');
+  if (container) {
+    container.style.opacity = '';  // 移除 inline style，恢復 CSS 預設值
+    container.style.transition = '';  // 移除過渡效果
+  }
+}
+
 
 // 星級顯示
 function initializeStarRatings() {
@@ -284,7 +454,7 @@ function initializeStarRatings() {
 
 // 滾動動畫（可選）
 function initializeScrollAnimations() {
-  const allCards = document.querySelectorAll('.activity-card');
+  const allCards = document.querySelectorAll('.course-card');
 
   function checkVisibility() {
     const h = window.innerHeight;
@@ -310,6 +480,52 @@ function initializeParallax() {
   window.addEventListener('scroll', parallaxScroll);
 }
 
+
+// ---- 統一的開/關 Modal 工具 ----
+function openModal(modal) {
+  if (!modal) return;
+  modal.classList.add('show');                 // 統一用 .show 控制狀態
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+
+  // 可選：若有 backdrop
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.classList.add('show');
+}
+
+function closeModal(modal) {
+  if (!modal) return;
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+
+  const backdrop = document.querySelector('.modal-backdrop.show');
+  if (backdrop) backdrop.classList.remove('show');
+}
+
+// 全域一次性委派（叉叉/取消/遮罩/ESC）
+document.addEventListener('click', (e) => {
+  // 叉叉或任何 data-modal-close
+  const closer = e.target.closest('[data-modal-close], .modal__close, .btn-close');
+  if (closer) {
+    const modal = closer.closest('.modal');
+    if (modal) closeModal(modal);
+    return;
+  }
+  // 點 backdrop（外層 .modal）關閉
+  if (e.target.classList?.contains('modal') && e.target.classList.contains('show')) {
+    closeModal(e.target);
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const opened = document.querySelector('.modal.show');
+    if (opened) closeModal(opened);
+  }
+});
+
+
 // 互動初始化（包含導頁）
 function initializeInteractions() {
   // 事件委派：課程卡片的「新增評論」→ 顯示彈窗
@@ -321,11 +537,11 @@ function initializeInteractions() {
     if (window.CommentPopup && typeof window.CommentPopup.showSimpleCommentModal === 'function') {
       window.CommentPopup.showSimpleCommentModal(btn);
     } else {
-      const fallback = document.querySelector('#simple-comment-modal, .modal');
-      if (fallback) {
-        fallback.classList.add('active');
-        fallback.style.display = 'flex';
-      }
+      // ✅ 改走統一的 openModal，而不是 active + inline style
+      const modal =
+        document.getElementById('simple-comment-modal') ||
+        document.querySelector('.modal'); // 若 id 不存在，退而求其次
+      openModal(modal);
     }
   });
 }

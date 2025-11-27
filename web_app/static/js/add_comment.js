@@ -1,4 +1,4 @@
-// static/js/add_comment.js — robust version（含：轉換錯誤時禁止送出）
+// static/js/add_comment.js — robust version（含：轉換錯誤時禁止送出 + 初始清空表單）
 // 功能：頂端顯示同步 / 中文可見搜尋泡泡 / Toast 提示 / 匿名或實名顯示切換 & 上傳 / 保證 user_id 由後端以 request.user 儲存
 
 (function(){
@@ -24,6 +24,75 @@
     ERROR_TEXT: '轉換失敗，請稍後重試',        // 轉換器回傳的失敗訊息
     SHORT_HINT: '（內容過短）請補充具體細節。' // 你現有在右框顯示的「過短」提示
   };
+
+  // ===== 新增：清空所有表單欄位 =====
+  function clearAllFormFields() {
+    console.log('🧹 清空評論表單...');
+    
+    // 清空評論輸入框
+    const commentText = el('comment_text');
+    if (commentText) {
+      commentText.value = '';
+      console.log('  ✓ 評論輸入框已清空');
+    }
+    
+    // 清空預覽區域
+    const previewText = el('preview_text') || el('comment-preview');
+    if (previewText) {
+      if ('value' in previewText) {
+        previewText.value = '';
+      } else {
+        previewText.textContent = '';
+      }
+      console.log('  ✓ 預覽區已清空');
+    }
+    
+    // 清空隱藏的優化內容欄位
+    const optimizedComment = el('optimized_comment');
+    if (optimizedComment) {
+      optimizedComment.value = '';
+      console.log('  ✓ 優化內容欄位已清空');
+    }
+    
+    // 重置評分為 0
+    const ratingInput = el('rating-input');
+    if (ratingInput) {
+      ratingInput.value = '0';
+      console.log('  ✓ 評分已重置');
+    }
+    
+    // 重置評分星星顯示
+    const ratingStars = el('rating-stars');
+    if (ratingStars) {
+      ratingStars.setAttribute('data-rating', '0');
+      const stars = ratingStars.querySelectorAll('i[data-rating]');
+      stars.forEach(star => {
+        star.classList.remove('fa-solid');
+        star.classList.add('fa-regular', 'fa-star');
+      });
+      const ratingText = ratingStars.querySelector('.rating-text');
+      if (ratingText) ratingText.textContent = '0.0/5.0';
+      console.log('  ✓ 評分星星已重置');
+    }
+    
+    // 重置匿名選項為預設值（匿名）
+    const anonymousYes = el('anonymous_yes');
+    if (anonymousYes) {
+      anonymousYes.checked = true;
+      console.log('  ✓ 匿名選項已重置');
+    }
+    
+    // 隱藏預覽區
+    const preview = el('preview');
+    if (preview) {
+      preview.classList.add('d-none');
+      delete preview.dataset.state;
+      preview.classList.remove('is-error', 'is-ok', 'is-empty');
+      console.log('  ✓ 預覽區已隱藏');
+    }
+    
+    console.log('✅ 表單清空完成\n');
+  }
 
   // 嘗試多種來源取得目前使用者資訊（供「實名」顯示）
   function getCurrentUserInfo(){
@@ -93,6 +162,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+    
+    // ===== 🎯 頁面載入時立即清空表單 =====
+    clearAllFormFields();
 
     // === 強化：預覽區僅允許「刪除/剪下」，中英/注音都無法新增 ===
     (function enforceDeleteOnlyOnPreview_hard(){
@@ -546,4 +618,114 @@
   }
 
   document.addEventListener('DOMContentLoaded', initAddCommentStars);
+})();
+
+
+// ===== 🎯 監聽彈窗開啟事件，每次開啟時清空表單 =====
+(function() {
+  // 監聽所有可能開啟評論彈窗的按鈕
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 初始化彈窗監聽器...');
+    
+    // 找到所有可能觸發彈窗的元素
+    const triggers = [
+      ...document.querySelectorAll('[data-bs-toggle="modal"]'),
+      ...document.querySelectorAll('.hidden-create-btn'),
+      ...document.querySelectorAll('#add-comment-btn'),
+      ...document.querySelectorAll('.add-review-btn'),
+      ...document.querySelectorAll('[data-bs-target="#commentModal"]')
+    ];
+    
+    console.log(`  找到 ${triggers.length} 個觸發器`);
+    
+    triggers.forEach(trigger => {
+      trigger.addEventListener('click', function() {
+        console.log('🚪 彈窗觸發，準備清空表單...');
+        
+        // 延遲執行確保彈窗已完全開啟
+        setTimeout(() => {
+          clearFormOnModalOpen();
+        }, 150);
+      });
+    });
+    
+    // 也監聽 Bootstrap Modal 的 show 事件
+    const modal = document.querySelector('#commentModal');
+    if (modal) {
+      modal.addEventListener('show.bs.modal', function() {
+        console.log('📢 Bootstrap Modal show 事件觸發');
+        clearFormOnModalOpen();
+      });
+    }
+  });
+  
+  function clearFormOnModalOpen() {
+    console.log('🧹 開始清空彈窗表單...');
+    
+    // 清空評論輸入框
+    const commentText = document.getElementById('comment_text');
+    if (commentText) {
+      commentText.value = '';
+      console.log('  ✓ 評論輸入框已清空');
+    }
+    
+    // 清空預覽區
+    const previewText = document.getElementById('preview_text') || document.getElementById('comment-preview');
+    if (previewText) {
+      if ('value' in previewText) {
+        previewText.value = '';
+      } else {
+        previewText.textContent = '';
+      }
+      console.log('  ✓ 預覽區已清空');
+    }
+    
+    // 清空優化內容
+    const optimizedComment = document.getElementById('optimized_comment');
+    if (optimizedComment) {
+      optimizedComment.value = '';
+      console.log('  ✓ 優化內容已清空');
+    }
+    
+    // 重置評分
+    const ratingInput = document.getElementById('rating-input');
+    if (ratingInput) {
+      ratingInput.value = '0';
+      console.log('  ✓ 評分已重置');
+    }
+    
+    // 重置星星顯示
+    const ratingStars = document.getElementById('rating-stars');
+    if (ratingStars) {
+      ratingStars.setAttribute('data-rating', '0');
+      const stars = ratingStars.querySelectorAll('i[data-rating]');
+      stars.forEach(star => {
+        star.classList.remove('fa-solid');
+        star.classList.add('fa-regular', 'fa-star');
+      });
+      const ratingText = ratingStars.querySelector('.rating-text');
+      if (ratingText) ratingText.textContent = '0.0/5.0';
+      console.log('  ✓ 星星已重置');
+    }
+    
+    // 重置匿名選項
+    const anonymousYes = document.getElementById('anonymous_yes');
+    if (anonymousYes) {
+      anonymousYes.checked = true;
+      // 觸發 change 事件更新顯示
+      anonymousYes.dispatchEvent(new Event('change'));
+      console.log('  ✓ 匿名選項已重置');
+    }
+    
+    // 隱藏預覽區
+    const preview = document.getElementById('preview');
+    if (preview) {
+      preview.classList.add('d-none');
+      delete preview.dataset.state;
+      preview.classList.remove('is-error', 'is-ok', 'is-empty');
+      console.log('  ✓ 預覽區已隱藏');
+    }
+    
+    console.log('✅ 彈窗表單清空完成\n');
+  }
 })();

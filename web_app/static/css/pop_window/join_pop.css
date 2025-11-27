@@ -1,81 +1,152 @@
 /* join_pop.css - 發起揪團彈跳視窗樣式 */
 
-/* 參加人數加減數字輸入區塊 */
-.number-input-group {
+/* 參加人數設定區塊 - 重新設計 */
+.participants-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 16px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    justify-content: flex-start;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
 
-.number-input-group .number-input {
-    width: 60px;
+.participants-container:hover {
+    border-color: #6F557D;
+    box-shadow: 0 6px 20px rgba(111, 85, 125, 0.1);
+}
+
+.participant-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.participant-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #495057;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.participant-label i {
+    color: #6F557D;
+    font-size: 16px;
+}
+
+.participant-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.participant-control:hover {
+    border-color: #6F557D;
+    box-shadow: 0 4px 12px rgba(111, 85, 125, 0.15);
+}
+
+.control-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6F557D 0%, #8a6b8f 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.control-btn:hover {
+    background: linear-gradient(135deg, #8a6b8f 0%, #6F557D 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(111, 85, 125, 0.3);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(111, 85, 125, 0.2);
+}
+
+.number-display {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+    justify-content: center;
+}
+
+.number-display input {
+    width: 40px;
+    border: none;
+    background: transparent;
     text-align: center;
     font-size: 18px;
-    border-radius: 10px;
-    border: 1.5px solid #ddd;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: border-color 0.2s, box-shadow 0.2s;
-    padding: 6px 0;
-    margin: 0 4px;
-}
-
-.number-input-group .number-input:focus {
-    border-color: #6F557D;
+    font-weight: 700;
+    color: #2c3e50;
     outline: none;
-    box-shadow: 0 2px 8px rgba(111,85,125,0.12);
 }
 
-.num-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #6F557D;
-    color: #fff;
-    border: none;
-    font-size: 22px;
+.number-display .unit {
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.participant-divider {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
-    margin: 0 2px;
+    margin: 0 15px;
 }
 
-.num-btn:hover {
-    background: #9e8c9d;
-    color: #e7c21b;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-}
-
-.num-btn:active {
-    background: #6F557D;
-    color: #fff;
-    transform: scale(0.95);
-}
-
-
-/* 上傳按鈕 */
-.upload-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 40px;
-    width: 60px;
-    height: 60px;
-    background-color: #443730;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.divider-dash {
     font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    z-index: 999999;
-    border: none;
+    font-weight: 300;
+    color: #6F557D;
+    opacity: 0.6;
+    user-select: none;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .participants-container {
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .participant-divider {
+        transform: rotate(90deg);
+        margin: 8px 0;
+    }
+    
+    .divider-dash {
+        font-size: 20px;
+    }
+    
+    .participant-item {
+        width: 100%;
+    }
+    
+    .participant-control {
+        justify-content: center;
+    }
 }
 
 .upload-btn:hover {
@@ -146,8 +217,8 @@
 }
 
 .close-btn:hover {
-    color: #333;
-    background-color: #f0f0f0;
+    color: #6F557D;
+    background-color: #f8f6f9;
 }
 
 /* 表單樣式 */
@@ -161,6 +232,14 @@
     font-weight: 600;
     color: #333;
     font-size: 16px;
+}
+
+/* 必填欄位紅色星號 - 獨立標籤方式 */
+.required-star {
+    color: #ef4444;
+    font-size: 1.25em;
+    font-weight: bold;
+    margin-left: 2px;
 }
 
 .form-input,
@@ -180,9 +259,9 @@
 .form-select:focus,
 .form-textarea:focus {
     outline: none;
-    border-color: #3d7e88;
+    border-color: #6F557D;
     background-color: white;
-    box-shadow: 0 0 0 3px rgba(61, 126, 136, 0.1);
+    box-shadow: 0 0 0 3px rgba(111, 85, 125, 0.1);
 }
 
 .form-textarea {
@@ -218,8 +297,8 @@
 }
 
 .image-upload-container:hover {
-    border-color: #3d7e88;
-    background-color: #f0f8fa;
+    border-color: #6F557D;
+    background-color: #f8f6f9;
 }
 
 .image-upload-icon {
@@ -464,20 +543,21 @@
 }
 
 .cancel-btn:hover {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: #f8f6f9;
+    color: #6F557D;
+    border-color: #6F557D;
 }
 
 .submit-btn {
-    background-color: #3d7e88;
+    background: linear-gradient(135deg, #6F557D 0%, #8a6b8f 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(61, 126, 136, 0.3);
+    box-shadow: 0 4px 12px rgba(111, 85, 125, 0.3);
 }
 
 .submit-btn:hover {
-    background-color: #346b74;
+    background: linear-gradient(135deg, #8a6b8f 0%, #6F557D 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(61, 126, 136, 0.4);
+    box-shadow: 0 6px 16px rgba(111, 85, 125, 0.4);
 }
 
 .location-suggestions {
@@ -702,8 +782,8 @@
 }
 
 .radio-option:hover {
-    background-color: #f8f9fa;
-    border-color: #9e8c9d;
+    background-color: #f8f6f9;
+    border-color: #6F557D;
 }
 
 .radio-option input[type="radio"] {
@@ -712,13 +792,13 @@
 }
 
 .radio-option input[type="radio"]:checked + span {
-    color: #9e8c9d;
+    color: #6F557D;
     font-weight: 500;
 }
 
 .radio-option:has(input[type="radio"]:checked) {
-    background-color: #f0f7ff;
-    border-color: #9e8c9d;
+    background-color: #f8f6f9;
+    border-color: #6F557D;
 }
 
 /* 聯絡資訊輸入欄位 */
@@ -755,4 +835,332 @@
 .suggestion-item.disabled {
     color: #999;
     cursor: default;
+}
+
+/* 聯絡方式選擇樣式 */
+.contact-info-reminder {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.reminder-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reminder-icon {
+    color: #6c757d;
+    font-size: 18px;
+}
+
+.reminder-text {
+    flex: 1;
+    color: #495057;
+    font-size: 14px;
+}
+
+.edit-contact-btn {
+    background: linear-gradient(135deg, #6F557D 0%, #8a6b8f 100%);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,123,255,0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.edit-contact-btn:hover {
+    background: linear-gradient(135deg, #8a6b8f 0%, #6F557D 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(111, 85, 125, 0.35);
+}
+
+.contact-method-selector {
+    margin-top: 15px;
+}
+
+.contact-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.contact-option {
+    position: relative;
+}
+
+.contact-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.contact-label {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-label:hover {
+    border-color: #6F557D;
+    background: linear-gradient(135deg, #f8f6f9 0%, #f0ebf2 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(111, 85, 125, 0.15);
+}
+
+.contact-option input[type="radio"]:checked + .contact-label {
+    border-color: #6F557D;
+    background: linear-gradient(135deg, #f8f6f9 0%, #f0ebf2 100%);
+    box-shadow: 0 4px 12px rgba(111, 85, 125, 0.25);
+}
+
+.contact-option input[type="radio"]:checked + .contact-label::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #6F557D 0%, #8a6b8f 100%);
+}
+
+.contact-label i {
+    margin-right: 12px;
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+.contact-label span:first-of-type {
+    font-weight: 600;
+    margin-right: auto;
+}
+
+.contact-value {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.contact-value.has-value {
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* 聯絡資訊編輯模態框樣式 */
+.contact-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999; /* 比活動彈窗更高的層級 */
+}
+
+.contact-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.contact-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.contact-modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.contact-modal-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 5px;
+}
+
+.contact-modal-close:hover {
+    color: #6F557D;
+}
+
+.contact-modal-body {
+    padding: 20px;
+}
+
+.contact-edit-group {
+    margin-bottom: 20px;
+}
+
+.contact-edit-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.contact-edit-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.contact-edit-group input:focus {
+    outline: none;
+    border-color: #6F557D;
+    box-shadow: 0 0 0 3px rgba(111, 85, 125, 0.1);
+}
+
+.contact-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.contact-btn-cancel,
+.contact-btn-save {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.contact-btn-cancel {
+    background: #f8f9fa;
+    color: #6F557D;
+    border: 2px solid #e9ecef;
+}
+
+.contact-btn-cancel:hover {
+    background: #f8f6f9;
+    border-color: #6F557D;
+}
+
+.contact-btn-save {
+    background: linear-gradient(135deg, #6F557D 0%, #8a6b8f 100%);
+    color: white;
+}
+
+.contact-btn-save:hover {
+    background: linear-gradient(135deg, #8a6b8f 0%, #6F557D 100%);
+}
+
+/* 聯絡方式預覽卡片樣式 */
+.contact-preview-card {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.contact-preview-card.contact-preview-animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.contact-preview-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.contact-preview-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #6F557D 0%, #9e8c9d 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 4px 8px rgba(111, 85, 125, 0.3);
+}
+
+.contact-preview-text {
+    flex: 1;
+}
+
+.contact-preview-title {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.contact-preview-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.contact-preview-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.contact-preview-value {
+    color: #6F557D;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .contact-preview-content {
+        gap: 12px;
+    }
+    
+    .contact-preview-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .contact-preview-label,
+    .contact-preview-value {
+        font-size: 14px;
+    }
 }

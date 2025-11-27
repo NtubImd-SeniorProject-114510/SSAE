@@ -94,16 +94,16 @@
         <div class="activity-grid" id="activity-grid">
             {% for a in activities %}
                 {% if a.pk %}
-                    {% url 'join_detail' a.pk as detail_url %}
+                    {% url 'activity_detail' a.pk as detail_url %}
                 {% endif %}
                 <div class="activity-card" 
                      {% if a.pk %} onclick="window.location.href='{{ detail_url }}'" {% else %} style="cursor: default;" {% endif %}>
 
                     <div class="activity-image">
                         {% if a.cover_image %}
-                            <img src="{{ a.cover_image.url }}" alt="{{ a.title }}">
+                            <img src="{{ a.cover_image.url }}" alt="{{ a.title }}" class="activity-cover-img">
                         {% else %}
-                            <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}">
+                            <img src="{% static 'image/activity_test.jpg' %}" alt="{{ a.title }}" class="activity-cover-img">
                         {% endif %}
 
                         {# 狀態標籤 #}
@@ -150,6 +150,10 @@
                                         {{ a.location_short }}
                                     {% endif %}
                                 </div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="fa-solid fa-envelope" style="color: #6F557D;"></i></div>
+                                <div class="detail-text">{{ a.display_contact }}</div>
                             </div>
                         </div>
 
@@ -199,15 +203,17 @@
                         <button class="join-button disabled" onclick="event.stopPropagation();return false;">已額滿/截止</button>
                     {% elif not request.user.is_authenticated %}
                         <button class="join-button" onclick="event.stopPropagation(); triggerNavbarLogin();">登入即可參加 ✨</button>
-                    {% elif a.pk and a.id in created_ids %}
-                        <button class="join-button disabled" onclick="event.stopPropagation();return false;">您是發起人</button>
+                    {% elif a.id in created_ids %}
+                        <a href="{% url 'activity_detail' a.id %}" class="join-button creator-btn" onclick="event.stopPropagation();">
+                            管理活動 <i class="fa-solid fa-cog"></i>
+                        </a>
                     {% elif a.pk and a.id in joined_ids %}
-                        <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();" style="position: absolute; bottom: 24px; right: 24px; z-index: 10;">
+                        <form action="{% url 'cancel_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
                             {% csrf_token %}
                             <button class="join-button" type="submit">取消參加 <i class="fa-regular fa-calendar-xmark"></i></button>
                         </form>
                     {% elif a.pk %}
-                        <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();" style="position: absolute; bottom: 24px; right: 24px; z-index: 10;">
+                        <form action="{% url 'join_activity' a.pk %}" method="post" class="inline-form" onclick="event.stopPropagation();">
                             {% csrf_token %}
                             <button class="join-button" type="submit">立即參加 <i class="fa-solid fa-bolt"></i></button>
                         </form>
@@ -284,6 +290,7 @@
 
 {% block body_js %}
 <script src="{% static 'js/pop_window/join_pop.js' %}"></script>
+<script src="{% static 'js/contact_selector.js' %}"></script>
 <script src="{% static 'js/join.js' %}"></script>
 <script>
 // 分頁和顯示控制功能
@@ -536,6 +543,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     sessionStorage.removeItem('openPopup');
   }
+});
+
+// 處理活動封面圖片載入錯誤
+document.addEventListener('DOMContentLoaded', function() {
+    const coverImages = document.querySelectorAll('.activity-cover-img');
+    coverImages.forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = '{% static "image/activity_test.jpg" %}';
+        });
+    });
 });
 </script>
 

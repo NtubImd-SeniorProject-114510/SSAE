@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}北商學生資訊系統{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ntub_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="123" style="height: 100px;"></div>
+<div class="container" style="padding: 100px;">
+    <!-- 隱藏的登入狀態數據 -->
+    <div id="loginData" 
+         data-logged-in="{% if request.session.ntub_logged_in %}true{% else %}false{% endif %}"
+         data-student-id="{% if request.session.ntub_student_id %}{{ request.session.ntub_student_id }}{% endif %}"
+         style="display: none;"></div>
+    <div class="ntub-header">
+        <h1><i class="fas fa-university"></i> 北商學生資訊系統</h1>
+    </div>
+
+    {% if not api_available %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        北商API服務暫時不可用，請稍後再試
+    </div>
+    {% endif %}
+
+    <div class="dashboard-grid">
+        <!-- 登入卡片 -->
+        <div class="dashboard-card login-card">
+
+            <div class="card-body">
+                <form id="ntubLoginForm">
+                    <div class="form-group">
+                        <label for="studentId">學號</label>
+                        <input type="text" id="studentId" name="student_id" class="form-control" placeholder="請輸入學號" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密碼</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="請輸入密碼" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> 登入
+                    </button>
+                </form>
+                <div id="loginStatus" class="mt-3"></div>
+            </div>
+        </div>
+
+        <div class="123" style="height: 80px;"></div>
+
+        <!-- 功能卡片 -->
+        <div class="dashboard-card feature-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user"></i> 學生資料</h3>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'ntub_student_info' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye"></i> 查看資料
+                </a>
+            </div>
+        </div>
+        <div class="123" style="height: 20px;"></div>
+
+
+        <div class="dashboard-card feature-card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-line"></i> 成績查詢</h3>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'ntub_grades' %}" class="btn btn-outline-success">
+                    <i class="fas fa-search"></i> 查詢成績
+                </a>
+            </div>
+        </div>
+        <div class="123" style="height: 20px;"></div>
+
+
+        <div class="dashboard-card feature-card">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-alt"></i> 課表查詢</h3>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'ntub_schedule' %}" class="btn btn-outline-info">
+                    <i class="fas fa-calendar"></i> 查看課表
+                </a>
+            </div>
+        </div>
+        <div class="123" style="height: 20px;"></div>
+
+    </div>
+
+    <!-- 系統狀態 -->
+    <div class="system-status">
+        <h4><i class="fas fa-server"></i> 系統狀態</h4>
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-label">API服務</span>
+                <span class="status-value {% if api_available %}status-online{% else %}status-offline{% endif %}">
+                    {% if api_available %}
+                        <i class="fas fa-check-circle"></i> 正常
+                    {% else %}
+                        <i class="fas fa-times-circle"></i> 離線
+                    {% endif %}
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">登入狀態</span>
+                <span class="status-value" id="loginStatusIndicator">
+                    <i class="fas fa-times-circle"></i> 未登入
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 包含驗證碼模態框 -->
+{% include 'ntub/captcha_modal.html' %}
+
+{% endblock %}
+
+{% block body_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 NTUB Dashboard JavaScript 載入完成');
+    const loginForm = document.getElementById('ntubLoginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginStatus = document.getElementById('loginStatus');
+    const loginStatusIndicator = document.getElementById('loginStatusIndicator');
+
+    console.log('📋 表單元素檢查:', {
+        loginForm: !!loginForm,
+        loginBtn: !!loginBtn,
+        loginStatus: !!loginStatus,
+        loginStatusIndicator: !!loginStatusIndicator
+    });
+
+    // 檢查登入狀態
+    checkLoginStatus();
+
+    if (loginForm) {
+        console.log('✅ 登入表單找到，添加事件監聽器');
+        loginForm.addEventListener('submit', async function(e) {
+            console.log('📝 表單提交事件觸發');
+            e.preventDefault();
+            
+            const studentId = document.getElementById('studentId').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            console.log('📋 輸入資料:', { studentId: studentId ? '已輸入' : '空白', password: password ? '已輸入' : '空白' });
+            
+            if (!studentId || !password) {
+                showStatus('請輸入學號和密碼', 'error');
+                return;
+            }
+
+            // 顯示載入狀態
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登入中...';
+            
+            try {
+                console.log('🔄 發送登入請求...');
+                const response = await fetch('{% url "api_ntub_login" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+                console.log('📨 收到回應:', result);
+                
+                if (result.success) {
+                    // 顯示成功訊息
+                    showStatus('🎉 登入成功！歡迎使用北商學生資訊系統', 'success');
+                    updateLoginStatus(true, studentId);
+                    
+                    // 清空表單
+                    loginForm.reset();
+                    
+                    // 顯示成功後的操作選項
+                    setTimeout(() => {
+                        showSuccessOptions(result.student_id);
+                    }, 1000);
+                } else if (result.requiresManualInput) {
+                    // 需要手動輸入驗證碼
+                    console.log('🎯 需要手動輸入驗證碼');
+                    showStatus('OCR識別信心度不足，請手動輸入驗證碼', 'warning');
+                    showCaptchaModal(result);
+                } else {
+                    showStatus(result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ 登入錯誤:', error);
+                showStatus('登入失敗，請稍後再試', 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入';
+            }
+        });
+    } else {
+        console.error('❌ 登入表單未找到');
+    }
+
+    function showStatus(message, type) {
+        console.log('📢 顯示狀態:', message, type);
+        if (loginStatus) {
+            loginStatus.innerHTML = `
+                <div class="alert alert-${type === 'success' ? 'success' : 'danger'}">
+                    <i class="fas fa-${type === 'success' ? 'check' : 'exclamation-triangle'}"></i>
+                    ${message}
+            `;
+        }
+    }
+
+    function updateLoginStatus(isLoggedIn, studentId) {
+        if (isLoggedIn) {
+            if (loginStatus) {
+                loginStatus.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        已登入北商系統 (學號: ${studentId})
+                    </div>
+                `;
+            }
+            if (loginStatusIndicator) {
+                loginStatusIndicator.innerHTML = `
+                    <span class="badge badge-success">
+                        <i class="fas fa-check"></i> 已登入
+                    </span>
+                `;
+            }
+        } else {
+            if (loginStatus) {
+                loginStatus.innerHTML = '';
+            }
+            if (loginStatusIndicator) {
+                loginStatusIndicator.innerHTML = `
+                    <span class="badge badge-secondary">
+                        <i class="fas fa-times"></i> 未登入
+                    </span>
+                `;
+            }
+        }
+    }
+
+    function checkLoginStatus() {
+        const loginData = document.getElementById('loginData');
+        if (loginData) {
+            const isLoggedIn = loginData.dataset.loggedIn === 'true';
+            const studentId = loginData.dataset.studentId;
+            if (isLoggedIn && studentId) {
+                updateLoginStatus(true, studentId);
+            }
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 全局變量存儲當前session token
+    window.currentSessionToken = null;
+
+    // 顯示驗證碼模態框
+    window.showCaptchaModal = function(result) {
+        console.log('🖼️ 顯示驗證碼模態框');
+        
+        window.currentSessionToken = result.sessionToken;
+        
+        const modal = document.getElementById('captchaModal');
+        const captchaImage = document.getElementById('captchaImage');
+        const captchaLoading = document.getElementById('captchaLoading');
+        const ocrSuggestion = document.getElementById('ocrSuggestion');
+        const ocrText = document.getElementById('ocrText');
+        const captchaInput = document.getElementById('captchaInput');
+        
+        // 顯示模態框
+        modal.style.display = 'flex';
+        
+        // 如果有驗證碼圖片，顯示它
+        if (result.captchaImage) {
+            captchaImage.src = 'data:image/png;base64,' + result.captchaImage;
+            captchaImage.style.display = 'block';
+            captchaLoading.style.display = 'none';
+        } else {
+            captchaImage.style.display = 'none';
+            captchaLoading.style.display = 'block';
+        }
+        
+        // 如果有OCR建議，顯示它
+        if (result.ocrSuggestion && result.ocrSuggestion.trim()) {
+            ocrText.textContent = result.ocrSuggestion;
+            ocrSuggestion.style.display = 'block';
+            captchaInput.value = result.ocrSuggestion; // 預填OCR結果
+        } else {
+            ocrSuggestion.style.display = 'none';
+        }
+        
+        // 聚焦到輸入框
+        setTimeout(() => {
+            captchaInput.focus();
+            captchaInput.select();
+        }, 300);
+    };
+
+    // 關閉驗證碼模態框
+    window.closeCaptchaModal = function() {
+        const modal = document.getElementById('captchaModal');
+        modal.style.display = 'none';
+        window.currentSessionToken = null;
+        
+        // 重置登入按鈕
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入';
+    };
+
+    // 提交驗證碼
+    window.submitCaptcha = async function() {
+        const captchaInput = document.getElementById('captchaInput');
+        const submitBtn = document.getElementById('submitCaptcha');
+        const captchaText = captchaInput.value.trim();
+        
+        if (!captchaText) {
+            alert('請輸入驗證碼');
+            captchaInput.focus();
+            return;
+        }
+        
+        if (!window.currentSessionToken) {
+            alert('Session已過期，請重新登入');
+            closeCaptchaModal();
+            return;
+        }
+        
+        console.log('📝 提交驗證碼:', captchaText);
+        
+        // 顯示載入狀態
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 驗證中...';
+        
+        try {
+            const response = await fetch('{% url "api_ntub_input_captcha" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    sessionToken: window.currentSessionToken,
+                    captchaText: captchaText
+                })
+            });
+            
+            const result = await response.json();
+            console.log('📨 驗證碼提交結果:', result);
+            
+            if (result.success) {
+                showStatus('登入成功！', 'success');
+                closeCaptchaModal();
+                
+                // 更新登入狀態
+                const studentId = document.getElementById('studentId').value;
+                updateLoginStatus(true, studentId);
+                
+                // 清空表單
+                loginForm.reset();
+                
+                // 2秒後重新載入頁面
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                alert('登入失敗: ' + result.message);
+                captchaInput.focus();
+                captchaInput.select();
+            }
+            
+        } catch (error) {
+            console.error('❌ 驗證碼提交錯誤:', error);
+            alert('驗證碼提交失敗，請稍後再試');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check"></i> 確認登入';
+        }
+    };
+
+    // 顯示登入成功後的操作選項
+    function showSuccessOptions(studentId) {
+        const loginCard = document.querySelector('.login-card');
+        
+        loginCard.innerHTML = `
+            <div class="success-container" style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 4rem; color: #28a745; margin-bottom: 20px;">
+                    🎉
+                </div>
+                <h2 style="color: #28a745; margin-bottom: 10px;">登入成功！</h2>
+                <p style="color: #666; margin-bottom: 30px;">學號: ${studentId}</p>
+                
+                <div class="action-buttons" style="display: grid; gap: 15px; max-width: 300px; margin: 0 auto;">
+                    <button onclick="window.location.href='/ntub/student-info/'" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
+                        📋 查看學生資料
+                    </button>
+                    
+                    <button onclick="window.location.href='/ntub/grades/'" 
+                            style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 15px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
+                        📊 查看成績
+                    </button>
+                    
+                    <button onclick="window.location.href='/ntub/schedule/'" 
+                            style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 15px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
+                        📅 查看課表
+                    </button>
+                    
+                    <button onclick="window.location.reload()" 
+                            style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; margin-top: 10px;">
+                        🔄 重新登入
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // 添加按鈕hover效果
+        const buttons = loginCard.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'translateY(-2px)';
+            });
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translateY(0)';
+            });
+        });
+    }
+
+}); // 關閉 DOMContentLoaded 函數
+
+</script>
+{% endblock %}

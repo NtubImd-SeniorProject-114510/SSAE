@@ -75,18 +75,25 @@ const keywordMap = [
     { keywords: "課本", intent: "book" },
     { keywords: "查", intent: "rules" },
     { keywords: "問", intent: "rules" },
+    { keywords: "怎麼", intent: "rules" },
+    { keywords: "知道", intent: "rules" },
     { keywords: "規", intent: "rules" },
-    { keywords: "學分", intent: "rules" },
     { keywords: "畢業", intent: "rules" },
     { keywords: "門檻", intent: "rules" },
+    { keywords: "學分", intent: "ntub" },
     { keywords: "舉辦", intent: "hold" },
+    { keywords: "邀請", intent: "hold" },
     { keywords: "發起", intent: "hold" },
     { keywords: "揪", intent: "hold" },
     { keywords: "創", intent: "hold" },
+    { keywords: "參", intent: "event" },
     { keywords: "活動", intent: "event" },
     { keywords: "團", intent: "event" },
     { keywords: "會", intent: "event" },
     { keywords: "評", intent: "review" },
+    { keywords: "抱怨", intent: "review" },
+    { keywords: "罵", intent: "review" },
+    { keywords: "稱讚", intent: "review" },
     { keywords: "寫", intent: "review" },
     { keywords: "看", intent: "look" },
     { keywords: "課", intent: "course" },
@@ -96,6 +103,12 @@ const keywordMap = [
 
 // 每個捷徑定義需要包含哪些 intent
 const shortcuts = [
+    {
+      intentSet: ["rules", "ntub"],
+      action: "external",  // 自定義一個表示「開啟外部連結」的行為
+      target: "https://acad.ntub.edu.tw/p/412-1004-1718.php",
+      label: "課程科目表"
+    },
     {
         intentSet: ["hold", "event"],
         action: "redirect",
@@ -147,6 +160,7 @@ const shortcuts = [
         target: "/comment/",
         label: "課程評論區"
     },
+
     
     // {
     //     intentSet: ["event"],
@@ -168,6 +182,7 @@ function getIntentsFromInput(input) {
     }
     return Array.from(result);
 }
+
 
 function showMessage(text, type = 'error') {
     const messageEl = document.getElementById('message');
@@ -203,9 +218,36 @@ function confirmAction() {
             if (currentShortcut.popupToOpen) {
                 sessionStorage.setItem('openPopup', currentShortcut.popupToOpen);
             }
-            window.location.href = currentShortcut.target;
+            let target = currentShortcut.target;
+            if (target === '/chat/' && sessionStorage.getItem('rules_prefill')) {
+                target = '/chat/?autoAsk=1';
+            }
+            window.location.href = target;
+
+        } else if (currentShortcut.action === "external") {
+            window.open(currentShortcut.target, "_blank"); // 在新分頁開啟
         }
     }
+}
+
+
+// 例：你原本拿到使用者輸入的地方
+function onAskSubmit() {
+  const inputEl = document.querySelector('#askInput'); // ← 你的詢問框 selector
+  const raw = (inputEl?.value || '').trim();
+  if (!raw) return;
+
+  const intents = getIntentsFromInput(raw);
+  const shortcut = pickShortcutByIntents(intents); // ← 你原本決定 shortcuts 的方法
+
+  // 重要：若要前往校規頁面，先把原句問題塞進 sessionStorage
+  if (shortcut && shortcut.action === 'redirect' && shortcut.target === '/chat/') {
+    sessionStorage.setItem('rules_prefill', raw);
+  }
+
+  // 照你原本流程跑
+  currentShortcut = shortcut;
+  confirmAction();
 }
 
 
@@ -225,6 +267,11 @@ function handleInput() {
             intents.includes(intent)
         );
         if (isMatch) {
+          // ★ 若要前往校規頁面：先把原句問題存起來
+          if (shortcut.action === "redirect" && shortcut.target === "/chat/") {
+               sessionStorage.setItem('rules_prefill', inputValue);
+          }
+
             let title = `前往「${shortcut.label || inputValue}」?`;
             let content = '';
 
@@ -1508,7 +1555,7 @@ function initTechParticles() {
 document.addEventListener("DOMContentLoaded", () => {
   initBlobs();
   initTechParticles();
-  initFeatureSvgAnimation();
+  // initFeatureSvgAnimation(); // 暫時註解掉，因為函數尚未實現
 });
 
 

@@ -64,8 +64,40 @@
       {% endfor %}
     </select>
 
+    <!-- 評分篩選 -->
+    <select class="filter-item" id="rating-select">
+      <option value="">所有評分</option>
+      <option value="4.5">4.5星以上</option>
+      <option value="4.0">4.0星以上</option>
+      <option value="3.5">3.5星以上</option>
+      <option value="3.0">3.0星以上</option>
+      <option value="2.0">2.0星以上</option>
+    </select>
+
+    <!-- 評論數量篩選 -->
+    <select class="filter-item" id="review-count-select">
+      <option value="">所有評論數</option>
+      <option value="10">10則以上</option>
+      <option value="5">5則以上</option>
+      <option value="1">有評論</option>
+    </select>
+
+    <!-- 排序選項 -->
+    <select class="filter-item" id="sort-select">
+      <option value="name">課程名稱</option>
+      <option value="rating-desc">評分高到低</option>
+      <option value="rating-asc">評分低到高</option>
+      <option value="review-count-desc">評論數多到少</option>
+      <option value="review-count-asc">評論數少到多</option>
+    </select>
+
     <!-- 搜尋框 -->
     <input type="text" class="search-box" placeholder="搜尋課程或教師...">
+    
+    <!-- 清除篩選按鈕 -->
+    <button type="button" class="clear-filters-btn" id="clear-filters-btn">
+      <i class="fas fa-times"></i> 清除篩選
+    </button>
   </div>
 
   <!-- 課程列表 -->
@@ -180,96 +212,7 @@
         });
       }
     });
-
-
-    // 渲染課程列表
-function renderCourses(courses) {
-  const container = document.querySelector('.activity-grid');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  if (!courses.length) {
-    container.innerHTML =
-      '<div class="no-results">找不到符合條件的課程</div>';
-    return;
-  }
-
-  courses.forEach((course) => {
-    const el = document.createElement('div');
-    el.className = 'course-item';
-    el.dataset.department = course.department_name || '';
-    el.style.cursor = 'pointer';
-
-    // 點到卡片空白處 → 詳情
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('a, button, .create-btn, .join-btn')) return;
-      window.location.href = `/comment_detail/${course.id}/`;
-    });
-
-    // 計算顯示用文字
-    const avgRating = course.avg_rating ? Number(course.avg_rating).toFixed(1) : '0.0';
-    const ratingCount = course.rating_count || 0;   // 幾則評分（含純評分）
-    const reviewCount = course.review_count || 0;   // 幾則評論（有文字）
-    const lastDate   = course.last_date || '暫無';
-
-    let summaryHtml = `
-      <div class="user-info">
-        <img src="/static/image/anonymous.png" alt="User Avatar" class="avatar">
-        <span class="username">暫無評論</span>
-      </div>
-      <p>目前還沒有任何評論，成為第一個評論的人吧！</p>
-    `;
-    if (course.course_summary) {
-      summaryHtml = `
-        <div class="user-info">
-          <img src="${course.course_summary.avatar_url || '/static/image/anonymous.png'}" alt="User Avatar" class="avatar">
-          <span class="username">${course.course_summary.display_name || '使用者'}</span>
-        </div>
-        <p>${course.course_summary.summary}</p>
-        <div class="likes"><i class="fa-solid fa-thumbs-up"></i> ${course.course_summary.likes}　${course.course_summary.created}</div>
-      `;
-    }
-
-    el.innerHTML = `
-      <div class="course-top">
-        <div>
-          <h3 class="course-name">${course.course_name || '未命名課程'}</h3>
-          <div class="course-meta">
-            <span class="course-teacher"><i class="fas fa-user-tie"></i> ${
-              course.course_teacher || '未指定教師'
-            }</span>
-            <span class="course-department"><i class="fas fa-building"></i> ${
-              course.department_name || '未指定科系'
-            }</span>
-          </div>
-        </div>
-        <div class="course-rating">
-          <div class="stars" data-rating="${avgRating}">
-            <span class="rating-text">${avgRating}</span>
-            <i class="fa-solid fa-thumbs-up"></i>
-          </div>
-          <div class="rating-count">${ratingCount} 則評分</div>
-        </div>
-      </div>
-      <div class="course-bottom">
-        <p class="last-date">最新評論: ${lastDate}</p>
-        <div class="course-summary">${summaryHtml}</div>
-        <div class="review-counter">${reviewCount} 則評論</div>
-        <div class="buttons-container">
-          <a href="#"
-            class="join-btn add-comment"
-            data-course-id="${course.id}">新增評論</a>
-          <a href="/comment_detail/${course.id}/" class="join-btn">查看所有評論</a>
-        </div>
-      </div>
-    `;
-
-    container.appendChild(el);
-  });
-
-  initializeStarRatings();
-}
+  
   </script>
 
   

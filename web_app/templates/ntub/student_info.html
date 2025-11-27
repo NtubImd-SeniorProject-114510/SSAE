@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}北商學生資料 - SSAE{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{% static 'css/ntub_dashboard.css' %}">
+<style>
+.student-info-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.info-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.info-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.info-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.refresh-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="123" style="height: 100px;"></div>
+
+<div class="student-info-container" style="padding: 100px;">
+    <div class="info-card">
+        <div class="info-header">
+            <div class="info-icon">
+                <i class="fas fa-user-graduate" style="color: white; font-size: 1.5rem;"></i>
+            </div>
+            <div>
+                <h2 class="info-title">學生基本資料</h2>
+                <p style="margin: 0; color: #666;">北商學生資訊系統</p>
+            </div>
+            <button class="refresh-btn" onclick="loadStudentInfo()">
+                <i class="fas fa-sync-alt"></i> 重新載入
+            </button>
+        </div>
+
+        <div id="studentInfoContent">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #667eea;"></i>
+                <p>正在載入學生資料...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block body_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 學生資料頁面載入完成');
+    loadStudentInfo();
+});
+
+async function loadStudentInfo() {
+    const content = document.getElementById('studentInfoContent');
+    
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #667eea;"></i>
+            <p>正在載入學生資料...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('{% url "api_ntub_profile" %}');
+        const result = await response.json();
+
+        if (result.success) {
+            displayStudentInfo(result.data);
+        } else {
+            content.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    載入失敗: ${result.message}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('載入學生資料錯誤:', error);
+        content.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                載入失敗，請稍後再試
+            </div>
+        `;
+    }
+}
+
+function displayStudentInfo(data) {
+    const content = document.getElementById('studentInfoContent');
+    
+    content.innerHTML = `
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">學號</span>
+                <span class="info-value">${data.student_id || '{{ student_id }}'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">姓名</span>
+                <span class="info-value">${data.name || '載入中...'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">系所</span>
+                <span class="info-value">${data.department || '載入中...'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">年級</span>
+                <span class="info-value">${data.grade || '載入中...'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">班級</span>
+                <span class="info-value">${data.class || '載入中...'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">學制</span>
+                <span class="info-value">${data.program || '載入中...'}</span>
+            </div>
+        </div>
+    `;
+}
+
+async function loadSchedule() {
+    const content = document.getElementById('scheduleContent');
+    
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #667eea;"></i>
+            <p>正在載入課表資料...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('{% url "api_ntub_schedule" %}');
+        const result = await response.json();
+
+        if (result.success) {
+            displaySchedule(result.data);
+        } else {
+            content.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    載入失敗: ${result.message}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('載入課表錯誤:', error);
+        content.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                載入失敗，請稍後再試
+            </div>
+        `;
+    }
+}
+
+function displaySchedule(scheduleData) {
+    const content = document.getElementById('scheduleContent');
+    
+    if (!scheduleData || scheduleData.length === 0) {
+        content.innerHTML = `
+            <p style="text-align: center; color: #666; padding: 20px;">
+                暫無課表資料
+            </p>
+        `;
+        return;
+    }
+
+    let scheduleHtml = '<div class="info-grid">';
+    scheduleData.forEach(course => {
+        scheduleHtml += `
+            <div class="info-item">
+                <div>
+                    <div class="info-label">${course.time}</div>
+                    <div class="info-value">${course.name}</div>
+                    <small style="color: #888;">${course.location}</small>
+                </div>
+            </div>
+        `;
+    });
+    scheduleHtml += '</div>';
+    
+    content.innerHTML = scheduleHtml;
+}
+</script>
+{% endblock %}

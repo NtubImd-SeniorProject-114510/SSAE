@@ -31,20 +31,37 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.templatetags.static import static
 from django.conf import settings
 
-# Third-party imports
+# views.py (module import 區)
+from django.db.models import Q, F
+from django.db.models import Count as DJCount
+from django.db.models import Value as DJValue
+from django.db.models import IntegerField as DJIntegerField
+from django.db.models.functions import Coalesce
+import logging
+logger = logging.getLogger(__name__)
+
 from social_django.models import UserSocialAuth
 import openai
 
 # Local imports
-from .views_rag import ask_question, create_vector_store, load_pdf_documents, split_documents
+# from .views_rag import ask_question, create_vector_store, load_pdf_documents, split_documents
+try:
+    from .views_rag import ask_question, create_vector_store, load_pdf_documents, split_documents
+    RAG_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"RAG功能不可用: {e}")
+    RAG_AVAILABLE = False
+    # 創建假的函數避免錯誤
+    def ask_question(question, history=None):
+        return {"answer": "抱歉，校規查詢功能暫時不可用，請稍後再試。", "sources": []}
 from .models import (
-    GroupActivity, ActivityParticipant, ActivityComment, Book2, Todo, User,
-    Department, Category, Academic, AcademicGrade, AcadeDepart, AcadeGrade,
-    Course, Departmentd, Academica, CourseReview, ReviewLike,
-    User as LegacyUser
+    GroupActivity, ActivityParticipant, ActivityComment, Book2, Department, 
+    AcademicGrade, Category, Status, Academic, User, Academica, Departmentd, 
+    AcadeGrade, AcadeDepart, CourseReview, Course, Departmentd, Academica, CourseReview, 
+    ReviewLike, User as LegacyUser
 )
 from .forms import Book2Form, ActivityForm
-from .utils.content_filter import contains_banned_content, BANNED_WORDS
+from .utils.content_filter import contains_banned_content, BANNED_WORDS, debug_banned_content
 from .mongo import (
     create_conversation, add_message, get_conversations, get_messages,
     delete_conversation, update_conversation_title, get_conversation_by_id
@@ -312,6 +329,7 @@ def personal(request):
             if getattr(a, 'date', None):
                 weekday_zh = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日'][a.date.weekday()]
                 month_num  = a.date.strftime('%m')
+                month_abbr  = (calendar.month_abbr[a.date.month] or '').capitalize()
                 date_num   = a.date.strftime('%d')
             else:
                 weekday_zh, month_num, date_num = '—','—','—'
@@ -322,6 +340,7 @@ def personal(request):
                 "desc": getattr(a, 'description', '活動說明稍後公布。'),
                 "location": getattr(a, 'location', '校園活動場地'),
                 "weekday": weekday_zh,
+                "month_abbr": month_abbr,
                 "month": month_num,
                 "date": date_num,
                 "time": a.time.strftime('%H:%M') if getattr(a, 'time', None) else '—',
@@ -332,130 +351,34 @@ def personal(request):
     except Exception as e:
         print(f"Error building created_flags: {e}")
 
-    # === 我的書櫃（跨 app 自動偵測 Model 與擁有者欄位，含除錯） ===
+    # === 我的書櫃（直接使用 Book2 模型） ===
     books = []
     try:
-        from django.apps import apps
-        from django.db.models import Q
-        from django.conf import settings
-        from django.db.models.fields.related import ForeignKey, ManyToManyField, OneToOneField
-
-        def _cover_url(obj):
-            # 常見封面欄位：都試一次；ImageField/File 取 .url
-            for name in ['cover_url', 'image_url', 'thumbnail_url', 'cover', 'image', 'thumbnail', 'photo']:
-                if hasattr(obj, name):
-                    val = getattr(obj, name)
-                    if not val:
-                        continue
-                    try:
-                        return val.url  # ImageField/File
-                    except Exception:
-                        return str(val)
-            return ''
-
-        def _text(obj, *names, default=''):
-            for n in names:
-                if hasattr(obj, n):
-                    v = getattr(obj, n)
-                    if v:
-                        return str(v)
-            return default
-
-        # 1) 從所有 model 中找「像是書」的候選清單
-        candidates = []
-        for M in apps.get_models():
-            label = M._meta.label_lower  # e.g. "market.book2"
-            name  = M.__name__.lower()
-            fields = list(M._meta.get_fields())
-            field_names = {f.name for f in fields}
-
-            looks_like_book = (
-                'book' in name
-                or 'book' in label
-                or {'isbn', 'book_title', 'author'}.intersection(field_names)
-            )
-            if not looks_like_book:
-                continue
-
-            # 簡單打分：越像「二手書」分越高
-            score = 0
-            if any(k in name for k in ['used', 'secondhand', 'second_hand', 'preowned']):
-                score += 3
-            if 'isbn' in field_names: score += 2
-            if any(n in field_names for n in ['title','book_title']): score += 1
-            if any(n in field_names for n in ['user','owner','seller','created_by','uploader']): score += 2
-
-            candidates.append((score, M, fields, field_names))
-
-        if not candidates:
-            print('[books] no candidate models found.')
-            BookModel = None
-        else:
-            # 分數高者優先
-            candidates.sort(key=lambda x: x[0], reverse=True)
-            BookModel, fields, field_names = candidates[0][1], candidates[0][2], candidates[0][3]
-            print(f"[books] picked model: {BookModel._meta.label} (score={candidates[0][0]})")
-
-        if BookModel:
-            # 2) 組「屬於我的」過濾條件：支援 FK / O2O / M2M / email 欄位
-            ors = Q()
-            uid = getattr(request.user, 'id', None)
-            my_email = (request.user.email or '').strip() if hasattr(request.user, 'email') else ''
-
-            for f in fields:
-                # 針對關聯到 User 的 FK / O2O
-                if isinstance(f, (ForeignKey, OneToOneField)) and getattr(f, 'related_model', None):
-                    if f.related_model == apps.get_model(settings.AUTH_USER_MODEL):
-                        # 欄位名例如: user/owner/seller/created_by/uploader...
-                        ors |= Q(**{f.name: request.user}) | Q(**{f.name + '_id': uid})
-
-                # 針對 M2M 到 User
-                if isinstance(f, ManyToManyField) and getattr(f, 'related_model', None):
-                    if f.related_model == apps.get_model(settings.AUTH_USER_MODEL):
-                        ors |= Q(**{f.name: request.user})
-
-            # 另外嘗試常見欄位名（即使不是外鍵）
-            for fn in ['user', 'owner', 'seller', 'created_by', 'uploader', 'posted_by']:
-                if fn in field_names:
-                    ors |= Q(**{fn: request.user}) | Q(**{fn + '_id': uid})
-
-            # 以 email 存的情況
-            for fn in ['seller_email', 'owner_email', 'email', 'contact_email']:
-                if fn in field_names and my_email:
-                    ors |= Q(**{fn: my_email})
-
-            # 3) 查詢
-            base_qs = BookModel.objects.all() if ors == Q() else BookModel.objects.filter(ors)
-
-            # 若有狀態欄位再加條件（存在才套用）
-            if 'is_active' in field_names:
-                base_qs = base_qs.filter(is_active=True)
-            if 'status' in field_names:
-                base_qs = base_qs.filter(status__in=['listed', 'published', 'active', 'available'])
-
-            qs = base_qs.order_by('-id')[:12]
-
-            # 若依然撈不到任何東西，為了除錯先拿最近 12 筆給你看得到畫面
-            if not qs.exists():
-                print('[books] filtered result empty; fallback to latest 12 for debugging.')
-                qs = BookModel.objects.all().order_by('-id')[:12]
-
-            for b in qs:
+        from .models import Book2
+        
+        if request.user.is_authenticated:
+            # 直接查詢當前用戶的書籍（包含所有狀態）
+            user_books = Book2.objects.filter(seller=request.user).order_by('-book_id')
+            
+            for book in user_books:
+                # 獲取書籍狀態
+                status_name = ''
+                try:
+                    if book.status:
+                        status_name = str(book.status)
+                except Exception:
+                    pass
+                
                 books.append({
-                    "id": b.pk,
-                    "title": _text(b, 'title', 'book_title', default=''),
-                    "author": _text(b, 'author', 'authors', default=''),
-                    "publisher": _text(b, 'publisher', default=''),
-                    "isbn": _text(b, 'isbn', 'isbn13', 'isbn_13', default=''),
-                    "desc": _text(b, 'description', 'intro', 'summary', default='這本書目前尚未提供簡介。'),
-                    "cover": _cover_url(b),
+                    "id": book.book_id,
+                    "title": book.title or '',
+                    "author": book.author or '',
+                    "publisher": book.publisher or '',
+                    "isbn": book.isbn or '',
+                    "desc": book.description or '這本書目前尚未提供簡介。',
+                    "cover": book.cover_image.url if book.cover_image else '',
+                    "status": status_name,
                 })
-
-            print(f"[books] model={BookModel._meta.label}, fields={sorted(list(field_names))}")
-            print(f"[books] final count={len(books)}")
-
-        else:
-            print("No Book model found in installed apps.")
 
     except Exception as e:
         print(f"Error fetching books: {e}")
@@ -498,11 +421,6 @@ def join(request):
 def join_create(request):
     return render(request, 'join_create.html')
 
-def join_detail(request):
-    return render(request, 'join_detail.html')
-
-
-
 def _parse_request_data(request):
     """同時支援 JSON 與 x-www-form-urlencoded"""
     if request.content_type and 'application/json' in request.content_type.lower():
@@ -522,12 +440,70 @@ def book(request):
     try:
         offline_status = Status.objects.get(name='已下架')
         sold_status = Status.objects.get(name='已售出')
-        books_list = Book2.objects.exclude(
+        books_queryset = Book2.objects.exclude(
             status__in=[offline_status, sold_status]
-        ).order_by('-created_at')
+        ).select_related('academic', 'department', 'grade', 'category', 'status')
     except Status.DoesNotExist:
         # 如果沒有相關狀態，顯示所有書籍
-        books_list = Book2.objects.all().order_by('-created_at')
+        books_queryset = Book2.objects.all().select_related('academic', 'department', 'grade', 'category', 'status')
+
+    # 應用篩選條件
+    search_term = request.GET.get('search', '').strip()
+    academic_id = request.GET.get('academic_id', '')
+    department_id = request.GET.get('department_id', '')
+    grade_level = request.GET.get('grade_level', '')
+    category_name = request.GET.get('category', '')
+    condition = request.GET.get('condition', '')
+    price_range = request.GET.get('price_range', '')
+
+    # 搜尋詞篩選
+    if search_term:
+        books_queryset = books_queryset.filter(
+            Q(title__icontains=search_term) | 
+            Q(author__icontains=search_term) |
+            Q(description__icontains=search_term)
+        )
+
+    # 學制篩選
+    if academic_id:
+        books_queryset = books_queryset.filter(academic_id=academic_id)
+
+    # 系所篩選
+    if department_id:
+        books_queryset = books_queryset.filter(department_id=department_id)
+
+    # 年級篩選
+    if grade_level:
+        books_queryset = books_queryset.filter(grade__grade_level=grade_level)
+
+    # 分類篩選
+    if category_name:
+        books_queryset = books_queryset.filter(category__name=category_name)
+
+    # 書況篩選 - 需要將顯示文字轉換為數字值
+    if condition:
+        # 建立書況對應表
+        condition_mapping = {
+            '全新': 'new',
+            '近全新': 'like_new', 
+            '良好': 'good',
+            '普通': 'fair',
+            '需要修復': 'poor'
+        }
+        condition_value = condition_mapping.get(condition)
+        if condition_value:
+            books_queryset = books_queryset.filter(condition=condition_value)
+
+    # 價格範圍篩選
+    if price_range:
+        try:
+            min_price, max_price = map(int, price_range.split('-'))
+            books_queryset = books_queryset.filter(price__gte=min_price, price__lte=max_price)
+        except (ValueError, AttributeError):
+            pass
+
+    # 排序
+    books_list = books_queryset.order_by('-created_at')
 
     # 每行顯示數量（URL參數，預設4）
     items_per_row = int(request.GET.get('items_per_row', 4))
@@ -545,9 +521,29 @@ def book(request):
     form = Book2Form()
     categories = Category.objects.all()
     academics = Academic.objects.all()
-    # 只傳遞學制，科系和年級透過 AJAX 動態載入
-    departments = []  # 空的科系列表
-    academic_grades = []  # 空的年級列表
+    
+    # 如果有選擇學制，載入對應的科系和年級
+    departments = []
+    academic_grades = []
+    if academic_id:
+        try:
+            # 載入該學制下的科系
+            academic_departments = AcadeDepart.objects.filter(
+                academica_id=academic_id
+            ).select_related("departmentd")
+            departments = [{"id": ad.departmentd.id, "name": ad.departmentd.name} 
+                          for ad in academic_departments]
+            
+            # 載入該學制下的年級
+            academic_grades_qs = AcadeGrade.objects.filter(
+                academica_id=academic_id
+            ).order_by('id')
+            academic_grades = [{"id": ag.id, "grade_level": ag.grade_level} 
+                              for ag in academic_grades_qs]
+        except Exception as e:
+            logger.warning(f"載入科系年級失敗: {e}")
+            departments = []
+            academic_grades = []
 
     # 獲取當前用戶的聯絡資訊
     user_phone = None
@@ -579,6 +575,14 @@ def book(request):
         'items_per_row': items_per_row,
         'user_phone': user_phone,
         'user_line_id': user_line_id,
+        # 傳遞當前篩選值給模板
+        'current_search': search_term,
+        'current_academic_id': academic_id,
+        'current_department_id': department_id,
+        'current_grade_level': grade_level,
+        'current_category': category_name,
+        'current_condition': condition,
+        'current_price_range': price_range,
     })
 
 def book_2(request):
@@ -1179,16 +1183,30 @@ def index(request):
     try:
         a_hot = (
             GroupActivity.objects
-            .annotate(joined_count=Count("participants", filter=Q(participants__status="joined")))
-            .order_by("-joined_count", "-created_at")
+            .annotate(
+                participants_count_q=Coalesce(
+                    DJCount(
+                        'participants',
+                        filter=Q(participants__status='joined'),
+                        distinct=True,
+                    ),
+                    0,
+                )
+            )
+            .annotate(
+                total_count_q=F('participants_count_q') + DJValue(1, output_field=DJIntegerField())
+            )
+            .order_by('-total_count_q', '-created_at')
             .first()
         )
+
         if a_hot:
             title = f"🔥 活動︰{_shorten(a_hot.title)}"
             url = _safe_reverse("activity_detail", args=[a_hot.pk], fallback=f"/activity/{a_hot.pk}/")
             activity_hot_item = {"title": title, "url": url}
+
     except Exception:
-        pass
+        logger.exception("計算熱門活動失敗")
 
     # ====== 組裝給前端 ======
     # 桌機：左邊 3 個（最新：課程／二手書／活動），右邊 3 個（熱門：課程／二手書／活動）
@@ -1228,7 +1246,7 @@ def get_legacy_user_id(request) -> int | None:
         return None
 
     return (
-        LegacyUser.objects
+        User.objects
         .filter(mail=email)
         .values_list("user_id", flat=True)
         .first()
@@ -1415,7 +1433,7 @@ def comment(request):
 
     # 批量抓使用者 email
     user_ids = [tr.user_id for tr in top_review_map.values() if not tr.is_anonymous]
-    users = LegacyUser.objects.filter(user_id__in=user_ids).only('user_id', 'mail')
+    users = User.objects.filter(user_id__in=user_ids).only('user_id', 'mail')
     user_id_to_email = {u.user_id: u.mail for u in users if u.mail}
 
     # 批量查 avatar/name
@@ -2027,8 +2045,8 @@ def comment_detail(request, id=None):
         'review_items': review_items,
         'avg_rating': round(avg_rating, 1),
         'avg_fill_percent': avg_fill_percent,
-        'review_count': len([rv for rv in raw_qs if (rv.content or '').strip()]),  # 有文字的
-        'total_ratings': stats_qs.count(),                                         # 含純評分
+        'review_count': len([rv for rv in raw_qs if (rv.content or '').strip()]),  # 有文字的評論
+        'total_ratings': len([rv for rv in raw_qs if not (rv.content or '').strip()]),  # 純評分（無文字）
         'academic': course.academica,
         'department': course.departmentd,
         'star_distribution': star_distribution,
@@ -2238,7 +2256,7 @@ def toggle_review_like(request, review_id):
         return JsonResponse({'error': '無法找到對應的使用者'}, status=403)
 
     review = get_object_or_404(CourseReview, id=review_id)
-    legacy_user = get_object_or_404(LegacyUser, user_id=legacy_uid)
+    legacy_user = get_object_or_404(User, user_id=legacy_uid)
 
     like = ReviewLike.objects.filter(review=review, user=legacy_user).first()
 
@@ -2256,19 +2274,62 @@ def toggle_review_like(request, review_id):
         'review_id': review.id,
     })
 
-# ===== AI Comment Optimization =====
+import re
+import logging
+import openai
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+# 設定日誌記錄器
+logger = logging.getLogger(__name__)
+
+# ============================================================
+# AI 評論優化功能
+# ============================================================
+# 功能說明:
+# 1. 接收使用者輸入的課程評論
+# 2. 使用 Azure OpenAI API 進行語意優化
+# 3. 保持原意但改善語氣,使其更友善、清晰
+# 4. 在評論末尾加上改進建議 (🦉：開頭)
+# ============================================================
+
 
 def _clean_input(text: str) -> str:
-    text = re.sub(r"\r\n?", "\n", text or "")
+    """
+    清理輸入文字
+    
+    處理步驟:
+    1. 統一換行符號 (\r\n 或 \r 轉為 \n)
+    2. 壓縮多餘空白 (連續空格/Tab 轉為單一空格)
+    3. 去除頭尾空白
+    
+    Args:
+        text: 原始輸入文字
+    
+    Returns:
+        str: 清理後的文字
+    """
+    # 處理可能的 None 值
+    text = text or ""
+    
+    # 統一換行符號
+    text = re.sub(r"\r\n?", "\n", text)
+    
+    # 壓縮空白字元
     text = re.sub(r"[ \t]+", " ", text)
+    
     return text.strip()
 
+
+# AI 系統提示詞 (System Prompt)
 SYSTEM_PROMPT = (
     "You help polish course reviews. Keep the user's original meaning almost completely. "
     "Only fix words if they are super harsh or offensive, but make the wording funny, casual, and easy to read—like a real person talking. "
     "Everything else should stay as close to the original as possible. "
-    "At the end of the review, add a short, natural improvement suggestion prefixed with 🦉：, and start it on a new line using a literal \\n (so the 🦉 part is always on its own line). "
-    "1) Don’t add or remove details the user didn’t mention, except for the improvement suggestion; "
+    "At the end of the review, add a short, natural improvement suggestion prefixed with 🦉：, and start it on a new line using a literal (so the 🦉 part is always on its own line). "
+    "1) Don't add or remove details the user didn't mention, except for the improvement suggestion; "
     "2) Only swap out offensive words while keeping the same strong opinion; "
     "3) Make the smallest edits needed, no over-polishing; "
     "4) Just output the final review text, no explanations; "
@@ -2279,59 +2340,157 @@ SYSTEM_PROMPT = (
 @csrf_exempt
 @require_POST
 def optimize_comment_ai(request):
-    api_key    = settings.AZURE_OPENAI_API_KEY
-    endpoint   = settings.AZURE_OPENAI_ENDPOINT
-    api_ver    = settings.AZURE_OPENAI_API_VERSION
+    """
+    AI 評論優化 API 端點
+    
+    請求方式: POST
+    請求參數:
+        - content (str): 使用者輸入的原始評論內容
+    
+    回應格式:
+        成功: {"result": "優化後的評論內容"}
+        失敗: {"error": "錯誤訊息"}, status=4xx/5xx
+    """
+    
+    logger.info("=== AI 評論優化請求開始 ===")
+    
+    # ===== 步驟 1: 載入 Azure OpenAI 設定 =====
+    api_key = settings.AZURE_OPENAI_API_KEY
+    endpoint = settings.AZURE_OPENAI_ENDPOINT
+    api_ver = settings.AZURE_OPENAI_API_VERSION
     deployment = settings.AZURE_OPENAI_DEPLOYMENT_NAME
-
-    if not (api_key and endpoint and deployment):
-        return JsonResponse({"error": "Azure OpenAI not configured"}, status=503)
-
-    raw = _clean_input(request.POST.get("content", ""))
-    if not raw:
+    
+    logger.info(f"Azure OpenAI 端點: {endpoint}")
+    logger.info(f"部署名稱: {deployment}")
+    logger.info(f"API 版本: {api_ver}")
+    
+    # 檢查必要設定是否完整
+    if not all([api_key, endpoint, deployment]):
+        logger.error("❌ Azure OpenAI 設定不完整")
+        return JsonResponse(
+            {"error": "Azure OpenAI not configured"}, 
+            status=503
+        )
+    
+    # ===== 步驟 2: 取得並清理使用者輸入 =====
+    raw_content = request.POST.get("content", "")
+    logger.info(f"原始輸入長度: {len(raw_content)} 字元")
+    
+    cleaned_content = _clean_input(raw_content)
+    logger.info(f"清理後長度: {len(cleaned_content)} 字元")
+    
+    # 空內容直接回傳
+    if not cleaned_content:
+        logger.warning("⚠️  輸入內容為空")
         return JsonResponse({"result": ""})
-
-    short = raw.replace("\n", "").strip()
-    if len(short) < 6:
+    
+    # ===== 步驟 3: 檢查內容長度 =====
+    # 移除換行後檢查實際字數
+    content_without_newlines = cleaned_content.replace("\n", "").strip()
+    
+    if len(content_without_newlines) < 6:
+        logger.warning(f"⚠️  內容過短 (僅 {len(content_without_newlines)} 字元)")
         return JsonResponse({
-            "result": "（內容過短）目前的評論資訊不足，無法進行語意優化與送出。"
-                     "請補充具體細節（例如：單元/作業類型/上課節奏/評分標準/時間點等），再按「轉換」。"
+            "result": (
+                "（內容過短）目前的評論資訊不足,無法進行語意優化與送出。"
+                "請補充具體細節（例如：單元/作業類型/上課節奏/評分標準/時間點等）,再按「轉換」。"
+            )
         })
-
+    
+    # ===== 步驟 4: 呼叫 Azure OpenAI API =====
     try:
+        logger.info("📡 正在呼叫 Azure OpenAI API...")
+        
+        # 初始化 OpenAI 客戶端
         client = openai.AzureOpenAI(
             api_key=api_key,
             api_version=api_ver,
             azure_endpoint=endpoint,
         )
-
-        msg_user = (
-            "請將以下評論改寫為可直接提交的中性評論文本，避免對話式與流程說明：\n\n"
-            f"{raw}\n\n"
+        
+        # 建構使用者訊息
+        user_message = (
+            "請將以下評論改寫為可直接提交的中性評論文本,避免對話式與流程說明：\n\n"
+            f"{cleaned_content}\n\n"
             "注意：只輸出改寫後的最終評論內容；不要出現道歉、無法處理、需要更多資訊等字樣。"
         )
-
-        resp = client.chat.completions.create(
+        
+        logger.info("📤 發送請求到 OpenAI...")
+        
+        # 發送 API 請求
+        response = client.chat.completions.create(
             model=deployment,
-            temperature=0.2,
+            temperature=0.2,  # 較低溫度確保輸出穩定
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": msg_user},
+                {"role": "user", "content": user_message},
             ],
-            max_tokens=400,
+            max_tokens=400,  # 限制回應長度
         )
-
-        text = (resp.choices[0].message.content or "").strip()
-
-        blacklist = ["無法", "需要更多資訊", "不便", "抱歉", "無法進行有效", "建議您提供"]
-        if any(k in text for k in blacklist) or len(text) < 6:
-            text = "課程整體品質仍有進步空間；期望在教學重點與作業說明上更清楚，並提供更多實作示例以提升理解。"
-
-        return JsonResponse({"result": text})
-
+        
+        # 取得 AI 回應內容
+        optimized_text = (response.choices[0].message.content or "").strip()
+        logger.info(f"📥 收到 AI 回應,長度: {len(optimized_text)} 字元")
+        
+        # ===== 步驟 5: 驗證 AI 回應品質 =====
+        # 黑名單關鍵字 (避免 AI 回應無效內容)
+        blacklist_keywords = [
+            "無法", 
+            "需要更多資訊", 
+            "不便", 
+            "抱歉", 
+            "無法進行有效", 
+            "建議您提供"
+        ]
+        
+        # 檢查是否包含黑名單關鍵字或內容過短
+        has_blacklist = any(keyword in optimized_text for keyword in blacklist_keywords)
+        is_too_short = len(optimized_text) < 6
+        
+        if has_blacklist or is_too_short:
+            logger.warning("⚠️  AI 回應品質不佳,使用預設回應")
+            optimized_text = (
+                "課程整體品質仍有進步空間；期望在教學重點與作業說明上更清楚,"
+                "並提供更多實作示例以提升理解。"
+            )
+        else:
+            logger.info("✅ AI 優化成功")
+        
+        return JsonResponse({"result": optimized_text})
+    
+    except openai.APIError as e:
+        # OpenAI API 錯誤
+        logger.error(f"❌ OpenAI API 錯誤: {str(e)}")
+        return JsonResponse(
+            {"error": f"OpenAI API 錯誤: {str(e)}"}, 
+            status=500
+        )
+    
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-# ===== end AI Comment Optimization =====
+        # 其他未預期錯誤
+        logger.error(f"❌ 未預期錯誤: {str(e)}", exc_info=True)
+        return JsonResponse(
+            {"error": f"系統錯誤: {str(e)}"}, 
+            status=500
+        )
+    
+    finally:
+        logger.info("=== AI 評論優化請求結束 ===\n")
+
+
+# ============================================================
+# 使用範例
+# ============================================================
+# POST /api/optimize-comment/
+# Content-Type: application/x-www-form-urlencoded
+# 
+# content=這門課真的爛透了老師都在講廢話
+#
+# 回應:
+# {
+#   "result": "這門課的教學內容還有很大的改進空間,老師的講解方式可以更精簡有效。\n🦉：建議課程設計時可以加入更多實作練習,讓理論與實務結合得更好。"
+# }
+# ============================================================
 
 #############################課程評論區##############################
 
@@ -2740,6 +2899,12 @@ def activity_list(request):
         a.user_display_name = get_user_display_name(a.user)
         for p in a.cleaned_participants:
             p.user_display_name = get_user_display_name(p.user)
+            
+        # 設定顯示的聯絡資訊：有contact_info就用它，沒有就用email
+        if a.contact_info and a.contact_info.strip():
+            a.display_contact = a.contact_info
+        else:
+            a.display_contact = a.user.email if hasattr(a.user, 'email') else '無聯絡資訊'
 
     # 只有登入用戶才需要取得參與/建立狀態
     joined_ids, created_ids = [], []
@@ -2755,6 +2920,26 @@ def activity_list(request):
             .values_list('id', flat=True)
         )
 
+    # 獲取用戶聯絡資訊（用於彈窗發布活動）
+    user_phone = ''
+    user_line_id = ''
+    user_email = ''
+    if request.user.is_authenticated:
+        try:
+            # 嘗試通過email關聯自定義User模型
+            from .models import User
+            custom_user = User.objects.filter(mail=request.user.email).first()
+            if custom_user:
+                user_phone = custom_user.phone or ''
+                user_line_id = custom_user.LINE_ID or ''
+                user_email = custom_user.mail or request.user.email
+            else:
+                # 如果沒有找到自定義用戶，使用Django標準用戶的資料
+                user_email = request.user.email or ''
+        except Exception as e:
+            print(f"獲取用戶聯絡資訊失敗: {e}")
+            user_email = request.user.email or ''
+
     return render(request, 'join.html', {
         'activities': activities,
         'joined_ids': joined_ids,
@@ -2763,6 +2948,9 @@ def activity_list(request):
         'current_location_type': location_type,
         'current_time': time_filter,
         'current_search': search_query,
+        'user_phone': user_phone,
+        'user_line_id': user_line_id,
+        'user_email': user_email,
     })
 
 # -----------------------
@@ -2847,15 +3035,21 @@ def join_activity(request, pk):
 
     if a.is_deadline_passed:
         messages.error(request, '已超過報名截止時間')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': '已超過報名截止時間'})
         return redirect('activity_detail', pk=pk)
     if current_joined_count >= (a.max_participants or 0):
         messages.error(request, '本活動已額滿')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': '本活動已額滿'})
         return redirect('activity_detail', pk=pk)
 
     # 使用 auth_user（request.user）
     existing = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id).first()
     if existing and existing.status == 'joined':
         messages.info(request, '您已經報名此活動')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': '您已經報名此活動'})
         return redirect('activity_detail', pk=pk)
 
     ActivityParticipant.objects.update_or_create(
@@ -2867,7 +3061,13 @@ def join_activity(request, pk):
     messages.success(request, '報名成功！可至個人中心查看已參加的活動')
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'ok': True, 'participants': updated_joined_count, 'message': '報名成功！'})
+        return JsonResponse({
+            'success': True, 
+            'participants': updated_joined_count, 
+            'message': '報名成功！',
+            'new_status': 'joined',
+            'activity_id': a.id
+        })
     
     return redirect('activity_detail', pk=pk)
 
@@ -2883,6 +3083,8 @@ def cancel_activity(request, pk):
     participant = ActivityParticipant.objects.filter(activity_id=a.id, user_id=request.user.id, status='joined').first()
     if not participant:
         messages.warning(request, '您尚未報名此活動')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': '您尚未報名此活動'})
         return redirect('activity_detail', pk=pk)
 
     participant.status = 'cancelled'
@@ -2892,9 +3094,49 @@ def cancel_activity(request, pk):
     messages.info(request, '已取消參加')
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'ok': True, 'participants': updated_joined_count, 'message': '已取消參加'})
+        return JsonResponse({
+            'success': True, 
+            'participants': updated_joined_count, 
+            'message': '已取消參加',
+            'new_status': 'not_joined',
+            'activity_id': a.id
+        })
     
     return redirect('activity_detail', pk=pk)
+
+# -----------------------
+# 刪除活動（僅發起者可刪除）
+# -----------------------
+@login_required
+def delete_activity(request, pk):
+    if request.method != 'POST':
+        return redirect('activity_detail', pk=pk)
+    
+    activity = get_object_or_404(GroupActivity, pk=pk)
+    
+    # 檢查是否為活動發起者
+    if request.user != activity.user:
+        messages.error(request, '您沒有權限刪除此活動')
+        return redirect('activity_detail', pk=pk)
+    
+    # 檢查是否有其他人已經參加
+    participant_count = ActivityParticipant.objects.filter(
+        activity=activity,
+        status='joined'
+    ).count()
+    
+    if participant_count > 0:
+        messages.error(request, '已有其他人參加此活動，無法刪除。請聯繫參加者或等待活動結束。')
+        return redirect('activity_detail', pk=pk)
+    
+    # 記錄活動標題用於顯示訊息
+    activity_title = activity.title
+    
+    # 刪除活動（會自動刪除相關的評論和參與記錄）
+    activity.delete()
+    
+    messages.success(request, f'活動「{activity_title}」已成功刪除')
+    return redirect('activity_list')
 
 # -----------------------
 # 建立活動
@@ -2907,15 +3149,34 @@ def create_activity(request):
         return req.headers.get('x-requested-with') == 'XMLHttpRequest'
 
     def render_form(form_obj):
-        # ★ 無論 GET 或 POST 重新 render，都把禁用詞清單丟給模板
+        # ★ 無論 GET 或 POST 重新 render，都把禁用詞清單和用戶聯絡資訊丟給模板
+        user_phone = ''
+        user_line_id = ''
+        user_email = ''
+        try:
+            # 嘗試通過email關聯自定義User模型
+            from .models import User
+            custom_user = User.objects.filter(mail=request.user.email).first()
+            if custom_user:
+                user_phone = custom_user.phone or ''
+                user_line_id = custom_user.LINE_ID or ''
+                user_email = custom_user.mail or request.user.email
+            else:
+                user_email = request.user.email or ''
+        except Exception as e:
+            print(f"獲取用戶聯絡資訊失敗: {e}")
+            user_email = request.user.email or ''
+        
         return render(request, 'join_create.html', {
             'form': form_obj,
-            'banned_words': BANNED_WORDS(),
+            'banned_words': BANNED_WORDS,
+            'user_phone': user_phone,
+            'user_line_id': user_line_id,
+            'user_email': user_email,
         })
 
     if request.method == 'GET':
         return render_form(ActivityForm())
-
     elif request.method == 'POST':
         # ❶ 前置禁用詞檢查（不依賴 form.is_valid）
         #    覆蓋所有字串欄位：title / description / address / contact...
@@ -2933,6 +3194,31 @@ def create_activity(request):
             try:
                 activity = form.save(commit=False)
                 activity.user = request.user
+                
+                # 處理聯絡方式選擇
+                contact_method = request.POST.get('contact_method')
+                if contact_method:
+                    try:
+                        # 嘗試通過email關聯自定義User模型
+                        from .models import User
+                        custom_user = User.objects.filter(mail=request.user.email).first()
+                        
+                        if contact_method == 'phone' and custom_user and custom_user.phone:
+                            activity.contact_info = f"電話: {custom_user.phone}"
+                        elif contact_method == 'line' and custom_user and custom_user.LINE_ID:
+                            activity.contact_info = f"LINE: {custom_user.LINE_ID}"
+                        elif contact_method == 'email':
+                            email = (custom_user.mail if custom_user else '') or request.user.email
+                            if email:
+                                activity.contact_info = f"Email: {email}"
+                            else:
+                                activity.contact_info = "請聯絡發起者"
+                        else:
+                            activity.contact_info = "請聯絡發起者"
+                    except Exception as e:
+                        print(f"處理聯絡方式選擇失敗: {e}")
+                        activity.contact_info = "請聯絡發起者"
+                
                 activity.save()
                 if is_ajax(request):
                     return JsonResponse(
@@ -2948,12 +3234,40 @@ def create_activity(request):
                 messages.error(request, msg)
                 return render_form(form)
 
-        # ❸ 表單驗證失敗（非禁用詞）
-        generic_msg = '表單填寫有誤，請檢查後重試'
+        # ❸ 表單驗證失敗（非禁用詞）- 返回詳細錯誤訊息
         if is_ajax(request):
-            # 只回一句話（不再丟整包 form.errors）
-            return JsonResponse({'ok': False, 'success': False, 'message': generic_msg}, status=400)
-        messages.error(request, generic_msg)
+            # 將 form.errors 轉換為友善的錯誤訊息
+            error_messages = []
+            field_names = {
+                'title': '活動標題',
+                'activity_type': '活動類型',
+                'description': '活動說明',
+                'date': '活動日期',
+                'time': '活動時間',
+                'address': '活動地點',
+                'max_participants': '參加人數上限',
+                'cover_image': '封面圖片',
+                'contact_info': '聯絡方式',
+            }
+            
+            for field, errors in form.errors.items():
+                field_label = field_names.get(field, field)
+                for error in errors:
+                    error_messages.append(f"{field_label}: {error}")
+            
+            final_message = '\n'.join(error_messages) if error_messages else '表單填寫有誤，請檢查後重試'
+            
+            return JsonResponse({
+                'ok': False, 
+                'success': False, 
+                'message': final_message,
+                'errors': form.errors  # 保留原始錯誤結構供前端使用
+            }, status=400)
+
+        # 非 AJAX 請求時，將錯誤顯示給用戶
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
         return render_form(form)
 
     # 其他 HTTP 方法
@@ -3098,6 +3412,31 @@ def toggle_like(request, comment_id):
         'likes_count': comment.likes.count()
     })
 
-
-
-
+# -----------------------
+# 調試禁用詞檢查
+# -----------------------
+@csrf_exempt
+def debug_content_filter(request):
+    """調試禁用詞過濾功能"""
+    if request.method != 'POST':
+        return JsonResponse({'error': '僅支援 POST 請求'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        
+        if not text:
+            return JsonResponse({'error': '請提供要檢查的文字'}, status=400)
+        
+        debug_result = debug_banned_content(text)
+        
+        return JsonResponse({
+            'success': True,
+            'text': text,
+            'has_banned_content': debug_result['has_banned'],
+            'found_words': debug_result['found_words'],
+            'normalized_text': debug_result['normalized_text']
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'檢查失敗: {str(e)}'}, status=500)

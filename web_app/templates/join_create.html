@@ -7,6 +7,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/join_create.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     {% block content %}
@@ -20,7 +21,7 @@
             <form id="create-group-form" enctype="multipart/form-data">
                 <!-- 活動標題 -->
                 <div class="form-group">
-                    <label for="activity-title" class="form-label">活動標題</label>
+                    <label for="activity-title" class="form-label">活動標題 <span class="required-star">*</span></label>
                     <input type="text" id="activity-title" name="title" class="form-input" placeholder="請輸入活動標題（最多30字）" maxlength="30" required>
                 </div>
 
@@ -28,7 +29,7 @@
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="activity-type" class="form-label">活動類型</label>
+                            <label for="activity-type" class="form-label">活動類型 <span class="required-star">*</span></label>
                             <select id="activity-type" name="type" class="form-select" required>
                                 <option value="" disabled selected>請選擇活動類型</option>
                                 <option value="美食">美食</option>
@@ -71,13 +72,13 @@
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="activity-date" class="form-label">活動日期</label>
+                            <label for="activity-date" class="form-label">活動日期 <span class="required-star">*</span></label>
                             <input type="date" id="activity-date" name="date" class="form-input" required>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="activity-time" class="form-label">活動時間</label>
+                            <label for="activity-time" class="form-label">活動時間 <span class="required-star">*</span></label>
                             <input type="time" id="activity-time" name="time" class="form-input" required>
                         </div>
                     </div>
@@ -87,13 +88,13 @@
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="min-participants" class="form-label">最少參加人數</label>
+                            <label for="min-participants" class="form-label">最少參加人數 <span class="required-star">*</span></label>
                             <input type="number" id="min-participants" name="min_participants" class="form-input" min="1" value="2" required>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="max-participants" class="form-label">最多參加人數</label>
+                            <label for="max-participants" class="form-label">最多參加人數 <span class="required-star">*</span></label>
                             <input type="number" id="max-participants" name="max_participants" class="form-input" min="1" value="10" required>
                         </div>
                     </div>
@@ -101,13 +102,13 @@
 
                 <!-- 活動說明 -->
                 <div class="form-group">
-                    <label for="activity-description" class="form-label">活動說明</label>
+                    <label for="activity-description" class="form-label">活動說明 <span class="required-star">*</span></label>
                     <textarea id="activity-description" name="description" class="form-textarea" placeholder="請詳細描述活動內容、準備物品、費用說明等資訊..." required></textarea>
                 </div>
 
                 <!-- 活動封面圖片 -->
                 <div class="form-group">
-                    <label class="form-label">活動封面圖片</label>
+                    <label class="form-label">活動封面圖片（選填）</label>
                     <div class="image-upload-container" id="image-upload-area">
                         <div class="image-upload-icon">📷</div>
                         <div class="image-upload-text">點擊上傳圖片或拖曳圖片至此處</div>
@@ -116,23 +117,118 @@
                     <div class="help-text">建議尺寸：800x400像素，檔案大小不超過2MB</div>
                 </div>
 
+                <!-- 聯絡方式選擇 -->
+                <div class="form-group">
+                    <label class="form-label">聯絡方式</label>
+                    
+                    <!-- 智能聯絡資訊提醒區域 -->
+                    <div id="contact-info-reminder" class="contact-info-reminder">
+                        <div class="reminder-content">
+                            <div class="reminder-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="reminder-text">
+                                <span id="contact-status-text">檢查聯絡資訊中...</span>
+                            </div>
+                            <button type="button" id="edit-contact-btn" class="edit-contact-btn" style="display: none;">
+                                <i class="fas fa-edit"></i> 編輯聯絡資訊
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 聯絡方式選擇器 -->
+                    <div class="contact-method-selector">
+                        <div class="contact-options">
+                            <div class="contact-option">
+                                <input type="radio" id="contact-phone" name="contact_method" value="phone">
+                                <label for="contact-phone" class="contact-label">
+                                    <i class="fas fa-phone"></i>
+                                    <span>電話</span>
+                                    <span id="phone-display" class="contact-value">未設定</span>
+                                </label>
+                            </div>
+                            
+                            <div class="contact-option">
+                                <input type="radio" id="contact-line" name="contact_method" value="line">
+                                <label for="contact-line" class="contact-label">
+                                    <i class="fas fa-comments"></i>
+                                    <span>LINE</span>
+                                    <span id="line-display" class="contact-value">未設定</span>
+                                </label>
+                            </div>
+                            
+                            <div class="contact-option">
+                                <input type="radio" id="contact-email" name="contact_method" value="email">
+                                <label for="contact-email" class="contact-label">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>Email</span>
+                                    <span id="email-display" class="contact-value">未設定</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 報名截止日期 -->
                 <div class="form-group">
-                    <label for="activity-deadline" class="form-label">報名截止日期</label>
+                    <label for="activity-deadline" class="form-label">報名截止日期 <span class="required-star">*</span></label>
                     <input type="date" id="activity-deadline" name="deadline" class="form-input" required>
                 </div>
 
                 <div class="buttons-container">
-                    <a href="{% url 'activities_list' %}" class="cancel-btn">取消</a>
+                    <a href="{% url 'activity_list' %}" class="cancel-btn">取消</a>
                     <button type="submit" class="submit-btn">發布活動</button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <!-- 聯絡資訊編輯模態框 -->
+    <div id="contact-edit-modal" class="contact-modal" style="display: none;">
+        <div class="contact-modal-content">
+            <div class="contact-modal-header">
+                <h3>編輯聯絡資訊</h3>
+                <button type="button" class="contact-modal-close" id="close-contact-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="contact-modal-body">
+                <div class="contact-edit-group">
+                    <label for="edit-phone">電話號碼</label>
+                    <input type="tel" id="edit-phone" placeholder="請輸入電話號碼">
+                </div>
+                
+                <div class="contact-edit-group">
+                    <label for="edit-line">LINE ID</label>
+                    <input type="text" id="edit-line" placeholder="請輸入LINE ID">
+                </div>
+                
+                <div class="contact-edit-group">
+                    <label for="edit-email">Email</label>
+                    <input type="email" id="edit-email" placeholder="請輸入Email地址">
+                </div>
+            </div>
+            
+            <div class="contact-modal-footer">
+                <button type="button" class="contact-btn-cancel" id="cancel-contact-edit">取消</button>
+                <button type="button" class="contact-btn-save" id="save-contact-info">儲存</button>
+            </div>
+        </div>
+    </div>
     {% endblock %}
 
     {% block body_js %}
+    <script>
+        // 將用戶聯絡資訊傳遞給JavaScript
+        window.userContactData = {
+            phone: '{{ user_phone|default:"" }}',
+            line_id: '{{ user_line_id|default:"" }}',
+            email: '{{ user_email|default:"" }}'
+        };
+    </script>
     <script src="{% static 'js/join_create.js' %}"></script>
+    <script src="{% static 'js/contact_selector.js' %}"></script>
     {% endblock %}
 </body>
 </html>

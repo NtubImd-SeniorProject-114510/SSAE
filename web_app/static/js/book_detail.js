@@ -56,11 +56,294 @@ const addLineBtn = document.querySelector('.add-line-btn');
 if (addLineBtn) {
     addLineBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        alert('已將您導向至LINE加入好友頁面！');
-        // 實際應用中可以導向到LINE加好友頁面
-        // window.open('https://line.me/ti/p/~wang_ntub', '_blank');
+        
+        // 獲取LINE ID
+        const lineId = this.getAttribute('data-line-id') || this.href.split('~')[1];
+        
+        if (!lineId) {
+            alert('無法獲取LINE ID');
+            return;
+        }
+        
+        // 檢測設備類型
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            // 手機版：直接跳轉LINE
+            handleMobileLineContact(lineId);
+        } else {
+            // 電腦版：顯示QR Code
+            showLineQRModal(lineId);
+        }
     });
 }
+
+// 處理手機版LINE聯絡
+function handleMobileLineContact(lineId) {
+    // 手機版直接跳轉到LINE應用程式
+    const lineAppUrl = `line://ti/p/~${lineId}`;
+    const lineWebUrl = `https://line.me/ti/p/~${lineId}`;
+    
+    // 嘗試開啟LINE應用程式
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = lineAppUrl;
+    document.body.appendChild(iframe);
+    
+    // 如果APP沒有開啟，則開啟網頁版
+    setTimeout(() => {
+        window.open(lineWebUrl, '_blank');
+        document.body.removeChild(iframe);
+    }, 1500);
+    
+    // 顯示提示訊息
+    showSuccessMessage('正在開啟LINE，請查看應用程式');
+}
+
+// 顯示電腦版QR Code模態框
+function showLineQRModal(lineId) {
+    const modal = document.createElement('div');
+    modal.className = 'line-qr-modal';
+    modal.innerHTML = `
+        <div class="line-qr-content">
+            <div class="line-qr-header">
+                <i class="fab fa-line" style="color: #00C300; font-size: 2rem;"></i>
+                <h3>加入LINE好友</h3>
+                <span class="close-qr-modal" onclick="closeQRModal()">&times;</span>
+            </div>
+            <div class="line-qr-body">
+                <div class="qr-code-container">
+                    <div id="qrcode"></div>
+                    <p>使用LINE掃描QR Code加入好友</p>
+                </div>
+                <div class="line-id-section">
+                    <div class="line-id-display">
+                        <span>LINE ID</span>
+                        <div class="line-id-row">
+                            <strong>${lineId}</strong>
+                            <button class="copy-id-btn" onclick="copyLineId('${lineId}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="line-web-link">
+                        <a href="https://line.me/ti/p/~${lineId}" target="_blank" class="web-line-btn">
+                            <i class="fas fa-external-link-alt"></i> 網頁版LINE
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+    
+    // 生成QR Code
+    generateQRCode(lineId);
+}
+
+// 生成QR Code
+function generateQRCode(lineId) {
+    const qrContainer = document.getElementById('qrcode');
+    if (qrContainer) {
+        // 清空容器
+        qrContainer.innerHTML = '';
+        
+        // 使用QR Code API生成QR碼
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://line.me/ti/p/~' + lineId)}`;
+        
+        const qrImg = document.createElement('img');
+        qrImg.src = qrUrl;
+        qrImg.alt = 'LINE QR Code';
+        qrImg.style.width = '200px';
+        qrImg.style.height = '200px';
+        qrImg.style.border = '2px solid #00C300';
+        qrImg.style.borderRadius = '8px';
+        
+        qrContainer.appendChild(qrImg);
+    }
+}
+
+
+// 複製LINE ID
+function copyLineId(lineId) {
+    console.log('複製LINE ID:', lineId); // 調試信息
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(lineId).then(() => {
+            console.log('複製成功 (現代API)'); // 調試信息
+            showCopySuccess(lineId);
+        }).catch((error) => {
+            console.log('現代API失敗，使用備用方法:', error); // 調試信息
+            fallbackCopyText(lineId);
+        });
+    } else {
+        console.log('使用備用複製方法'); // 調試信息
+        fallbackCopyText(lineId);
+    }
+}
+
+// 備用複製方法
+function fallbackCopyText(text) {
+    console.log('執行備用複製方法:', text); // 調試信息
+    
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        console.log('execCommand結果:', successful); // 調試信息
+        
+        if (successful) {
+            showCopySuccess(text);
+        } else {
+            alert('複製失敗，請手動複製: ' + text);
+        }
+    } catch (err) {
+        console.error('複製錯誤:', err); // 調試信息
+        alert('複製失敗，請手動複製: ' + text);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// 顯示複製成功提示
+function showCopySuccess(lineId) {
+    console.log('顯示複製成功提示:', lineId); // 調試信息
+    
+    // 移除現有的提示
+    const existingToast = document.querySelector('.copy-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'copy-toast';
+    toast.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>已複製LINE ID: ${lineId}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 確保元素已添加到DOM後再添加show類
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+    
+    // 自動隱藏
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+
+
+
+
+// 關閉QR Code模態框
+function closeQRModal() {
+    const modal = document.querySelector('.line-qr-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 300);
+    }
+}
+
+
+// 複製LINE ID按鈕事件監聽器
+document.addEventListener('click', function(e) {
+    // 處理複製LINE ID按鈕
+    if (e.target.closest('.copy-line-id-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('複製按鈕被點擊'); // 調試信息
+        
+        const btn = e.target.closest('.copy-line-id-btn');
+        const lineId = btn.getAttribute('data-line-id');
+        
+        console.log('獲取到的LINE ID:', lineId); // 調試信息
+        
+        if (lineId) {
+            copyLineId(lineId);
+            
+            // 添加視覺反饋
+            btn.style.transform = 'scale(0.9)';
+            btn.style.background = '#00A300';
+            setTimeout(() => {
+                btn.style.transform = '';
+                btn.style.background = '';
+            }, 200);
+        } else {
+            console.error('未找到LINE ID'); // 調試信息
+            alert('無法獲取LINE ID');
+        }
+        return;
+    }
+    
+    // 關閉QR Code模態框
+    if (e.target.classList.contains('line-qr-modal')) {
+        closeQRModal();
+    }
+});
+
+// 確保DOM載入完成後設置事件監聽器
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM載入完成，設置複製按鈕事件監聽器');
+    
+    // 檢查複製按鈕是否存在
+    const copyBtns = document.querySelectorAll('.copy-line-id-btn');
+    console.log('找到複製按鈕數量:', copyBtns.length);
+    
+    copyBtns.forEach((btn, index) => {
+        console.log(`按鈕 ${index + 1} LINE ID:`, btn.getAttribute('data-line-id'));
+        
+        // 為每個按鈕直接添加點擊事件監聽器
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('直接事件監聽器 - 複製按鈕被點擊');
+            const lineId = this.getAttribute('data-line-id');
+            console.log('直接事件監聽器 - LINE ID:', lineId);
+            
+            if (lineId) {
+                copyLineId(lineId);
+                
+                // 視覺反饋
+                this.style.transform = 'scale(0.9)';
+                this.style.background = '#00A300';
+                setTimeout(() => {
+                    this.style.transform = '';
+                    this.style.background = '';
+                }, 200);
+            }
+        });
+        
+        // 添加測試功能：滑鼠懸停時顯示提示
+        btn.addEventListener('mouseenter', function() {
+            console.log('滑鼠懸停在複製按鈕上');
+            this.title = `點擊複製LINE ID: ${this.getAttribute('data-line-id')}`;
+        });
+    });
+});
 
 // 發送按鈕功能
 if (sendBtn) {

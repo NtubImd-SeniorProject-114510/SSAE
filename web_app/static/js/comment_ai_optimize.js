@@ -1,3 +1,4 @@
+// ===== AI 評論優化模組 =====
 (function(){
   const INPUT_ID   = "comment_text";
   const BUTTON_ID  = "convert-btn";
@@ -66,6 +67,31 @@
     return await callAPI(raw);  // 交給後端處理
   }
 
+  // ===== 新增：清空所有輸入框 =====
+  function clearAllFields(){
+    console.log("🧹 清空所有評論輸入框");
+    
+    // 清空主輸入框
+    const input = $(INPUT_ID);
+    if (input) {
+      if ("value" in input) input.value = "";
+      else input.textContent = "";
+    }
+    
+    // 清空預覽區
+    const preview = $(PREVIEW_ID) || $("preview_text");
+    if (preview) {
+      if ("value" in preview) preview.value = "";
+      else preview.textContent = "";
+    }
+    
+    // 清空隱藏欄位
+    const hidden = $(HIDDEN_ID);
+    if (hidden) hidden.value = "";
+    
+    console.log("✅ 評論輸入框已清空");
+  }
+
   function bind(){
     const btn = $(BUTTON_ID);
     if (!btn) return;
@@ -82,23 +108,29 @@
         putPreview(out);
       }catch(err){
         console.error(err);
-        putPreview("（轉換失敗，請稍後重試）");
+        putPreview("（轉換失敗,請稍後重試）");
       }finally{
         setLoading(false);
       }
     });
   }
 
-  document.addEventListener("DOMContentLoaded", bind);
+  // ===== 初始化：清空所有欄位 =====
+  function init(){
+    clearAllFields(); // 頁面載入時立即清空
+    bind();           // 綁定事件
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
 })();
 
 
-// ===== 送出前檢查：避免送出過短提示，並回填優化內容 =====
+// ===== 送出前檢查：避免送出過短提示,並回填優化內容 =====
 (function(){
   const FORM_ID    = "comment-form";
   const SUBMIT_ID  = "submit-btn";
   const INPUT_ID   = "comment_text";
-  const PREVIEW_ID = "comment-preview"; // 你的頁面也有 #preview_text，我們會同時支援
+  const PREVIEW_ID = "comment-preview"; // 你的頁面也有 #preview_text,我們會同時支援
   const SHORT_PREFIX = "（內容過短）";
 
   function $(id){ return document.getElementById(id); }
@@ -127,25 +159,62 @@
       // 1) 尚未轉換（或空白）
       if (!preview){
         e.preventDefault(); e.stopPropagation();
-        alert("請先按「轉換」，產生可提交的評論內容，再送出。");
+        alert("偵測到可能不當的言論，建議您先按「轉換」，以產生符合規範的評論內容，然後再送出。");
         return;
       }
 
       // 2) 是「內容過短」的系統提示 → 禁止送出
       if (preview.startsWith(SHORT_PREFIX)){
         e.preventDefault(); e.stopPropagation();
-        alert("評論內容過短，請補充具體細節後再送出。");
+        alert("評論內容過短,請補充具體細節後再送出。");
         return;
       }
 
-      // 3) 一切正常 → 回填到 #comment_text，確保送出是優化後內容
+      // 3) 一切正常 → 回填到 #comment_text,確保送出是優化後內容
       const input = $(INPUT_ID);
       if (input) input.value = preview;
 
-      // 若你的表單送出是由其它 JS 控制（onsubmit return false），這裡只做資料回填
+      // 若你的表單送出是由其它 JS 控制（onsubmit return false）,這裡只做資料回填
       // 交由現有 add_comment.js 去處理實際送出流程即可
     });
   }
 
   document.addEventListener("DOMContentLoaded", bindSubmitGuard);
+})();
+
+
+// ===== 全域：當彈窗開啟時清空欄位 =====
+(function(){
+  // 監聽彈窗開啟事件（如果有的話）
+  document.addEventListener("DOMContentLoaded", function(){
+    // 找到可能觸發彈窗的按鈕
+    const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"], .hidden-create-btn, #add-comment-btn');
+    
+    modalTriggers.forEach(trigger => {
+      trigger.addEventListener('click', function(){
+        console.log("🔄 彈窗開啟,清空評論欄位");
+        
+        // 延遲執行,確保彈窗已完全開啟
+        setTimeout(() => {
+          const commentText = document.getElementById("comment_text");
+          const previewText = document.getElementById("comment-preview") || document.getElementById("preview_text");
+          const optimizedComment = document.getElementById("optimized_comment");
+          
+          if (commentText) {
+            if ("value" in commentText) commentText.value = "";
+            else commentText.textContent = "";
+          }
+          
+          if (previewText) {
+            if ("value" in previewText) previewText.value = "";
+            else previewText.textContent = "";
+          }
+          
+          if (optimizedComment) optimizedComment.value = "";
+          
+          console.log("✅ 彈窗欄位已清空");
+        }, 100);
+      });
+    });
+  });
 })();

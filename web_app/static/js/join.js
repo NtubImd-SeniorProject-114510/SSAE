@@ -2,7 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('join.js 已載入');
-    
     // 初始化頁面功能
     sortActivitiesByStatus();
     initializeScrollAnimations();
@@ -10,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeRandomClouds();
     initializeActivityCards();
     initializeMobileGridButtons();
+    initializeAjaxForms();
 });
 
 // 按照活動狀態排序功能
@@ -424,10 +424,195 @@ function initializeMobileGridButtons() {
             }
         });
     }
-    
     // 初始檢查和監聽窗口大小變化
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
     
     console.log('手機版網格按鈕已初始化');
 }
+
+// 初始化AJAX表單處理
+function initializeAjaxForms() {
+    const joinForms = document.querySelectorAll('form[action*="join"], form[action*="cancel"]');
+    
+    joinForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const actionUrl = this.action;
+            const activityCard = this.closest('.activity-card');
+            const button = this.querySelector('button[type="submit"]');
+            
+            // 禁用按鈕防止重複提交
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '處理中...';
+            
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新按鈕狀態
+                    updateActivityButton(activityCard, data.new_status, data.activity_id);
+                    
+                    // 顯示成功訊息
+                    showMessage(data.message, 'success');
+                } else {
+                    // 顯示錯誤訊息
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('操作失敗，請稍後再試', 'error');
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        });
+    });
+    
+    console.log('AJAX表單已初始化');
+}
+
+// 更新活動按鈕狀態
+function updateActivityButton(activityCard, newStatus, activityId) {
+    // 按鈕直接在 activity-card 下面，不在特定容器中
+    const buttonContainer = activityCard;
+    
+    let newButtonHTML = '';
+    
+    if (newStatus === 'joined') {
+        // 用戶已參加，顯示取消參加按鈕
+        newButtonHTML = `
+            <form action="/activities/${activityId}/cancel/" method="post" class="inline-form" onclick="event.stopPropagation();">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                <button class="join-button" type="submit">取消參加 <i class="fa-regular fa-calendar-xmark"></i></button>
+            </form>
+        `;
+    } else if (newStatus === 'not_joined') {
+        // 用戶未參加，顯示立即參加按鈕
+        newButtonHTML = `
+            <form action="/activities/${activityId}/join/" method="post" class="inline-form" onclick="event.stopPropagation();">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                <button class="join-button" type="submit">立即參加 <i class="fa-solid fa-bolt"></i></button>
+            </form>
+        `;
+    }
+    
+    // 更新按鈕HTML - 尋找具有 join-button 類別的按鈕或其父表單
+    const existingButton = buttonContainer.querySelector('.join-button') || 
+                          buttonContainer.querySelector('form.inline-form') ||
+                          buttonContainer.querySelector('a.join-button');
+    
+    if (existingButton && newButtonHTML) {
+        // 如果現有按鈕在表單中，替換整個表單；否則替換按鈕本身
+        const formParent = existingButton.closest('form.inline-form');
+        const targetElement = formParent || existingButton;
+        targetElement.outerHTML = newButtonHTML;
+        
+        // 重新初始化新按鈕的AJAX功能
+        const newForm = buttonContainer.querySelector('form.inline-form');
+        if (newForm) {
+            initializeFormAjax(newForm);
+        }
+    }
+}
+
+// 為單個表單初始化AJAX
+function initializeFormAjax(form) {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const actionUrl = this.action;
+        const activityCard = this.closest('.activity-card');
+        const button = this.querySelector('button[type="submit"]');
+        
+        button.disabled = true;
+        const originalText = button.innerHTML;
+        button.innerHTML = '處理中...';
+        
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateActivityButton(activityCard, data.new_status, data.activity_id);
+                showMessage(data.message, 'success');
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('操作失敗，請稍後再試', 'error');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        });
+    });
+}
+
+// 獲取CSRF Token
+function getCsrfToken() {
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    return csrfInput ? csrfInput.value : '';
+}
+
+// 顯示訊息
+function showMessage(message, type) {
+    // 創建訊息元素
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `ajax-message ${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 9999;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        ${type === 'success' ? 'background-color: #28a745;' : 'background-color: #dc3545;'}
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    // 顯示動畫
+    setTimeout(() => {
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // 自動移除
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 300);
+    }, 3000);
+}
+

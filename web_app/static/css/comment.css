@@ -146,6 +146,51 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
+/* 清除篩選按鈕 */
+.clear-filters-btn {
+    margin: 0px 10px 0px 10px;
+    padding: 12px 25px;
+    border-radius: 50px;
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #666;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.clear-filters-btn:hover {
+    background-color: #ebebeb;
+    border-color: #d0d0d0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.clear-filters-btn:active {
+    transform: translateY(0);
+}
+
+.clear-filters-btn i {
+    font-size: 14px;
+}
+
+/* 無結果提示 */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--dark-gray);
+    font-size: 18px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin: 20px 0;
+}
+
 
 
 /* Activity Card Grid */

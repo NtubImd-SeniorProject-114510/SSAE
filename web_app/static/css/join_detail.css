@@ -8,16 +8,15 @@
 
 body {
     font-family: 'Noto Sans TC', sans-serif;
-    background-color: white;
+    background-color: #f8f9fa;
     color: #333;
     line-height: 1.6;
     margin-top: 15vh;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 0;
 }
 
 .back-button {
@@ -48,8 +47,138 @@ body {
     width: 0;
     height: 2px;
     background-color: #555;
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
+}
+
+/* 活動主要區域樣式 - 參考二手書頁面 */
+.activity-main-section {
+    display: flex;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.activity-content-layout {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 25px;
+    width: 100%;
+}
+
+.activity-image-container {
+    flex-shrink: 0;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.activity-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.activity-details-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.activity-title-container h1.activity-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* 活動資訊卡片在主要區域中的樣式 */
+.activity-details-container .event-info-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 40px; 
+}
+
+.activity-details-container .info-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #7E3D76;
+    position: relative;
+}
+
+.activity-details-container .info-icon-circle {
+    width: 40px;
+    height: 40px;
+    background-color: #7E3D76;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activity-details-container .info-icon {
+    color: white;
+    font-size: 16px;
+}
+
+.activity-details-container .info-content {
+    flex: 1;
+}
+
+.activity-details-container .info-title {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 4px 0;
+    font-weight: 500;
+}
+
+.activity-details-container .info-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+}
+
+.activity-details-container .info-address {
+    font-size: 12px;
+    color: #888;
+    margin: 2px 0 0 0;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .activity-content-layout {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .activity-image-container {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .activity-details-container .event-info-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-title-container h1.activity-title {
+        font-size: 24px;
+    }
 }
 
 .back-button a:hover::after {
@@ -422,7 +551,8 @@ body {
     position: relative;
 }
 
-.info-card:not(:last-child)::after {
+/* 為 activity-main-section 中的所有 info-card 添加 ::after 樣式 */
+.activity-details-container .info-card::after {
     content: '';
     position: absolute;
     right: -10px;
@@ -508,7 +638,6 @@ body {
     font-size: 18px;
     font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 }
@@ -519,19 +648,26 @@ body {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* 刪除按鈕樣式 */
+.fixed-cta.delete-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.fixed-cta.delete-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+}
+
+/* 統一section樣式 - 參考二手書頁面 */
 .section {
-    padding: 40px;
-    width: 100%;
-    clear: both;
-    overflow: hidden;
-}
-
-.section:nth-child(odd) {
-    background-color: #f4f4f4;
-}
-
-.section:nth-child(even) {
     background-color: white;
+    margin-bottom: 20px;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
 .section-title {
@@ -1431,5 +1567,6 @@ a.join-btn, a.fixed-cta, a.like-btn, a.reply-btn {
 }
 
 a.join-btn:hover, a.fixed-cta:hover {
-    /* 保持原有的 hover 效果 */
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 8px 20px rgba(111, 85, 125, 0.4);
 }

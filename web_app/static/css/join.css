@@ -101,9 +101,20 @@ body {
     flex-direction: row !important;
     flex-wrap: wrap !important;
     justify-content: center !important; 
+    align-items: center !important;
     gap: 15px;
     margin: 20px 0px 40px 0px;
  }
+
+.filter-section form {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 15px;
+    width: 100%;
+}
 
 .filter-item {
   margin: 0px 10px 0px 10px;
@@ -307,7 +318,6 @@ body {
 .activity-grid.items-per-row-4 {
   gap: 20px;
 }
-
 .activity-grid.items-per-row-5 {
   gap: 16px;
 }
@@ -326,6 +336,7 @@ body {
   flex-direction: column;
   align-items: stretch;
 }
+
 
 /* 動態卡片尺寸 - 保持一致的寬高比例 (基於每行3個的比例 1:1.44) */
 .activity-card.card-size-1 {
@@ -2092,6 +2103,12 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
+
+.activity-card.visible:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.25) !important;
+}
+
 .activity-header {
   padding: 15px 0;
   text-align: center;
@@ -2484,7 +2501,7 @@ body {
   cursor: pointer;
   opacity: 0;
   transform: translateY(100%);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
   box-shadow: 0 8px 25px rgba(102,126,234,0.4);
   z-index: 10;
@@ -2561,23 +2578,130 @@ body {
   opacity: 0.9;
 }
 
-/* 修復浮動按鈕在disabled狀態的樣式 */
-.join-button.disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
+/* 修復浮動按鈕在disabled狀態的懸停樣式 */
 .join-button.disabled:hover {
-  background: #ccc;
-  transform: translateY(0) scale(1);
-  box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+  background: #ccc !important;
+  transform: translateY(0) !important;
+  box-shadow: 0 8px 25px rgba(102,126,234,0.4) !important;
 }
 
-/* 確保inline-form不影響佈局 */
-.inline-form {
-  display: contents;
+/* 修復絕對定位的join-button樣式 - 統一全寬度樣式 */
+.inline-form .join-button {
+  position: absolute !important;
+  opacity: 0 !important;
+  transform: translateY(100%) !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  border-radius: 0 0 20px 20px !important;
+  padding: 32px 32px !important;
+  font-size: 15px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 懸停時顯示按鈕 */
+.activity-card:hover .inline-form .join-button {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* 確保disabled按鈕樣式正確 */
+.join-button.disabled {
+  background: #ccc !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  border-radius: 0 0 20px 20px !important;
+  padding: 32px 32px !important;
+  font-size: 15px !important;
+  cursor: not-allowed !important;
+}
+
+/* 管理按鈕樣式 */
+.creator-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.manage-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+}
+
+.manage-button.view-btn {
+  background: linear-gradient(135deg, #6F557D 0%, #9e8c9d 100%);
+  color: white;
+}
+
+.manage-button.view-btn:hover {
+  background: linear-gradient(135deg, #5a4469 0%, #8a7a89 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(111, 85, 125, 0.3);
+}
+
+.manage-button.delete-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.manage-button.delete-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.delete-form {
+  margin: 0;
+  display: inline-block;
+}
+
+/* 管理活動按鈕樣式 */
+.join-button.creator-btn {
+  background: linear-gradient(135deg, #6F557D 0%, #9e8c9d 100%) !important;
+  color: white !important;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  position: absolute !important;
+  opacity: 0 !important;
+  transform: translateY(100%) !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  border-radius: 0 0 20px 20px !important;
+  padding: 32px 32px !important;
+  font-size: 15px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 懸停時顯示管理活動按鈕 */
+.activity-card:hover .join-button.creator-btn {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.join-button.creator-btn:hover {
+  background: linear-gradient(135deg, #5a4469 0%, #8a7a89 100%) !important;
+  box-shadow: 0 8px 25px rgba(111, 85, 125, 0.4) !important;
 }
 
 /* Students Section */
@@ -2929,7 +3053,7 @@ body {
 
 /* 新增清除篩選按鈕樣式 */
 .clear-filters-btn {
-  margin: 0px 10px 0px 10px;
+    margin: 0px 10px 0px 10px;
     padding: 12px 25px;
     border-radius: 50px;
     background-color: #f5f5f5;
@@ -2938,6 +3062,8 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     color: #666;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .clear-filters-btn:hover {

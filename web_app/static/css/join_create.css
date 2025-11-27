@@ -19,6 +19,14 @@
     color: #34495e;
 }
 
+/* 必填欄位紅色星號 - 獨立標籤方式 */
+.required-star {
+    color: #ef4444;
+    font-size: 1.25em;
+    font-weight: bold;
+    margin-left: 2px;
+}
+
 .form-input {
     width: 100%;
     padding: 12px;
@@ -197,13 +205,318 @@
     line-height: 1.5;
 }
 
+/* 聯絡方式選擇樣式 */
+.contact-info-reminder {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.reminder-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reminder-icon {
+    color: #6c757d;
+    font-size: 18px;
+}
+
+.reminder-text {
+    flex: 1;
+    color: #495057;
+    font-size: 14px;
+}
+
+.edit-contact-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.edit-contact-btn:hover {
+    background: #0056b3;
+}
+
+.contact-method-selector {
+    margin-top: 15px;
+}
+
+.contact-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.contact-option {
+    position: relative;
+}
+
+.contact-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.contact-label {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+}
+
+.contact-label:hover {
+    border-color: #007bff;
+    background: #f8f9ff;
+}
+
+.contact-option input[type="radio"]:checked + .contact-label {
+    border-color: #007bff;
+    background: #e7f3ff;
+}
+
+.contact-label i {
+    margin-right: 12px;
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+.contact-label span:first-of-type {
+    font-weight: 600;
+    margin-right: auto;
+}
+
+.contact-value {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.contact-value.has-value {
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* 聯絡資訊編輯模態框樣式 */
+.contact-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.contact-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.contact-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.contact-modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.contact-modal-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 5px;
+}
+
+.contact-modal-close:hover {
+    color: #333;
+}
+
+.contact-modal-body {
+    padding: 20px;
+}
+
+.contact-edit-group {
+    margin-bottom: 20px;
+}
+
+.contact-edit-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.contact-edit-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.contact-edit-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.contact-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.contact-btn-cancel,
+.contact-btn-save {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.contact-btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.contact-btn-cancel:hover {
+    background: #545b62;
+}
+
+.contact-btn-save {
+    background: #28a745;
+    color: white;
+}
+
+.contact-btn-save:hover {
+    background: #218838;
+}
+
+/* 響應式設計 */
 @media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-        gap: 25px;
+    .container {
+        padding: 15px;
     }
     
-    .nav-menu {
-        display: none;
+    .form-row {
+        flex-direction: column;
     }
+    
+    .form-col {
+        width: 100%;
+    }
+    
+    .radio-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .number-input-group {
+        justify-content: center;
+    }
+    
+    .contact-preview-content {
+        gap: 12px;
+    }
+    
+    .contact-preview-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .contact-preview-label,
+    .contact-preview-value {
+        font-size: 14px;
+    }
+}
+
+/* 聯絡方式預覽卡片樣式 */
+.contact-preview-card {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.contact-preview-card.contact-preview-animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.contact-preview-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.contact-preview-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #6F557D 0%, #9e8c9d 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 4px 8px rgba(111, 85, 125, 0.3);
+}
+.contact-preview-text {
+    flex: 1;
+}
+
+/* 重複的 form-label 樣式已移除，統一使用上方定義 */
+
+.contact-preview-info {
+    display: flex;
+    align-items: center;
+}
+
+.contact-preview-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.contact-preview-value {
+    color: #28a745;
+    font-weight: 500;
+    font-size: 16px;
 }

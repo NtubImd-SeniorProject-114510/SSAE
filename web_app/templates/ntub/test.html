@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}北商系統測試{% endblock %}
+
+{% block extra_css %}
+<style>
+    .test-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .test-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .test-btn:hover {
+        transform: translateY(-2px);
+    }
+    .test-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        display: none;
+    }
+    .result.success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    .result.error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    .result.loading {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="test-container">
+    <h1>🎓 北商學生資訊系統測試</h1>
+    <p>請輸入您的北商學號和密碼進行測試</p>
+    
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="studentId">學號:</label>
+            <input type="text" id="studentId" name="studentId" placeholder="請輸入學號" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密碼:</label>
+            <input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+        </div>
+        <button type="submit" class="test-btn" id="submitBtn">
+            <i class="fas fa-sign-in-alt"></i> 登入測試
+        </button>
+    </form>
+    
+    <div id="result" class="result"></div>
+    
+    <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <h4>📋 測試說明:</h4>
+        <ul>
+            <li>此測試會嘗試連接北商學生資訊系統</li>
+            <li>如果系統檢測到驗證碼，會返回相應提示</li>
+            <li>請使用真實的學號和密碼進行測試</li>
+            <li>測試過程可能需要10-30秒</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultDiv = document.getElementById('result');
+    
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const studentId = document.getElementById('studentId').value.trim();
+        const password = document.getElementById('password').value.trim();
+        
+        if (!studentId || !password) {
+            showResult('請輸入學號和密碼', 'error');
+            return;
+        }
+        
+        // 顯示載入狀態
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 測試中...';
+        showResult('⏳ 正在連接北商學生資訊系統，請稍候...', 'loading');
+        
+        try {
+            const response = await fetch('{% url "api_ntub_login" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    student_id: studentId,
+                    password: password
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showResult(`✅ ${result.message}`, 'success');
+                
+                // 如果登入成功，可以測試其他功能
+                setTimeout(() => {
+                    testProfile();
+                }, 2000);
+            } else {
+                showResult(`❌ ${result.message}`, 'error');
+            }
+            
+        } catch (error) {
+            console.error('測試錯誤:', error);
+            showResult(`❌ 連接錯誤: ${error.message}`, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入測試';
+        }
+    });
+    
+    async function testProfile() {
+        try {
+            showResult('⏳ 測試獲取學生資料...', 'loading');
+            
+            const response = await fetch('{% url "api_ntub_profile" %}', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const data = result.data;
+                let profileInfo = '✅ 學生資料獲取成功:<br>';
+                for (const [key, value] of Object.entries(data)) {
+                    if (value) {
+                        profileInfo += `<strong>${key}:</strong> ${value}<br>`;
+                    }
+                }
+                showResult(profileInfo, 'success');
+            } else {
+                showResult(`⚠️ 學生資料獲取失敗: ${result.message}`, 'error');
+            }
+            
+        } catch (error) {
+            showResult(`⚠️ 學生資料測試錯誤: ${error.message}`, 'error');
+        }
+    }
+    
+    function showResult(message, type) {
+        resultDiv.innerHTML = message;
+        resultDiv.className = `result ${type}`;
+        resultDiv.style.display = 'block';
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

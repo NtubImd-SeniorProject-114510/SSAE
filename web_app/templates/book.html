@@ -30,20 +30,34 @@
         <select class="filter-select" id="academicFilter">
           <option value="">全部學制</option>
           {% for aca in academics %}
-            <option value="{{ aca.id }}" data-name="{{ aca.name }}">{{ aca.name }}</option>
+            <option value="{{ aca.id }}" data-name="{{ aca.name }}" {% if current_academic_id == aca.id|stringformat:"s" %}selected{% endif %}>{{ aca.name }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="filter-group">
         <label class="filter-label">系所</label>
-        <select class="filter-select" id="departmentFilter" disabled>
-          <option value="">請先選擇學制</option>
+        <select class="filter-select" id="departmentFilter" {% if not current_academic_id %}disabled{% endif %}>
+          {% if current_academic_id %}
+            <option value="">全部系所</option>
+            {% for dept in departments %}
+              <option value="{{ dept.id }}" {% if current_department_id == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+          {% else %}
+            <option value="">請先選擇學制</option>
+          {% endif %}
         </select>
       </div>
       <div class="filter-group">
         <label class="filter-label">年級</label>
-        <select class="filter-select" id="gradeFilter" disabled>
-          <option value="">請先選擇學制</option>
+        <select class="filter-select" id="gradeFilter" {% if not current_academic_id %}disabled{% endif %}>
+          {% if current_academic_id %}
+            <option value="">全部年級</option>
+            {% for grade in academic_grades %}
+              <option value="{{ grade.grade_level }}" {% if current_grade_level == grade.grade_level %}selected{% endif %}>{{ grade.grade_level }}</option>
+            {% endfor %}
+          {% else %}
+            <option value="">請先選擇學制</option>
+          {% endif %}
         </select>
       </div>
       <div class="filter-group">
@@ -51,7 +65,7 @@
         <select class="filter-select" id="categoryFilter">
           <option value="">全部分類</option>
           {% for cat in categories %}
-            <option value="{{ cat.name }}">{{ cat.name }}</option>
+            <option value="{{ cat.name }}" {% if current_category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -60,7 +74,7 @@
         <select class="filter-select" id="conditionFilter">
           <option value="">全部書況</option>
           {% for value,label in form.fields.condition.choices %}
-            {% if value %}<option value="{{ label }}">{{ label }}</option>{% endif %}
+            {% if value %}<option value="{{ label }}" {% if current_condition == label %}selected{% endif %}>{{ label }}</option>{% endif %}
           {% endfor %}
         </select>
       </div>
@@ -68,18 +82,18 @@
         <label class="filter-label">價格範圍</label>
         <select class="filter-select" id="priceFilter">
           <option value="">全部價格</option>
-          <option value="0-100">$100以下</option>
-          <option value="100-300">$100-$300</option>
-          <option value="300-500">$300-$500</option>
-          <option value="500-800">$500-$800</option>
-          <option value="800-99999">$800以上</option>
+          <option value="0-100" {% if current_price_range == "0-100" %}selected{% endif %}>$100以下</option>
+          <option value="100-300" {% if current_price_range == "100-300" %}selected{% endif %}>$100-$300</option>
+          <option value="300-500" {% if current_price_range == "300-500" %}selected{% endif %}>$300-$500</option>
+          <option value="500-800" {% if current_price_range == "500-800" %}selected{% endif %}>$500-$800</option>
+          <option value="800-99999" {% if current_price_range == "800-99999" %}selected{% endif %}>$800以上</option>
         </select>
       </div>
     </div>
     <div class="filter-grid-2">
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="搜尋書名或關鍵字...">
+        <input type="text" id="searchInput" class="search-input" placeholder="搜尋書名或關鍵字..." value="{{ current_search }}">
       </div>
       <div style="margin-top:10px;">
         <button type="button" id="clearFiltersBtn" class="clear-filters-btn">
@@ -113,8 +127,8 @@
         
 
         <div class="total-count">
-          共 <span id="total-activities">{{ books.paginator.count }}</span> 本書
-          <span class="page-info">(第 <span id="current-page">1</span> 頁，共 <span id="total-pages">1</span> 頁)</span>
+          共搜尋到 <span id="total-activities">{{ books.paginator.count }}</span> 本書
+          <span class="page-info">(第 <span id="current-page">{{ books.number }}</span> 頁，共 <span id="total-pages">{{ books.paginator.num_pages }}</span> 頁)</span>
       </div>
     </div>
   </div>
@@ -163,14 +177,25 @@
   <!-- Pagination -->
   {% if books.has_other_pages %}
   <nav class="pagination" style="display:flex;justify-content:center;margin:2rem 0;">
-    {% if books.has_previous %}<a href="?page={{ books.previous_page_number }}&items_per_row={{ items_per_row }}" class="page-link">上一頁</a>{% else %}<span class="page-link disabled">上一頁</span>{% endif %}
+    {% if books.has_previous %}
+      <a href="?page={{ books.previous_page_number }}&items_per_row={{ items_per_row }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_academic_id %}&academic_id={{ current_academic_id }}{% endif %}{% if current_department_id %}&department_id={{ current_department_id }}{% endif %}{% if current_grade_level %}&grade_level={{ current_grade_level }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_condition %}&condition={{ current_condition }}{% endif %}{% if current_price_range %}&price_range={{ current_price_range }}{% endif %}" class="page-link">上一頁</a>
+    {% else %}
+      <span class="page-link disabled">上一頁</span>
+    {% endif %}
+    
     {% for num in books.paginator.page_range %}
-      {% if books.number == num %}<span class="page-link active">{{ num }}</span>
+      {% if books.number == num %}
+        <span class="page-link active">{{ num }}</span>
       {% elif num > books.number|add:'-3' and num < books.number|add:'3' %}
-        <a href="?page={{ num }}&items_per_row={{ items_per_row }}" class="page-link">{{ num }}</a>
+        <a href="?page={{ num }}&items_per_row={{ items_per_row }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_academic_id %}&academic_id={{ current_academic_id }}{% endif %}{% if current_department_id %}&department_id={{ current_department_id }}{% endif %}{% if current_grade_level %}&grade_level={{ current_grade_level }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_condition %}&condition={{ current_condition }}{% endif %}{% if current_price_range %}&price_range={{ current_price_range }}{% endif %}" class="page-link">{{ num }}</a>
       {% endif %}
     {% endfor %}
-    {% if books.has_next %}<a href="?page={{ books.next_page_number }}&items_per_row={{ items_per_row }}" class="page-link">下一頁</a>{% else %}<span class="page-link disabled">下一頁</span>{% endif %}
+    
+    {% if books.has_next %}
+      <a href="?page={{ books.next_page_number }}&items_per_row={{ items_per_row }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_academic_id %}&academic_id={{ current_academic_id }}{% endif %}{% if current_department_id %}&department_id={{ current_department_id }}{% endif %}{% if current_grade_level %}&grade_level={{ current_grade_level }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_condition %}&condition={{ current_condition }}{% endif %}{% if current_price_range %}&price_range={{ current_price_range }}{% endif %}" class="page-link">下一頁</a>
+    {% else %}
+      <span class="page-link disabled">下一頁</span>
+    {% endif %}
   </nav>
   {% endif %}
 
@@ -428,7 +453,7 @@
     const categoryFilter = document.getElementById('categoryFilter');
     const conditionFilter = document.getElementById('conditionFilter');
     const priceFilter = document.getElementById('priceFilter');
-    const filterResult = document.getElementById('filterResult');
+    const filterResult = document.getElementById('total-activities');
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
     // 根據學制載入科系和年級
@@ -513,112 +538,73 @@
       loadDepartmentsAndGrades(academicId);
     });
 
-    // 篩選書籍函數
+    // 篩選書籍函數 - 改為發送請求到後端
     function filterBooks() {
-      const term = searchInput.value.trim().toLowerCase();
+      const params = new URLSearchParams();
+      
+      // 收集篩選參數
+      const term = searchInput.value.trim();
       const selectedAcademicId = academicFilter.value;
       const selectedDepartmentId = departmentFilter.value;
       const selectedGrade = gradeFilter.value;
       const category = categoryFilter.value;
       const condition = conditionFilter.value;
       const priceRange = priceFilter.value;
+      const itemsPerRow = document.getElementById('items-per-row-select').value;
 
-      let visibleCount = 0;
+      // 添加非空參數
+      if (term) params.set('search', term);
+      if (selectedAcademicId) params.set('academic_id', selectedAcademicId);
+      if (selectedDepartmentId) params.set('department_id', selectedDepartmentId);
+      if (selectedGrade) params.set('grade_level', selectedGrade);
+      if (category) params.set('category', category);
+      if (condition) params.set('condition', condition);
+      if (priceRange) params.set('price_range', priceRange);
+      if (itemsPerRow) params.set('items_per_row', itemsPerRow);
 
-      document.querySelectorAll('.book-card').forEach(card => {
-        const title = card.querySelector('.book-header')?.textContent.toLowerCase() || '';
-        
-        // 從 data 屬性獲取書籍資訊
-        const bookAcademicId = card.dataset.academicId;
-        const bookDepartmentId = card.dataset.departmentId;
-        const bookGradeLevel = card.dataset.gradeLevel;
-        
-        // 從顯示的標籤獲取其他資訊
-        const cardCategory = card.querySelector('.book-category')?.textContent || '';
-        const cardCondition = card.querySelector('.book-condition')?.textContent || '';
-        const cardPrice = parseInt(
-            (card.querySelector('.book-price')?.textContent || '0').replace(',', '')
-        ) || 0;
-
-        let match = true;
-        
-        // 搜尋詞篩選
-        if (term) {
-          match = match && title.includes(term);
-        }
-        
-        // 學制篩選
-        if (selectedAcademicId) {
-          match = match && (bookAcademicId === selectedAcademicId);
-        }
-        
-        // 系所篩選
-        if (selectedDepartmentId) {
-          match = match && (bookDepartmentId === selectedDepartmentId);
-        }
-        
-        // 年級篩選
-        if (selectedGrade) {
-          match = match && (bookGradeLevel === selectedGrade);
-        }
-        
-        // 分類篩選
-        if (category) {
-          match = match && (cardCategory === category);
-        }
-        
-        // 書況篩選
-        if (condition) {
-          match = match && (cardCondition === condition);
-        }
-
-        // 價格範圍篩選
-        if (priceRange) {
-          const [min, max] = priceRange.split('-').map(Number);
-          match = match && cardPrice >= min && cardPrice <= max;
-        }
-
-        // 顯示或隱藏書卡
-        card.style.display = match ? 'block' : 'none';
-        if (match) {
-          card.classList.add('visible');
-          visibleCount++;
-        } else {
-          card.classList.remove('visible');
-        }
-      });
-
-      filterResult.textContent = `共搜尋到 ${visibleCount} 本書`;
+      // 重新載入頁面並應用篩選
+      const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.location.href = newUrl;
     }
 
+    // 防抖動函數
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // 創建防抖動版本的篩選函數
+    const debouncedFilterBooks = debounce(filterBooks, 500);
+
     // 監聽所有篩選條件變化
-    [searchInput, academicFilter, departmentFilter, gradeFilter, categoryFilter, conditionFilter, priceFilter]
+    // 搜尋輸入使用防抖動
+    searchInput.addEventListener('input', debouncedFilterBooks);
+    
+    // 其他篩選條件立即觸發
+    [academicFilter, departmentFilter, gradeFilter, categoryFilter, conditionFilter, priceFilter]
       .forEach(el => {
-        el.addEventListener('input', filterBooks);
         el.addEventListener('change', filterBooks);
       });
 
     // 清除篩選按鈕
     clearFiltersBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      academicFilter.value = '';
-      departmentFilter.innerHTML = '<option value="">請先選擇學制</option>';
-      gradeFilter.innerHTML = '<option value="">請先選擇學制</option>';
-      departmentFilter.disabled = true;
-      gradeFilter.disabled = true;
-      categoryFilter.value = '';
-      conditionFilter.value = '';
-      priceFilter.value = '';
-      filterBooks();
+      // 直接跳轉到沒有篩選參數的頁面
+      const itemsPerRow = document.getElementById('items-per-row-select').value;
+      const newUrl = window.location.pathname + (itemsPerRow !== '4' ? '?items_per_row=' + itemsPerRow : '');
+      window.location.href = newUrl;
     });
 
     // 初始動畫效果
     document.querySelectorAll('.book-card').forEach((card, index) => {
       setTimeout(() => card.classList.add('visible'), index * 60);
     });
-
-    // 初次計算書籍數量
-    filterBooks();
   });
 
   // 設為全域函數

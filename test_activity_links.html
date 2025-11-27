@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動連結測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-link {
+            display: block;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .test-link:hover {
+            background-color: #0056b3;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #004085;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔗 活動連結測試</h1>
+        
+        <div class="info">
+            <h3>測試說明</h3>
+            <p>點擊下方連結測試活動詳情頁面是否正常工作：</p>
+        </div>
+        
+        <a href="http://127.0.0.1:8000/activities/" class="test-link">
+            📋 活動列表頁面
+        </a>
+        
+        <a href="http://127.0.0.1:8000/activities/1/" class="test-link">
+            📄 活動詳情頁面 (ID: 1)
+        </a>
+        
+        <a href="http://127.0.0.1:8000/activities/2/" class="test-link">
+            📄 活動詳情頁面 (ID: 2)
+        </a>
+        
+        <a href="http://127.0.0.1:8000/activities/3/" class="test-link">
+            📄 活動詳情頁面 (ID: 3)
+        </a>
+        
+        <div class="info success">
+            <h3>✅ 修復內容</h3>
+            <ul>
+                <li>修正了模板中的 URL 名稱：<code>join_detail</code> → <code>activity_detail</code></li>
+                <li>移除了重複的視圖函數</li>
+                <li>確保活動卡片的點擊事件正確指向活動詳情頁面</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>🔍 如何測試</h3>
+            <ol>
+                <li>確保 Django 服務器正在運行：<code>python manage.py runserver</code></li>
+                <li>點擊上方的「活動列表頁面」連結</li>
+                <li>在活動列表中點擊任一活動卡片</li>
+                <li>確認能正常進入活動詳情頁面</li>
+            </ol>
+        </div>
+        
+        <div class="info error" id="error-info" style="display: none;">
+            <h3>❌ 如果仍有問題</h3>
+            <p>請檢查瀏覽器控制台是否有 JavaScript 錯誤，或者查看 Django 服務器的錯誤日誌。</p>
+        </div>
+    </div>
+
+    <script>
+        // 檢查連結是否可訊問
+        function testLinks() {
+            const links = document.querySelectorAll('.test-link');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    console.log('測試連結:', this.href);
+                });
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', testLinks);
+    </script>
+</body>
+</html>

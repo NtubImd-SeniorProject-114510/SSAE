@@ -524,8 +524,20 @@ document.addEventListener('DOMContentLoaded', function () {
         typeof closeModal === 'function' && closeModal(modal);
       }
 
-      // TODO: 若需要，這裡刷新該卡片的平均分或評論數
-      // refreshCourseCard(courseId);
+      // 檢查是否在詳情頁面，如果是則重新載入頁面以顯示最新評分
+      if (window.location.pathname.includes('/comment_detail/')) {
+        console.log('在詳情頁面，評分成功後重新載入頁面');
+        
+        // 顯示成功提示
+        if (window.CommentToast?.toastSuccess) {
+          window.CommentToast.toastSuccess('評分已提交！頁面即將更新...');
+        }
+        
+        // 1秒後重新載入頁面
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
 
     } catch (err) {
       console.error('submitRating error:', err);

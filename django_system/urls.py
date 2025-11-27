@@ -18,25 +18,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
-from web_app import views
-from web_app import views_todo  # Todo API
-from django.conf import settings
 from django.conf.urls.static import static
-from web_app import views
+from django.contrib.auth import views as auth_views
 from web_app import views_todo  # Todo API
 from web_app import profile_api  # Profile API
-from django.contrib.auth import views as auth_views
+from web_app import views  # 主要views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('base/' , views.base),
+    path('', include('web_app.urls')),
+    path('', include('web_app.urls_ntub')),
     path('ttt/' , views.ttt),
     path('login/' , views.login, name='login'),
     path('welcome/' , views.welcome),
     path('welcome_mo/' , views.welcome_mo, name='wel_mo'),
     path('' , views.welcome),
     path('index/' , views.index),
-
     # path('mobile/' , views.mobile, name='mobile'),
     path('personal/' , views.personal),
     path('chat/' , views.chat),
@@ -54,22 +51,12 @@ urlpatterns = [
     path('api/grades/', views.get_grades, name='get_grades'),
     path('book_2/', views.book_2, name='book_2'),
     path('test/', views.ask_page, name='ask_page'),
-    path('test/', views.ask_page, name='ask_page'),
     path('navbar2/' , views.navbar2),
-
-    # 統一檔案上傳路由 (支援 PDF 和 ZIP)
-    path('upload_files/', views.upload_files, name='upload_files'),
-    # 向後相容的 ZIP 上傳路由
-    path('upload_zip/', views.upload_zip, name='upload_zip'),
     # 統一檔案上傳路由 (支援 PDF 和 ZIP)
     path('upload_files/', views.upload_files, name='upload_files'),
     # 向後相容的 ZIP 上傳路由
     path('upload_zip/', views.upload_zip, name='upload_zip'),
 
-    # 課程評論 / Review 頁面與 API
-    path('comment/', views.comment, name='comment'),
-    # 課程評論 / Review 頁面與 API
-    path('comment/', views.comment, name='comment'),
     # 課程評論 / Review 頁面與 API
     path('comment/', views.comment, name='comment'),
     path('comment_detail/<int:id>/', views.comment_detail, name='comment_detail'),
@@ -78,45 +65,30 @@ urlpatterns = [
     path('add_comment/<int:course_id>/', views.add_comment_page, name='add_comment'),
     path('add_comment/<int:course_id>/submit/', views.add_comment_submit, name='add_comment_submit'),
     path('comment/review/<int:id>/delete/', views.comment_review_delete, name='comment_review_delete'),
-    path('add_comment/', views.add_comment_blank, name='add_comment_new'),
-    path('add_comment/<int:course_id>/', views.add_comment_page, name='add_comment'),
-    path('add_comment/<int:course_id>/submit/', views.add_comment_submit, name='add_comment_submit'),
-    path('comment/review/<int:id>/delete/', views.comment_review_delete, name='comment_review_delete'),
+    path('get_courses/', views.get_courses, name='get_courses'),
     path('api/courses/<int:course_id>/reviews/', views.create_course_review, name='create_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/', views.update_course_review, name='update_course_review'),
     path('api/courses/<int:course_id>/reviews/<int:review_id>/delete/', views.delete_course_review, name='delete_course_review'),
     path('api/reviews/<int:review_id>/toggle-like/', views.toggle_review_like, name='toggle_review_like'),
-    path('api/reviews/<int:review_id>/toggle-like/', views.toggle_review_like, name='toggle_review_like'),
     path('api/rating/<int:course_id>/', views.submit_rating_only, name='submit_rating_only'),
-    path('api/comment/optimize_ai', views.optimize_comment_ai, name='optimize_comment_ai'),
     path('api/comment/optimize_ai', views.optimize_comment_ai, name='optimize_comment_ai'),
 
     # 對話/RAG/檔案
-    path('personal/', views.personal, name='personal'),
-    # 對話/RAG/檔案
-    path('personal/', views.personal, name='personal'),
-    path('api/rating/<int:course_id>/', views.submit_rating_only, name='submit_rating_only'),
-    path('api/comment/optimize_ai', views.optimize_comment_ai, name='optimize_comment_ai'),
-    # 對話/RAG/檔案
-    path('personal/', views.personal, name='personal'),
     path('api/conversations/', views.api_conversations),
     path('api/messages/<str:convo_id>/', views.api_messages),
-    path('api/ask/', views.api_ask),
     path('api/conversations/<str:convo_id>/', views.api_conversation_detail),
     path('api/export/<str:convo_id>/', views.api_export_conversation),
     path('auth/', include('social_django.urls', namespace='social')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('api/pdf/<str:filename>/', views.view_pdf, name='view_pdf'),
-
-    # 活動系統
+    path('api/ask/', views.api_ask),
 
     # 活動系統
     path('activities/', views.activity_list, name='activity_list'),
-    path('activities/<int:pk>/', views.activity_detail, name='join_detail'),
-    path('activities/<int:pk>/', views.activity_detail, name='activity_detail'),
     path('activities/<int:pk>/', views.activity_detail, name='activity_detail'),
     path('activities/<int:pk>/join/', views.join_activity, name='join_activity'),
     path('activities/<int:pk>/cancel/', views.cancel_activity, name='cancel_activity'),
+    path('activities/<int:pk>/delete/', views.delete_activity, name='delete_activity'),
     path('activities/<int:pk>/participants/', views.activity_participants, name='activity_participants'),
     path('activities/create/', views.create_activity, name='create_activity'),
     path('create/', views.create_activity, name='create_activity'),
@@ -135,6 +107,9 @@ urlpatterns = [
     
     # Profile API
     path('api/profile/update/', profile_api.update_profile, name='update_profile'),
+    
+    # Debug API
+    path('api/debug/content-filter/', views.debug_content_filter, name='debug_content_filter'),
 ]
 
 # 媒體/靜態檔案設定（開發環境）

@@ -9,6 +9,14 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeReplyButtons();
   initializeRatingModalConnection();
   initializeRenderLineBreaks();
+  clearAllReplyForms(); // 新增：清空所有回覆表單
+
+  // ===== 清空所有回覆對話框 =====
+  function clearAllReplyForms() {
+    document.querySelectorAll('.reply-form textarea').forEach(textarea => {
+      textarea.value = '';
+    });
+  }
 
   // ===== 星星顯示 =====
   function initializeRatings() {
@@ -103,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       } catch (err) {
         console.error('toggle like error:', err);
-        window.CommentToast ? CommentToast.toastError('按讚失敗，請稍後再試') : alert('按讚失敗，請稍後再試');
+        window.CommentToast ? CommentToast.toastError('按讚失敗,請稍後再試') : alert('按讚失敗,請稍後再試');
       } finally {
         btn.dataset.loading = '0';
       }
@@ -152,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       } catch (err) {
         console.error('delete review error:', err);
-        window.CommentToast ? CommentToast.toastError('刪除失敗，請稍後再試') : alert('刪除失敗，請稍後再試');
+        window.CommentToast ? CommentToast.toastError('刪除失敗,請稍後再試') : alert('刪除失敗,請稍後再試');
       } finally {
         btn.dataset.loading = '0';
       }
@@ -167,7 +175,12 @@ document.addEventListener('DOMContentLoaded', function() {
           if (f !== form) f.style.display = 'none';
         });
         form.style.display = form.style.display === 'block' ? 'none' : 'block';
-        if (form.style.display === 'block') form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (form.style.display === 'block') {
+          form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          // 清空當前開啟的對話框
+          const textarea = form.querySelector('textarea');
+          if (textarea) textarea.value = '';
+        }
       };
 
       if (e.target.closest('.reply-btn')) {
@@ -181,7 +194,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (e.target.closest('.cancel-reply-btn')) {
-        e.target.closest('.reply-form').style.display = 'none';
+        const form = e.target.closest('.reply-form');
+        const textarea = form?.querySelector('textarea');
+        if (textarea) textarea.value = ''; // 取消時清空
+        form.style.display = 'none';
       }
 
       if (e.target.closest('.submit-reply-btn')) {
