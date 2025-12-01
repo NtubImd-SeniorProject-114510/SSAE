@@ -189,13 +189,13 @@ class FinalBookRecognizer:
                                 highest_score = score
                                 best_result_so_far = data
                             
-                            # ★ 極速回傳：分數 > 65 就走人 (降低門檻以求速度)
-                            if score >= 65:
+                            # ★ 極速回傳：分數 > 85 就走人 (降低門檻以求速度)
+                            if score >= 85:
                                 return self._success_return(best_result_so_far, full_text)
                                 
                     except Exception: pass
 
-            if best_result_so_far and highest_score > 25:
+            if best_result_so_far and highest_score > 35:
                 return self._success_return(best_result_so_far, full_text)
             
             if full_text:

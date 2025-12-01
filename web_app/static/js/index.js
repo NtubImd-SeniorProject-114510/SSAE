@@ -50,17 +50,7 @@ document.addEventListener("DOMContentLoaded", function() {
 //     path.style.animation = "drawCircle 3s ease-in-out forwards";
 //   }, 3000);
 // });
-  
 
-// const keywordMap = [
-//     { keywords: ["賣", "上架", "上傳"], intent: "up" },
-//     { keywords: ["書", "課本"], intent: "book" },
-//     { keywords: ["查", "規", "學分", "畢業", "門檻"], intent: "rules" },
-//     { keywords: ["舉辦", "發起", "揪", "創"], intent: "hold" },
-//     { keywords: ["活動", "團", "讀書會"], intent: "event" },
-//     { keywords: ["評"], intent: "review" },
-//     { keywords: ["課", "老師"], intent: "course" },
-// ];
 
 
 // 詢問框
@@ -68,6 +58,10 @@ let currentShortcut = null;
 
 // 關鍵字與意圖對應表
 const keywordMap = [
+    { keywords: "實習", intent: "intern" },
+    { keywords: "職", intent: "intern" },
+    { keywords: "講座", intent: "lecture" },
+    { keywords: "演講", intent: "lecture" },
     { keywords: "賣", intent: "up" },
     { keywords: "上架", intent: "up" },
     { keywords: "上傳", intent: "up" },
@@ -97,7 +91,7 @@ const keywordMap = [
     { keywords: "寫", intent: "review" },
     { keywords: "看", intent: "look" },
     { keywords: "課", intent: "course" },
-    { keywords: "老師", intent: "course" }
+    { keywords: "老師", intent: "course" },
 ];
 
 
@@ -108,6 +102,18 @@ const shortcuts = [
       action: "external",  // 自定義一個表示「開啟外部連結」的行為
       target: "https://acad.ntub.edu.tw/p/412-1004-1718.php",
       label: "課程科目表"
+    },
+    {
+      intentSet: ["intern"],
+      action: "external",  // 自定義一個表示「開啟外部連結」的行為
+      target: "https://get.ntub.edu.tw/",
+      label: "北商實習就業平台"
+    },
+    {
+      intentSet: ["lecture"],
+      action: "external",  // 自定義一個表示「開啟外部連結」的行為
+      target: "https://signupactivity.ntub.edu.tw/activity/main",
+      label: "北商活動報名系統"
     },
     {
         intentSet: ["hold", "event"],
@@ -625,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 幾何與材質
     const footPath = new CurvedFoot();
     // 改變 `radius` 來使線條變細
-    const footGeometry = new THREE.TubeGeometry(footPath, 32, 0.025, 8, false);  // 將半徑設為 0.02
+    const footGeometry = new THREE.TubeGeometry(footPath, 32, 0.025, 8, false);  // 將半徑設為 0.025
 
     // 左腳
     const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
@@ -780,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
     camera.position.set(0, 1, 9);
     camera.lookAt(0, 0, 0);
 
-    
+    //貓頭鷹跟著滑鼠「轉頭」
     let mouseNormX = 0;
     let mouseNormY = 0;
 
@@ -841,6 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetY = mouseNormX * Math.PI / 6;  // 左右最多 ±30 度
         const targetX = -mouseNormY * Math.PI / 12; // 上下最多 ±15 度
 
+        // 用「平滑逼近」(* 0.05) 做阻尼，避免瞬間跳動
         owl.rotation.y += (targetY - owl.rotation.y) * 0.05;
         owl.rotation.x += (targetX - owl.rotation.x) * 0.05;
 
@@ -940,7 +947,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // 文字
-
 document.addEventListener('DOMContentLoaded', () => {
     const featureItems = document.querySelectorAll('.feature-item');
 
@@ -1409,7 +1415,7 @@ function initTechParticles() {
       if (isParticleInteracting) {
         // 滑鼠靠近該粒子，讓它逃離並加些隨機擾動
         const angleFromMouse = Math.atan2(particleScreenY - mouseY, particleScreenX - mouseX);
-        const repulseFactor = Math.max(0, 1 - distToMouse / 80) * 6;
+        const repulseFactor = Math.max(0, 1 - distToMouse / 80) * 6;   // 推開力度
         vx += Math.cos(angleFromMouse) * repulseFactor;
         vy += Math.sin(angleFromMouse) * repulseFactor;
 
